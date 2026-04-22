@@ -10,13 +10,9 @@
 *.pch
 *.gch
 
-# Extensionless binaries (compiled output)
-*
-!*/
-!*.*
-!Makefile
-!LICENSE
-!README
+# Compiled binaries
+/arrangement
+/arrangementoptimized
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
@@ -39,14 +35,13 @@ cmake_install.cmake
 *.swp
 *.swo
 *~
+.geminiignore
 
 # ── OS junk ──────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 .tmp/
 /*.log
-/*.md
-!README.md
 *.pdf
 *.zip
 *.tar.*
