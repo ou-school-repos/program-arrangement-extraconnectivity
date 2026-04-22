@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -210,11 +211,8 @@ static std::chrono::high_resolution_clock::time_point t_last_print;
 
 // Linear scan replaces unordered_set for ver membership (faster for small R).
 static inline bool in_ver_set(uint64_t v, int point) {
-    for (int i = 0; i < point; i++) {
-        if (ver[i] == v)
-            return true;
-    }
-    return false;
+    return std::any_of(ver.begin(), ver.begin() + point,
+                       [v](uint64_t x) { return x == v; });
 }
 
 // ── Independent verifier ───────────────────────────────────────────────────
@@ -395,11 +393,12 @@ static void solve(int point, int nodl, int largchg, int acc_nk1, int acc_cons) {
         if (std::chrono::duration<double>(now - t_last_print).count() >= 0.5) {
             double total =
                 std::chrono::duration<double>(now - t0_global).count();
-            size_t dedup_n = 0, dedup_s = 0;
-            for (const auto &s : seen_nauty)
-                dedup_n += s.size();
-            for (const auto &s : seen_sorted)
-                dedup_s += s.size();
+            const size_t dedup_n = std::accumulate(
+                seen_nauty.begin(), seen_nauty.end(), size_t{0},
+                [](size_t a, const FlatHashSet128 &s) { return a + s.size(); });
+            const size_t dedup_s = std::accumulate(
+                seen_sorted.begin(), seen_sorted.end(), size_t{0},
+                [](size_t a, const FlatHashSet128 &s) { return a + s.size(); });
             std::cerr << "\r  [" << std::fixed << std::setprecision(1) << total
                       << "s]  gen: " << nodes_generated
                       << " | eval: " << nodes_evaluated
