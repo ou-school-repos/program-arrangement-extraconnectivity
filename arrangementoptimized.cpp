@@ -31,7 +31,6 @@ static inline int get_sym(uint64_t vertex, int pos) {
     return static_cast<int>((vertex >> ((R - 1 - pos) * 4)) & 0xFU);
 }
 
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline uint64_t set_sym(uint64_t vertex, int pos, int sym) {
     const int shift = (R - 1 - pos) * 4;
     return (vertex & ~(0xFULL << shift)) |
@@ -107,7 +106,6 @@ static uint64_t nodes_pruned = 0;
 // ── Neighbor-set calculation ───────────────────────────────────────────────
 // Faithful port of Cheng's calc() using integer operations.
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 static std::pair<int, int> calc() {
     int nk1coef = 0;
     int cons = 0;

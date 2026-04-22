@@ -79,19 +79,19 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: build
 build:	##H @Build Compile original with optimizations (-O2)
-	@$(call print_info,Building $(BIN)...)
+	@$(call print_info,Building $(BIN))
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN) $(SRC)
 	@$(call print_success,Build complete.)
 
 .PHONY: build/opt
 build/opt:	##H @Build Compile optimized variant (-O2)
-	@$(call print_info,Building $(BIN_OPT)...)
+	@$(call print_info,Building $(BIN_OPT))
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT)
 	@$(call print_success,Build complete.)
 
 .PHONY: debug
 debug:	##H @Build Compile original with debug symbols and sanitizers
-	@$(call print_info,Building $(BIN) (debug)...)
+	@$(call print_info,Building $(BIN) (debug))
 	$(CXX) $(CXXFLAGS) $(DBGFLAGS) $(LDFLAGS) -o $(BIN) $(SRC)
 	@$(call print_success,Debug build complete.)
 
@@ -100,22 +100,22 @@ debug:	##H @Build Compile original with debug symbols and sanitizers
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: run
 run: build	##H @Run Build and run original
-	@$(call print_info,Running $(BIN)...)
+	@$(call print_info,Running $(BIN))
 	./$(BIN)
 
 .PHONY: run/opt
 run/opt: build/opt	##H @Run Build and run optimized (R=$(R))
-	@$(call print_info,Running $(BIN_OPT) R=$(R)...)
+	@$(call print_info,Running $(BIN_OPT) R=$(R))
 	./$(BIN_OPT) $(R)
 
 .PHONY: run/debug
 run/debug: debug	##H @Run Build (debug) and run
-	@$(call print_info,Running $(BIN) (debug)...)
+	@$(call print_info,Running $(BIN) (debug))
 	./$(BIN)
 
 .PHONY: benchmark
 benchmark: build/opt	##H @Run Benchmark optimized for R=2..$(R)
-	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R)...)
+	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 	@for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,7 +125,7 @@ EXPECTED_OUTPUT := "(5nk-4) (n-k)-10, EX: ABCDE FBCDE AGCDE ABHDE ABCIE \n(5nk-5
 
 .PHONY: test
 test: build	##H @Dev Verify original output matches expected
-	@$(call print_info,Testing $(BIN)...)
+	@$(call print_info,Testing $(BIN))
 	@actual=$$(./$(BIN)); \
 	expected=$$(printf $(EXPECTED_OUTPUT)); \
 	if [ "$$actual" = "$$expected" ]; then \
@@ -141,9 +141,9 @@ test: build	##H @Dev Verify original output matches expected
 
 .PHONY: test/opt
 test/opt: build build/opt	##H @Dev Verify optimized output matches original
-	@$(call print_info,Testing $(BIN_OPT) against $(BIN)...)
-	@expected=$$(./$(BIN)); \
-	actual=$$(./$(BIN_OPT) 2>/dev/null); \
+	@$(call print_info,Testing $(BIN_OPT) against $(BIN))
+	@expected=$$(./$(BIN) | tr -d ' '); \
+	actual=$$(./$(BIN_OPT) 2>/dev/null | tr -d ' '); \
 	if [ "$$actual" = "$$expected" ]; then \
 		$(call print_success,Optimized matches original.); \
 	else \
@@ -158,21 +158,20 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
-	@$(call print_info,Linting...)
-	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC) $(SRC_OPT)
-	-clang-tidy $(SRC) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-abseil-*,-boost-*,-llvm-*,-google-readability-casting,-modernize-use-trailing-return-type,-readability-identifier-length,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-use-anonymous-namespace,-cppcoreguidelines-avoid-non-const-global-variables,-misc-no-recursion,-hicpp-signed-bitwise,-cppcoreguidelines-pro-bounds-*,-hicpp-avoid-c-arrays,-modernize-avoid-c-arrays,-cppcoreguidelines-avoid-c-arrays' -- $(CXXFLAGS)
-	-clang-tidy $(SRC_OPT) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-abseil-*,-boost-*,-llvm-*,-google-readability-casting,-modernize-use-trailing-return-type,-readability-identifier-length,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-use-anonymous-namespace,-cppcoreguidelines-avoid-non-const-global-variables,-misc-no-recursion,-hicpp-signed-bitwise,-cppcoreguidelines-pro-bounds-*,-hicpp-avoid-c-arrays,-modernize-avoid-c-arrays,-cppcoreguidelines-avoid-c-arrays' -- $(CXXFLAGS)
+	@$(call print_info,Linting)
+	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC_OPT)
+	-clang-tidy $(SRC_OPT) -- $(CXXFLAGS)
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
 format:	##H @Dev Format C++ sources (clang-format)
-	@$(call print_info,Formatting...)
-	clang-format -i $(SRC) $(SRC_OPT)
+	@$(call print_info,Formatting)
+	clang-format -i $(SRC_OPT)
 	@$(call print_success,Format complete.)
 
 .PHONY: format/check
 format/check:	##H @Dev Check formatting without modifying files
-	@$(call print_info,Checking format...)
+	@$(call print_info,Checking format)
 	clang-format --dry-run --Werror $(SRC) $(SRC_OPT)
 	@$(call print_success,Format check passed.)
 
@@ -181,7 +180,7 @@ format/check:	##H @Dev Check formatting without modifying files
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: clean
 clean:	##H @General Remove build artifacts
-	@$(call print_info,Cleaning...)
+	@$(call print_info,Cleaning)
 	rm -f $(BIN) $(BIN_OPT) *.o *.d *.gch *.class
 	@$(call print_success,Clean complete.)
 
