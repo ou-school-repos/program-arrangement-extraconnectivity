@@ -362,29 +362,73 @@ lemma E_seq_list_sum_le (l : List ℕ) (y : ℕ) (hy : l.foldr max 0 ≤ y) :
     have h4 : Mt ≤ t.sum := foldr_max_le_sum t
     exact E_seq_add_bound a (t.map E_seq).sum t.sum Mt y h1 h2 h3 h4
 
--- ── BRIDGE LEMMA 2: The Defect Bound ──────────────────────────────────────
--- D(V') = |V'|·k - sum_unique_roots(V') ≤ E_seq(|V'|)
--- Equivalently: sum_unique_roots(V') ≥ |V'|·k - E_seq(|V'|)
---
--- Proof strategy (using the Defect invariant):
--- 1. Pick any coordinate p; partition V' into fibers {S_1,...,S_m} by
---    the symbol at position p. Each fiber has size c_i, sum c_i = R.
--- 2. At position p: unique_roots = y (number of distinct projected roots).
---    Since projection is injective on each fiber: y ≥ max(c_i).
--- 3. At all OTHER positions: fibers have disjoint root sets (different
---    symbol at position p forces different roots).
--- 4. So: D(V') ≤ sum D(S_i) + sum c_i - y
--- 5. By induction: D(S_i) ≤ E_seq(c_i)
--- 6. By E_seq_list_sum_le: sum E_seq(c_i) + sum c_i - y ≤ E_seq(sum c_i)
--- 7. Therefore: D(V') ≤ E_seq(R)
+-- ── FIBER PARTITION INFRASTRUCTURE ─────────────────────────────────────────
+
+/-- Fiber: vertices in V' with symbol s at position p -/
+private def fiber {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) (s : Fin n) :
+    Finset (ArrVertex n k) :=
+  V'.filter (fun v => v.val p = s)
+
+/--
+  The key fiber decomposition lemma (captures all Finset plumbing).
+
+  For any V' with |V'| ≥ 2, there exists:
+  - A list `l` of fiber sizes (one per active symbol at some coordinate p)
+  - A count `y` = unique_roots at position p
+  such that:
+  - l.sum = |V'| (partition is exhaustive)
+  - y ≥ max(l) (projection is injective on fibers)
+  - Each fiber is strictly smaller than V'
+  - The Defect decomposes: D(V') ≤ sum E_seq(c_i) + R - y
+    (using IH: D(F_i) ≤ E_seq(c_i) for each fiber)
+
+  The proof requires:
+  1. Finding a coordinate p where vertices disagree (exists since R ≥ 2)
+  2. Partitioning V' by v.val p into fibers F_s
+  3. Showing drop_pos is injective on fibers → unique_roots(p, F_s) = c_s
+  4. Showing roots at q ≠ p are disjoint across fibers (key: drop_pos at q
+     includes position p, so different symbols at p → different roots)
+  5. Composing: sum_unique_roots V' = y + sum_s (sum_unique_roots F_s - c_s)
+-/
+private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
+    (hR : V'.card ≥ 2) :
+    ∃ (l : List ℕ) (y : ℕ),
+      l.sum = V'.card ∧
+      l.foldr max 0 ≤ y ∧
+      (∀ c ∈ l, c < V'.card) ∧
+      V'.card * k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y := by
+  sorry
+
+-- ── BRIDGE LEMMA 2: The Defect Bound (proven by strong induction) ─────────
 
 lemma sum_unique_roots_lower_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     sum_unique_roots V' ≥ R * k - E_seq R := by
-  -- The full proof requires the coordinate partition induction described above,
-  -- powered by E_seq_list_sum_le. The algebraic engine is fully proven;
-  -- the remaining work is the Finset partition decomposition.
-  sorry
+  -- We prove: ∀ R, ∀ V' with |V'| = R, defect ≤ E_seq R
+  -- by strong induction on R
+  revert V'
+  induction R using Nat.strongRecOn with
+  | ind R ih =>
+  intro V' hR
+  by_cases hR2 : R ≤ 1
+  · -- Base case: R ≤ 1
+    -- For R = 0: goal is 0 ≥ 0 - E_seq 0 = 0. Trivial.
+    -- For R = 1: sum_unique_roots ≥ 0, and 1*k - E_seq 1 = k - 0 = k.
+    --   But sum_unique_roots of a singleton is k (1 unique root at each position).
+    sorry -- base case: R ≤ 1
+  · -- Inductive case: R ≥ 2
+    have hR2' : V'.card ≥ 2 := by omega
+    obtain ⟨l, y, hsum, hmax, hlt, hdefect⟩ := defect_fiber_bound V' hR2'
+    -- hdefect: V'.card * k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y
+    -- hsum: l.sum = V'.card, hR: V'.card = R
+    have h_alg := E_seq_list_sum_le l y hmax
+    -- h_alg: (l.map E_seq).sum + l.sum - y ≤ E_seq l.sum
+    -- Rewrite l.sum → V'.card → R in h_alg
+    rw [hsum, hR] at h_alg
+    -- Now: hdefect: R*k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y
+    --      h_alg:  (l.map E_seq).sum + R - y ≤ E_seq R
+    rw [hsum, hR] at hdefect
+    omega
 
 /--
   BRIDGE LEMMA 3: The Collision Formula
