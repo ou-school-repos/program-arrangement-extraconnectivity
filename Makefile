@@ -113,6 +113,11 @@ run/debug: debug	##H @Run Build (debug) and run
 	@$(call print_info,Running $(BIN) (debug)...)
 	./$(BIN)
 
+.PHONY: benchmark
+benchmark: build/opt	##H @Run Benchmark optimized for R=2..$(R)
+	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R)...)
+	@for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

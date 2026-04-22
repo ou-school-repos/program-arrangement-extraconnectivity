@@ -97,13 +97,8 @@ static std::pair<int, int> calc() {
                 int pos = chgs[n];
                 char ch = dv[pos];
                 // Check if same char appears at a later position in dv.
-                bool dup = false;
-                for (int p = pos + 1; p < R; p++) {
-                    if (dv[p] == ch) {
-                        dup = true;
-                        break;
-                    }
-                }
+                const bool dup = std::any_of(dv.begin() + pos + 1, dv.end(),
+                                             [ch](char c) { return c == ch; });
                 if (dup) {
                     chgs.erase(chgs.begin() + n);
                     dcverts.erase(dcverts.begin() + n);
@@ -143,8 +138,7 @@ static void solve(int point, int nodl, int largchg) {
                 for (int k = 0; k <= largchg + 1; k++) {
                     std::string temp = ver[i];
                     temp[k] = c;
-                    if (seen.find(temp) == seen.end()) {
-                        seen.insert(temp);
+                    if (seen.insert(temp).second) {
                         ver[point] = temp;
                         solve(point + 1, std::max(nodl, j + 1),
                               std::max(largchg, k));

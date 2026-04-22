@@ -12,8 +12,10 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -29,6 +31,7 @@ static inline int get_sym(uint64_t vertex, int pos) {
     return static_cast<int>((vertex >> ((R - 1 - pos) * 4)) & 0xFU);
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline uint64_t set_sym(uint64_t vertex, int pos, int sym) {
     const int shift = (R - 1 - pos) * 4;
     return (vertex & ~(0xFULL << shift)) |
@@ -70,16 +73,18 @@ static std::string vertex_to_string(uint64_t vertex) {
 // different neighborhoods in A(n,r). The sorted vertex set is the
 // correct dedup granularity for this problem.
 
+namespace {
 struct VectorHash {
     size_t operator()(const std::vector<uint64_t> &vec) const {
-        size_t hash = vec.size();
-        for (const uint64_t val : vec) {
-            hash ^= std::hash<uint64_t>{}(val) + 0x9e3779b97f4a7c15ULL +
-                    (hash << 6) + (hash >> 2);
-        }
-        return hash;
+        return std::accumulate(vec.begin(), vec.end(), vec.size(),
+                               [](size_t hash, uint64_t val) {
+                                   return hash ^ (std::hash<uint64_t>{}(val) +
+                                                  0x9e3779b97f4a7c15ULL +
+                                                  (hash << 6) + (hash >> 2));
+                               });
     }
 };
+} // namespace
 
 // One dedup set per recursion depth (partial sets of size k).
 static std::vector<std::unordered_set<std::vector<uint64_t>, VectorHash>> seen;
@@ -89,10 +94,12 @@ static std::vector<std::unordered_set<std::vector<uint64_t>, VectorHash>> seen;
 static std::vector<uint64_t> ver;
 static std::unordered_set<uint64_t> ver_set;
 
+namespace {
 struct Result {
     int cons = 0;
     std::string example;
 };
+} // namespace
 static std::map<int, Result> results;
 static uint64_t nodes_explored = 0;
 static uint64_t nodes_pruned = 0;
@@ -100,6 +107,7 @@ static uint64_t nodes_pruned = 0;
 // ── Neighbor-set calculation ───────────────────────────────────────────────
 // Faithful port of Cheng's calc() using integer operations.
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 static std::pair<int, int> calc() {
     int nk1coef = 0;
     int cons = 0;
@@ -267,8 +275,19 @@ int main(int argc, const char *argv[]) {
     const auto t1 = std::chrono::high_resolution_clock::now();
     const double elapsed = std::chrono::duration<double>(t1 - t0).count();
 
-    for (auto &[nk1, res] : results) {
-        std::cout << "(" << R << "nk-" << nk1 << ") (n-k)-" << (nk1 + res.cons)
+    // Compute column widths for aligned output.
+    int max_nk1_w = 0;
+    int max_nk_w = 0;
+    for (const auto &[nk1, res] : results) {
+        max_nk1_w =
+            std::max(max_nk1_w, static_cast<int>(std::to_string(nk1).size()));
+        max_nk_w = std::max(
+            max_nk_w, static_cast<int>(std::to_string(nk1 + res.cons).size()));
+    }
+
+    for (const auto &[nk1, res] : results) {
+        std::cout << "(" << R << "nk-" << std::setw(max_nk1_w) << nk1
+                  << ") (n-k)-" << std::setw(max_nk_w) << (nk1 + res.cons)
                   << ", EX: " << res.example << "\n";
     }
 
