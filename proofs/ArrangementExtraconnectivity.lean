@@ -529,9 +529,20 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
             intro hw
             exact fun heq => hs (Finset.mem_image.mpr ⟨w, hw, heq⟩)
           simp [h_empty, E_seq]
-    -- Final: chain h_decomp with h_sum_ih
-    -- D(V') ≤ ∑ D(Fₛ) + R - y ≤ ∑ E_seq(cₛ) + R - y
-    sorry -- omega from h_decomp and h_sum_ih
+    -- Chain h_decomp + h_sum_ih
+    -- Goal involves (l.map E_seq).sum where l = active_syms.toList.map (fiber sizes)
+    -- which is ((active_syms.toList.map f).map E_seq).sum = (active_syms.toList.map (E_seq ∘ f)).sum
+    -- Also need l.sum = V'.card
+    have h_map_eq : (active_syms.toList.map (fun s => (fiber V' p s).card)).map E_seq =
+        active_syms.toList.map (fun s => E_seq (fiber V' p s).card) := by
+      simp [List.map_map]
+    -- l.sum = V'.card (from Subgoal 1, but we need it in context)
+    have h_l_sum : (active_syms.toList.map (fun s => (fiber V' p s).card)).sum = V'.card := by
+      rw [Finset.sum_map_toList]
+      symm
+      exact Finset.card_eq_sum_card_fiberwise (fun w hw => Finset.mem_image_of_mem _ hw)
+    rw [h_map_eq]
+    omega
 
 -- ── BRIDGE LEMMA 2: The Defect Bound (proven by strong induction) ─────────
 
