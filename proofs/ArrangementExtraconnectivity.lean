@@ -33,6 +33,10 @@ def cubeEquivFinset (d : ℕ) : CubeVertex d ≃ Finset (Fin d) where
   left_inv v := funext (fun i => by simp)
   right_inv s := by ext i; simp
 
+lemma cubeAdj_iff_symmDiff_card_one (u v : CubeVertex d) :
+  CubeAdj u v ↔ (symmDiff (cubeEquivFinset d u) (cubeEquivFinset d v)).card = 1 := by
+  sorry
+
 noncomputable def internal_degree (d : ℕ) (S : Finset (CubeVertex d)) (v : CubeVertex d) : ℕ :=
   (S.filter (fun u => CubeAdj u v)).card
 
@@ -64,8 +68,8 @@ def ArrangementGraph (n k : ℕ) : SimpleGraph (ArrangementVertex n k) where
     obtain ⟨p, hp1, hp2⟩ := h
     exact ⟨p, Ne.symm hp1, fun y hy => hp2 y (Ne.symm hy)⟩
   loopless := ⟨fun v h => by
-    obtain ⟨p, hp1, _⟩ := h
-    exact hp1 rfl⟩
+    obtain ⟨i, h1, _⟩ := h
+    exact h1 rfl⟩
 
 
 -- Phase 3
@@ -99,9 +103,12 @@ def bit_length (x : ℕ) : ℕ :=
 def C_constant (R : ℕ) : ℕ :=
   (R - 1) + (∑ x ∈ Finset.range R, bit_length x) - A000788 R
 
+noncomputable def degree_arr (n k : ℕ) (_ : ArrangementVertex n k) : ℕ :=
+  k * (n - k)
+
 -- external_neighbors function
 noncomputable def external_neighbors (n k : ℕ) (V' : Finset (ArrangementVertex n k)) : ℕ :=
-  (∑ v ∈ V', k * (n - k)) - 2 * internal_edges_arr n k V' - sorry
+  (∑ v ∈ V', degree_arr n k v) - 2 * internal_edges_arr n k V' - sorry
 
 -- THE CROWNING THEOREM: The Extraconnectivity Formula
 theorem arrangement_extraconnectivity_minimum
