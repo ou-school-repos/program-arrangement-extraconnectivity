@@ -31,17 +31,15 @@ def E : ℕ → ℕ
 -- Theorem: The closed-form number of internal edges in a d-cube is d * 2^(d-1).
 -- To avoid subtraction on natural numbers in Lean, we prove 2 * E(d) = d * 2^d.
 theorem hypercube_edges_form (d : ℕ) : E d * 2 = d * 2^d := by
-  induction' d with d ih
-  · -- Base case: d = 0
+  induction d with
+  | zero => -- Base case: d = 0
     rfl
-  · -- Inductive step: assume it holds for d, prove for d + 1
-    calc E (d + 1) * 2
-      _ = (2 * E d + V d) * 2       := by rfl
-      _ = (2 * E d + 2^d) * 2       := by rfl
-      _ = 2 * (E d * 2) + 2^(d+1)   := by ring
-      _ = 2 * (d * 2^d) + 2^(d+1)   := by rw [ih] -- Apply inductive hypothesis
-      _ = d * 2^(d+1) + 2^(d+1)     := by ring
-      _ = (d + 1) * 2^(d+1)         := by ring
+  | succ d ih => -- Inductive step: assume it holds for d, prove for d + 1
+    show (2 * E d + V d) * 2 = (d + 1) * 2 ^ (d + 1)
+    unfold V
+    rw [show (2 * E d + 2 ^ d) * 2 = 2 * (E d * 2) + 2 ^ (d + 1) from by ring]
+    rw [ih]
+    ring
 
 /-
   Corollary (computed, not proved here):
