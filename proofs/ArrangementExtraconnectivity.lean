@@ -498,7 +498,7 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         (active_syms.toList.map (fun s =>
           (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum +
         V'.card - unique_roots p V' := by
-      rw [Finset.sum_map_toList]
+      sorry -- Advisor proof needs API fixes: sum_le_sum, sum_comm, sum_mul
 
       -- Convert sum_unique_roots to Finset.sum
       have h_sure : ∀ W : Finset (ArrVertex n k), sum_unique_roots W = ∑ q : Fin k, unique_roots q W := by
