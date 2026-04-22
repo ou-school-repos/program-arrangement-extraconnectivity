@@ -52,6 +52,13 @@ static inline bool contains_sym(uint64_t vertex, int sym) {
     return false;
 }
 
+static inline uint32_t sym_mask(uint64_t vertex) {
+    uint32_t m = 0;
+    for (int i = 0; i < R; i++)
+        m |= (1U << get_sym(vertex, i));
+    return m;
+}
+
 static inline uint64_t make_identity() {
     uint64_t vertex = 0;
     for (int i = 0; i < R; i++)
@@ -182,6 +189,7 @@ static int orbits_nauty[MAX_NAUTY_N];
 // ── Global state ───────────────────────────────────────────────────────────
 
 static std::vector<uint64_t> ver;
+static uint32_t ver_sym_mask[16];
 
 namespace {
 struct Result {
@@ -196,6 +204,7 @@ static uint64_t nodes_generated = 0;
 static uint64_t nodes_evaluated = 0;
 static uint64_t nodes_pruned_iso = 0;
 static uint64_t nodes_pruned_exact = 0;
+static uint64_t nodes_pruned_local = 0;
 static std::chrono::high_resolution_clock::time_point t0_global;
 static std::chrono::high_resolution_clock::time_point t_last_print;
 
@@ -374,6 +383,102 @@ static std::pair<int, int> calc() {
     return {nk1coef, cons};
 }
 
+// ── Incremental calc: O(R) contribution of the last-added vertex ───────────
+// Processes only ver[idx] against ver[0..idx-1], returning its delta.
+
+static std::pair<int, int> calc_step(int count) {
+    const int idx = count - 1;
+    const uint64_t cur = ver[idx];
+    int step_nk1 = 0;
+    int dc_count = 0;
+    bool isShared[32] = {};
+    int isSharednum = 0;
+    uint64_t dcverts[256];
+    int chgs[256];
+
+    for (int j = 0; j < idx; j++) {
+        const uint64_t cur2 = ver[j];
+        int differs = 0, diff1 = 0, diff2 = 0;
+
+        for (int k = 0; k < R; k++) {
+            if (get_sym(cur, k) != get_sym(cur2, k)) {
+                if (differs == 0)
+                    diff1 = k;
+                else if (differs == 1)
+                    diff2 = k;
+                differs++;
+                if (differs > 2)
+                    break;
+            }
+        }
+
+        if (differs == 1 && !isShared[diff1]) {
+            isShared[diff1] = true;
+            isSharednum++;
+            step_nk1++;
+        }
+
+        if (differs == 2) {
+            if (diff1 > diff2)
+                std::swap(diff1, diff2);
+
+            if (get_sym(cur, diff1) != get_sym(cur2, diff2)) {
+                const uint64_t vtx = set_sym(cur, diff1, get_sym(cur2, diff1));
+                bool found = false;
+                for (int d = 0; d < dc_count; d++) {
+                    if (dcverts[d] == vtx) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    dcverts[dc_count] = vtx;
+                    chgs[dc_count++] = diff1;
+                }
+            }
+
+            if (get_sym(cur, diff2) != get_sym(cur2, diff1)) {
+                const uint64_t vtx = set_sym(cur, diff2, get_sym(cur2, diff2));
+                bool found = false;
+                for (int d = 0; d < dc_count; d++) {
+                    if (dcverts[d] == vtx) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    dcverts[dc_count] = vtx;
+                    chgs[dc_count++] = diff2;
+                }
+            }
+        }
+    }
+
+    for (int n = 0; n < dc_count; n++) {
+        bool prune = false;
+        if (isShared[chgs[n]]) {
+            prune = true;
+        } else {
+            const int pos = chgs[n];
+            const int ch = get_sym(dcverts[n], pos);
+            for (int p = pos + 1; p < R; p++) {
+                if (get_sym(dcverts[n], p) == ch) {
+                    prune = true;
+                    break;
+                }
+            }
+        }
+        if (prune) {
+            dcverts[n] = dcverts[dc_count - 1];
+            chgs[n] = chgs[dc_count - 1];
+            dc_count--;
+            n--;
+        }
+    }
+
+    return {step_nk1, dc_count - isSharednum + 1};
+}
+
 // ── Recursive search ───────────────────────────────────────────────────────
 // Depth-gated dedup:
 //   - Internal depths (point <= nauty_limit): nauty canonical graph (expensive
@@ -384,7 +489,7 @@ static std::pair<int, int> calc() {
 
 static int nauty_limit = 5;
 
-static void solve(int point, int nodl, int largchg) {
+static void solve(int point, int nodl, int largchg, int acc_nk1, int acc_cons) {
     nodes_generated++;
 
     // Telemetry: non-blocking update every ~262k nodes
@@ -401,24 +506,24 @@ static void solve(int point, int nodl, int largchg) {
             std::cerr << "\r  [" << std::fixed << std::setprecision(1) << total
                       << "s]  gen: " << nodes_generated
                       << " | eval: " << nodes_evaluated
-                      << " | pruned(iso/sort): " << nodes_pruned_iso << "/"
-                      << nodes_pruned_exact << " | dedup: " << dedup_n << "+"
-                      << dedup_s << " entries   " << std::flush;
+                      << " | pruned(iso/sort/local): " << nodes_pruned_iso
+                      << "/" << nodes_pruned_exact << "/" << nodes_pruned_local
+                      << " | dedup: " << dedup_n << "+" << dedup_s
+                      << " entries   " << std::flush;
             t_last_print = now;
         }
     }
 
-    // Leaf: evaluate directly — NO dedup needed (never branch from here).
+    // Leaf: use accumulated incremental values — no full calc() needed.
     if (point == R) {
         nodes_evaluated++;
-        const auto [nk1, cons] = calc();
 
-        auto it = results.find(nk1);
-        if (it == results.end() || it->second.cons < cons) {
+        auto it = results.find(acc_nk1);
+        if (it == results.end() || it->second.cons < acc_cons) {
             std::string exa;
             for (int i = 0; i < R; i++)
                 exa += vertex_to_string(ver[i]) + " ";
-            results[nk1] = {cons, exa};
+            results[acc_nk1] = {acc_cons, exa};
         }
         return;
     }
@@ -502,18 +607,43 @@ static void solve(int point, int nodl, int largchg) {
         }
     }
 
-    // Generate candidates (same logic as original Cheng code).
+    // Generate candidates with local dedup and bitmask contains_sym.
+    uint64_t local_seen[2048];
+    std::memset(local_seen, 0xFF, sizeof(local_seen));
+
     for (int i = 0; i < point; i++) {
         for (int j = 0; j <= nodl; j++) {
-            if (contains_sym(ver[i], j))
+            if (ver_sym_mask[i] & (1U << j))
                 continue;
             for (int k = 0; k <= largchg + 1 && k < R; k++) {
                 const uint64_t temp = set_sym(ver[i], k, j);
                 if (in_ver_set(temp, point))
                     continue;
 
+                // Local O(1) dedup: skip if this parent already spawned temp.
+                uint32_t h = static_cast<uint32_t>(
+                    (temp ^ (temp >> 27) ^ (temp >> 13)) & 2047);
+                bool duplicate = false;
+                while (local_seen[h] != 0xFFFFFFFFFFFFFFFFULL) {
+                    if (local_seen[h] == temp) {
+                        duplicate = true;
+                        break;
+                    }
+                    h = (h + 1) & 2047;
+                }
+                if (duplicate) {
+                    nodes_pruned_local++;
+                    continue;
+                }
+                local_seen[h] = temp;
+
                 ver[point] = temp;
-                solve(point + 1, std::max(nodl, j + 1), std::max(largchg, k));
+                ver_sym_mask[point] = sym_mask(temp);
+
+                // Incremental calc: O(R) delta for the newly-added vertex.
+                const auto [step_nk1, step_cons] = calc_step(point + 1);
+                solve(point + 1, std::max(nodl, j + 1), std::max(largchg, k),
+                      acc_nk1 + step_nk1, acc_cons + step_cons);
             }
         }
     }
@@ -545,6 +675,11 @@ int main(int argc, const char *argv[]) {
 
     ver[0] = make_identity();
     ver[1] = set_sym(ver[0], 0, R);
+    ver_sym_mask[0] = sym_mask(ver[0]);
+    ver_sym_mask[1] = sym_mask(ver[1]);
+
+    // Compute initial accumulated calc for ver[0] and ver[1].
+    const auto [init_nk1, init_cons] = calc_step(2);
 
     std::cerr << "Searching R=" << R << " (nauty depth limit: " << nauty_limit
               << ")"
@@ -552,7 +687,7 @@ int main(int argc, const char *argv[]) {
               << "  ver[1]=" << vertex_to_string(ver[1]) << "\n";
 
     if (R == 2) {
-        solve(2, R + 1, 0);
+        solve(2, R + 1, 0, init_nk1, init_cons);
     } else {
         // Pre-enumerate top-level branches for progress tracking.
         struct Branch {
@@ -580,7 +715,10 @@ int main(int argc, const char *argv[]) {
         const int total = static_cast<int>(branches.size());
         for (int b = 0; b < total; b++) {
             ver[2] = branches[b].temp;
-            solve(3, branches[b].nodl, branches[b].largchg);
+            ver_sym_mask[2] = sym_mask(ver[2]);
+            const auto [step_nk1, step_cons] = calc_step(3);
+            solve(3, branches[b].nodl, branches[b].largchg, init_nk1 + step_nk1,
+                  init_cons + step_cons);
 
             const double elapsed =
                 std::chrono::duration<double>(
@@ -702,7 +840,8 @@ int main(int argc, const char *argv[]) {
     std::cerr << "Done: " << std::fixed << std::setprecision(3) << elapsed
               << "s, " << nodes_generated << " generated, " << nodes_evaluated
               << " evaluated, " << nodes_pruned_iso << " iso-pruned, "
-              << nodes_pruned_exact << " exact-pruned\n";
+              << nodes_pruned_exact << " exact-pruned, " << nodes_pruned_local
+              << " local-pruned\n";
 
     if (all_ok && !results.empty()) {
         std::cerr << "\xe2\x9c\x93 Verified.\n";
