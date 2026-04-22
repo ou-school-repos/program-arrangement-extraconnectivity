@@ -178,6 +178,26 @@ Done: 490.892s, 166116718 generated, 162163337 evaluated, 2921832 iso-pruned, 0 
 | 8   | **(8k−12)(n−k) − 12**   | **New (this work)** | **(52)(8) − 12 = 404**       |
 | 9   | **(9k−13)(n−k) − 16**   | **New (this work)** | **(68)(9) − 16 = 596**       |
 
+### Internal edge divergence: OEIS A000788 vs. linear prediction
+
+The paper extrapolated E(R) = 2R−5 internal edges from R=5,6,7. The true
+sequence is [OEIS A000788](https://oeis.org/A000788) (cumulative binary weight),
+which coincides at R=5,6,7 but diverges at powers of 2:
+
+| R  | A000788 (true E) | Paper's 2R-5 | Winner |
+| -- | ---------------- | ------------ | ------ |
+| 4  | **4**            | 3            | Hypercube wins |
+| 5  | 5                | 5            | *Tie* |
+| 6  | 7                | 7            | *Tie* |
+| 7  | 9                | 9            | *Tie* |
+| 8  | **12**           | 11           | **Hypercube wins (3-cube)** |
+| 9  | 13               | 13           | *Tie* |
+| 10 | 15               | 15           | *Tie* |
+| 12 | 20               | 19           | Hypercube wins |
+| 16 | **32**           | 27           | **Total divergence (4-cube)** |
+
+The closed form E(2^d) = d · 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
+
 > **Note:** For R=5..7, the minimum follows ((r+1)k−(2r−3))(n−k)−(2r−1).
 > **Pattern break at R=8.** For R=5..7, the minimum follows
 > ((r+1)k−(2r−3))(n−k)−(2r−1), which assumes tree-like vertex cuts with R−1
