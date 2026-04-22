@@ -4,6 +4,10 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Fintype.Pi
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset
+
+open Finset
 
 /-!
   # Layer 1: The Combinatorial Heart — Subadditivity of A000788
@@ -216,13 +220,11 @@ variable {n k : ℕ}
 def ArrVertex (n k : ℕ) := { f : Fin k → Fin n // Function.Injective f }
 
 -- Provide Fintype and DecidableEq for ArrVertex (injective functions)
-instance {n k : ℕ} : DecidableEq (ArrVertex n k) := Subtype.instDecidableEqSubtype
+instance {n k : ℕ} : DecidableEq (ArrVertex n k) := by
+  unfold ArrVertex; infer_instance
 
 instance {n k : ℕ} : Fintype (ArrVertex n k) := by
-  unfold ArrVertex
-  haveI : (f : Fin k → Fin n) → Decidable (Function.Injective f) :=
-    fun f => Fintype.decidableInjective f
-  exact Fintype.subtype Finset.univ (fun f => Finset.mem_univ f)
+  unfold ArrVertex; infer_instance
 
 -- The Embedding Condition
 def can_embed_hypercube (R n k : ℕ) : Prop :=
@@ -274,8 +276,8 @@ def embed_vertex (n k d : ℕ) (v : Cube d) (hk : d ≤ k) (hnk : k + d ≤ n) :
 def arr_adjacent {n k : ℕ} (u v : ArrVertex n k) : Prop :=
   (Finset.univ.filter (fun p : Fin k => u.val p ≠ v.val p)).card = 1
 
-instance {n k : ℕ} (u v : ArrVertex n k) : Decidable (arr_adjacent u v) :=
-  inferInstance
+instance {n k : ℕ} (u v : ArrVertex n k) : Decidable (arr_adjacent u v) := by
+  unfold arr_adjacent; infer_instance
 
 -- ── EXTERNAL NEIGHBORS (computable) ───────────────────────────────────────
 
@@ -307,10 +309,12 @@ def drop_pos {n k : ℕ} (v : ArrVertex n k) (p : Fin k) : {x : Fin k // x ≠ p
 def unique_roots {n k : ℕ} (p : Fin k) (V' : Finset (ArrVertex n k)) : ℕ :=
   (V'.image (fun v => drop_pos v p)).card
 
-/-- Internal edges strictly along dimension p -/
+/-- Internal edges strictly along dimension p.
+    Counts ordered pairs (u, v) with u < v sharing a root at position p. -/
 def edges_at {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) : ℕ :=
-  ((V' ×ˢ V').filter (fun ⟨u, v⟩ => arr_adjacent u v ∧
-    drop_pos u p = drop_pos v p)).card / 2
+  V'.sum (fun u =>
+    (V'.filter (fun v => arr_adjacent u v ∧
+      drop_pos u p = drop_pos v p)).card) / 2
 
 /--
   BRIDGE LEMMA 1: The Clique Squeeze
@@ -330,7 +334,7 @@ lemma unique_roots_ge_card_sub_edges {n k : ℕ}
 -/
 lemma sum_unique_roots_lower_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
-    (∑ p : Fin k, unique_roots p V') ≥ R * k - E_seq R := by
+    (Finset.univ.sum (fun p : Fin k => unique_roots p V')) ≥ R * k - E_seq R := by
   -- Proof strategy:
   -- 1. Sum BRIDGE LEMMA 1 over all p: ∑ U_p ≥ R*k - ∑ E_p
   -- 2. Observe ∑ E_p = E_int (total internal edges)
@@ -347,7 +351,8 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
 lemma external_neighbors_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥
-      (∑ p : Fin k, unique_roots p V') * (n - k) - C_constant R := by
+      (Finset.univ.sum (fun p : Fin k => unique_roots p V')) * (n - k) -
+        C_constant R := by
   sorry
 
 -- ── THE CROWNING THEOREM DECOMPOSED ────────────────────────────────────────
