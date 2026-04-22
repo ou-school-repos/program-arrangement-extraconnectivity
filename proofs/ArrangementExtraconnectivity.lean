@@ -13,7 +13,6 @@ def popcount (n : ℕ) : ℕ :=
   else (n % 2) + popcount (n / 2)
 termination_by n
 decreasing_by
-  simp_wf
   exact Nat.div_lt_self (Nat.pos_of_ne_zero h) (by decide)
 
 def E_seq : ℕ → ℕ
@@ -112,10 +111,9 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
         have : 2 * a + 1 + (2 * b + 1) = 2 * (a + b + 1) := by omega
         rw [this, E_seq_even]
       rw [eq3]
-      have : min (2 * a + 1) (2 * b + 1) = 2 * min a b + 1 := by omega
-      have : 2 * min a b ≤ min a (b + 1) + min (a + 1) b := by omega
-      omega
-
+      have hmin1 : min (2 * a + 1) (2 * b + 1) = 2 * min a b + 1 := by omega
+      have hmin2 : 2 * min a b ≤ min a (b + 1) + min (a + 1) b := by omega
+      linarith
 
 /-!
   # Layer 2: Harper's Theorem via Sum Types
@@ -132,18 +130,18 @@ instance instDecidableEqCube (d : ℕ) : DecidableEq (Cube d) :=
 
 open Classical
 
-def S0 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
+noncomputable def S0 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
   (S.filter (fun x => match x with | Sum.inl _ => True | _ => False)).map
     ⟨fun x => match x with | Sum.inl y => y | _ => Classical.choice sorry, sorry⟩
 
-def S1 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
+noncomputable def S1 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
   (S.filter (fun x => match x with | Sum.inr _ => True | _ => False)).map
     ⟨fun x => match x with | Sum.inr y => y | _ => Classical.choice sorry, sorry⟩
 
 lemma cube_card_split {d : ℕ} (S : Finset (Cube (d + 1))) :
   S.card = (S0 S).card + (S1 S).card := by sorry
 
-def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
+noncomputable def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
   | 0, _ => 0
   | d + 1, S =>
     let s0 := S0 S
@@ -165,8 +163,8 @@ theorem harpers_edge_isoperimetry {d : ℕ} (S : Finset (Cube d)) :
 
     have h_cross : (s0 ∩ s1).card ≤ min s0.card s1.card := by
       apply Nat.le_min.mpr
-      exact ⟨Finset.card_le_card (Finset.inter_subset_left _ _),
-             Finset.card_le_card (Finset.inter_subset_right _ _)⟩
+      exact ⟨Finset.card_le_card Finset.inter_subset_left,
+             Finset.card_le_card Finset.inter_subset_right⟩
 
     have h_card : S.card = s0.card + s1.card := cube_card_split S
 
@@ -196,9 +194,9 @@ def embed_cube (n k : ℕ) : ∀ d, (d ≤ k) → (d ≤ n - k) → Cube d → (
   | d + 1, hk, hnk, Sum.inr c =>
       fun p =>
         if h : p.val = d then
-          ⟨k + d, by omega⟩
+          ⟨k + d, by linarith⟩
         else
-          embed_cube n k d (by omega) (by omega) c p
+          embed_cube n k d (by linarith) (by linarith) c p
 
 lemma permutation_is_injective {n k d} (hk : d ≤ k) (hnk : d ≤ n - k) (c : Cube d) :
   Function.Injective (embed_cube n k d hk hnk c) := by
@@ -207,7 +205,7 @@ lemma permutation_is_injective {n k d} (hk : d ≤ k) (hnk : d ≤ n - k) (c : C
 def embed_vertex (n k d : ℕ) (hk : d ≤ k) (hnk : d ≤ n - k) (c : Cube d) : ArrVertex n k :=
   ⟨embed_cube n k d hk hnk c, permutation_is_injective hk hnk c⟩
 
-def external_neighbors (V' : Finset (ArrVertex n k)) : ℕ :=
+def external_neighbors {n k : ℕ} (_ : Finset (ArrVertex n k)) : ℕ :=
   0 -- Implementation of the boundary counting goes here
 
 def bit_length (x : ℕ) : ℕ :=
