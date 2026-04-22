@@ -10,7 +10,6 @@
 // Usage: ./predict [R]
 
 #include <algorithm>
-#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -140,6 +139,30 @@ static FormulaResult compute_formula(const std::vector<Vertex> &verts) {
     return {nk1, constant};
 }
 
+// ── Brute-force verification (R ≤ 12 only) ───────────────────────────
+
+static int brute_force_neighbors(const std::vector<Vertex> &verts, int n,
+                                 int k) {
+    std::vector<Vertex> neighbors;
+    for (int i = 0; i < R; i++) {
+        for (int p = 0; p < k; p++) {
+            for (int s = 0; s < n; s++) {
+                if (contains_sym(verts[i], s))
+                    continue;
+                Vertex nbr = verts[i];
+                nbr[p] = s;
+                if (!std::any_of(verts.begin(), verts.end(),
+                                 [&nbr](const Vertex &v) { return v == nbr; }))
+                    neighbors.push_back(nbr);
+            }
+        }
+    }
+    std::sort(neighbors.begin(), neighbors.end());
+    neighbors.erase(std::unique(neighbors.begin(), neighbors.end()),
+                    neighbors.end());
+    return static_cast<int>(neighbors.size());
+}
+
 // ── Main ──────────────────────────────────────────────────────────────
 
 int main(int argc, const char *argv[]) {
@@ -186,15 +209,27 @@ int main(int argc, const char *argv[]) {
         for (int i = 0; i < R; i++)
             std::cout << " " << vertex_to_string(verts[i]);
     } else {
-        std::cout << " [" << R << " vertices, "
-                  << (R + (1 + __builtin_clz(1) - __builtin_clz(R)))
-                  << " symbols]";
+        std::cout << " [" << R << " vertices]";
     }
     std::cout << "\n";
 
-    std::cerr << "  verify(n=" << ver_n << ",k=" << ver_k
+    std::cerr << "  formula(n=" << ver_n << ",k=" << ver_k
               << "): |N(V')| = " << coeff << "\xc2\xb7" << (ver_n - ver_k)
               << " - " << constant << " = " << formula_val << "\n";
+
+    // Brute-force verification for small R
+    if (R <= 12) {
+        const int brute_count = brute_force_neighbors(verts, ver_n, ver_k);
+        std::cerr << "  brute-force neighbor count: " << brute_count;
+        if (brute_count == formula_val)
+            std::cerr << " \xe2\x9c\x93\n";
+        else {
+            std::cerr << " \xe2\x9c\x97 MISMATCH!\n";
+            return 1;
+        }
+    } else {
+        std::cerr << "  (brute-force skipped for R>12)\n";
+    }
 
     return (nk1 == expected_nk1) ? 0 : 1;
 }
