@@ -255,7 +255,13 @@ docs:	##H @General Generate PDF documentation from README
 bundle:	##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
-	zip -rv9 $(BUNDLE_OUT) .git/ README.md README.pdf arrangementoptimized.cpp predict.cpp cheng/arrangement.cpp proofs/*.lean -x proofs/lakefile.lean
+	zip -rv9 $(BUNDLE_OUT) \
+		README.md README.pdf arrangementoptimized.cpp predict.cpp \
+		cheng/arrangement.cpp proofs/*.lean \
+		-x proofs/lakefile.lean
+	# Uncomment to include
+	# zip -rv9 $(BUNDLE_OUT) docs/
+	# zip -rv9 $(BUNDLE_OUT) .git/
 	@$(call print_success,Bundle created.)
 
 .PHONY: site
