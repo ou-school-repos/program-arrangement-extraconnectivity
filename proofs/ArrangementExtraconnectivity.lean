@@ -494,56 +494,109 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
       omega
 
     -- Step B: Decomposition identity (root disjointness)
-    -- With disjointness at q ≠ p, we get EQUALITY:
-    --   sum_unique_roots V' = y + ∑_s sum_unique_roots F_s - R
-    -- so D(V') = ∑ D(F_s) + R - y, and ≤ holds trivially.
     have h_decomp : V'.card * k - sum_unique_roots V' ≤
         (active_syms.toList.map (fun s =>
           (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum +
         V'.card - unique_roots p V' := by
-      -- Key identity: sum_unique_roots V' + R = y + ∑_s sum_unique_roots F_s
-      -- Then: R*k - S ≤ R*k - S + 0 = R*k - (y + ∑ S_s - R) = ∑(c_s*k - S_s) + R - y
-      -- Prove the identity via two sub-facts:
+      rw [Finset.sum_map_toList]
 
-      -- Fact 1: unique_roots p (fiber V' p s) = (fiber V' p s).card
-      -- (drop_pos injective on fiber, same as Subgoal 2)
-      have h_p_eval : ∀ s ∈ active_syms,
-          unique_roots p (fiber V' p s) = (fiber V' p s).card := by
-        intro s _
+      -- Convert sum_unique_roots to Finset.sum
+      have h_sure : ∀ W : Finset (ArrVertex n k), sum_unique_roots W = ∑ q : Fin k, unique_roots q W := by
+        intro W; rfl
+
+      -- 1. For q ≠ p, roots from different fibers are completely disjoint!
+      have h_q_eq : ∀ q ∈ Finset.univ.erase p, unique_roots q V' = ∑ s ∈ active_syms, unique_roots q (fiber V' p s) := by
+        intro q hq
+        have hpq : p ≠ q := fun heq => (Finset.not_mem_erase p Finset.univ) (heq ▸ hq)
         unfold unique_roots
-        symm
-        exact Finset.card_image_of_injOn (α := ArrVertex n k) (fun ha hb hab => by
-          have ha' := (Finset.mem_filter.mp ha).2
-          have hb' := (Finset.mem_filter.mp hb).2
-          exact Subtype.ext (funext fun q => by
-            by_cases hq : q = p
-            · subst hq; rw [ha', hb']
-            · exact congr_fun hab ⟨q, hq⟩))
+        have h_fibers : ∀ s ∈ active_syms,
+            (V'.image (fun v => drop_pos v q)).filter (fun r => r ⟨p, hpq⟩ = s) =
+            (fiber V' p s).image (fun v => drop_pos v q) := by
+          intro s _
+          ext r
+          simp only [Finset.mem_filter, Finset.mem_image, fiber]
+          constructor
+          · rintro ⟨⟨v, hv, rfl⟩, heq⟩; exact ⟨v, ⟨hv, heq⟩, rfl⟩
+          · rintro ⟨v, ⟨hv, heq⟩, rfl⟩; exact ⟨⟨v, hv, rfl⟩, heq⟩
+        have h_sum := Finset.card_eq_sum_card_fiberwise
+          (fun r => r ⟨p, hpq⟩)
+          (fun r hr => by
+            obtain ⟨v, hv, rfl⟩ := Finset.mem_image.mp hr
+            exact Finset.mem_image_of_mem (fun w => w.val p) hv)
+        rw [h_sum]
+        exact Finset.sum_congr rfl (fun s hs => congr_arg _ (h_fibers s hs))
 
-      -- Fact 2: For q ≠ p, fiber images under drop_pos are disjoint
-      -- (different fibers → different symbol at p → different roots)
-      have h_root_disj : ∀ (q : Fin k), q ≠ p →
-          ∀ s1 ∈ active_syms, ∀ s2 ∈ active_syms, s1 ≠ s2 →
-          Disjoint ((fiber V' p s1).image (fun w => drop_pos w q))
-                   ((fiber V' p s2).image (fun w => drop_pos w q)) := by
-        intro q hqp s1 _ s2 _ hne
-        rw [Finset.disjoint_left]
-        intro x hx1 hx2
-        simp only [Finset.mem_image] at hx1 hx2
-        obtain ⟨a, ha, rfl⟩ := hx1
-        obtain ⟨b, hb, hab⟩ := hx2
-        have ha_s := (Finset.mem_filter.mp ha).2
-        have hb_s := (Finset.mem_filter.mp hb).2
-        -- hab : drop_pos a q = drop_pos b q
-        -- evaluate at ⟨p, p ≠ q⟩ to get a.val p = b.val p
-        have h_eq : a.val p = b.val p := by
-          have := congr_fun hab ⟨p, hqp.symm⟩
-          simp [drop_pos] at this
-          exact this.symm
-        exact hne (ha_s ▸ hb_s ▸ h_eq ▸ rfl)
+      -- 2. At p, the roots of a fiber are just the fiber elements themselves.
+      have h_p_eq : ∑ s ∈ active_syms, unique_roots p (fiber V' p s) = V'.card := by
+        have h_inj : ∀ s ∈ active_syms, unique_roots p (fiber V' p s) = (fiber V' p s).card := by
+          intro s _
+          unfold unique_roots
+          symm; apply Finset.card_image_of_injOn
+          intro v1 hv1 v2 hv2 heq
+          simp only [fiber, Finset.mem_filter] at hv1 hv2
+          apply Subtype.ext; funext q'
+          by_cases hq' : q' = p
+          · subst hq'; rw [hv1.2, hv2.2]
+          · exact congr_fun heq ⟨q', hq'⟩
+        rw [Finset.sum_congr rfl h_inj]
+        have h_card_sum := Finset.card_eq_sum_card_fiberwise (fun w => w.val p) (fun w (hw : w ∈ V') => Finset.mem_image_of_mem (fun v => v.val p) hw)
+        exact h_card_sum.symm
 
-      -- Now use Facts 1 & 2 to prove the decomposition inequality
-      sorry -- Algebraic composition from h_p_eval + h_root_disj
+      -- 3. Create bounds and substitutions for omega
+      have h_bounds : ∀ s ∈ active_syms, sum_unique_roots (fiber V' p s) ≤ (fiber V' p s).card * k := by
+        intro s _
+        rw [h_sure]
+        have h_le : ∀ q, unique_roots q (fiber V' p s) ≤ (fiber V' p s).card := fun q => Finset.card_image_le
+        have h_sum_le := Finset.sum_le_sum (fun q _ => h_le q)
+        have h_rhs : (∑ q : Fin k, (fiber V' p s).card) = (fiber V' p s).card * k := by
+          have h_multiset : ∀ m : Multiset (Fin k), (m.map (fun _ => (fiber V' p s).card)).sum = m.card * (fiber V' p s).card := by
+            intro m; induction m using Multiset.induction with
+            | empty => simp
+            | cons a t ih => simp [ih]; ring
+          have hk : Finset.univ.val.card = k := by simp [Finset.card_univ, Fintype.card_fin]
+          have h_eval := h_multiset Finset.univ.val
+          rw [hk] at h_eval
+          calc (∑ q : Fin k, (fiber V' p s).card)
+            _ = (Finset.univ.val.map (fun _ => (fiber V' p s).card)).sum := rfl
+            _ = k * (fiber V' p s).card := h_eval
+            _ = (fiber V' p s).card * k := mul_comm _ _
+        rw [h_rhs] at h_sum_le
+        exact h_sum_le
+
+      have h_sum_sub_aux : (∑ s ∈ active_syms, ((fiber V' p s).card * k - sum_unique_roots (fiber V' p s))) +
+                           ∑ s ∈ active_syms, sum_unique_roots (fiber V' p s) =
+                           V'.card * k := by
+        rw [← Finset.sum_add_distrib]
+        have h_cancel : ∀ s ∈ active_syms, ((fiber V' p s).card * k - sum_unique_roots (fiber V' p s)) + sum_unique_roots (fiber V' p s) = (fiber V' p s).card * k := by
+          intro s hs
+          exact Nat.sub_add_cancel (h_bounds s hs)
+        have h_sum_cancel : ∑ s ∈ active_syms, (((fiber V' p s).card * k - sum_unique_roots (fiber V' p s)) + sum_unique_roots (fiber V' p s)) = ∑ s ∈ active_syms, (fiber V' p s).card * k :=
+          Finset.sum_congr rfl h_cancel
+        rw [h_sum_cancel, ← Finset.sum_mul]
+        have h_card_sum := Finset.card_eq_sum_card_fiberwise (fun w => w.val p) (fun w (hw : w ∈ V') => Finset.mem_image_of_mem (fun v => v.val p) hw)
+        rw [h_card_sum]
+
+      have h_split_V : sum_unique_roots V' = unique_roots p V' + ∑ q ∈ Finset.univ.erase p, unique_roots q V' := by
+        rw [h_sure, ← Finset.add_sum_erase _ _ (Finset.mem_univ p)]
+
+      have h_split_s : ∑ s ∈ active_syms, sum_unique_roots (fiber V' p s) =
+          V'.card + ∑ s ∈ active_syms, ∑ q ∈ Finset.univ.erase p, unique_roots q (fiber V' p s) := by
+        have h1 : ∑ s ∈ active_syms, sum_unique_roots (fiber V' p s) =
+            ∑ s ∈ active_syms, (unique_roots p (fiber V' p s) + ∑ q ∈ Finset.univ.erase p, unique_roots q (fiber V' p s)) := by
+          apply Finset.sum_congr rfl
+          intro s _
+          rw [h_sure, ← Finset.add_sum_erase _ _ (Finset.mem_univ p)]
+        rw [h1, Finset.sum_add_distrib, h_p_eq]
+
+      have h_sum_comm : ∑ q ∈ Finset.univ.erase p, unique_roots q V' =
+          ∑ s ∈ active_syms, ∑ q ∈ Finset.univ.erase p, unique_roots q (fiber V' p s) := by
+        have h2 : ∑ q ∈ Finset.univ.erase p, unique_roots q V' =
+            ∑ q ∈ Finset.univ.erase p, ∑ s ∈ active_syms, unique_roots q (fiber V' p s) :=
+          Finset.sum_congr rfl h_q_eq
+        rw [h2, Finset.sum_comm]
+
+      -- 4. Final Algebraic Squeeze!
+      omega
 
     -- Step C: Chain IH bounds with decomposition
     -- ∑ₛ D(Fₛ) ≤ ∑ₛ E_seq(cₛ) (from h_ih_fibers)
