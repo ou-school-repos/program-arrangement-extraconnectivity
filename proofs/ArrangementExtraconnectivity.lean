@@ -391,12 +391,20 @@ private def fiber {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) (s : Fin
   5. Composing: sum_unique_roots V' = y + sum_s (sum_unique_roots F_s - c_s)
 -/
 private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
-    (hR : V'.card ≥ 2) :
+    (hR : V'.card ≥ 2)
+    (ih : ∀ (W : Finset (ArrVertex n k)), W.card < V'.card →
+          sum_unique_roots W ≥ W.card * k - E_seq W.card) :
     ∃ (l : List ℕ) (y : ℕ),
       l.sum = V'.card ∧
       l.foldr max 0 ≤ y ∧
       (∀ c ∈ l, c < V'.card) ∧
       V'.card * k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y := by
+  -- 1. Find coordinate p where two vertices in V' disagree
+  -- 2. Define fibers: fiber V' p s = V'.filter (v.val p = s)
+  -- 3. l = active_syms.toList.map (fiber sizes), y = unique_roots p V'
+  -- 4. Use IH on each fiber: D(F_s) ≤ E_seq(c_s)
+  -- 5. Prove D(V') = R - y + sum D(F_s) via root disjointness
+  -- 6. Compose: D(V') ≤ sum E_seq(c_s) + R - y
   sorry
 
 -- ── BRIDGE LEMMA 2: The Defect Bound (proven by strong induction) ─────────
@@ -424,16 +432,9 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
       have h_each : ∀ p : Fin k, unique_roots p V' ≥ 1 := by
         intro p; unfold unique_roots
         exact Finset.card_pos.mpr (Finset.image_nonempty.mpr hne)
-      -- sum_unique_roots V' ≥ 1 * k - E_seq 1
-      -- Since E_seq 1 = E_seq 0 + popcount 0 = 0, the RHS = k.
-      -- sum_unique_roots of a non-empty set has each term ≥ 1.
-      -- We prove this by showing the Multiset sum ≥ its card.
       show sum_unique_roots V' ≥ 1 * k - E_seq 1
-      -- Step 1: bound sum_unique_roots from below
       have h_bound : sum_unique_roots V' ≥ k := by
         unfold sum_unique_roots
-        -- Need: (univ.val.map f).sum ≥ k where f p = unique_roots p V' ≥ 1
-        -- Since univ.val.card = k and each mapped value ≥ 1
         suffices ∀ (m : Multiset (Fin k)),
             (∀ p ∈ m, unique_roots p V' ≥ 1) →
             (m.map (fun p => unique_roots p V')).sum ≥ m.card by
@@ -444,23 +445,22 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
         intro m hm
         induction m using Multiset.induction with
         | empty => simp
-        | cons a s ih =>
+        | cons a s his =>
           simp only [Multiset.map_cons, Multiset.sum_cons, Multiset.card_cons]
           have ha := hm a (Multiset.mem_cons_self a s)
-          have hs := ih (fun p hp => hm p (Multiset.mem_cons_of_mem hp))
+          have hs := his (fun p hp => hm p (Multiset.mem_cons_of_mem hp))
           omega
       omega
   · -- Inductive case: R ≥ 2
     have hR2' : V'.card ≥ 2 := by omega
-    obtain ⟨l, y, hsum, hmax, hlt, hdefect⟩ := defect_fiber_bound V' hR2'
-    -- hdefect: V'.card * k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y
-    -- hsum: l.sum = V'.card, hR: V'.card = R
+    -- Pass the IH into defect_fiber_bound
+    have ih_typed : ∀ (W : Finset (ArrVertex n k)), W.card < V'.card →
+        sum_unique_roots W ≥ W.card * k - E_seq W.card := by
+      intro W hW
+      exact ih W.card (by omega) W rfl
+    obtain ⟨l, y, hsum, hmax, hlt, hdefect⟩ := defect_fiber_bound V' hR2' ih_typed
     have h_alg := E_seq_list_sum_le l y hmax
-    -- h_alg: (l.map E_seq).sum + l.sum - y ≤ E_seq l.sum
-    -- Rewrite l.sum → V'.card → R in h_alg
     rw [hsum, hR] at h_alg
-    -- Now: hdefect: R*k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y
-    --      h_alg:  (l.map E_seq).sum + R - y ≤ E_seq R
     rw [hsum, hR] at hdefect
     omega
 
