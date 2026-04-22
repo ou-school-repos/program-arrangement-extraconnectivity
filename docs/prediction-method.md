@@ -17,11 +17,14 @@ The minimum (R-1)-extraconnectivity formula has the form:
 where:
 
 - **E(R) = A000788(R)** = cumulative popcount = Σ popcount(0..R-1)
-- **C(R)** = a constant depending on the vertex set structure
+- **C(R) = (R−1) + Σ\_{x=1}^{R-1} Z(x)** where Z(x) = zero-bits in binary(x)
 
 The coefficient `Rk − E(R)` is determined by **OEIS A000788**, the cumulative binary
 weight sequence. This sequence counts internal "edges" (shared position-stems) in the
 optimal R-vertex subgraph.
+
+The constant `C(R)` is governed by the **zero-bits** (the complement of popcount).
+Both can be computed in O(R) without constructing the Hamming ball.
 
 ## Why the Hamming Ball?
 
