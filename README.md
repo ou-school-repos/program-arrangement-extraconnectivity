@@ -285,9 +285,6 @@ tend to infinity, the (R-1)-extraconnectivity approaches (R)k(n-k).
 
 The A000788 formula subsumes all published cases and extends to arbitrary R.
 
-See [docs/hypercube-isoperimetry.md](docs/hypercube-isoperimetry.md)
-for the full mathematical analysis.
-
 ## Reference
 
 E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs."
