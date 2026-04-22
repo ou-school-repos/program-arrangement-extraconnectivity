@@ -160,7 +160,7 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
 	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC_OPT)
-	-clang-tidy $(SRC_OPT) -- $(CXXFLAGS)
+	-clang-tidy $(SRC_OPT) --checks='*' -- $(CXXFLAGS)
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
