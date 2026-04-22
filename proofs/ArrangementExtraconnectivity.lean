@@ -418,11 +418,35 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
     · -- R = 1: goal is sum_unique_roots V' ≥ k - E_seq 1 = k
       have hR1 : R = 1 := by omega
       subst hR1
-      -- E_seq 1 = 0, so goal: sum_unique_roots V' ≥ 1 * k - 0 = k
-      -- V' is a singleton {v}. unique_roots p V' = |{v}.image(drop_pos · p)| = 1
-      -- for each p, so sum_unique_roots = k.
-      -- For now, this requires Finset singleton/image lemmas.
-      sorry -- singleton base case: sum_unique_roots of 1-element set = k
+      -- V' is non-empty (card = 1)
+      have hne : V'.Nonempty := Finset.card_pos.mp (by omega)
+      -- Each unique_roots p V' ≥ 1 (non-empty image has positive card)
+      have h_each : ∀ p : Fin k, unique_roots p V' ≥ 1 := by
+        intro p; unfold unique_roots
+        exact Finset.card_pos.mpr (Finset.image_nonempty.mpr hne)
+      -- sum_unique_roots V' ≥ 1 * k - E_seq 1
+      -- Since E_seq 1 = E_seq 0 + popcount 0 = 0, the RHS = k.
+      -- sum_unique_roots of a non-empty set has each term ≥ 1.
+      -- We prove this by showing the Multiset sum ≥ its card.
+      show sum_unique_roots V' ≥ 1 * k - E_seq 1
+      -- Step 1: bound sum_unique_roots from below
+      have h_bound : sum_unique_roots V' ≥ k := by
+        unfold sum_unique_roots
+        -- Need: (univ.val.map f).sum ≥ k where f p = unique_roots p V' ≥ 1
+        -- Since univ.val.card = k and each mapped value ≥ 1
+        suffices ∀ (m : Multiset (Fin k)),
+            (∀ p ∈ m, unique_roots p V' ≥ 1) →
+            (m.map (fun p => unique_roots p V')).sum ≥ m.card by
+          exact this Finset.univ.val (fun p _ => h_each p)
+        intro m hm
+        induction m using Multiset.induction with
+        | empty => simp
+        | cons a s ih =>
+          simp only [Multiset.map_cons, Multiset.sum_cons, Multiset.card_cons]
+          have ha := hm a (Multiset.mem_cons_self a s)
+          have hs := ih (fun p hp => hm p (Multiset.mem_cons_of_mem hp))
+          omega
+      omega
   · -- Inductive case: R ≥ 2
     have hR2' : V'.card ≥ 2 := by omega
     obtain ⟨l, y, hsum, hmax, hlt, hdefect⟩ := defect_fiber_bound V' hR2'
