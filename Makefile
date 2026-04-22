@@ -194,14 +194,14 @@ lean/cache:	##H @Build Download pre-built Mathlib cache
 .PHONY: lean/docs/setup
 lean/docs/setup:	##H @Build Fetch doc-gen4 dependency (run once)
 	@$(call print_info,Fetching doc-gen4)
-	cd proofs && MATHLIB_NO_CACHE_ON_UPDATE=1 lake -Kenv=dev update doc-gen4
+	cd proofs/docbuild && MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4
 	@$(call print_success,doc-gen4 ready.)
 
 .PHONY: lean/docs
 lean/docs:	##H @Build Generate Lean documentation
 	@$(call print_info,Generating Lean docs)
-	cd proofs && lake -Kenv=dev build Proofs:docs
-	@$(call print_success,Lean docs generated in proofs/.lake/build/doc/)
+	cd proofs/docbuild && lake build Proofs:docs
+	@$(call print_success,Lean docs generated in proofs/docbuild/.lake/build/doc/)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
