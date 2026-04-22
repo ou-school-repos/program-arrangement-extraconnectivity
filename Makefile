@@ -8,7 +8,7 @@ SHELL:=/bin/bash
 CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic
 LDFLAGS  ?=
-SRC       = arrangement.cpp
+SRC       = cheng/arrangement.cpp
 BIN       = arrangement
 
 SRC_OPT   = arrangementoptimized.cpp

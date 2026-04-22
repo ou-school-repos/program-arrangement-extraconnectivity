@@ -16,6 +16,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 // ── Vertex representation ──────────────────────────────────────────────────
@@ -24,34 +25,39 @@
 
 static int R = 5;
 
-static inline int get_sym(uint64_t v, int pos) {
-    return (v >> ((R - 1 - pos) * 4)) & 0xF;
+static inline int get_sym(uint64_t vertex, int pos) {
+    return static_cast<int>((vertex >> ((R - 1 - pos) * 4)) & 0xFU);
 }
 
-static inline uint64_t set_sym(uint64_t v, int pos, int sym) {
-    int shift = (R - 1 - pos) * 4;
-    return (v & ~(0xFULL << shift)) | ((uint64_t)sym << shift);
+static inline uint64_t set_sym(uint64_t vertex, int pos, int sym) {
+    const int shift = (R - 1 - pos) * 4;
+    return (vertex & ~(0xFULL << shift)) |
+           (static_cast<uint64_t>(sym) << shift);
 }
 
-static inline bool contains_sym(uint64_t v, int sym) {
-    for (int i = 0; i < R; i++)
-        if (get_sym(v, i) == sym)
+static inline bool contains_sym(uint64_t vertex, int sym) {
+    for (int i = 0; i < R; i++) {
+        if (get_sym(vertex, i) == sym) {
             return true;
+        }
+    }
     return false;
 }
 
 static inline uint64_t make_identity() {
-    uint64_t v = 0;
-    for (int i = 0; i < R; i++)
-        v = set_sym(v, i, i);
-    return v;
+    uint64_t vertex = 0;
+    for (int i = 0; i < R; i++) {
+        vertex = set_sym(vertex, i, i);
+    }
+    return vertex;
 }
 
-static std::string vertex_to_string(uint64_t v) {
-    std::string s(R, ' ');
-    for (int i = 0; i < R; i++)
-        s[i] = 'A' + get_sym(v, i);
-    return s;
+static std::string vertex_to_string(uint64_t vertex) {
+    std::string str(R, ' ');
+    for (int i = 0; i < R; i++) {
+        str[i] = static_cast<char>('A' + get_sym(vertex, i));
+    }
+    return str;
 }
 
 // ── Canonical set hashing ──────────────────────────────────────────────────
@@ -65,12 +71,13 @@ static std::string vertex_to_string(uint64_t v) {
 // correct dedup granularity for this problem.
 
 struct VectorHash {
-    size_t operator()(const std::vector<uint64_t> &v) const {
-        size_t h = v.size();
-        for (uint64_t x : v)
-            h ^= std::hash<uint64_t>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) +
-                 (h >> 2);
-        return h;
+    size_t operator()(const std::vector<uint64_t> &vec) const {
+        size_t hash = vec.size();
+        for (const uint64_t val : vec) {
+            hash ^= std::hash<uint64_t>{}(val) + 0x9e3779b97f4a7c15ULL +
+                    (hash << 6) + (hash >> 2);
+        }
+        return hash;
     }
 };
 
@@ -83,7 +90,7 @@ static std::vector<uint64_t> ver;
 static std::unordered_set<uint64_t> ver_set;
 
 struct Result {
-    int cons;
+    int cons = 0;
     std::string example;
 };
 static std::map<int, Result> results;
@@ -98,15 +105,17 @@ static std::pair<int, int> calc() {
     int cons = 0;
 
     for (int i = 1; i < R; i++) {
-        uint64_t cur = ver[i];
+        const uint64_t cur = ver[i];
         std::vector<uint64_t> dcverts;
         std::vector<int> chgs;
         bool isShared[16] = {};
         int isSharednum = 0;
 
         for (int j = 0; j < i; j++) {
-            uint64_t cur2 = ver[j];
-            int differs = 0, diff1 = 0, diff2 = 0;
+            const uint64_t cur2 = ver[j];
+            int differs = 0;
+            int diff1 = 0;
+            int diff2 = 0;
 
             for (int k = 0; k < R; k++) {
                 if (get_sym(cur, k) != get_sym(cur2, k)) {
@@ -130,21 +139,24 @@ static std::pair<int, int> calc() {
             }
 
             if (differs == 2) {
-                if (diff1 > diff2)
+                if (diff1 > diff2) {
                     std::swap(diff1, diff2);
+                }
                 if (get_sym(cur, diff1) != get_sym(cur2, diff2)) {
-                    uint64_t v = set_sym(cur, diff1, get_sym(cur2, diff1));
-                    if (std::find(dcverts.begin(), dcverts.end(), v) ==
+                    const uint64_t vtx =
+                        set_sym(cur, diff1, get_sym(cur2, diff1));
+                    if (std::find(dcverts.begin(), dcverts.end(), vtx) ==
                         dcverts.end()) {
-                        dcverts.push_back(v);
+                        dcverts.push_back(vtx);
                         chgs.push_back(diff1);
                     }
                 }
                 if (get_sym(cur, diff2) != get_sym(cur2, diff1)) {
-                    uint64_t v = set_sym(cur, diff2, get_sym(cur2, diff2));
-                    if (std::find(dcverts.begin(), dcverts.end(), v) ==
+                    const uint64_t vtx =
+                        set_sym(cur, diff2, get_sym(cur2, diff2));
+                    if (std::find(dcverts.begin(), dcverts.end(), vtx) ==
                         dcverts.end()) {
-                        dcverts.push_back(v);
+                        dcverts.push_back(vtx);
                         chgs.push_back(diff2);
                     }
                 }
@@ -156,13 +168,14 @@ static std::pair<int, int> calc() {
             if (isShared[chgs[n]]) {
                 prune = true;
             } else {
-                int pos = chgs[n];
-                int ch = get_sym(dcverts[n], pos);
-                for (int p = pos + 1; p < R; p++)
+                const int pos = chgs[n];
+                const int ch = get_sym(dcverts[n], pos);
+                for (int p = pos + 1; p < R; p++) {
                     if (get_sym(dcverts[n], p) == ch) {
                         prune = true;
                         break;
                     }
+                }
             }
             if (prune) {
                 chgs.erase(chgs.begin() + n);
@@ -196,8 +209,9 @@ static void solve(int point, int nodl, int largchg) {
         auto it = results.find(nk1);
         if (it == results.end() || it->second.cons < cons) {
             std::string exa;
-            for (int i = 0; i < R; i++)
+            for (int i = 0; i < R; i++) {
                 exa += vertex_to_string(ver[i]) + " ";
+            }
             results[nk1] = {cons, exa};
         }
         return;
@@ -206,12 +220,14 @@ static void solve(int point, int nodl, int largchg) {
     // Generate candidates: same logic as original Cheng code.
     for (int i = 0; i < point; i++) {
         for (int j = 0; j <= nodl; j++) {
-            if (contains_sym(ver[i], j))
+            if (contains_sym(ver[i], j)) {
                 continue;
+            }
             for (int k = 0; k <= largchg + 1 && k < R; k++) {
-                uint64_t temp = set_sym(ver[i], k, j);
-                if (ver_set.count(temp))
+                const uint64_t temp = set_sym(ver[i], k, j);
+                if (ver_set.count(temp) != 0) {
                     continue;
+                }
 
                 ver[point] = temp;
                 ver_set.insert(temp);
@@ -226,14 +242,14 @@ static void solve(int point, int nodl, int largchg) {
 
 int main(int argc, const char *argv[]) {
     if (argc >= 2) {
-        R = std::atoi(argv[1]);
+        R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
         if (R < 2 || R > 16) {
             std::cerr << "R must be between 2 and 16\n";
             return 1;
         }
     }
 
-    auto t0 = std::chrono::high_resolution_clock::now();
+    const auto t0 = std::chrono::high_resolution_clock::now();
 
     ver.resize(R);
     seen.resize(R + 1);
@@ -248,8 +264,8 @@ int main(int argc, const char *argv[]) {
 
     solve(2, R + 1, 0);
 
-    auto t1 = std::chrono::high_resolution_clock::now();
-    double elapsed = std::chrono::duration<double>(t1 - t0).count();
+    const auto t1 = std::chrono::high_resolution_clock::now();
+    const double elapsed = std::chrono::duration<double>(t1 - t0).count();
 
     for (auto &[nk1, res] : results) {
         std::cout << "(" << R << "nk-" << nk1 << ") (n-k)-" << (nk1 + res.cons)
