@@ -24,12 +24,12 @@ Done: 0.002s, 1 generated, 1 evaluated, 0 iso-pruned, 0 exact-pruned, 0 local-pr
 ✓ Verified.
 
 Searching R=3 (nauty depth limit: 2)  ver[0]=ABC  ver[1]=DBC
-  1/6 branches | 1 evaluated | 0.00287525s
-  2/6 branches | 2 evaluated | 0.00290457s
-  3/6 branches | 3 evaluated | 0.00291655s
-  4/6 branches | 4 evaluated | 0.00293408s
-  5/6 branches | 5 evaluated | 0.00294712s
-  6/6 branches | 6 evaluated | 0.00296168s
+  1/6 branches | 1 evaluated | 0.00284127s
+  2/6 branches | 2 evaluated | 0.00286678s
+  3/6 branches | 3 evaluated | 0.00287872s
+  4/6 branches | 4 evaluated | 0.00289065s
+  5/6 branches | 5 evaluated | 0.00290198s
+  6/6 branches | 6 evaluated | 0.00291571s
 (3nk-2) (n-k)-3, EX: ABC DBC AEC
   verify(n=6,k=3): |N(V')| = (3·3-2)(6-3)-3 = 7·3 - 3 = 18
   brute-force neighbor count: 18 ✓
@@ -37,12 +37,12 @@ Done: 0.003s, 6 generated, 6 evaluated, 0 iso-pruned, 0 exact-pruned, 0 local-pr
 ✓ Verified.
 
 Searching R=4 (nauty depth limit: 3)  ver[0]=ABCD  ver[1]=EBCD
-  1/6 branches | 12 evaluated | 0.00384929s
-  2/6 branches | 22 evaluated | 0.00390469s
-  3/6 branches | 40 evaluated | 0.00393358s
-  4/6 branches | 40 evaluated | 0.00395854s
-  5/6 branches | 40 evaluated | 0.00398756s
-  6/6 branches | 40 evaluated | 0.00401038s
+  1/6 branches | 12 evaluated | 0.0038284s
+  2/6 branches | 22 evaluated | 0.00388459s
+  3/6 branches | 40 evaluated | 0.00391383s
+  4/6 branches | 40 evaluated | 0.00393623s
+  5/6 branches | 40 evaluated | 0.00396536s
+  6/6 branches | 40 evaluated | 0.00398838s
 (4nk-3) (n-k)-6, EX: ABCD EBCD AFCD ABGD
   verify(n=8,k=4): |N(V')| = (4·4-3)(8-4)-6 = 13·4 - 6 = 46
   brute-force neighbor count: 46 ✓
@@ -53,28 +53,28 @@ Done: 0.004s, 46 generated, 40 evaluated, 3 iso-pruned, 0 exact-pruned, 9 local-
 ✓ Verified.
 
 Searching R=5 (nauty depth limit: 4)  ver[0]=ABCDE  ver[1]=FBCDE
-  1/6 branches | 176 evaluated | 0.00474304s
-  2/6 branches | 224 evaluated | 0.0050081s
-  3/6 branches | 402 evaluated | 0.00543929s
-  4/6 branches | 402 evaluated | 0.00547289s
-  5/6 branches | 402 evaluated | 0.00552289s
-  6/6 branches | 402 evaluated | 0.00555784s
+  1/6 branches | 176 evaluated | 0.00455884s
+  2/6 branches | 224 evaluated | 0.0048273s
+  3/6 branches | 402 evaluated | 0.00526092s
+  4/6 branches | 402 evaluated | 0.00529409s
+  5/6 branches | 402 evaluated | 0.00534502s
+  6/6 branches | 402 evaluated | 0.00537986s
 (5nk-4) (n-k)-10, EX: ABCDE FBCDE AGCDE ABHDE ABCIE
   verify(n=10,k=5): |N(V')| = (5·5-4)(10-5)-10 = 21·5 - 10 = 95
   brute-force neighbor count: 95 ✓
 (5nk-5) (n-k)- 7, EX: ABCDE FBCDE AGCDE ABHDE FGCDE
   verify(n=10,k=5): |N(V')| = (5·5-5)(10-5)-7 = 20·5 - 7 = 93
   brute-force neighbor count: 93 ✓
-Done: 0.006s, 448 generated, 402 evaluated, 29 iso-pruned, 0 exact-pruned, 107 local-pruned
+Done: 0.005s, 448 generated, 402 evaluated, 29 iso-pruned, 0 exact-pruned, 107 local-pruned
 ✓ Verified.
 
 Searching R=6 (nauty depth limit: 5)  ver[0]=ABCDEF  ver[1]=GBCDEF
-  1/6 branches | 3602 evaluated | 0.0116404s
-  2/6 branches | 4181 evaluated | 0.0147582s
-  3/6 branches | 5436 evaluated | 0.0220111s
-  4/6 branches | 5436 evaluated | 0.0220747s
-  5/6 branches | 5436 evaluated | 0.022162s
-  6/6 branches | 5436 evaluated | 0.0222252s
+  1/6 branches | 3602 evaluated | 0.0116042s
+  2/6 branches | 4181 evaluated | 0.0147043s
+  3/6 branches | 5436 evaluated | 0.0219102s
+  4/6 branches | 5436 evaluated | 0.021977s
+  5/6 branches | 5436 evaluated | 0.0220605s
+  6/6 branches | 5436 evaluated | 0.0221209s
 (6nk-5) (n-k)-15, EX: ABCDEF GBCDEF AHCDEF ABIDEF ABCJEF ABCDKF
   verify(n=12,k=6): |N(V')| = (6·6-5)(12-6)-15 = 31·6 - 15 = 171
   brute-force neighbor count: 171 ✓
@@ -88,12 +88,12 @@ Done: 0.022s, 5884 generated, 5436 evaluated, 324 iso-pruned, 0 exact-pruned, 13
 ✓ Verified.
 
 Searching R=7 (nauty depth limit: 6)  ver[0]=ABCDEFG  ver[1]=HBCDEFG
-  1/6 branches | 90621 evaluated | 0.210585s
-  2/6 branches | 99245 evaluated | 0.258777s
-  3/6 branches | 120172 evaluated | 0.34141s
-  4/6 branches | 120172 evaluated | 0.341519s
-  5/6 branches | 120172 evaluated | 0.341646s
-  6/6 branches | 120172 evaluated | 0.341735s
+  1/6 branches | 90621 evaluated | 0.20612s
+  2/6 branches | 99245 evaluated | 0.25371s
+  3/6 branches | 120172 evaluated | 0.334895s
+  4/6 branches | 120172 evaluated | 0.335001s
+  5/6 branches | 120172 evaluated | 0.335125s
+  6/6 branches | 120172 evaluated | 0.335214s
 (7nk-6) (n-k)-21, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG ABCDLFG ABCDEMG
   verify(n=14,k=7): |N(V')| = (7·7-6)(14-7)-21 = 43·7 - 21 = 280
   brute-force neighbor count: 280 ✓
@@ -106,16 +106,16 @@ Searching R=7 (nauty depth limit: 6)  ver[0]=ABCDEFG  ver[1]=HBCDEFG
 (7nk-9) (n-k)-11, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG HICDEFG HBJDEFG AIJDEFG
   verify(n=14,k=7): |N(V')| = (7·7-9)(14-7)-11 = 40·7 - 11 = 269
   brute-force neighbor count: 269 ✓
-Done: 0.342s, 126056 generated, 120172 evaluated, 4265 iso-pruned, 0 exact-pruned, 28373 local-pruned
+Done: 0.335s, 126056 generated, 120172 evaluated, 4265 iso-pruned, 0 exact-pruned, 28373 local-pruned
 ✓ Verified.
 
 Searching R=8 (nauty depth limit: 7)  ver[0]=ABCDEFGH  ver[1]=IBCDEFGH
   1/6 branches | 3132048 evaluated | 7.6s
-  2/6 branches | 3355354 evaluated | 8.6s
-  3/6 branches | 3827325 evaluated | 10.4s
-  4/6 branches | 3827325 evaluated | 10.4s
-  5/6 branches | 3827325 evaluated | 10.4s
-  6/6 branches | 3827325 evaluated | 10.4s
+  2/6 branches | 3355354 evaluated | 8.7s
+  3/6 branches | 3827325 evaluated | 10.5s
+  4/6 branches | 3827325 evaluated | 10.5s
+  5/6 branches | 3827325 evaluated | 10.5s
+  6/6 branches | 3827325 evaluated | 10.5s
 (8nk- 7) (n-k)-28, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH ABCDMFGH ABCDENGH ABCDEFOH
   verify(n=16,k=8): |N(V')| = (8·8-7)(16-8)-28 = 57·8 - 28 = 428
   brute-force neighbor count: 428 ✓
@@ -131,16 +131,16 @@ Searching R=8 (nauty depth limit: 7)  ver[0]=ABCDEFGH  ver[1]=IBCDEFGH
 (8nk-12) (n-k)-12, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH IJCDEFGH IBKDEFGH AJKDEFGH IJKDEFGH
   verify(n=16,k=8): |N(V')| = (8·8-12)(16-8)-12 = 52·8 - 12 = 404
   brute-force neighbor count: 404 ✓
-Done: 10.392s, 3953381 generated, 3827325 evaluated, 91824 iso-pruned, 0 exact-pruned, 838218 local-pruned
+Done: 10.475s, 3953381 generated, 3827325 evaluated, 91824 iso-pruned, 0 exact-pruned, 838218 local-pruned
 ✓ Verified.
 
 Searching R=9 (nauty depth limit: 8)  ver[0]=ABCDEFGHI  ver[1]=JBCDEFGHI
-  1/6 branches | 165314750 evaluated | 538.6s
-  2/6 branches | 175213668 evaluated | 586.4s
-  3/6 branches | 194499500 evaluated | 667.2s
-  4/6 branches | 194499500 evaluated | 667.2s
-  5/6 branches | 194499500 evaluated | 667.2s
-  6/6 branches | 194499500 evaluated | 667.2s
+  1/6 branches | 137988829 evaluated | 396.1s
+  2/6 branches | 146106345 evaluated | 431.0s
+  3/6 branches | 162163337 evaluated | 490.9s
+  4/6 branches | 162163337 evaluated | 490.9s
+  5/6 branches | 162163337 evaluated | 490.9s
+  6/6 branches | 162163337 evaluated | 490.9s
 (9nk- 8) (n-k)-36, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI ABCDNFGHI ABCDEOGHI ABCDEFPHI ABCDEFGQI
   verify(n=18,k=9): |N(V')| = (9·9-8)(18-9)-36 = 73·9 - 36 = 621
   brute-force neighbor count: 621 ✓
@@ -159,9 +159,8 @@ Searching R=9 (nauty depth limit: 8)  ver[0]=ABCDEFGHI  ver[1]=JBCDEFGHI
 (9nk-13) (n-k)-16, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI JKCDEFGHI JBLDEFGHI AKLDEFGHI JKLDEFGHI
   verify(n=18,k=9): |N(V')| = (9·9-13)(18-9)-16 = 68·9 - 16 = 596
   brute-force neighbor count: 596 ✓
-Done: 667.225s, 199291099 generated, 194499500 evaluated, 3760050 iso-pruned, 0 exact-pruned
+Done: 490.892s, 166116718 generated, 162163337 evaluated, 2921832 iso-pruned, 0 exact-pruned, 33174381 local-pruned
 ✓ Verified.
-
 ```
 
 \newpage
