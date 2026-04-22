@@ -13,6 +13,7 @@
 # Compiled binaries
 /arrangement
 /arrangementoptimized
+/predict
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

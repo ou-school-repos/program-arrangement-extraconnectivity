@@ -17,6 +17,10 @@ R         ?= 8
 DOCS_SRC  = README.md
 DOCS_OUT  = README.pdf
 BUNDLE_OUT = bundle.zip
+SITE_OUT   = site.zip
+
+SRC_PRED  = predict.cpp
+BIN_PRED  = predict
 
 # Build modes
 OPTFLAGS  ?= -O2
@@ -92,6 +96,12 @@ build/opt:	##H @Build Compile optimized variant (-O2)
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
 	@$(call print_success,Build complete.)
 
+.PHONY: build/predict
+build/predict:	##H @Build Compile Hamming ball predictor
+	@$(call print_info,Building $(BIN_PRED))
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
+	@$(call print_success,Build complete.)
+
 .PHONY: debug
 debug:	##H @Build Compile original with debug symbols and sanitizers
 	@$(call print_info,Building $(BIN) (debug))
@@ -162,8 +172,8 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
-	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC_OPT) | tee lint.log
-	-clang-tidy $(SRC_OPT) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
+	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC_OPT) $(SRC_PRED) | tee lint.log
+	-clang-tidy $(SRC_OPT) $(SRC_PRED) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
@@ -172,7 +182,7 @@ format:	##H @Dev Format C++ sources (clang-format)
 	find . -name '*.md' -exec sed -i 's/[[:space:]]*$$//' {} +
 	-prettier -w .
 	-pre-commit run --all-files
-	clang-format -i $(SRC_OPT)
+	clang-format -i $(SRC_OPT) $(SRC_PRED)
 	@$(call print_success,Format complete.)
 
 
@@ -227,13 +237,20 @@ docs:	##H @General Generate PDF documentation from README
 bundle:	##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
-	zip -rv9 $(BUNDLE_OUT) .git/ README.md README.pdf arrangementoptimized.cpp cheng/arrangement.cpp proofs/*.lean -x proofs/lakefile.lean
+	zip -rv9 $(BUNDLE_OUT) .git/ README.md README.pdf arrangementoptimized.cpp predict.cpp cheng/arrangement.cpp proofs/*.lean -x proofs/lakefile.lean
 	@$(call print_success,Bundle created.)
+
+.PHONY: site
+site:	##H @General Create site.zip of Lean HTML documentation
+	@$(call print_info,Creating $(SITE_OUT))
+	rm -f $(SITE_OUT)
+	cd proofs/docbuild/.lake/build/doc && zip -r9 ../../../../../$(SITE_OUT) .
+	@$(call print_success,Site archive created.)
 
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN) $(BIN_OPT) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT)
+	rm -f $(BIN) $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
