@@ -501,13 +501,45 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         (active_syms.toList.map (fun s =>
           (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum +
         V'.card - unique_roots p V' := by
-      -- Root disjointness: for q ≠ p, drop_pos at q retains position p,
-      -- so vertices from different fibers map to different roots.
-      -- This gives: unique_roots q V' = ∑_s unique_roots q F_s
-      -- Combined with unique_roots p F_s = c_s (injectivity), we get
-      -- sum_unique_roots V' = y + ∑_s (sum_unique_roots F_s - c_s)
-      -- = y + ∑_s sum_unique_roots F_s - R
-      sorry -- Root disjointness identity (advisor guidance needed)
+      -- Key identity: sum_unique_roots V' + R = y + ∑_s sum_unique_roots F_s
+      -- Then: R*k - S ≤ R*k - S + 0 = R*k - (y + ∑ S_s - R) = ∑(c_s*k - S_s) + R - y
+      -- Prove the identity via two sub-facts:
+
+      -- Fact 1: unique_roots p (fiber V' p s) = (fiber V' p s).card
+      -- (drop_pos injective on fiber, same as Subgoal 2)
+      have h_p_eval : ∀ s ∈ active_syms,
+          unique_roots p (fiber V' p s) = (fiber V' p s).card := by
+        intro s _
+        unfold unique_roots
+        symm
+        apply Finset.card_image_of_injOn
+        intro a ha b hb hab
+        have ha' := (Finset.mem_filter.mp ha).2
+        have hb' := (Finset.mem_filter.mp hb).2
+        exact Subtype.ext (funext fun q => by
+          by_cases hq : q = p
+          · subst hq; rw [ha', hb']
+          · exact congr_fun hab ⟨q, hq⟩)
+
+      -- Fact 2: For q ≠ p, fiber images under drop_pos are disjoint
+      -- (different fibers → different symbol at p → different roots)
+      have h_root_disj : ∀ (q : Fin k), q ≠ p →
+          ∀ s1 ∈ active_syms, ∀ s2 ∈ active_syms, s1 ≠ s2 →
+          Disjoint ((fiber V' p s1).image (fun w => drop_pos w q))
+                   ((fiber V' p s2).image (fun w => drop_pos w q)) := by
+        intro q hqp s1 _ s2 _ hne
+        rw [Finset.disjoint_left]
+        intro x hx1 hx2
+        simp only [Finset.mem_image] at hx1 hx2
+        obtain ⟨a, ha, rfl⟩ := hx1
+        obtain ⟨b, hb, hab⟩ := hx2
+        have ha_s := (Finset.mem_filter.mp ha).2
+        have hb_s := (Finset.mem_filter.mp hb).2
+        have : a.val p = b.val p := congr_fun hab ⟨p, hqp⟩
+        exact hne (ha_s ▸ hb_s ▸ this ▸ rfl)
+
+      -- Now use Facts 1 & 2 to prove the decomposition inequality
+      sorry -- Algebraic composition from h_p_eval + h_root_disj
 
     -- Step C: Chain IH bounds with decomposition
     -- ∑ₛ D(Fₛ) ≤ ∑ₛ E_seq(cₛ) (from h_ih_fibers)
