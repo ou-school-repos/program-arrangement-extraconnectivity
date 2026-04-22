@@ -293,18 +293,25 @@ static std::pair<int, int> calc_step(int count) {
 
     for (int j = 0; j < idx; j++) {
         const uint64_t cur2 = ver[j];
-        int differs = 0, diff1 = 0, diff2 = 0;
+        // XOR-based diff: single op detects all differing 5-bit groups.
+        uint64_t xor_val = cur ^ cur2;
+        if (xor_val == 0)
+            continue;
 
-        for (int k = 0; k < R; k++) {
-            if (get_sym(cur, k) != get_sym(cur2, k)) {
+        int differs = 0, diff1 = 0, diff2 = 0;
+        int pos = R - 1;
+        while (xor_val > 0) {
+            if (xor_val & 0x1FU) {
                 if (differs == 0)
-                    diff1 = k;
+                    diff1 = pos;
                 else if (differs == 1)
-                    diff2 = k;
+                    diff2 = pos;
                 differs++;
                 if (differs > 2)
                     break;
             }
+            xor_val >>= 5;
+            pos--;
         }
 
         if (differs == 1 && !isShared[diff1]) {
