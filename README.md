@@ -1,6 +1,6 @@
 # Arrangement Graph Extraconnectivity
 
-This project provides a definitive disproof of the 2022 exact structural conjecture for arrangement graph $(R-1)$-extraconnectivity (specifically the coefficients and constants of the minimum-cut subgraph) and introduces an $O(R^4)$ Hamming ball predictor that replaces super-exponential exhaustive search.
+This project generalizes the 2022 results of Cheng, Liptak & Tian on arrangement graph $(R-1)$-extraconnectivity. By scaling exhaustive search to $R=10$ and discovering the connection to Harper's Edge Isoperimetric Theorem, we derive a closed-form formula valid for all $R$ — replacing the case-by-case analysis used for $R \le 7$. An $O(R^4)$ Hamming ball predictor replaces super-exponential exhaustive search.
 
 ## 1. The Core Theoretical Revelation
 
@@ -8,9 +8,9 @@ This project provides a definitive disproof of the 2022 exact structural conject
 
 The $(R-1)$-extraconnectivity problem in the Arrangement Graph $A(n,k)$ seeks a connected subgraph $V'$ of size $R$ minimizing the external neighborhood $|N(V')|$. Since $A(n,k)$ is $k(n-k)$-regular, this is equivalent to **maximizing internal edges** ($E_{int}$) among $R$ vertices.
 
-### The Fallacy: Pattern Overfitting
+### The Discovery: Hamming Ball Unification
 
-The 2022 paper by Cheng et al. relied on computer searches up to $R=7$ to propose a linear model $E(R) = 2R-5$. We have proven this was a "Strong Law of Small Numbers" illusion. The optimal structures are not linear trees, but **Hamming balls** that form multi-dimensional hypercubes at powers of 2.
+Cheng et al. (2022) proved correct extraconnectivity formulas for individual cases $R=5,6,7$ using ad-hoc constructions verified by computer search. We discovered that their constructions are **Hamming balls** embedded in hypercubes — they independently found the optimal structures without recognizing the pattern. For example, their R=6 set `{12345B, 62345B, 17345B, 12845B, 67345B, 62845B}` maps to binary `{000, 001, 010, 011, 100, 101}`, the first 6 vertices in Q(3). Their formulas match our A000788 model exactly for all published cases.
 
 ### The True Sequence: OEIS A000788
 
@@ -219,37 +219,27 @@ Predictions for R=2..1024 are available in [`docs/predictions.csv`](docs/predict
 | `coeff`         | R·k − nk1 (the leading coefficient at k=R)           |
 | `formula_at_2R` | \|N(V')\| evaluated at n=2R, k=R: coeff·R − constant |
 
-### Internal edge divergence: OEIS A000788 vs. linear prediction
+### Relationship to Cheng et al. (2022)
 
-The paper extrapolated E(R) = 2R-5 internal edges from R=5,6,7. The true
-sequence is [OEIS A000788](https://oeis.org/A000788) (cumulative binary weight),
-which coincides at R=5,6,7 but diverges at powers of 2.
+The published formulas for R=2..7 (Theorems 1-7) are all **correct** and match
+our A000788 model exactly:
 
-**Full formula comparison** (evaluated at n=2R, k=R):
+| R   | Paper formula     | A000788 formula        | Internal edges | Match? |
+| --- | ----------------- | ---------------------- | -------------- | ------ |
+| 2   | (2k-1)(n-k) - 1   | (2k-1)(n-k) - 1        | 1              | YES    |
+| 3   | (3k-2)(n-k) - 3   | (3k-2)(n-k) - 3        | 2              | YES    |
+| 4   | (4k-4)(n-k) - 4   | (4k-4)(n-k) - 4        | 4              | YES    |
+| 5   | (5k-5)(n-k) - 7   | (5k-5)(n-k) - 7        | 5              | YES    |
+| 6   | (6k-7)(n-k) - 9   | (6k-7)(n-k) - 9        | 7              | YES    |
+| 7   | (7k-9)(n-k) - 11  | (7k-9)(n-k) - 11       | 9              | YES    |
+| 8   | _(not published)_ | **(8k-12)(n-k) - 12**  | **12**         | NEW    |
+| 9   | _(not published)_ | **(9k-13)(n-k) - 16**  | **13**         | NEW    |
+| 10  | _(not published)_ | **(10k-15)(n-k) - 19** | **15**         | NEW    |
 
-| R   | A000788 formula    | \|N(V')\| | Cheng's formula | \|N(V')\| | Search  |
-| --- | ------------------ | --------- | --------------- | --------- | ------- |
-| 2   | (3)(2) - 1         | 5         | **(5)(2) - 3**  | **7**     | **5**   |
-| 3   | (7)(3) - 3         | 18        | **(8)(3) - 5**  | **19**    | **18**  |
-| 5   | (20)(5) - 7        | 93        | (20)(5) - 9     | 91        | **93**  |
-| 6   | (29)(6) - 9        | 165       | (29)(6) - 11    | 163       | **165** |
-| 7   | (40)(7) - 11       | 269       | (40)(7) - 13    | 267       | **269** |
-| 8   | **(52)(8) - 12**   | **404**   | (53)(8) - 15    | 409       | **404** |
-| 9   | **(68)(9) - 16**   | **596**   | (68)(9) - 17    | 595       | **596** |
-| 16  | **(224)(16) - 32** | **3552**  | (229)(16) - 31  | 3633      | _N/A_   |
-
-The A000788 formula matches exhaustive search for every R tested (2-9).
-At R=8, Cheng's formula predicts |N(V')|=409, but the true minimum is **404**.
-
-**R=8 counterexample structure** — a 3-cube Q(3) in A(16,8):
-
-![R=8 minimum-cut subgraph — a 3-cube Q(3) in A(16,8)](docs/r8-cube.svg)
-
-<!-- Hand-crafted SVG (native <text>, no foreignObject) for PDF compatibility. Mermaid source: docs/r8-cube.mmd -->
-
-Binary labels show which of the 3 positions {0,1,2} have been swapped
-(A to I, B to J, C to K). Each edge = vertices differ in exactly 1 position.
-The 12 internal edges match A000788(8) = 12, not Cheng's 2(8)-5 = 11.
+The paper's constructions for R=5,6,7 are Hamming balls (initial segments of
+binary lexicographic order in Q(3)), though they were not identified as such.
+Our contribution is the **unifying pattern**: Harper's theorem + A000788
+explains all cases and predicts arbitrarily large R.
 
 **R=9 and R=10 minimum-cut subgraphs** (generated empirically by the C++ oracle) showing the topological expansion beyond the perfect 3-cube:
 
@@ -261,46 +251,39 @@ Verify independently: `python3 docs/verify-counterexample.py`
 
 \newpage
 
-### nk1 coefficient divergence
+### nk1 coefficient: OEIS A000788
 
-| R    | A000788 (true E) | Paper's 2R-5 | Winner                          |
-| ---- | ---------------- | ------------ | ------------------------------- |
-| 2    | **1**            | **-1**       | **Cheng undefined (negative)**  |
-| 3    | **2**            | 1            | **Cheng wrong**                 |
-| 4    | **4**            | 3            | Hypercube wins                  |
-| 5    | 5                | 5            | _Tie_                           |
-| 6    | 7                | 7            | _Tie_                           |
-| 7    | 9                | 9            | _Tie_                           |
-| 8    | **12**           | 11           | **Hypercube wins (3-cube)**     |
-| 9    | 13               | 13           | _Tie_                           |
-| 10   | 15               | 15           | _Tie_                           |
-| 12   | 20               | 19           | Hypercube wins                  |
-| 16   | **32**           | 27           | **Total divergence (4-cube)**   |
-| 20   | 40               | 35           | +5 divergence                   |
-| 24   | 52               | 43           | +9 divergence                   |
-| 32   | **80**           | 59           | **+21 (5-cube)**                |
-| 64   | **192**          | 123          | **+69 (6-cube)**                |
-| 100  | 316              | 195          | +121 divergence                 |
-| 128  | **448**          | 251          | **+197 (7-cube)**               |
-| 256  | **1024**         | 507          | **+517 (8-cube, 2x error)**     |
-| 512  | **2304**         | 1019         | **+1285 (9-cube, 2.3x error)**  |
-| 1024 | **5120**         | 2043         | **+3077 (10-cube, 2.5x error)** |
+| R   | A000788 (true E) | Δ from R-1 (= popcount(R-1)) |
+| --- | ---------------- | ---------------------------- |
+| 2   | 1                | 1                            |
+| 3   | 2                | 1                            |
+| 4   | 4                | 2                            |
+| 5   | 5                | 1                            |
+| 6   | 7                | 2                            |
+| 7   | 9                | 2                            |
+| 8   | **12**           | **3** (new 3-cube)           |
+| 9   | 13               | 1                            |
+| 10  | 15               | 2                            |
+| 16  | **32**           | 4-cube                       |
+| 32  | **80**           | 5-cube                       |
+| 64  | **192**          | 6-cube                       |
+| 128 | **448**          | 7-cube                       |
+| 256 | **1024**         | 8-cube                       |
 
-The closed form E(2^d) = d · 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
+The closed form E(2^d) = d \* 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
 
 ## Asymptotic agreement
 
-While the exact correction terms differ, the asymptotic result of Cheng et al.
-(Proposition 6) is confirmed: as k, n-k tend to infinity, the (R-1)-extraconnectivity
-approaches (R)k(n-k) under both formulas.
+Both the published case-by-case formulas and our general A000788 formula
+confirm the asymptotic result of Cheng et al. (Proposition 6): as k, n-k
+tend to infinity, the (R-1)-extraconnectivity approaches (R)k(n-k).
 
-|                    | Coefficient     | Constant | Asymptotic              |
-| ------------------ | --------------- | -------- | ----------------------- |
-| **Cheng et al.**   | Rk - (2R-5)     | 2R-1     | (g+1)k(n-k) **correct** |
-| **A000788 (ours)** | Rk - A000788(R) | C(R)     | (g+1)k(n-k) **correct** |
+|                    | Coefficient         | Constant   | Asymptotic              |
+| ------------------ | ------------------- | ---------- | ----------------------- |
+| **Cheng et al.**   | Individual (R=2..7) | Individual | (g+1)k(n-k) **correct** |
+| **A000788 (ours)** | Rk - A000788(R)     | C(R)       | (g+1)k(n-k) **correct** |
 
-The disagreement is only in the sub-leading terms, which vanish relative to
-Rk(n-k) in the limit. For finite n,k the A000788 formula gives the exact value.
+The A000788 formula subsumes all published cases and extends to arbitrary R.
 
 See [docs/hypercube-isoperimetry.md](docs/hypercube-isoperimetry.md)
 for the full mathematical analysis.
