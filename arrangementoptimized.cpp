@@ -695,7 +695,7 @@ int main(int argc, const char *argv[]) {
         // Oracle cross-check (independent algorithm)
         const auto [vnk1, vcons] = verify_neighbor_set();
         if (nk1 != vnk1) {
-            std::cout << "  VERIFY FAIL: nk1 mismatch: calc=" << nk1
+            std::cerr << "  VERIFY FAIL: nk1 mismatch: calc=" << nk1
                       << " verify=" << vnk1 << "\n";
             all_ok = false;
             continue;
@@ -730,16 +730,16 @@ int main(int argc, const char *argv[]) {
         const int constant = nk1 + res.cons;
         const int formula_val = coeff * (ver_n - ver_k) - constant;
 
-        std::cout << "  verify(n=" << ver_n << ",k=" << ver_k
+        std::cerr << "  verify(n=" << ver_n << ",k=" << ver_k
                   << "): |N(V')| = (" << R << "\xc2\xb7" << ver_k << "-" << nk1
                   << ")(" << ver_n << "-" << ver_k << ")-" << constant << " = "
                   << coeff << "\xc2\xb7" << (ver_n - ver_k) << " - " << constant
                   << " = " << formula_val << "\n";
-        std::cout << "  brute-force neighbor count: " << brute_count;
+        std::cerr << "  brute-force neighbor count: " << brute_count;
         if (brute_count == formula_val) {
-            std::cout << " \xe2\x9c\x93\n";
+            std::cerr << " \xe2\x9c\x93\n";
         } else {
-            std::cout << " \xe2\x9c\x97 MISMATCH!\n";
+            std::cerr << " \xe2\x9c\x97 MISMATCH!\n";
             all_ok = false;
         }
     }
