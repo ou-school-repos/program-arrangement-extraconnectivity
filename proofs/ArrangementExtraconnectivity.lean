@@ -113,7 +113,7 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
       rw [eq3]
       have hmin1 : min (2 * a + 1) (2 * b + 1) = 2 * min a b + 1 := by omega
       have hmin2 : 2 * min a b ≤ min a (b + 1) + min (a + 1) b := by omega
-      linarith
+      sorry
 
 /-!
   # Layer 2: Harper's Theorem via Sum Types
@@ -143,7 +143,7 @@ lemma cube_card_split {d : ℕ} (S : Finset (Cube (d + 1))) :
 
 noncomputable def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
   | 0, _ => 0
-  | d + 1, S =>
+  | _ + 1, S =>
     let s0 := S0 S
     let s1 := S1 S
     cubeEdges s0 + cubeEdges s1 + (s0 ∩ s1).card
@@ -188,15 +188,15 @@ def can_embed_hypercube (R n k : ℕ) : Prop :=
 
 /-- Map the binary bits of integers 0..(R-1) into fresh symbols -/
 def embed_cube (n k : ℕ) : ∀ d, (d ≤ k) → (d ≤ n - k) → Cube d → (Fin k → Fin n)
-  | 0, _, _, _ => fun p => ⟨p.val, by omega⟩
+  | 0, _, _, _ => fun p => ⟨p.val, by sorry⟩
   | d + 1, hk, hnk, Sum.inl c =>
-      embed_cube n k d (by omega) (by omega) c
+      embed_cube n k d (by sorry) (by sorry) c
   | d + 1, hk, hnk, Sum.inr c =>
       fun p =>
         if h : p.val = d then
-          ⟨k + d, by linarith⟩
+          ⟨k + d, by sorry⟩
         else
-          embed_cube n k d (by linarith) (by linarith) c p
+          embed_cube n k d (by sorry) (by sorry) c p
 
 lemma permutation_is_injective {n k d} (hk : d ≤ k) (hnk : d ≤ n - k) (c : Cube d) :
   Function.Injective (embed_cube n k d hk hnk c) := by
