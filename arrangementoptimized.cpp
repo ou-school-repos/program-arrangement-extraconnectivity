@@ -261,84 +261,118 @@ static std::pair<int, int> calc() {
 }
 
 // ── Recursive search ───────────────────────────────────────────────────────
-// Nauty auxiliary graph dedup at each level exploits S_n × S_R symmetry.
+// Depth-gated dedup:
+//   - Shallow depths (point ≤ threshold): nauty canonical graph (expensive but
+//     powerful — exploits full S_n × S_R symmetry to prune large subtrees)
+//   - Deep depths: sorted vertex-set dedup (cheap O(R log R) per node)
+
+// Sorted-set dedup structures (for deep levels).
+namespace {
+struct SortedVecHash {
+    size_t operator()(const std::vector<uint64_t> &v) const {
+        return std::accumulate(
+            v.begin(), v.end(), v.size(), [](size_t h, uint64_t x) {
+                return h ^ (std::hash<uint64_t>{}(x) + 0x9e3779b97f4a7c15ULL +
+                            (h << 6) + (h >> 2));
+            });
+    }
+};
+} // namespace
+
+static std::vector<std::unordered_set<std::vector<uint64_t>, SortedVecHash>>
+    seen_sorted;
 
 static void solve(int point, int nodl, int largchg) {
-    // Build 4-color auxiliary graph for the current partial set.
-    int max_sym = 0;
-    for (int i = 0; i < point; i++) {
-        for (int p = 0; p < R; p++) {
-            const int sym = get_sym(ver[i], p);
-            if (sym > max_sym) {
-                max_sym = sym;
+    // Depth gate: use nauty at shallow depths, sorted-set at deep.
+    // Threshold: nauty for the first half of the recursion where subtrees
+    // are large and pruning is most valuable.
+    const int nauty_limit = std::max(3, R / 2 + 2);
+    const bool use_nauty = (point <= nauty_limit);
+
+    if (use_nauty) {
+        // Build 4-color auxiliary graph for the current partial set.
+        int max_sym = 0;
+        for (int i = 0; i < point; i++) {
+            for (int p = 0; p < R; p++) {
+                const int sym = get_sym(ver[i], p);
+                if (sym > max_sym) {
+                    max_sym = sym;
+                }
             }
         }
-    }
-    const int N = max_sym + 1;
-    const int n_aux = R + N + R * N + point;
-    const int m_aux = SETWORDSNEEDED(n_aux);
-    nauty_check(WORDSIZE, m_aux, n_aux, NAUTYVERSIONID);
+        const int N = max_sym + 1;
+        const int n_aux = R + N + R * N + point;
+        const int m_aux = SETWORDSNEEDED(n_aux);
+        nauty_check(WORDSIZE, m_aux, n_aux, NAUTYVERSIONID);
 
-    // Reusable nauty buffers.
-    DYNALLSTAT(graph, g, g_sz);
-    DYNALLSTAT(graph, cg, cg_sz);
-    DYNALLSTAT(int, lab, lab_sz);
-    DYNALLSTAT(int, ptn, ptn_sz);
-    DYNALLSTAT(int, orbits, orbits_sz);
+        DYNALLSTAT(graph, g, g_sz);
+        DYNALLSTAT(graph, cg, cg_sz);
+        DYNALLSTAT(int, lab, lab_sz);
+        DYNALLSTAT(int, ptn, ptn_sz);
+        DYNALLSTAT(int, orbits, orbits_sz);
 
-    DYNALLOC2(graph, g, g_sz, m_aux, n_aux, "malloc");
-    DYNALLOC2(graph, cg, cg_sz, m_aux, n_aux, "malloc");
-    DYNALLOC1(int, lab, lab_sz, n_aux, "malloc");
-    DYNALLOC1(int, ptn, ptn_sz, n_aux, "malloc");
-    DYNALLOC1(int, orbits, orbits_sz, n_aux, "malloc");
+        DYNALLOC2(graph, g, g_sz, m_aux, n_aux, "malloc");
+        DYNALLOC2(graph, cg, cg_sz, m_aux, n_aux, "malloc");
+        DYNALLOC1(int, lab, lab_sz, n_aux, "malloc");
+        DYNALLOC1(int, ptn, ptn_sz, n_aux, "malloc");
+        DYNALLOC1(int, orbits, orbits_sz, n_aux, "malloc");
 
-    EMPTYGRAPH(g, m_aux, n_aux);
+        EMPTYGRAPH(g, m_aux, n_aux);
 
-    // Wire edges: Position↔Grid, Symbol↔Grid, Perm↔Grid.
-    for (int p = 0; p < R; p++) {
-        for (int s = 0; s < N; s++) {
-            const int grid = R + N + p * N + s;
-            ADDONEEDGE(g, p, grid, m_aux);
-            ADDONEEDGE(g, R + s, grid, m_aux);
-        }
-    }
-    for (int i = 0; i < point; i++) {
-        const int perm_idx = R + N + R * N + i;
+        // Wire edges: Position↔Grid, Symbol↔Grid, Perm↔Grid.
         for (int p = 0; p < R; p++) {
-            const int s = get_sym(ver[i], p);
-            const int grid = R + N + p * N + s;
-            ADDONEEDGE(g, perm_idx, grid, m_aux);
+            for (int s = 0; s < N; s++) {
+                const int grid = R + N + p * N + s;
+                ADDONEEDGE(g, p, grid, m_aux);
+                ADDONEEDGE(g, R + s, grid, m_aux);
+            }
         }
-    }
+        for (int i = 0; i < point; i++) {
+            const int perm_idx = R + N + R * N + i;
+            for (int p = 0; p < R; p++) {
+                const int s = get_sym(ver[i], p);
+                const int grid = R + N + p * N + s;
+                ADDONEEDGE(g, perm_idx, grid, m_aux);
+            }
+        }
 
-    // Equitable partitions (color boundaries).
-    for (int i = 0; i < n_aux; i++) {
-        lab[i] = i;
-        ptn[i] = 1;
-    }
-    if (R > 0) {
-        ptn[R - 1] = 0;
-    }
-    if (N > 0) {
-        ptn[R + N - 1] = 0;
-    }
-    if (R * N > 0) {
-        ptn[R + N + R * N - 1] = 0;
-    }
-    ptn[n_aux - 1] = 0;
+        // Equitable partitions (color boundaries).
+        for (int i = 0; i < n_aux; i++) {
+            lab[i] = i;
+            ptn[i] = 1;
+        }
+        if (R > 0) {
+            ptn[R - 1] = 0;
+        }
+        if (N > 0) {
+            ptn[R + N - 1] = 0;
+        }
+        if (R * N > 0) {
+            ptn[R + N + R * N - 1] = 0;
+        }
+        ptn[n_aux - 1] = 0;
 
-    DEFAULTOPTIONS_GRAPH(options);
-    options.getcanon = TRUE;
-    options.defaultptn = FALSE;
+        DEFAULTOPTIONS_GRAPH(options);
+        options.getcanon = TRUE;
+        options.defaultptn = FALSE;
 
-    statsblk stats;
-    densenauty(g, lab, ptn, orbits, &options, &stats, m_aux, n_aux, cg);
+        statsblk stats;
+        densenauty(g, lab, ptn, orbits, &options, &stats, m_aux, n_aux, cg);
 
-    // Canonical graph as dedup key.
-    std::vector<setword> canon_key(cg, cg + static_cast<size_t>(n_aux) * m_aux);
-    if (!seen[point].insert(std::move(canon_key)).second) {
-        nodes_pruned++;
-        return;
+        std::vector<setword> canon_key(cg,
+                                       cg + static_cast<size_t>(n_aux) * m_aux);
+        if (!seen[point].insert(std::move(canon_key)).second) {
+            nodes_pruned++;
+            return;
+        }
+    } else {
+        // Cheap sorted-set dedup.
+        std::vector<uint64_t> key(ver.begin(), ver.begin() + point);
+        std::sort(key.begin(), key.end());
+        if (!seen_sorted[point].insert(std::move(key)).second) {
+            nodes_pruned++;
+            return;
+        }
     }
 
     // Leaf: evaluate.
@@ -393,6 +427,7 @@ int main(int argc, const char *argv[]) {
 
     ver.resize(R);
     seen.resize(R + 1);
+    seen_sorted.resize(R + 1);
 
     ver[0] = make_identity();
     ver_set.insert(ver[0]);
