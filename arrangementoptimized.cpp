@@ -70,31 +70,35 @@ static std::string vertex_to_string(uint64_t vertex) {
     return str;
 }
 
-// ── Nauty canonical hash ───────────────────────────────────────────────────
-// 4-color auxiliary graph encodes the S_n × S_R metric structure:
-//   Color 0: R position vertices
-//   Color 1: N symbol vertices (N = max symbol + 1)
-//   Color 2: R×N grid slot vertices (position, symbol)
-//   Color 3: point permutation vertices
-//
-// Two subsets with isomorphic auxiliary graphs have identical neighbor-set
-// formulas, so pruning by canonical graph is exact.
+// ── 128-bit hash-only dedup ────────────────────────────────────────────────
+// Instead of storing full nauty canonical graphs (~6KB each), we hash them
+// to 128 bits. Collision probability ~2^-128 per pair — negligible at any
+// realistic search size.
 
 namespace {
-struct SetwordVecHash {
-    size_t operator()(const std::vector<setword> &v) const {
-        return std::accumulate(
-            v.begin(), v.end(), v.size(), [](size_t h, setword x) {
-                return h ^ (std::hash<setword>{}(x) + 0x9e3779b97f4a7c15ULL +
-                            (h << 6) + (h >> 2));
-            });
+struct Hash128 {
+    uint64_t lo, hi;
+    bool operator==(const Hash128 &o) const { return lo == o.lo && hi == o.hi; }
+};
+struct Hash128Hasher {
+    size_t operator()(const Hash128 &h) const {
+        return h.lo ^ (h.hi * 0x9e3779b97f4a7c15ULL);
     }
 };
 } // namespace
 
-// One dedup set per recursion depth.
-static std::vector<std::unordered_set<std::vector<setword>, SetwordVecHash>>
-    seen;
+// One dedup set per recursion depth (hash-only: 16 bytes/entry, not ~6KB).
+static std::vector<std::unordered_set<Hash128, Hash128Hasher>> seen;
+
+// ── Nauty workspace (file-scope for reuse + Debian Bookworm compat) ────────
+// DYNALLSTAT expands to 'static thread_local' which is illegal inside a block
+// scope on some compilers. Declaring at file scope fixes this and also avoids
+// millions of realloc calls by reusing the buffers across solve() invocations.
+DYNALLSTAT(graph, nauty_g, nauty_g_sz);
+DYNALLSTAT(graph, nauty_cg, nauty_cg_sz);
+DYNALLSTAT(int, nauty_lab, nauty_lab_sz);
+DYNALLSTAT(int, nauty_ptn, nauty_ptn_sz);
+DYNALLSTAT(int, nauty_orbits, nauty_orbits_sz);
 
 // ── Global state ───────────────────────────────────────────────────────────
 
@@ -110,6 +114,11 @@ struct Result {
 static std::map<int, Result> results;
 static uint64_t nodes_explored = 0;
 static uint64_t nodes_pruned = 0;
+
+// ── Telemetry ──────────────────────────────────────────────────────────────
+static std::chrono::high_resolution_clock::time_point t_start;
+static std::chrono::high_resolution_clock::time_point t_last_report;
+static uint64_t nodes_since_check = 0;
 
 // ── Independent verifier ───────────────────────────────────────────────────
 // Computes neighbor-set formula directly, independent of calc().
