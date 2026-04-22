@@ -177,6 +177,23 @@ static int brute_force_neighbors(const std::vector<Vertex> &verts, int n,
 // ── Main ──────────────────────────────────────────────────────────────
 
 int main(int argc, const char *argv[]) {
+    // CSV mode: ./predict --csv N
+    if (argc >= 3 && std::string(argv[1]) == "--csv") {
+        int max_r = static_cast<int>(std::strtol(argv[2], nullptr, 10));
+        if (max_r < 2)
+            max_r = 2;
+        std::cout << "R,nk1,constant,coeff,formula_at_2R\n";
+        for (int r = 2; r <= max_r; r++) {
+            int nk1 = A000788(r);
+            int c = constant_analytical(r);
+            int coeff = r * r - nk1;
+            int val = coeff * r - c;
+            std::cout << r << "," << nk1 << "," << c << "," << coeff << ","
+                      << val << "\n";
+        }
+        return 0;
+    }
+
     if (argc >= 2) {
         R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
         if (R < 2 || R > 64) {

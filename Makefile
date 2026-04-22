@@ -184,6 +184,12 @@ test/predict: build/opt build/predict	##H @Dev Verify predictor matches search f
 	done; \
 	if [ $$fail -eq 1 ]; then exit 1; fi
 
+.PHONY: csv
+csv: build/predict	##H @General Generate docs/predictions.csv (R=2..1024)
+	@$(call print_info,Generating predictions CSV)
+	./$(BIN_PRED) --csv 1024 | tee docs/predictions.csv
+	@$(call print_success,docs/predictions.csv written.)
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lint & Format
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

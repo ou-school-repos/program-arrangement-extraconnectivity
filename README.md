@@ -198,8 +198,17 @@ The search space is Ω(R^(R−2)) by Cayley's formula; observed growth is ×22 a
 | 24  | **(24k−52)(n−k) − 60**  | **Predicted**           | **(524)(24) − 60 = 12516** | infeas. |
 | 32  | **(32k−80)(n−k) − 80**  | **Predicted (5-cube)**  | **(944)(32) − 80 = 30128** | infeas. |
 
-† R≥10 predicted via Hamming ball construction (`predict.cpp`), brute-force verified for R≤12.
-Full search confirmation pending for R≥10.
+† R≥10 predicted via Hamming ball construction (`predict.cpp`), brute-force verified for R≤20.
+
+Predictions for R=2..1024 are available in [`docs/predictions.csv`](docs/predictions.csv) (`make csv`):
+
+| Column          | Meaning                                              |
+| --------------- | ---------------------------------------------------- |
+| `R`             | Number of vertices in the subgraph                   |
+| `nk1`           | Internal edges = A000788(R) (cumulative popcount)    |
+| `constant`      | Formula constant C(R) = (R−1) + Σ zero-bits(1..R−1)  |
+| `coeff`         | R·k − nk1 (the leading coefficient at k=R)           |
+| `formula_at_2R` | \|N(V')\| evaluated at n=2R, k=R: coeff·R − constant |
 
 ### Internal edge divergence: OEIS A000788 vs. linear prediction
 
