@@ -53,17 +53,17 @@ v₇ = IJKDEFGH  (binary 111 — positions 0,1,2 flipped)
 
 The predictor is validated against the exhaustive search for R=2..9:
 
-| R  | Search nk1 | Predicted nk1 | A000788(R) | Match |
-|----|-----------|---------------|------------|-------|
-| 2  | 1         | 1             | 1          | ✓     |
-| 3  | 2         | 2             | 2          | ✓     |
-| 4  | 4         | 4             | 4          | ✓     |
-| 5  | 5         | 5             | 5          | ✓     |
-| 6  | 7         | 7             | 7          | ✓     |
-| 7  | 9         | 9             | 9          | ✓     |
-| 8  | 12        | 12            | 12         | ✓     |
-| 9  | 13        | 13            | 13         | ✓     |
-| 10 | —         | **15**        | 15         | ✓     |
+| R   | Search nk1 | Predicted nk1 | A000788(R) | Match |
+| --- | ---------- | ------------- | ---------- | ----- |
+| 2   | 1          | 1             | 1          | ✓     |
+| 3   | 2          | 2             | 2          | ✓     |
+| 4   | 4          | 4             | 4          | ✓     |
+| 5   | 5          | 5             | 5          | ✓     |
+| 6   | 7          | 7             | 7          | ✓     |
+| 7   | 9          | 9             | 9          | ✓     |
+| 8   | 12         | 12            | 12         | ✓     |
+| 9   | 13         | 13            | 13         | ✓     |
+| 10  | —          | **15**        | 15         | ✓     |
 
 Both the formula coefficients AND the constants match exactly for all
 searched values (R=2..9).

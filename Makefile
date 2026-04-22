@@ -166,6 +166,24 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 		exit 1; \
 	fi
 
+.PHONY: test/predict
+test/predict: build/opt build/predict	##H @Dev Verify predictor matches search for R=2..9
+	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
+	@fail=0; \
+	for r in $$(seq 2 9); do \
+		expected=$$(./$(BIN_OPT) $$r 2>/dev/null | tail -1 | tr -d ' '); \
+		actual=$$(./$(BIN_PRED) $$r 2>/dev/null | tr -d ' '); \
+		if [ "$$actual" = "$$expected" ]; then \
+			$(call print_success,R=$$r: prediction matches search.); \
+		else \
+			$(call print_err,R=$$r: mismatch); \
+			echo "  search:  $$expected"; \
+			echo "  predict: $$actual"; \
+			fail=1; \
+		fi; \
+	done; \
+	if [ $$fail -eq 1 ]; then exit 1; fi
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lint & Format
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

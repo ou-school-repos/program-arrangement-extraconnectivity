@@ -124,14 +124,8 @@ static FormulaResult compute_formula(const std::vector<uint64_t> &verts) {
         std::vector<uint64_t> group_keys;
         for (int i = 0; i < R; i++) {
             uint64_t key = set_sym(verts[i], p, 0x1F); // blank position p
-            bool found = false;
-            for (const auto &k : group_keys) {
-                if (k == key) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
+            if (!std::any_of(group_keys.begin(), group_keys.end(),
+                             [key](uint64_t k) { return k == key; }))
                 group_keys.push_back(key);
         }
         anon_coeff += static_cast<int>(group_keys.size());
@@ -146,25 +140,11 @@ static FormulaResult compute_formula(const std::vector<uint64_t> &verts) {
                     continue;
                 if (!contains_sym(verts[i], s)) {
                     uint64_t vtx = set_sym(verts[i], p, s);
-                    // Check if in V'
-                    bool in_vprime = false;
-                    for (int q = 0; q < R; q++) {
-                        if (verts[q] == vtx) {
-                            in_vprime = true;
-                            break;
-                        }
-                    }
-                    if (in_vprime)
+                    if (std::any_of(verts.begin(), verts.end(),
+                                    [vtx](uint64_t v) { return v == vtx; }))
                         continue;
-                    // Check if already counted
-                    bool found = false;
-                    for (const auto &n : named_nbrs) {
-                        if (n == vtx) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
+                    if (!std::any_of(named_nbrs.begin(), named_nbrs.end(),
+                                     [vtx](uint64_t v) { return v == vtx; }))
                         named_nbrs.push_back(vtx);
                 }
             }
@@ -190,14 +170,8 @@ static int brute_force_neighbors(const std::vector<uint64_t> &verts, int n,
                 if (contains_sym(verts[i], s))
                     continue;
                 uint64_t nbr = set_sym(verts[i], p, s);
-                bool in_vprime = false;
-                for (int q = 0; q < R; q++) {
-                    if (verts[q] == nbr) {
-                        in_vprime = true;
-                        break;
-                    }
-                }
-                if (!in_vprime)
+                if (!std::any_of(verts.begin(), verts.end(),
+                                 [nbr](uint64_t v) { return v == nbr; }))
                     neighbors.push_back(nbr);
             }
         }
