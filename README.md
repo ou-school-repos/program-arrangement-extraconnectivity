@@ -1,6 +1,6 @@
 # Arrangement Graph Extraconnectivity
 
-This project provides a definitive disproof of the 2022 asymptotic conjecture for arrangement graph $(R-1)$-extraconnectivity and introduces an $O(R^4)$ Hamming ball predictor that replaces super-exponential exhaustive search.
+This project provides a definitive disproof of the 2022 exact structural conjecture for arrangement graph $(R-1)$-extraconnectivity (specifically the coefficients and constants of the minimum-cut subgraph) and introduces an $O(R^4)$ Hamming ball predictor that replaces super-exponential exhaustive search.
 
 ## 1. The Core Theoretical Revelation
 

@@ -2,7 +2,7 @@
 
 ## 1. Abstract
 
-This project provides a definitive disproof of the 2022 asymptotic conjecture for arrangement graph $(R-1)$-extraconnectivity. By scaling exhaustive search to $R=9$, we discovered that the previously proposed linear model for internal edges, $E(R) = 2R-5$, fails at $R=8$. The optimal connected subgraphs that minimize the external neighborhood are instead **Hamming balls**, which form $d$-dimensional hypercubes at $R=2^d$. We introduce an $O(R^4)$ Hamming ball predictor based on the **OEIS A000788** sequence that entirely replaces the super-exponential exhaustive search, providing exact topological minimum-cut formulas for any $R$.
+This project provides a definitive disproof of the 2022 exact structural conjecture for arrangement graph $(R-1)$-extraconnectivity (specifically the coefficients and constants of the minimum-cut subgraph). By scaling exhaustive search to $R=9$, we discovered that the previously proposed linear model for internal edges, $E(R) = 2R-5$, fails at $R=8$. The optimal connected subgraphs that minimize the external neighborhood are instead **Hamming balls**, which form $d$-dimensional hypercubes at $R=2^d$. We introduce an $O(R^4)$ Hamming ball predictor based on the **OEIS A000788** sequence that entirely replaces the super-exponential exhaustive search, providing exact topological minimum-cut formulas for any $R$.
 
 ## 2. Theory
 
