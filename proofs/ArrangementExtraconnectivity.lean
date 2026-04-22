@@ -442,13 +442,14 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         intro x hx; simp only [List.mem_map] at hx
         obtain ⟨s, hs, rfl⟩ := hx
         exact h_le s (active_syms.mem_toList.mp hs))
-    intro l b hl
+    intro l
     induction l with
-    | nil => simp
+    | nil => intro _ _; simp
     | cons a t iht =>
+      intro b hl
       simp only [List.foldr_cons]
-      exact Nat.max_le.mpr ⟨hl a (List.mem_cons_self _ _),
-        iht (fun x hx => hl x (List.mem_cons_of_mem _ hx))⟩
+      exact Nat.max_le.mpr ⟨hl a (List.mem_cons_self a t),
+        iht b (fun x hx => hl x (List.mem_cons_of_mem _ hx))⟩
   · -- Subgoal 3: ∀ c ∈ l, c < V'.card (Strict Decrease)
     intro c hc
     simp only [List.mem_map, Finset.mem_toList] at hc
