@@ -508,9 +508,27 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
     have h_sum_ih : (active_syms.toList.map (fun s =>
         (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum ≤
         (active_syms.toList.map (fun s => E_seq (fiber V' p s).card)).sum := by
-      -- Each D(F_s) ≤ E_seq(c_s) by h_ih_fibers
-      -- Sum preserves ≤
-      sorry -- Need: this follows from h_ih_fibers applied to each s
+      -- Pointwise D(F_s) ≤ E_seq(c_s) → sum D(F_s) ≤ sum E_seq(c_s)
+      suffices ∀ (l : List (Fin n)),
+          (l.map (fun s => (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum ≤
+          (l.map (fun s => E_seq (fiber V' p s).card)).sum by
+        exact this _
+      intro l
+      induction l with
+      | nil => simp
+      | cons s t iht =>
+        simp only [List.map_cons, List.sum_cons]
+        apply Nat.add_le_add _ iht
+        -- Need: D(F_s) ≤ E_seq(c_s) for this specific s
+        -- If s ∈ active_syms, use h_ih_fibers. If s ∉ active_syms, fiber is empty.
+        by_cases hs : s ∈ active_syms
+        · exact h_ih_fibers s hs
+        · -- s not active → fiber V' p s = ∅ → both sides are 0
+          have h_empty : fiber V' p s = ∅ := by
+            ext w; simp [fiber, Finset.mem_filter]
+            intro hw
+            exact fun heq => hs (Finset.mem_image.mpr ⟨w, hw, heq⟩)
+          simp [h_empty, E_seq]
     -- Final: chain h_decomp with h_sum_ih
     -- D(V') ≤ ∑ D(Fₛ) + R - y ≤ ∑ E_seq(cₛ) + R - y
     sorry -- omega from h_decomp and h_sum_ih
