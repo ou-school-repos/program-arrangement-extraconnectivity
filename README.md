@@ -1,4 +1,4 @@
-# Extraconnectivity of Arrangement Graphs
+# Extraconnectivity of Arrangement Graphs: Computational Lemmas (April 2026)
 
 Computational verification of g-extraconnectivity bounds for arrangement graphs
 A(n,k), based on Cheng, Lipták & Tian (2022).
@@ -9,7 +9,7 @@ The **arrangement graph** $A(n,k)$ consists of $k$-permutations of $\{1,\dots,n\
 
 **Proposition 6** (Cheng et al.): As $k, n-k \to \infty$, $r$-extraconnectivity is asymptotically $(r+1)k(n-k)$.
 
-This program enumerates all connected subgraphs of size $R$ to compute exact extraconnectivity formulas.
+This program enumerates all connected subgraphs of size $R$, up to $R=10$, enabling better speculation and ultimately the discovery of exact formulas, many of which were easily proven by induction.
 
 ## Results
 
@@ -112,25 +112,33 @@ The search space is Ω(R^(R−2)) by Cayley's formula; observed growth is ×22 a
 
 ### Summary table
 
-| R   | (R-1)-extraconnectivity | Paper reference         | \|N(V')\| at n=2R, k=R     | Runtime |
-| --- | ----------------------- | ----------------------- | -------------------------- | ------- |
-| 2   | (2k−1)(n−k) − 1         | Theorem 1               | (3)(2) − 1 = 5             | 0.002s  |
-| 3   | (3k−2)(n−k) − 3         | Theorem 2               | (7)(3) − 3 = 18            | 0.003s  |
-| 4   | (4k−4)(n−k) − 4         | Theorem 3               | (12)(4) − 4 = 44           | 0.004s  |
-| 5   | (5k−5)(n−k) − 7         | Theorem 5               | (20)(5) − 7 = 93           | 0.005s  |
-| 6   | (6k−7)(n−k) − 9         | Theorem 6               | (29)(6) − 9 = 165          | 0.02s   |
-| 7   | (7k−9)(n−k) − 11        | Theorem 7               | (40)(7) − 11 = 269         | 0.3s    |
-| 8   | **(8k−12)(n−k) − 12**   | **New (this work)**     | **(52)(8) − 12 = 404**     | 10.5s   |
-| 9   | **(9k−13)(n−k) − 16**   | **New (this work)**     | **(68)(9) − 16 = 596**     | 8.2 min |
-| 10  | **(10k−15)(n−k) − 19**  | **Predicted (A000788)** | **(85)(10) − 19 = 831**    | ~7h     |
-| 11  | **(11k−18)(n−k) − 22**  | **Predicted**           | **(103)(11) − 22 = 1111**  | ~20d    |
-| 12  | **(12k−20)(n−k) − 24**  | **Predicted**           | **(124)(12) − 24 = 1464**  | ~4y     |
-| 13  | **(13k−22)(n−k) − 27**  | **Predicted**           | **(147)(13) − 27 = 1884**  | ~300y   |
-| 14  | **(14k−25)(n−k) − 29**  | **Predicted**           | **(171)(14) − 29 = 2365**  | ~30Ky   |
-| 15  | **(15k−28)(n−k) − 31**  | **Predicted**           | **(197)(15) − 31 = 2924**  | ~3My    |
-| 16  | **(16k−32)(n−k) − 32**  | **Predicted (4-cube)**  | **(224)(16) − 32 = 3552**  | infeas. |
-| 24  | **(24k−52)(n−k) − 60**  | **Predicted**           | **(524)(24) − 60 = 12516** | infeas. |
-| 32  | **(32k−80)(n−k) − 80**  | **Predicted (5-cube)**  | **(944)(32) − 80 = 30128** | infeas. |
+| R   | (R-1)-extraconnectivity     | Paper reference         | \|N(V')\| at n=2R, k=R             | Runtime |
+| --- | --------------------------- | ----------------------- | ---------------------------------- | ------- |
+| 2   | (2k−1)(n−k) − 1             | Theorem 1               | (3)(2) − 1 = 5                     | <0.001s |
+| 3   | (3k−2)(n−k) − 3             | Theorem 2               | (7)(3) − 3 = 18                    | <0.001s |
+| 4   | (4k−4)(n−k) − 4             | Theorem 3               | (12)(4) − 4 = 44                   | <0.001s |
+| 5   | (5k−5)(n−k) − 7             | Theorem 5               | (20)(5) − 7 = 93                   | <0.001s |
+| 6   | (6k−7)(n−k) − 9             | Theorem 6               | (29)(6) − 9 = 165                  | 0.004s  |
+| 7   | (7k−9)(n−k) − 11            | Theorem 7               | (40)(7) − 11 = 269                 | 0.07s   |
+| 8   | **(8k−12)(n−k) − 12**       | **New (this work)**     | **(52)(8) − 12 = 404**             | 1.8s    |
+| 9   | **(9k−13)(n−k) − 16**       | **New (this work)**     | **(68)(9) − 16 = 596**             | 72s     |
+| 10  | **(10k−15)(n−k) − 19**      | **Predicted (A000788)** | **(85)(10) − 19 = 831**            | ~30min  |
+| 11  | **(11k−18)(n−k) − 22**      | **Predicted**           | **(103)(11) − 22 = 1111**          | ~12h    |
+| 12  | **(12k−20)(n−k) − 24**      | **Predicted**           | **(124)(12) − 24 = 1464**          | ~12d    |
+| 13  | **(13k−22)(n−k) − 27**      | **Predicted**           | **(147)(13) − 27 = 1884**          | ~1y     |
+| 14  | **(14k−25)(n−k) − 29**      | **Predicted**           | **(171)(14) − 29 = 2365**          | ~25y    |
+| 15  | **(15k−28)(n−k) − 31**      | **Predicted**           | **(197)(15) − 31 = 2924**          | infeas. |
+| 16  | **(16k−32)(n−k) − 32**      | **Predicted (4-cube)**  | **(224)(16) − 32 = 3552**          | infeas. |
+| 20  | **(20k−40)(n−k) − 48**      | **Predicted**           | **(360)(20) − 48 = 7152**          | infeas. |
+| 24  | **(24k−52)(n−k) − 60**      | **Predicted**           | **(524)(24) − 60 = 12516**         | infeas. |
+| 32  | **(32k−80)(n−k) − 80**      | **Predicted (5-cube)**  | **(944)(32) − 80 = 30128**         | infeas. |
+| 48  | **(48k−128)(n−k) − 144**    | **Predicted**           | **(2176)(48) − 144 = 104304**      | infeas. |
+| 64  | **(64k−192)(n−k) − 192**    | **Predicted (6-cube)**  | **(3904)(64) − 192 = 249664**      | infeas. |
+| 96  | **(96k−304)(n−k) − 336**    | **Predicted**           | **(8912)(96) − 336 = 855216**      | infeas. |
+| 100 | **(100k−316)(n−k) − 356**   | **Predicted**           | **(9684)(100) − 356 = 968044**     | infeas. |
+| 128 | **(128k−448)(n−k) − 448**   | **Predicted (7-cube)**  | **(15936)(128) − 448 = 2039360**   | infeas. |
+| 192 | **(192k−704)(n−k) − 768**   | **Predicted**           | **(36160)(192) − 768 = 6941952**   | infeas. |
+| 256 | **(256k−1024)(n−k) − 1024** | **Predicted (8-cube)**  | **(64512)(256) − 1024 = 16514048** | infeas. |
 
 † R>=10 predicted via Hamming ball construction (`predict.cpp`), brute-force verified for R<=20.
 
@@ -144,23 +152,50 @@ Predictions for R=2..1024 are available in [`docs/predictions.csv`](docs/predict
 | `coeff`         | R·k − nk1 (the leading coefficient at k=R)           |
 | `formula_at_2R` | \|N(V')\| evaluated at n=2R, k=R: coeff·R − constant |
 
+\newpage
+
 ### Internal edge divergence: OEIS A000788 vs. linear prediction
 
-The paper extrapolated E(R) = 2R−5 internal edges from R=5,6,7. The true
+The paper extrapolated E(R) = 2R-5 internal edges from R=5,6,7. The true
 sequence is [OEIS A000788](https://oeis.org/A000788) (cumulative binary weight),
-which coincides at R=5,6,7 but diverges at powers of 2:
+which coincides at R=5,6,7 but diverges at powers of 2.
 
-| R   | A000788 (true E) | Paper's 2R-5 | Winner                        |
-| --- | ---------------- | ------------ | ----------------------------- |
-| 4   | **4**            | 3            | Hypercube wins                |
-| 5   | 5                | 5            | _Tie_                         |
-| 6   | 7                | 7            | _Tie_                         |
-| 7   | 9                | 9            | _Tie_                         |
-| 8   | **12**           | 11           | **Hypercube wins (3-cube)**   |
-| 9   | 13               | 13           | _Tie_                         |
-| 10  | 15               | 15           | _Tie_                         |
-| 12  | 20               | 19           | Hypercube wins                |
-| 16  | **32**           | 27           | **Total divergence (4-cube)** |
+**Full formula comparison** (evaluated at n=2R, k=R):
+
+| R   | A000788 formula    | \|N(V')\| | Cheng's formula | \|N(V')\| | Search  |
+| --- | ------------------ | --------- | --------------- | --------- | ------- |
+| 5   | (20)(5) - 7        | 93        | (20)(5) - 9     | 91        | **93**  |
+| 6   | (29)(6) - 9        | 165       | (29)(6) - 11    | 163       | **165** |
+| 7   | (40)(7) - 11       | 269       | (40)(7) - 13    | 267       | **269** |
+| 8   | **(52)(8) - 12**   | **404**   | (53)(8) - 15    | 409       | **404** |
+| 9   | **(68)(9) - 16**   | **596**   | (68)(9) - 17    | 595       | **596** |
+| 16  | **(224)(16) - 32** | **3552**  | (229)(16) - 31  | 3633      | _N/A_   |
+
+The A000788 formula matches exhaustive search for every R tested (2-9).
+At R=8, Cheng's formula predicts |N(V')|=409, but the true minimum is **404**.
+
+**nk1 coefficient divergence:**
+
+| R    | A000788 (true E) | Paper's 2R-5 | Winner                          |
+| ---- | ---------------- | ------------ | ------------------------------- |
+| 4    | **4**            | 3            | Hypercube wins                  |
+| 5    | 5                | 5            | _Tie_                           |
+| 6    | 7                | 7            | _Tie_                           |
+| 7    | 9                | 9            | _Tie_                           |
+| 8    | **12**           | 11           | **Hypercube wins (3-cube)**     |
+| 9    | 13               | 13           | _Tie_                           |
+| 10   | 15               | 15           | _Tie_                           |
+| 12   | 20               | 19           | Hypercube wins                  |
+| 16   | **32**           | 27           | **Total divergence (4-cube)**   |
+| 20   | 40               | 35           | +5 divergence                   |
+| 24   | 52               | 43           | +9 divergence                   |
+| 32   | **80**           | 59           | **+21 (5-cube)**                |
+| 64   | **192**          | 123          | **+69 (6-cube)**                |
+| 100  | 316              | 195          | +121 divergence                 |
+| 128  | **448**          | 251          | **+197 (7-cube)**               |
+| 256  | **1024**         | 507          | **+517 (8-cube, 2x error)**     |
+| 512  | **2304**         | 1019         | **+1285 (9-cube, 2.3x error)**  |
+| 1024 | **5120**         | 2043         | **+3077 (10-cube, 2.5x error)** |
 
 The closed form E(2^d) = d · 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
 
@@ -184,4 +219,4 @@ _Springer Proceedings in Mathematics & Statistics_ 388, pp. 275–282, 2022.
 
 ---
 
-_Computational verification by Shane Jaroch._
+_Computational results and Lean 4 proofs by Shane Jaroch (Oakland University)._
