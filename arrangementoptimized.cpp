@@ -16,6 +16,8 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <numeric>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -81,12 +83,11 @@ static std::string vertex_to_string(uint64_t vertex) {
 namespace {
 struct SetwordVecHash {
     size_t operator()(const std::vector<setword> &v) const {
-        size_t h = v.size();
-        for (const setword x : v) {
-            h ^= std::hash<setword>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) +
-                 (h >> 2);
-        }
-        return h;
+        return std::accumulate(
+            v.begin(), v.end(), v.size(), [](size_t h, setword x) {
+                return h ^ (std::hash<setword>{}(x) + 0x9e3779b97f4a7c15ULL +
+                            (h << 6) + (h >> 2));
+            });
     }
 };
 } // namespace
@@ -477,6 +478,32 @@ int main(int argc, const char *argv[]) {
 
     std::cerr << "Done: " << elapsed << "s, " << nodes_explored
               << " evaluated, " << nodes_pruned << " pruned\n";
+
+    // Post-search verification: cross-check each result example with verify().
+    bool all_ok = true;
+    for (const auto &[nk1, res] : results) {
+        // Parse example string "ABCDE FBCDE ..." back into ver[].
+        std::istringstream iss(res.example);
+        std::string tok;
+        for (int i = 0; i < R && (iss >> tok); i++) {
+            uint64_t v = 0;
+            for (int p = 0; p < R; p++) {
+                v = set_sym(v, p, tok[p] - 'A');
+            }
+            ver[i] = v;
+        }
+        const auto [vnk1, vcons] = verify_neighbor_set();
+        if (nk1 != vnk1) {
+            std::cerr << "VERIFY FAIL: nk1 mismatch for " << res.example
+                      << ": calc=" << nk1 << " verify=" << vnk1 << "\n";
+            all_ok = false;
+        }
+    }
+    if (all_ok) {
+        std::cerr << "\u2713 Verified.\n";
+    } else {
+        std::cerr << "\u2717 Verification failed.\n";
+    }
 
     return 0;
 }
