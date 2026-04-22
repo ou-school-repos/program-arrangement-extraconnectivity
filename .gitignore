@@ -46,3 +46,6 @@ Thumbs.db
 .tmp/
 /*.log
 /*.md
+*.pdf
+*.zip
+*.tar.*

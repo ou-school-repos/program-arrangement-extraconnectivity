@@ -133,30 +133,16 @@ Done: 647.703s, 199291099 generated, 194499500 evaluated, 3760050 iso-pruned, 0 
 | 6   | (6k−7)(n−k) − 9         | Theorem 6           |
 | 7   | (7k−9)(n−k) − 11        | Theorem 7           |
 | 8   | **(8k−12)(n−k) − 12**   | **New (this work)** |
+| 9   | **(9k−13)(n−k) − 16**   | **New (this work)** |
 
 > **Note:** For R=5..7, the minimum follows ((r+1)k−(2r−3))(n−k)−(2r−1).
-> R=8 **breaks this pattern** — the nk1 coefficient jumps by 3 (9→12)
-> instead of 2, and the nk1=11 class is absent entirely.
-
-## Building & running
-
-```sh
-make build/opt        # compile optimized binary
-make benchmark        # run R=2..7 (override with R=N)
-make benchmark R=8    # run R=2..8
-make run/opt R=7      # run single R value
-make test/opt         # verify against baseline
-make lint             # cppcheck + clang-tidy
-```
-
-## Files
-
-- `arrangementoptimized.cpp` — optimized search with bitwise vertex packing
-  and canonical set deduplication
-- `cheng/arrangement.cpp` — baseline C++ port of the original paper's Java code
-- `cheng/cheng.java` — original Java code from the paper appendix
+> R=8 and R=9 **break this pattern** — the (n-k) coefficient jumps by more than 2,
+> and the intermediate classes are absent.
 
 ## Reference
 
 E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs."
 _Springer Proceedings in Mathematics & Statistics_ 388, pp. 275–282, 2022.
+
+---
+*Computational verification by Shane Jaroch.*

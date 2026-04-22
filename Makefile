@@ -14,6 +14,9 @@ BIN       = arrangement
 SRC_OPT   = arrangementoptimized.cpp
 BIN_OPT   = arrangementoptimized
 R         ?= 7
+DOCS_SRC  = README.md
+DOCS_OUT  = README.pdf
+BUNDLE_OUT = bundle.zip
 
 # Build modes
 OPTFLAGS  ?= -O2
@@ -179,10 +182,29 @@ format/check:	##H @Dev Check formatting without modifying files
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.PHONY: docs
+docs:	##H @General Generate PDF documentation from README
+	@$(call print_info,Generating $(DOCS_OUT) from $(DOCS_SRC))
+	pandoc $(DOCS_SRC) -o $(DOCS_OUT) \
+		--pdf-engine=xelatex \
+		-V geometry:margin=1in \
+		-V monofont="DejaVu Sans Mono" || \
+	pandoc $(DOCS_SRC) -o $(DOCS_OUT) \
+		--pdf-engine=lualatex \
+		-V geometry:margin=1in \
+		-V monofont="DejaVu Sans Mono"
+	@$(call print_success,Documentation generated.)
+
+.PHONY: bundle
+bundle:	##H @General Create a zip archive of the project sources
+	@$(call print_info,Creating $(BUNDLE_OUT))
+	zip -rv9 $(BUNDLE_OUT) README.md arrangementoptimized.cpp cheng/arrangement.cpp
+	@$(call print_success,Bundle created.)
+
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN) $(BIN_OPT) *.o *.d *.gch *.class
+	rm -f $(BIN) $(BIN_OPT) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
