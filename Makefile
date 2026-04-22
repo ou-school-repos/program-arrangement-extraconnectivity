@@ -111,13 +111,25 @@ run: build	##H @Run Build and run optimized (R=$(R))
 	./$(BIN_OPT) $(R)
 
 .PHONY: benchmark
-benchmark: build	##H @Run Benchmark optimized for R=2..$(R)
+benchmark: build	##H @Run Benchmark search for R=2..$(R)
 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
+
+.PHONY: benchmark/full
+benchmark/full: build build/predict	##H @Run Search + verify for R=2..$(R)
+	@for i in $$(seq 2 $(R)); do \
+		./$(BIN_OPT) $$i; \
+		./$(BIN_PRED) $$i 2>&1 | grep 'formula\|brute-force'; \
+		echo ""; \
+	done
 
 .PHONY: run/predict
 run/predict: build/predict	##H @Run Predict extraconnectivity for R=$(R)
 	./$(BIN_PRED) $(R)
+
+.PHONY: benchmark/predict
+benchmark/predict: build/predict	##H @Run Predict for R=2..$(R)
+	@for i in $$(seq 2 $(R)); do ./$(BIN_PRED) $$i 2>&1; echo ""; done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
