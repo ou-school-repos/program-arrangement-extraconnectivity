@@ -13,7 +13,7 @@ BIN       = arrangement
 
 SRC_OPT   = arrangementoptimized.cpp
 BIN_OPT   = arrangementoptimized
-R         ?= 5
+R         ?= 7
 
 # Build modes
 OPTFLAGS  ?= -O2
