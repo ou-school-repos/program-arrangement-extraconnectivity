@@ -167,20 +167,28 @@ Done: 490.892s, 166116718 generated, 162163337 evaluated, 2921832 iso-pruned, 0 
 
 ### Summary table
 
-| R   | (R-1)-extraconnectivity | Paper reference         | \|N(V')\| at n=2R, k=R  | Runtime   |
-| --- | ----------------------- | ----------------------- | ----------------------- | --------- |
-| 2   | (2k−1)(n−k) − 1         | Theorem 1               | (3)(2) − 1 = 5          | 0.002s    |
-| 3   | (3k−2)(n−k) − 3         | Theorem 2               | (7)(3) − 3 = 18         | 0.003s    |
-| 4   | (4k−4)(n−k) − 4         | Theorem 3               | (12)(4) − 4 = 44        | 0.004s    |
-| 5   | (5k−5)(n−k) − 7         | Theorem 5               | (20)(5) − 7 = 93        | 0.005s    |
-| 6   | (6k−7)(n−k) − 9         | Theorem 6               | (29)(6) − 9 = 165       | 0.02s     |
-| 7   | (7k−9)(n−k) − 11        | Theorem 7               | (40)(7) − 11 = 269      | 0.3s      |
-| 8   | **(8k−12)(n−k) − 12**   | **New (this work)**     | **(52)(8) − 12 = 404**  | 10.5s     |
-| 9   | **(9k−13)(n−k) − 16**   | **New (this work)**     | **(68)(9) − 16 = 596**  | 8.2 min   |
-| 10  | **(10k−15)(n−k) − 19**  | **Predicted (A000788)** | **(85)(10) − 19 = 831** | **~6h** † |
+| R   | (R-1)-extraconnectivity | Paper reference         | \|N(V')\| at n=2R, k=R     | Runtime |
+| --- | ----------------------- | ----------------------- | -------------------------- | ------- |
+| 2   | (2k−1)(n−k) − 1         | Theorem 1               | (3)(2) − 1 = 5             | 0.002s  |
+| 3   | (3k−2)(n−k) − 3         | Theorem 2               | (7)(3) − 3 = 18            | 0.003s  |
+| 4   | (4k−4)(n−k) − 4         | Theorem 3               | (12)(4) − 4 = 44           | 0.004s  |
+| 5   | (5k−5)(n−k) − 7         | Theorem 5               | (20)(5) − 7 = 93           | 0.005s  |
+| 6   | (6k−7)(n−k) − 9         | Theorem 6               | (29)(6) − 9 = 165          | 0.02s   |
+| 7   | (7k−9)(n−k) − 11        | Theorem 7               | (40)(7) − 11 = 269         | 0.3s    |
+| 8   | **(8k−12)(n−k) − 12**   | **New (this work)**     | **(52)(8) − 12 = 404**     | 10.5s   |
+| 9   | **(9k−13)(n−k) − 16**   | **New (this work)**     | **(68)(9) − 16 = 596**     | 8.2 min |
+| 10  | **(10k−15)(n−k) − 19**  | **Predicted (A000788)** | **(85)(10) − 19 = 831**    | ~7h     |
+| 11  | **(11k−18)(n−k) − 22**  | **Predicted**           | **(103)(11) − 22 = 1111**  | ~20d    |
+| 12  | **(12k−20)(n−k) − 24**  | **Predicted**           | **(124)(12) − 24 = 1464**  | ~4y     |
+| 13  | **(13k−22)(n−k) − 27**  | **Predicted**           | **(147)(13) − 27 = 1884**  | ~300y   |
+| 14  | **(14k−25)(n−k) − 29**  | **Predicted**           | **(171)(14) − 29 = 2365**  | ~30Ky   |
+| 15  | **(15k−28)(n−k) − 31**  | **Predicted**           | **(197)(15) − 31 = 2924**  | ~3My    |
+| 16  | **(16k−32)(n−k) − 32**  | **Predicted (4-cube)**  | **(224)(16) − 32 = 3552**  | infeas. |
+| 24  | **(24k−52)(n−k) − 60**  | **Predicted**           | **(524)(24) − 60 = 12516** | infeas. |
+| 32  | **(32k−80)(n−k) − 80**  | **Predicted (5-cube)**  | **(944)(32) − 80 = 30128** | infeas. |
 
-† R=10 predicted via Hamming ball construction (`predict.cpp`), not exhaustive search.
-Brute-force verified in A(20,10). Full search confirmation pending.
+† R≥10 predicted via Hamming ball construction (`predict.cpp`), brute-force verified for R≤12.
+Full search confirmation pending for R≥10.
 
 ### Internal edge divergence: OEIS A000788 vs. linear prediction
 
