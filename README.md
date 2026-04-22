@@ -176,33 +176,17 @@ At R=8, Cheng's formula predicts |N(V')|=409, but the true minimum is **404**.
 
 **R=8 counterexample structure** — a 3-cube Q(3) in A(16,8):
 
-```mermaid
-graph LR
-    subgraph sub["R=8 minimum-cut subgraph V' in A(16,8)"]
-        direction LR
-        info["8 vertices, 12 internal edges (A000788=12, Cheng=11)<br/>|N(V')| = 404 (Cheng predicts 409)"]
-        style info fill:none,stroke:none
+![R=8 minimum-cut subgraph — a 3-cube Q(3) in A(16,8)](docs/r8-cube.svg)
 
-        A["ABCDEFGH<br/>(000)"] --- I["IBCDEFGH<br/>(100)"]
-        A --- J["AJCDEFGH<br/>(010)"]
-        A --- K["ABKDEFGH<br/>(001)"]
-        I --- IJ["IJCDEFGH<br/>(110)"]
-        I --- IK["IBKDEFGH<br/>(101)"]
-        J --- IJ
-        J --- JK["AJKDEFGH<br/>(011)"]
-        K --- IK
-        K --- JK
-        IJ --- IJK["IJKDEFGH<br/>(111)"]
-        IK --- IJK
-        JK --- IJK
-    end
-```
+<!-- Hand-crafted SVG (native <text>, no foreignObject) for PDF compatibility. Mermaid source: docs/r8-cube.mmd -->
 
 Binary labels show which of the 3 positions {0,1,2} have been swapped
 (A to I, B to J, C to K). Each edge = vertices differ in exactly 1 position.
 The 12 internal edges match A000788(8) = 12, not Cheng's 2(8)-5 = 11.
 
 Verify independently: `python3 docs/verify-counterexample.py`
+
+\newpage
 
 #### nk1 coefficient divergence
 
@@ -229,7 +213,7 @@ Verify independently: `python3 docs/verify-counterexample.py`
 
 The closed form E(2^d) = d · 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
 
-#### Asymptotic agreement
+### Asymptotic agreement
 
 While the exact correction terms differ, the asymptotic result of Cheng et al.
 (Proposition 6) is confirmed: as k, n-k tend to infinity, the (R-1)-extraconnectivity

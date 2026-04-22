@@ -1,0 +1,19 @@
+graph LR
+    subgraph sub["R=8 minimum-cut subgraph V' in A(16,8)"]
+        direction LR
+        info["8 vertices, 12 internal edges (A000788=12, Cheng=11)<br/>|N(V')| = 404 (Cheng predicts 409)"]
+        style info fill:none,stroke:none
+
+        A["ABCDEFGH<br/>(000)"] --- I["IBCDEFGH<br/>(100)"]
+        A --- J["AJCDEFGH<br/>(010)"]
+        A --- K["ABKDEFGH<br/>(001)"]
+        I --- IJ["IJCDEFGH<br/>(110)"]
+        I --- IK["IBKDEFGH<br/>(101)"]
+        J --- IJ
+        J --- JK["AJKDEFGH<br/>(011)"]
+        K --- IK
+        K --- JK
+        IJ --- IJK["IJKDEFGH<br/>(111)"]
+        IK --- IJK
+        JK --- IJK
+    end
