@@ -2,36 +2,37 @@
 // (Based on Cheng et al., with algorithmic fixes/speedups)
 //
 // Fixes applied:
-//   1. Nauty-based 4-color auxiliary graph dedup exploits S_n x S_R symmetry
-//   2. Integer-packed vertices (uint64_t, 5-bit nibbles) for O(1) compare/hash
-//   3. unordered_set for O(1) membership checks
-//   4. Independent verify() cross-checks every result
+//   1. Nauty 4-color auxiliary graph dedup for full S_n x S_R symmetry.
+//   2. Eliminated leaf-level deduplication to completely solve the OOM bug.
+//   3. Dynamic symbol remapping forces perfect Nauty structural matches.
+//   4. 128-bit custom flat hash table (16 bytes per node vs thousands).
+//   5. Zero dynamic allocations (std::vector) in calc() and candidate loops.
+//   6. Real-time telemetry printed during the heavy search phase.
 //
-// Usage: ./arrangementoptimized [R]   (default R=5)
+// Usage: ./arrangementoptimized [R] [nauty_depth_limit]
 
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <numeric>
 #include <sstream>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 extern "C" {
 #include <nauty/nauty.h>
 }
 
+static int R = 5;
+
 // ── Vertex representation ──────────────────────────────────────────────────
 // Each r-permutation packed into uint64_t with 5-bit nibbles.
 // Position 0 in the highest nibble → integer comparison = lex comparison.
 // 5 bits support up to 32 symbols, allowing R up to 12.
-
-static int R = 5;
 
 static inline int get_sym(uint64_t vertex, int pos) {
     return static_cast<int>((vertex >> ((R - 1 - pos) * 5)) & 0x1FU);
@@ -45,18 +46,16 @@ static inline uint64_t set_sym(uint64_t vertex, int pos, int sym) {
 
 static inline bool contains_sym(uint64_t vertex, int sym) {
     for (int i = 0; i < R; i++) {
-        if (get_sym(vertex, i) == sym) {
+        if (get_sym(vertex, i) == sym)
             return true;
-        }
     }
     return false;
 }
 
 static inline uint64_t make_identity() {
     uint64_t vertex = 0;
-    for (int i = 0; i < R; i++) {
+    for (int i = 0; i < R; i++)
         vertex = set_sym(vertex, i, i);
-    }
     return vertex;
 }
 
@@ -70,40 +69,119 @@ static std::string vertex_to_string(uint64_t vertex) {
     return str;
 }
 
-// ── 128-bit hash-only dedup ────────────────────────────────────────────────
+// ── 128-bit hash fingerprint ───────────────────────────────────────────────
 // Instead of storing full nauty canonical graphs (~6KB each), we hash them
 // to 128 bits. Collision probability ~2^-128 per pair — negligible at any
 // realistic search size.
 
-namespace {
+static inline uint64_t splitmix64(uint64_t z) {
+    z ^= (z >> 30);
+    z *= 0xbf58476d1ce4e5b9ULL;
+    z ^= (z >> 27);
+    z *= 0x94d049bb133111ebULL;
+    z ^= (z >> 31);
+    return z;
+}
+
 struct Hash128 {
-    uint64_t lo, hi;
-    bool operator==(const Hash128 &o) const { return lo == o.lo && hi == o.hi; }
+    uint64_t h1, h2;
+    bool operator==(const Hash128 &o) const { return h1 == o.h1 && h2 == o.h2; }
 };
-struct Hash128Hasher {
-    size_t operator()(const Hash128 &h) const {
-        return h.lo ^ (h.hi * 0x9e3779b97f4a7c15ULL);
+
+static inline Hash128 hash_nauty_graph(const graph *cg, int m_aux, int n_aux) {
+    uint64_t h1 = 0x123456789ABCDEF0ULL;
+    uint64_t h2 = 0x0FEDCBA987654321ULL;
+    const size_t num_words = static_cast<size_t>(m_aux) * n_aux;
+    for (size_t i = 0; i < num_words; i++) {
+        uint64_t w = static_cast<uint64_t>(cg[i]);
+        w ^= i * 0x9E3779B97F4A7C15ULL;
+        h1 ^= w;
+        h1 = splitmix64(h1);
+        h2 ^= h1;
+        h2 = splitmix64(h2);
+    }
+    return {h1, h2};
+}
+
+static inline Hash128 hash_sorted_vertices(const uint64_t *arr, int len) {
+    uint64_t h1 = 0x8a976b32c61e4fbbULL ^ static_cast<uint64_t>(len);
+    uint64_t h2 = 0x93309a6324d081f9ULL ^ static_cast<uint64_t>(len);
+    for (int i = 0; i < len; i++) {
+        h1 ^= arr[i];
+        h1 = splitmix64(h1);
+        h2 ^= h1;
+        h2 = splitmix64(h2);
+    }
+    return {h1, h2};
+}
+
+// ── Open-addressing flat hash set (fixes OOM) ─────────────────────────────
+// Stores only 16-byte fingerprints instead of multi-KB canonical graphs.
+
+class FlatHashSet128 {
+    std::vector<Hash128> data_;
+    size_t count_ = 0;
+    size_t mask_;
+
+  public:
+    explicit FlatHashSet128(size_t capacity_pow2 = 1U << 16)
+        : data_(capacity_pow2, {0, 0}), mask_(capacity_pow2 - 1) {}
+
+    // Returns true if newly inserted, false if already present.
+    bool insert(Hash128 key) {
+        if (key.h1 == 0 && key.h2 == 0)
+            key.h1 = 1; // reserve {0,0} as empty sentinel
+        size_t idx = key.h1 & mask_;
+        while (true) {
+            if (data_[idx].h1 == 0 && data_[idx].h2 == 0) {
+                data_[idx] = key;
+                count_++;
+                if (count_ * 2 > data_.size())
+                    rehash();
+                return true;
+            }
+            if (data_[idx] == key)
+                return false;
+            idx = (idx + 1) & mask_;
+        }
+    }
+
+    void clear() {
+        std::fill(data_.begin(), data_.end(), Hash128{0, 0});
+        count_ = 0;
+    }
+    [[nodiscard]] size_t size() const { return count_; }
+
+  private:
+    void rehash() {
+        std::vector<Hash128> old = std::move(data_);
+        data_.assign(old.size() * 2, {0, 0});
+        mask_ = data_.size() - 1;
+        count_ = 0;
+        for (const auto &k : old) {
+            if (k.h1 != 0 || k.h2 != 0)
+                insert(k);
+        }
     }
 };
-} // namespace
 
-// One dedup set per recursion depth (hash-only: 16 bytes/entry, not ~6KB).
-static std::vector<std::unordered_set<Hash128, Hash128Hasher>> seen;
+static std::vector<FlatHashSet128> seen_nauty;
+static std::vector<FlatHashSet128> seen_sorted;
 
-// ── Nauty workspace (file-scope for reuse + Debian Bookworm compat) ────────
-// DYNALLSTAT expands to 'static thread_local' which is illegal inside a block
-// scope on some compilers. Declaring at file scope fixes this and also avoids
-// millions of realloc calls by reusing the buffers across solve() invocations.
-DYNALLSTAT(graph, nauty_g, nauty_g_sz);
-DYNALLSTAT(graph, nauty_cg, nauty_cg_sz);
-DYNALLSTAT(int, nauty_lab, nauty_lab_sz);
-DYNALLSTAT(int, nauty_ptn, nauty_ptn_sz);
-DYNALLSTAT(int, nauty_orbits, nauty_orbits_sz);
+// ── Nauty static buffers (no DYNALLSTAT — portable across all compilers) ──
+// Fixed-size arrays avoid the DYNALLSTAT '_Thread_local inside block scope'
+// bug on Debian Bookworm and also eliminate per-call malloc overhead.
+constexpr int MAX_NAUTY_N = 512;
+constexpr int MAX_NAUTY_M = SETWORDSNEEDED(MAX_NAUTY_N);
+static graph g_nauty[MAX_NAUTY_N * MAX_NAUTY_M];
+static graph cg_nauty[MAX_NAUTY_N * MAX_NAUTY_M];
+static int lab_nauty[MAX_NAUTY_N];
+static int ptn_nauty[MAX_NAUTY_N];
+static int orbits_nauty[MAX_NAUTY_N];
 
 // ── Global state ───────────────────────────────────────────────────────────
 
 static std::vector<uint64_t> ver;
-static std::unordered_set<uint64_t> ver_set;
 
 namespace {
 struct Result {
@@ -112,13 +190,23 @@ struct Result {
 };
 } // namespace
 static std::map<int, Result> results;
-static uint64_t nodes_explored = 0;
-static uint64_t nodes_pruned = 0;
 
-// ── Telemetry ──────────────────────────────────────────────────────────────
-static std::chrono::high_resolution_clock::time_point t_start;
-static std::chrono::high_resolution_clock::time_point t_last_report;
-static uint64_t nodes_since_check = 0;
+// Telemetry counters
+static uint64_t nodes_generated = 0;
+static uint64_t nodes_evaluated = 0;
+static uint64_t nodes_pruned_iso = 0;
+static uint64_t nodes_pruned_exact = 0;
+static std::chrono::high_resolution_clock::time_point t0_global;
+static std::chrono::high_resolution_clock::time_point t_last_print;
+
+// Linear scan replaces unordered_set for ver membership (faster for small R).
+static inline bool in_ver_set(uint64_t v, int point) {
+    for (int i = 0; i < point; i++) {
+        if (ver[i] == v)
+            return true;
+    }
+    return false;
+}
 
 // ── Independent verifier ───────────────────────────────────────────────────
 // Computes neighbor-set formula directly, independent of calc().
@@ -126,88 +214,90 @@ static uint64_t nodes_since_check = 0;
 // Returns {nk1, cons} matching calc()'s format.
 
 static std::pair<int, int> verify_neighbor_set() {
-    // Collect all distinct symbols used across V'.
-    std::unordered_set<int> used_syms;
+    uint32_t used_syms_mask = 0;
     for (int i = 0; i < R; i++) {
-        for (int p = 0; p < R; p++) {
-            used_syms.insert(get_sym(ver[i], p));
-        }
+        for (int p = 0; p < R; p++)
+            used_syms_mask |= (1U << get_sym(ver[i], p));
     }
-    const int M = static_cast<int>(used_syms.size());
+    const int M = __builtin_popcount(used_syms_mask);
 
-    // For each position p, group vertices by their values at all OTHER
-    // positions. Each group produces one distinct anonymous neighbor per
-    // anonymous symbol. Anonymous neighbors from different groups/positions
-    // are always distinct.
     int anon_coeff = 0;
     for (int p = 0; p < R; p++) {
-        std::unordered_set<uint64_t> group_keys;
+        uint64_t group_keys[16];
+        int group_sz = 0;
         for (int i = 0; i < R; i++) {
-            group_keys.insert(set_sym(ver[i], p, 0x1F)); // sentinel
+            uint64_t key = set_sym(ver[i], p, 0x1F);
+            bool found = false;
+            for (int q = 0; q < group_sz; q++) {
+                if (group_keys[q] == key) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                group_keys[group_sz++] = key;
         }
-        anon_coeff += static_cast<int>(group_keys.size());
+        anon_coeff += group_sz;
     }
 
-    // Enumerate all "named" neighbors: vertex with one position changed
-    // to a symbol that appears somewhere in V'.
-    std::unordered_set<uint64_t> named_nbrs;
+    uint64_t named_nbrs[8192];
+    int named_sz = 0;
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++) {
-            for (const int s : used_syms) {
+            for (int s = 0; s < 32; s++) {
+                if ((used_syms_mask & (1U << s)) == 0)
+                    continue;
                 if (!contains_sym(ver[i], s)) {
-                    named_nbrs.insert(set_sym(ver[i], p, s));
+                    uint64_t vtx = set_sym(ver[i], p, s);
+                    if (in_ver_set(vtx, R))
+                        continue;
+                    bool found = false;
+                    for (int q = 0; q < named_sz; q++) {
+                        if (named_nbrs[q] == vtx) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        named_nbrs[named_sz++] = vtx;
                 }
             }
         }
     }
-    // Remove V' members.
-    for (int i = 0; i < R; i++) {
-        named_nbrs.erase(ver[i]);
-    }
-    const int named_count = static_cast<int>(named_nbrs.size());
 
-    // |N(V')| = anon_coeff * (n-M) + named_count
-    //         = anon_coeff * (n-k) + (named_count - anon_coeff*(M-R))
-    // Matching (R*k - nk1)*(n-k) - (nk1+cons):
     const int nk1 = R * R - anon_coeff;
-    const int total_const = anon_coeff * (M - R) - named_count;
+    const int total_const = anon_coeff * (M - R) - named_sz;
     const int cons = total_const - nk1;
-
     return {nk1, cons};
 }
 
-// ── Neighbor-set calculation ───────────────────────────────────────────────
-// Faithful port of Cheng's calc() using integer operations.
+// ── Neighbor-set calculation (allocation-free) ─────────────────────────────
+// Faithful port of Cheng's calc() using integer operations and stack arrays.
 
 static std::pair<int, int> calc() {
-    int nk1coef = 0;
-    int cons = 0;
+    int nk1coef = 0, cons = 0;
+    uint64_t dcverts[256];
+    int chgs[256];
 
     for (int i = 1; i < R; i++) {
         const uint64_t cur = ver[i];
-        std::vector<uint64_t> dcverts;
-        std::vector<int> chgs;
+        int dc_count = 0;
         bool isShared[32] = {};
         int isSharednum = 0;
 
         for (int j = 0; j < i; j++) {
             const uint64_t cur2 = ver[j];
-            int differs = 0;
-            int diff1 = 0;
-            int diff2 = 0;
+            int differs = 0, diff1 = 0, diff2 = 0;
 
             for (int k = 0; k < R; k++) {
                 if (get_sym(cur, k) != get_sym(cur2, k)) {
-                    if (differs == 0) {
+                    if (differs == 0)
                         diff1 = k;
-                        differs++;
-                    } else if (differs == 1) {
+                    else if (differs == 1)
                         diff2 = k;
-                        differs++;
-                    } else {
-                        differs++;
+                    differs++;
+                    if (differs > 2)
                         break;
-                    }
                 }
             }
 
@@ -218,31 +308,44 @@ static std::pair<int, int> calc() {
             }
 
             if (differs == 2) {
-                if (diff1 > diff2) {
+                if (diff1 > diff2)
                     std::swap(diff1, diff2);
-                }
+
                 if (get_sym(cur, diff1) != get_sym(cur2, diff2)) {
                     const uint64_t vtx =
                         set_sym(cur, diff1, get_sym(cur2, diff1));
-                    if (std::find(dcverts.begin(), dcverts.end(), vtx) ==
-                        dcverts.end()) {
-                        dcverts.push_back(vtx);
-                        chgs.push_back(diff1);
+                    bool found = false;
+                    for (int d = 0; d < dc_count; d++) {
+                        if (dcverts[d] == vtx) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        dcverts[dc_count] = vtx;
+                        chgs[dc_count++] = diff1;
                     }
                 }
+
                 if (get_sym(cur, diff2) != get_sym(cur2, diff1)) {
                     const uint64_t vtx =
                         set_sym(cur, diff2, get_sym(cur2, diff2));
-                    if (std::find(dcverts.begin(), dcverts.end(), vtx) ==
-                        dcverts.end()) {
-                        dcverts.push_back(vtx);
-                        chgs.push_back(diff2);
+                    bool found = false;
+                    for (int d = 0; d < dc_count; d++) {
+                        if (dcverts[d] == vtx) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        dcverts[dc_count] = vtx;
+                        chgs[dc_count++] = diff2;
                     }
                 }
             }
         }
 
-        for (int n = 0; n < static_cast<int>(chgs.size()); n++) {
+        for (int n = 0; n < dc_count; n++) {
             bool prune = false;
             if (isShared[chgs[n]]) {
                 prune = true;
@@ -257,13 +360,15 @@ static std::pair<int, int> calc() {
                 }
             }
             if (prune) {
-                chgs.erase(chgs.begin() + n);
-                dcverts.erase(dcverts.begin() + n);
+                // O(1) swap-and-pop removal
+                dcverts[n] = dcverts[dc_count - 1];
+                chgs[n] = chgs[dc_count - 1];
+                dc_count--;
                 n--;
             }
         }
 
-        cons += static_cast<int>(dcverts.size());
+        cons += dc_count;
         cons = (cons - isSharednum) + 1;
     }
     return {nk1coef, cons};
@@ -271,151 +376,144 @@ static std::pair<int, int> calc() {
 
 // ── Recursive search ───────────────────────────────────────────────────────
 // Depth-gated dedup:
-//   - Shallow depths (point ≤ threshold): nauty canonical graph (expensive but
-//     powerful — exploits full S_n × S_R symmetry to prune large subtrees)
-//   - Deep depths: sorted vertex-set dedup (cheap O(R log R) per node)
+//   - Internal depths (point <= nauty_limit): nauty canonical graph (expensive
+//     but powerful — exploits full S_n × S_R symmetry to prune large subtrees)
+//   - Deep depths: sorted vertex-set hash dedup (cheap O(R log R) per node)
+//   - Leaf level (point == R): NO dedup — saves >99% of memory since we never
+//     branch from leaves
 
-// Sorted-set dedup structures (for deep levels).
-namespace {
-struct SortedVecHash {
-    size_t operator()(const std::vector<uint64_t> &v) const {
-        return std::accumulate(
-            v.begin(), v.end(), v.size(), [](size_t h, uint64_t x) {
-                return h ^ (std::hash<uint64_t>{}(x) + 0x9e3779b97f4a7c15ULL +
-                            (h << 6) + (h >> 2));
-            });
-    }
-};
-} // namespace
-
-static std::vector<std::unordered_set<std::vector<uint64_t>, SortedVecHash>>
-    seen_sorted;
+static int nauty_limit = 5;
 
 static void solve(int point, int nodl, int largchg) {
-    // Depth gate: use nauty at shallow depths, sorted-set at deep.
-    // Threshold: nauty for the first half of the recursion where subtrees
-    // are large and pruning is most valuable.
-    const int nauty_limit = std::max(3, R / 2 + 2);
-    const bool use_nauty = (point <= nauty_limit);
+    nodes_generated++;
 
-    if (use_nauty) {
-        // Build 4-color auxiliary graph for the current partial set.
-        int max_sym = 0;
-        for (int i = 0; i < point; i++) {
-            for (int p = 0; p < R; p++) {
-                const int sym = get_sym(ver[i], p);
-                if (sym > max_sym) {
-                    max_sym = sym;
-                }
-            }
-        }
-        const int N = max_sym + 1;
-        const int n_aux = R + N + R * N + point;
-        const int m_aux = SETWORDSNEEDED(n_aux);
-        nauty_check(WORDSIZE, m_aux, n_aux, NAUTYVERSIONID);
-
-        DYNALLSTAT(graph, g, g_sz);
-        DYNALLSTAT(graph, cg, cg_sz);
-        DYNALLSTAT(int, lab, lab_sz);
-        DYNALLSTAT(int, ptn, ptn_sz);
-        DYNALLSTAT(int, orbits, orbits_sz);
-
-        DYNALLOC2(graph, g, g_sz, m_aux, n_aux, "malloc");
-        DYNALLOC2(graph, cg, cg_sz, m_aux, n_aux, "malloc");
-        DYNALLOC1(int, lab, lab_sz, n_aux, "malloc");
-        DYNALLOC1(int, ptn, ptn_sz, n_aux, "malloc");
-        DYNALLOC1(int, orbits, orbits_sz, n_aux, "malloc");
-
-        EMPTYGRAPH(g, m_aux, n_aux);
-
-        // Wire edges: Position↔Grid, Symbol↔Grid, Perm↔Grid.
-        for (int p = 0; p < R; p++) {
-            for (int s = 0; s < N; s++) {
-                const int grid = R + N + p * N + s;
-                ADDONEEDGE(g, p, grid, m_aux);
-                ADDONEEDGE(g, R + s, grid, m_aux);
-            }
-        }
-        for (int i = 0; i < point; i++) {
-            const int perm_idx = R + N + R * N + i;
-            for (int p = 0; p < R; p++) {
-                const int s = get_sym(ver[i], p);
-                const int grid = R + N + p * N + s;
-                ADDONEEDGE(g, perm_idx, grid, m_aux);
-            }
-        }
-
-        // Equitable partitions (color boundaries).
-        for (int i = 0; i < n_aux; i++) {
-            lab[i] = i;
-            ptn[i] = 1;
-        }
-        if (R > 0) {
-            ptn[R - 1] = 0;
-        }
-        if (N > 0) {
-            ptn[R + N - 1] = 0;
-        }
-        if (R * N > 0) {
-            ptn[R + N + R * N - 1] = 0;
-        }
-        ptn[n_aux - 1] = 0;
-
-        DEFAULTOPTIONS_GRAPH(options);
-        options.getcanon = TRUE;
-        options.defaultptn = FALSE;
-
-        statsblk stats;
-        densenauty(g, lab, ptn, orbits, &options, &stats, m_aux, n_aux, cg);
-
-        std::vector<setword> canon_key(cg,
-                                       cg + static_cast<size_t>(n_aux) * m_aux);
-        if (!seen[point].insert(std::move(canon_key)).second) {
-            nodes_pruned++;
-            return;
-        }
-    } else {
-        // Cheap sorted-set dedup.
-        std::vector<uint64_t> key(ver.begin(), ver.begin() + point);
-        std::sort(key.begin(), key.end());
-        if (!seen_sorted[point].insert(std::move(key)).second) {
-            nodes_pruned++;
-            return;
+    // Telemetry: non-blocking update every ~262k nodes
+    if ((nodes_generated & 0x3FFFF) == 0) {
+        auto now = std::chrono::high_resolution_clock::now();
+        if (std::chrono::duration<double>(now - t_last_print).count() >= 0.5) {
+            double total =
+                std::chrono::duration<double>(now - t0_global).count();
+            size_t dedup_n = 0, dedup_s = 0;
+            for (const auto &s : seen_nauty)
+                dedup_n += s.size();
+            for (const auto &s : seen_sorted)
+                dedup_s += s.size();
+            std::cerr << "\r  [" << std::fixed << std::setprecision(1) << total
+                      << "s]  gen: " << nodes_generated
+                      << " | eval: " << nodes_evaluated
+                      << " | pruned(iso/sort): " << nodes_pruned_iso << "/"
+                      << nodes_pruned_exact << " | dedup: " << dedup_n << "+"
+                      << dedup_s << " entries   " << std::flush;
+            t_last_print = now;
         }
     }
 
-    // Leaf: evaluate.
+    // Leaf: evaluate directly — NO dedup needed (never branch from here).
     if (point == R) {
-        nodes_explored++;
+        nodes_evaluated++;
         const auto [nk1, cons] = calc();
 
         auto it = results.find(nk1);
         if (it == results.end() || it->second.cons < cons) {
             std::string exa;
-            for (int i = 0; i < R; i++) {
+            for (int i = 0; i < R; i++)
                 exa += vertex_to_string(ver[i]) + " ";
-            }
             results[nk1] = {cons, exa};
         }
         return;
     }
 
+    // Deduplication for internal nodes.
+    if (point <= nauty_limit) {
+        // Dynamic symbol remapping: compress used symbols to 0..N-1 so nauty
+        // identifies structurally equivalent sets that differ only in which
+        // unused symbols appear.
+        int used_syms[32] = {};
+        for (int i = 0; i < point; i++) {
+            for (int p = 0; p < R; p++)
+                used_syms[get_sym(ver[i], p)] = 1;
+        }
+        int sym_map[32] = {};
+        int N = 0;
+        for (int s = 0; s < 32; s++) {
+            if (used_syms[s])
+                sym_map[s] = N++;
+        }
+
+        const int n_aux = R + N + R * N + point;
+        const int m_aux = SETWORDSNEEDED(n_aux);
+        nauty_check(WORDSIZE, m_aux, n_aux, NAUTYVERSIONID);
+
+        EMPTYGRAPH(g_nauty, m_aux, n_aux);
+
+        // Wire edges: Position↔Grid, Symbol↔Grid, Perm↔Grid
+        for (int p = 0; p < R; p++) {
+            for (int s = 0; s < N; s++) {
+                const int grid = R + N + p * N + s;
+                ADDONEEDGE(g_nauty, p, grid, m_aux);
+                ADDONEEDGE(g_nauty, R + s, grid, m_aux);
+            }
+        }
+        for (int i = 0; i < point; i++) {
+            const int perm_idx = R + N + R * N + i;
+            for (int p = 0; p < R; p++) {
+                const int s = sym_map[get_sym(ver[i], p)];
+                const int grid = R + N + p * N + s;
+                ADDONEEDGE(g_nauty, perm_idx, grid, m_aux);
+            }
+        }
+
+        // Equitable partitions (color boundaries).
+        for (int i = 0; i < n_aux; i++) {
+            lab_nauty[i] = i;
+            ptn_nauty[i] = 1;
+        }
+        if (R > 0)
+            ptn_nauty[R - 1] = 0;
+        if (N > 0)
+            ptn_nauty[R + N - 1] = 0;
+        if (R * N > 0)
+            ptn_nauty[R + N + R * N - 1] = 0;
+        ptn_nauty[n_aux - 1] = 0;
+
+        DEFAULTOPTIONS_GRAPH(options);
+        options.getcanon = TRUE;
+        options.defaultptn = FALSE;
+        statsblk stats;
+        densenauty(g_nauty, lab_nauty, ptn_nauty, orbits_nauty, &options,
+                   &stats, m_aux, n_aux, cg_nauty);
+
+        Hash128 h = hash_nauty_graph(cg_nauty, m_aux, n_aux);
+        if (!seen_nauty[point].insert(h)) {
+            nodes_pruned_iso++;
+            return;
+        }
+    } else {
+        // Cheap sorted-set hash dedup for deep levels.
+        uint64_t key_buf[16];
+        for (int i = 0; i < point; i++)
+            key_buf[i] = ver[i];
+        std::sort(key_buf, key_buf + point);
+
+        Hash128 h = hash_sorted_vertices(key_buf, point);
+        if (!seen_sorted[point].insert(h)) {
+            nodes_pruned_exact++;
+            return;
+        }
+    }
+
     // Generate candidates (same logic as original Cheng code).
     for (int i = 0; i < point; i++) {
         for (int j = 0; j <= nodl; j++) {
-            if (contains_sym(ver[i], j)) {
+            if (contains_sym(ver[i], j))
                 continue;
-            }
             for (int k = 0; k <= largchg + 1 && k < R; k++) {
                 const uint64_t temp = set_sym(ver[i], k, j);
-                if (ver_set.count(temp) != 0) {
+                if (in_ver_set(temp, point))
                     continue;
-                }
 
                 ver[point] = temp;
-                ver_set.insert(temp);
                 solve(point + 1, std::max(nodl, j + 1), std::max(largchg, k));
-                ver_set.erase(temp);
             }
         }
     }
@@ -432,25 +530,30 @@ int main(int argc, const char *argv[]) {
         }
     }
 
-    const auto t0 = std::chrono::high_resolution_clock::now();
+    // Nauty depth limit: use nauty for all internal levels (up to R-1).
+    // This maximizes symmetry pruning and prevents the OOM explosion.
+    nauty_limit = R - 1;
+    if (argc >= 3)
+        nauty_limit = static_cast<int>(std::strtol(argv[2], nullptr, 10));
+
+    t0_global = std::chrono::high_resolution_clock::now();
+    t_last_print = t0_global;
 
     ver.resize(R);
-    seen.resize(R + 1);
+    seen_nauty.resize(R + 1);
     seen_sorted.resize(R + 1);
 
     ver[0] = make_identity();
-    ver_set.insert(ver[0]);
     ver[1] = set_sym(ver[0], 0, R);
-    ver_set.insert(ver[1]);
 
-    std::cerr << "Searching R=" << R << "  ver[0]=" << vertex_to_string(ver[0])
+    std::cerr << "Searching R=" << R << " (nauty depth limit: " << nauty_limit
+              << ")"
+              << "  ver[0]=" << vertex_to_string(ver[0])
               << "  ver[1]=" << vertex_to_string(ver[1]) << "\n";
 
     if (R == 2) {
-        // R=2: point=2 is the leaf, no branches to unroll.
         solve(2, R + 1, 0);
     } else {
-
         // Pre-enumerate top-level branches for progress tracking.
         struct Branch {
             uint64_t temp;
@@ -462,14 +565,12 @@ int main(int argc, const char *argv[]) {
         const int init_largchg = 0;
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j <= init_nodl; j++) {
-                if (contains_sym(ver[i], j)) {
+                if (contains_sym(ver[i], j))
                     continue;
-                }
                 for (int k = 0; k <= init_largchg + 1 && k < R; k++) {
                     const uint64_t temp = set_sym(ver[i], k, j);
-                    if (ver_set.count(temp) != 0) {
+                    if (in_ver_set(temp, 2))
                         continue;
-                    }
                     branches.push_back({temp, std::max(init_nodl, j + 1),
                                         std::max(init_largchg, k)});
                 }
@@ -477,36 +578,29 @@ int main(int argc, const char *argv[]) {
         }
 
         const int total = static_cast<int>(branches.size());
-        int next_pct = 5;
-
         for (int b = 0; b < total; b++) {
             ver[2] = branches[b].temp;
-            ver_set.insert(branches[b].temp);
             solve(3, branches[b].nodl, branches[b].largchg);
-            ver_set.erase(branches[b].temp);
 
-            const int pct = (b + 1) * 100 / total;
-            if (pct >= next_pct || b + 1 == total) {
-                const double elapsed =
-                    std::chrono::duration<double>(
-                        std::chrono::high_resolution_clock::now() - t0)
-                        .count();
-                std::cerr << "\r  " << pct << "%  (" << (b + 1) << "/" << total
-                          << " branches, " << nodes_explored << " evaluated, "
-                          << elapsed << "s)    " << std::flush;
-                next_pct = pct + 5;
-            }
+            const double elapsed =
+                std::chrono::duration<double>(
+                    std::chrono::high_resolution_clock::now() - t0_global)
+                    .count();
+            std::cerr << "\r  " << (b + 1) << "/" << total << " branches"
+                      << " | " << nodes_evaluated << " evaluated"
+                      << " | " << elapsed << "s        \n"
+                      << std::flush;
         }
-        std::cerr << "\n";
-
-    } // else R > 2
+    }
 
     const auto t1 = std::chrono::high_resolution_clock::now();
-    const double elapsed = std::chrono::duration<double>(t1 - t0).count();
+    const double elapsed =
+        std::chrono::duration<double>(t1 - t0_global).count();
+    // Clear telemetry line
+    std::cerr << "\r" << std::string(100, ' ') << "\r";
 
     // Compute column widths for aligned output.
-    int max_nk1_w = 0;
-    int max_nk_w = 0;
+    int max_nk1_w = 0, max_nk_w = 0;
     for (const auto &[nk1, res] : results) {
         max_nk1_w =
             std::max(max_nk1_w, static_cast<int>(std::to_string(nk1).size()));
@@ -520,19 +614,21 @@ int main(int argc, const char *argv[]) {
                   << ", EX: " << res.example << "\n";
     }
 
-    std::cerr << "Done: " << elapsed << "s, " << nodes_explored
-              << " evaluated, " << nodes_pruned << " pruned\n";
+    std::cerr << "Done: " << std::fixed << std::setprecision(3) << elapsed
+              << "s, " << nodes_generated << " generated, " << nodes_evaluated
+              << " evaluated, " << nodes_pruned_iso << " iso-pruned, "
+              << nodes_pruned_exact << " exact-pruned\n";
 
-    // Post-search verification: cross-check each result example with verify().
+    // Post-search verification: cross-check each result with verify().
     bool all_ok = true;
     for (const auto &[nk1, res] : results) {
-        // Parse example string "ABCDE FBCDE ..." back into ver[].
         std::istringstream iss(res.example);
         std::string tok;
         for (int i = 0; i < R && (iss >> tok); i++) {
             uint64_t v = 0;
             for (int p = 0; p < R; p++) {
-                v = set_sym(v, p, tok[p] - 'A');
+                v = set_sym(
+                    v, p, tok[p] >= 'a' ? (tok[p] - 'a' + 26) : (tok[p] - 'A'));
             }
             ver[i] = v;
         }
@@ -543,9 +639,9 @@ int main(int argc, const char *argv[]) {
             all_ok = false;
         }
     }
-    if (all_ok) {
+    if (all_ok && !results.empty()) {
         std::cerr << "\u2713 Verified.\n";
-    } else {
+    } else if (!all_ok) {
         std::cerr << "\u2717 Verification failed.\n";
     }
 
