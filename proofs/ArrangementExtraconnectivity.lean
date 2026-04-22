@@ -512,14 +512,13 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         intro s _
         unfold unique_roots
         symm
-        apply Finset.card_image_of_injOn
-        intro a ha b hb hab
-        have ha' := (Finset.mem_filter.mp ha).2
-        have hb' := (Finset.mem_filter.mp hb).2
-        exact Subtype.ext (funext fun q => by
-          by_cases hq : q = p
-          · subst hq; rw [ha', hb']
-          · exact congr_fun hab ⟨q, hq⟩)
+        exact Finset.card_image_of_injOn (α := ArrVertex n k) (fun ha hb hab => by
+          have ha' := (Finset.mem_filter.mp ha).2
+          have hb' := (Finset.mem_filter.mp hb).2
+          exact Subtype.ext (funext fun q => by
+            by_cases hq : q = p
+            · subst hq; rw [ha', hb']
+            · exact congr_fun hab ⟨q, hq⟩))
 
       -- Fact 2: For q ≠ p, fiber images under drop_pos are disjoint
       -- (different fibers → different symbol at p → different roots)
@@ -535,8 +534,13 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         obtain ⟨b, hb, hab⟩ := hx2
         have ha_s := (Finset.mem_filter.mp ha).2
         have hb_s := (Finset.mem_filter.mp hb).2
-        have : a.val p = b.val p := congr_fun hab ⟨p, hqp⟩
-        exact hne (ha_s ▸ hb_s ▸ this ▸ rfl)
+        -- hab : drop_pos a q = drop_pos b q
+        -- evaluate at ⟨p, p ≠ q⟩ to get a.val p = b.val p
+        have h_eq : a.val p = b.val p := by
+          have := congr_fun hab ⟨p, hqp.symm⟩
+          simp [drop_pos] at this
+          exact this.symm
+        exact hne (ha_s ▸ hb_s ▸ h_eq ▸ rfl)
 
       -- Now use Facts 1 & 2 to prove the decomposition inequality
       sorry -- Algebraic composition from h_p_eval + h_root_disj
