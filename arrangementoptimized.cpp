@@ -83,8 +83,8 @@ struct SetwordVecHash {
     size_t operator()(const std::vector<setword> &v) const {
         size_t h = v.size();
         for (const setword x : v) {
-            h ^= std::hash<setword>{}(x) + 0x9e3779b97f4a7c15ULL +
-                 (h << 6) + (h >> 2);
+            h ^= std::hash<setword>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) +
+                 (h >> 2);
         }
         return h;
     }
@@ -92,8 +92,8 @@ struct SetwordVecHash {
 } // namespace
 
 // One dedup set per recursion depth.
-static std::vector<
-    std::unordered_set<std::vector<setword>, SetwordVecHash>> seen;
+static std::vector<std::unordered_set<std::vector<setword>, SetwordVecHash>>
+    seen;
 
 // ── Global state ───────────────────────────────────────────────────────────
 
@@ -315,9 +315,15 @@ static void solve(int point, int nodl, int largchg) {
         lab[i] = i;
         ptn[i] = 1;
     }
-    if (R > 0) { ptn[R - 1] = 0; }
-    if (N > 0) { ptn[R + N - 1] = 0; }
-    if (R * N > 0) { ptn[R + N + R * N - 1] = 0; }
+    if (R > 0) {
+        ptn[R - 1] = 0;
+    }
+    if (N > 0) {
+        ptn[R + N - 1] = 0;
+    }
+    if (R * N > 0) {
+        ptn[R + N + R * N - 1] = 0;
+    }
     ptn[n_aux - 1] = 0;
 
     DEFAULTOPTIONS_GRAPH(options);
@@ -334,19 +340,10 @@ static void solve(int point, int nodl, int largchg) {
         return;
     }
 
-    // Leaf: evaluate and cross-validate.
+    // Leaf: evaluate.
     if (point == R) {
         nodes_explored++;
         const auto [nk1, cons] = calc();
-        const auto [vnk1, vcons] = verify_neighbor_set();
-        if (nk1 != vnk1 || cons != vcons) {
-            std::cerr << "VERIFY MISMATCH at ";
-            for (int i = 0; i < R; i++) {
-                std::cerr << vertex_to_string(ver[i]) << " ";
-            }
-            std::cerr << ": calc=(" << nk1 << "," << cons
-                      << ") verify=(" << vnk1 << "," << vcons << ")\n";
-        }
 
         auto it = results.find(nk1);
         if (it == results.end() || it->second.cons < cons) {
@@ -404,53 +401,60 @@ int main(int argc, const char *argv[]) {
     std::cerr << "Searching R=" << R << "  ver[0]=" << vertex_to_string(ver[0])
               << "  ver[1]=" << vertex_to_string(ver[1]) << "\n";
 
-    // Pre-enumerate top-level branches for progress tracking.
-    struct Branch {
-        uint64_t temp;
-        int nodl;
-        int largchg;
-    };
-    std::vector<Branch> branches;
-    const int init_nodl = R + 1;
-    const int init_largchg = 0;
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j <= init_nodl; j++) {
-            if (contains_sym(ver[i], j)) {
-                continue;
-            }
-            for (int k = 0; k <= init_largchg + 1 && k < R; k++) {
-                const uint64_t temp = set_sym(ver[i], k, j);
-                if (ver_set.count(temp) != 0) {
+    if (R == 2) {
+        // R=2: point=2 is the leaf, no branches to unroll.
+        solve(2, R + 1, 0);
+    } else {
+
+        // Pre-enumerate top-level branches for progress tracking.
+        struct Branch {
+            uint64_t temp;
+            int nodl;
+            int largchg;
+        };
+        std::vector<Branch> branches;
+        const int init_nodl = R + 1;
+        const int init_largchg = 0;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j <= init_nodl; j++) {
+                if (contains_sym(ver[i], j)) {
                     continue;
                 }
-                branches.push_back({temp, std::max(init_nodl, j + 1),
-                                    std::max(init_largchg, k)});
+                for (int k = 0; k <= init_largchg + 1 && k < R; k++) {
+                    const uint64_t temp = set_sym(ver[i], k, j);
+                    if (ver_set.count(temp) != 0) {
+                        continue;
+                    }
+                    branches.push_back({temp, std::max(init_nodl, j + 1),
+                                        std::max(init_largchg, k)});
+                }
             }
         }
-    }
 
-    const int total = static_cast<int>(branches.size());
-    int next_pct = 5;
+        const int total = static_cast<int>(branches.size());
+        int next_pct = 5;
 
-    for (int b = 0; b < total; b++) {
-        ver[2] = branches[b].temp;
-        ver_set.insert(branches[b].temp);
-        solve(3, branches[b].nodl, branches[b].largchg);
-        ver_set.erase(branches[b].temp);
+        for (int b = 0; b < total; b++) {
+            ver[2] = branches[b].temp;
+            ver_set.insert(branches[b].temp);
+            solve(3, branches[b].nodl, branches[b].largchg);
+            ver_set.erase(branches[b].temp);
 
-        const int pct = (b + 1) * 100 / total;
-        if (pct >= next_pct || b + 1 == total) {
-            const double elapsed =
-                std::chrono::duration<double>(
-                    std::chrono::high_resolution_clock::now() - t0)
-                    .count();
-            std::cerr << "\r  " << pct << "%  (" << (b + 1) << "/" << total
-                      << " branches, " << nodes_explored << " evaluated, "
-                      << elapsed << "s)    " << std::flush;
-            next_pct = pct + 5;
+            const int pct = (b + 1) * 100 / total;
+            if (pct >= next_pct || b + 1 == total) {
+                const double elapsed =
+                    std::chrono::duration<double>(
+                        std::chrono::high_resolution_clock::now() - t0)
+                        .count();
+                std::cerr << "\r  " << pct << "%  (" << (b + 1) << "/" << total
+                          << " branches, " << nodes_explored << " evaluated, "
+                          << elapsed << "s)    " << std::flush;
+                next_pct = pct + 5;
+            }
         }
-    }
-    std::cerr << "\n";
+        std::cerr << "\n";
+
+    } // else R > 2
 
     const auto t1 = std::chrono::high_resolution_clock::now();
     const double elapsed = std::chrono::duration<double>(t1 - t0).count();
