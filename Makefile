@@ -166,6 +166,7 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 .PHONY: format
 format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
+	-prettier -w .
 	clang-format -i $(SRC_OPT)
 	@$(call print_success,Format complete.)
 

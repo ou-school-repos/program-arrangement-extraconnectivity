@@ -65,14 +65,19 @@ Done: 304.064s, 146788359 evaluated, 206511685 pruned
 
 ### Summary table
 
-| R   | (R-1)-extraconnectivity | Paper reference |
-| --- | ----------------------- | --------------- |
-| 2   | (2k−1)(n−k) − 1         | Theorem 1       |
-| 3   | (3k−2)(n−k) − 3         | Theorem 2       |
-| 4   | (4k−4)(n−k) − 4         | Theorem 3       |
-| 5   | (5k−5)(n−k) − 7         | Theorem 5       |
-| 6   | (6k−7)(n−k) − 9         | Theorem 6       |
-| 7   | (7k−9)(n−k) − 11        | Theorem 7       |
+| R   | (R-1)-extraconnectivity | Paper reference     |
+| --- | ----------------------- | ------------------- |
+| 2   | (2k−1)(n−k) − 1         | Theorem 1           |
+| 3   | (3k−2)(n−k) − 3         | Theorem 2           |
+| 4   | (4k−4)(n−k) − 4         | Theorem 3           |
+| 5   | (5k−5)(n−k) − 7         | Theorem 5           |
+| 6   | (6k−7)(n−k) − 9         | Theorem 6           |
+| 7   | (7k−9)(n−k) − 11        | Theorem 7           |
+| 8   | **(8k−12)(n−k) − 12**   | **New (this work)** |
+
+> **Note:** For R=5..7, the minimum follows ((r+1)k−(2r−3))(n−k)−(2r−1).
+> R=8 **breaks this pattern** — the nk1 coefficient jumps by 3 (9→12)
+> instead of 2, and the nk1=11 class is absent entirely.
 
 ## Building & running
 
