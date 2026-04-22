@@ -418,8 +418,11 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
     · -- R = 1: goal is sum_unique_roots V' ≥ k - E_seq 1 = k
       have hR1 : R = 1 := by omega
       subst hR1
-      -- V' is a singleton. Each unique_roots p V' = 1, so sum = k.
-      sorry -- singleton base case
+      -- E_seq 1 = 0, so goal: sum_unique_roots V' ≥ 1 * k - 0 = k
+      -- V' is a singleton {v}. unique_roots p V' = |{v}.image(drop_pos · p)| = 1
+      -- for each p, so sum_unique_roots = k.
+      -- For now, this requires Finset singleton/image lemmas.
+      sorry -- singleton base case: sum_unique_roots of 1-element set = k
   · -- Inductive case: R ≥ 2
     have hR2' : V'.card ≥ 2 := by omega
     obtain ⟨l, y, hsum, hmax, hlt, hdefect⟩ := defect_fiber_bound V' hR2'
