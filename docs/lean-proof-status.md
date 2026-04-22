@@ -10,7 +10,7 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **909 jobs, 0 errors, 4 sorries**.
+Current status: **916 jobs, 0 errors, 3 sorries**.
 
 ## Architecture
 
@@ -28,44 +28,49 @@ Current status: **909 jobs, 0 errors, 4 sorries**.
 
 \*Proven modulo `defect_fiber_bound` helper (see Remaining Sorries below).
 
-## Remaining Sorries (4)
+## Remaining Sorries (3)
 
-### Sorry 1: `defect_fiber_bound` (L393) -- Finset Partition Plumbing
+### Sorry 1: `defect_fiber_bound` -- Root Disjointness (L394, 1 sub-sorry)
 
-**What it says**: For any V' with |V'| >= 2, there exists a list of fiber
-sizes `l` and an overlap count `y` such that the Defect decomposes as
-`D(V') <= sum E_seq(c_i) + R - y`.
+**What it says**: D(V') <= sum D(F_s) + R - y, where F_s are fibers at a
+disagreement coordinate p and y = unique_roots p V'.
 
-**What it needs**: This is the core Finset wiring for the partition induction:
+**Current state**: The lemma is 95% proven. All 4 subgoals of the `refine`
+are closed EXCEPT for `h_decomp` — the decomposition inequality that requires:
 
-1. Find a coordinate p where vertices in V' disagree (exists since R >= 2)
-2. Partition V' into fibers `V'.filter (fun v => v.val p = s)` for each symbol s
-3. Prove `drop_pos` is injective on each fiber (same symbol at p => distinct
-   roots must map distinctly)
-4. Prove root disjointness at other positions q != p (key: `drop_pos v q`
-   includes position p, so different symbols at p => different roots)
-5. Compose the sum_unique_roots decomposition identity
+1. **Root disjointness at q != p**: For positions q != p, `drop_pos` at q
+   retains coordinate p. If two vertices are in different fibers (different
+   symbol at p), their roots at q are automatically distinct. This gives:
+   `unique_roots q V' = sum_s unique_roots q F_s` for q != p.
 
-**Estimated effort**: ~60-80 lines of Finset API (filter, image, card, disjoint).
+2. **Injectivity at p**: `unique_roots p F_s = c_s` (drop_pos injective on
+   each fiber). Already proven in Subgoal 2.
 
-**Question for advisor**: Is there a cleaner Mathlib API for "partition a
-Finset by a function and sum over fibers"? Something like `Finset.disjiUnion`
-or `Finset.sigma` might simplify the fiber card sum identity.
+3. **Algebraic composition**: Combine (1) and (2) to get:
+   `sum_unique_roots V' = y + sum_s sum_unique_roots F_s - R`
+   Then: `D(V') = R*k - sum_unique_roots V' = sum D(F_s) + R - y`.
 
-### Sorry 2: Singleton Base Case (L404)
+**What's proven in defect_fiber_bound**:
 
-**What it says**: For R=1, `sum_unique_roots V' >= k`.
+- ✅ Subgoal 1: `l.sum = V'.card` (fiberwise partition via `card_eq_sum_card_fiberwise`)
+- ✅ Subgoal 2: `max(l) <= y` (drop_pos injective on fibers via `card_le_card_of_injOn`)
+- ✅ Subgoal 3: `forall c in l, c < V'.card` (strict decrease via `card_lt_card`)
+- ✅ Step A: IH application to each fiber (via `ih`)
+- ✅ `h_sum_ih`: Pointwise IH sum (via list induction)
+- ✅ Final chain: `h_decomp + h_sum_ih -> goal` (via `List.map_map` + `omega`)
+- ⬜ `h_decomp`: Root disjointness identity (THE final piece)
 
-**What it needs**: When V' is a singleton {v}, each `unique_roots p V'` = 1
-(image of a singleton has card 1), and there are k coordinates. So the sum
-is k. This requires:
+**Estimated effort**: ~20-30 lines for root disjointness.
 
-- `Finset.image_singleton` or `Finset.card_image_of_injective` for singletons
-- Connecting sum_unique_roots (defined via Multiset.map/sum) to k \* 1
+**Question for advisor**: The disjointness proof needs
+`Finset.disjoint_left` or `Finset.disjoint_filter` to show that at position
+q != p, images of different fibers under `drop_pos . q` are disjoint (because
+they differ at coordinate p, which is retained by `drop_pos . q`). Then we
+need to sum unique_roots over fibers and relate to unique_roots of V' via
+`Finset.card_biUnion`. Is there a single Mathlib lemma that gives
+`|union_s F_s.image f| = sum_s |F_s.image f|` given pairwise disjointness?
 
-**Estimated effort**: ~15-20 lines.
-
-### Sorry 3: `external_neighbors_bound` (L443) -- Collision Formula
+### Sorry 2: `external_neighbors_bound` (L602) -- Collision Formula
 
 **What it says**: `|N(V')| >= sum_unique_roots * (n-k) - C_constant(R)`.
 
@@ -73,41 +78,16 @@ is k. This requires:
 fresh symbols to form distinct external neighbors. The collision constant
 C_constant(R) bounds the maximum overlaps from reused "named" symbols.
 
-**Proof strategy** (from advisor):
-
-- Define Candidates as (position, root, fresh_symbol) tuples
-- Map candidates to external neighbor vertices
-- Split fresh symbols into Anonymous (never collide across dimensions) and
-  Named (collide, bounded by C_constant)
-- Count via injection + collision bound
-
 **Estimated effort**: ~100-150 lines. This is the deepest counting argument.
 
-**Question for advisor**: Should we formalize the Named/Anonymous split as
-two separate Finsets with a union bound, or use a single injection with a
-collision correction term?
-
-### Sorry 4: `exists_optimal_embedding` (L452) -- Constructive Upper Bound
+### Sorry 3: `exists_optimal_embedding` (L611) -- Constructive Upper Bound
 
 **What it says**: There exists a Finset of size R achieving the formula exactly.
 
 **What it needs**: Construct the Hamming ball as a Finset of arrangement
-vertices and compute external_neighbors exactly on it.
-
-**Critical issue** (from advisor): For arbitrary R (not just powers of 2),
-we need the initial segment of lexicographic order in Q(d), not the full
-cube. This requires:
-
-- `nat_to_cube`: map integers 0..R-1 to binary representations in Cube d
-- `hamming_ball_cube`: `(Finset.range R).image nat_to_cube`
-- Prove card = R (injectivity of nat_to_cube for values < 2^d)
-- Compute external_neighbors on this specific set to get exact equality
+vertices using `Nat.testBit` and compute external_neighbors exactly on it.
 
 **Estimated effort**: ~80-100 lines.
-
-**Question for advisor**: Since the `embed_vertex` injectivity is already
-proven, the main work is the nat_to_cube cardinality. Should we use
-`Nat.binaryRec` or a direct `fun i => (x / 2^i) % 2 == 1` definition?
 
 ## Key Proven Infrastructure
 
@@ -144,4 +124,4 @@ This is proven by list induction using `E_seq_add_bound` as the step lemma.
 - **Lean**: v4.30.0-rc2
 - **Mathlib**: Current master (pinned in `lake-manifest.json`)
 - Key imports: `Mathlib.Data.Fintype.Pi`, `Mathlib.Data.Fintype.Basic`,
-  `Mathlib.Data.Finset.Card`
+  `Mathlib.Data.Finset.Card`, `Mathlib.Algebra.BigOperators.Group.Finset.Basic`
