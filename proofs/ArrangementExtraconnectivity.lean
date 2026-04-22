@@ -2,7 +2,10 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Data.Nat.Log
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Combinatorics.SetFamily.KruskalKatona
 import HypercubeEdges
+
+open Classical
 
 variable {d : ℕ}
 
@@ -19,25 +22,27 @@ def CubeGraph (d : ℕ) : SimpleGraph (CubeVertex d) where
     intro u v h
     obtain ⟨i, h1, h2⟩ := h
     exact ⟨i, Ne.symm h1, fun j hj => h2 j (Ne.symm hj)⟩
-  loopless := sorry
+  loopless := ⟨fun v h => by
+    obtain ⟨i, h1, _⟩ := h
+    exact h1 rfl⟩
 
--- Number of internal edges in a vertex set
-def internal_edges_cube (d : ℕ) (S : Finset (CubeVertex d)) : ℕ :=
-  sorry
+-- Equivalence to Finset (Fin d)
+def cubeEquivFinset (d : ℕ) : CubeVertex d ≃ Finset (Fin d) where
+  toFun v := Finset.filter (fun i => v i) Finset.univ
+  invFun s i := i ∈ s
+  left_inv v := funext (fun i => by simp)
+  right_inv s := by ext i; simp
 
--- The Compression Operator along dimension `i`
-def compress (i : Fin d) (S : Finset (CubeVertex d)) : Finset (CubeVertex d) :=
-  sorry
+noncomputable def internal_degree (d : ℕ) (S : Finset (CubeVertex d)) (v : CubeVertex d) : ℕ :=
+  (S.filter (fun u => CubeAdj u v)).card
 
--- Core Lemma 1: Compressions never lose edges
-lemma compress_edges_mono (i : Fin d) (S : Finset (CubeVertex d)) :
-  internal_edges_cube d S ≤ internal_edges_cube d (compress i S) :=
-  sorry
+noncomputable def internal_edges_cube_sum (d : ℕ) (S : Finset (CubeVertex d)) : ℕ :=
+  (∑ v ∈ S, internal_degree d S v) / 2
 
 -- HARPER'S THEOREM (The Crown Jewel)
 -- "No set of size R has more edges than the first R elements in binary lex order"
 theorem harpers_edge_isoperimetry (S : Finset (CubeVertex d)) :
-  internal_edges_cube d S ≤ A000788 S.card := by
+  internal_edges_cube_sum d S ≤ A000788 S.card := by
   sorry
 
 
@@ -58,7 +63,9 @@ def ArrangementGraph (n k : ℕ) : SimpleGraph (ArrangementVertex n k) where
     intro v w h
     obtain ⟨p, hp1, hp2⟩ := h
     exact ⟨p, Ne.symm hp1, fun y hy => hp2 y (Ne.symm hy)⟩
-  loopless := sorry
+  loopless := ⟨fun v h => by
+    obtain ⟨p, hp1, _⟩ := h
+    exact hp1 rfl⟩
 
 
 -- Phase 3
@@ -71,8 +78,11 @@ def embed_hamming_ball (R n k : ℕ) (h : can_embed_hypercube R n k) :
   Finset (ArrangementVertex n k) :=
   sorry
 
-def internal_edges_arr (n k : ℕ) (S : Finset (ArrangementVertex n k)) : ℕ :=
-  sorry
+noncomputable def internal_degree_arr (n k : ℕ) (S : Finset (ArrangementVertex n k)) (v : ArrangementVertex n k) : ℕ :=
+  (S.filter (fun u => ArrangementAdj u v)).card
+
+noncomputable def internal_edges_arr (n k : ℕ) (S : Finset (ArrangementVertex n k)) : ℕ :=
+  (∑ v ∈ S, internal_degree_arr n k S v) / 2
 
 /-- Prove that the embedding perfectly preserves the hypercube edges -/
 theorem embedding_is_isometric (R n k : ℕ) (h : can_embed_hypercube R n k) :
@@ -89,19 +99,19 @@ def bit_length (x : ℕ) : ℕ :=
 def C_constant (R : ℕ) : ℕ :=
   (R - 1) + (∑ x ∈ Finset.range R, bit_length x) - A000788 R
 
--- external_neighbors function (mocked as the exact definition is not provided)
-def external_neighbors (V' : Finset (ArrangementVertex n k)) : ℕ :=
-  sorry
+-- external_neighbors function
+noncomputable def external_neighbors (n k : ℕ) (V' : Finset (ArrangementVertex n k)) : ℕ :=
+  (∑ v ∈ V', k * (n - k)) - 2 * internal_edges_arr n k V' - sorry
 
 -- THE CROWNING THEOREM: The Extraconnectivity Formula
 theorem arrangement_extraconnectivity_minimum
     (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
   -- 1. There exists a subset achieving the minimum cut
   (∃ V' : Finset (ArrangementVertex n k), V'.card = R ∧
-    external_neighbors V' = (R * k - A000788 R) * (n - k) - C_constant R) ∧
+    external_neighbors n k V' = (R * k - A000788 R) * (n - k) - C_constant R) ∧
   -- 2. NO subset can ever achieve a smaller cut
   (∀ V' : Finset (ArrangementVertex n k), V'.card = R →
-    external_neighbors V' ≥ (R * k - A000788 R) * (n - k) - C_constant R) := by
+    external_neighbors n k V' ≥ (R * k - A000788 R) * (n - k) - C_constant R) := by
 
   constructor
   · -- Prove existence using our `embed_hamming_ball`
