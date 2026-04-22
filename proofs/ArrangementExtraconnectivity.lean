@@ -4,6 +4,7 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Fintype.Pi
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Data.Fintype.Basic
 
 /-!
@@ -410,16 +411,46 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
   refine ⟨active_syms.toList.map (fun s => (fiber V' p s).card),
           unique_roots p V', ?_, ?_, ?_, ?_⟩
   · -- Subgoal 1: l.sum = V'.card (Exhaustiveness)
-    -- Fibers partition V': each w ∈ V' is in exactly one fiber (for s = w.val p).
-    -- Sum of fiber sizes = V'.card.
-    -- Needs: Finset.biUnion_filter_eq_of_maps_to + card reasoning, or
-    --        import Mathlib.Algebra.BigOperators.Group.Finset for Finset.sum API.
-    sorry
+    -- Convert List.sum to Finset.sum, then use card_eq_sum_card_fiberwise.
+    -- (active_syms.toList.map f).sum = ∑ s ∈ active_syms, f s
+    have h_list_sum : (active_syms.toList.map (fun s => (fiber V' p s).card)).sum =
+        ∑ s ∈ active_syms, (fiber V' p s).card := by
+      rw [← Finset.sum_toList]
+      congr 1
+      simp [List.map_map]
+    rw [h_list_sum]
+    -- Now: ∑ s ∈ active_syms, (V'.filter (w.val p = s)).card = V'.card
+    symm
+    exact Finset.card_eq_sum_card_fiberwise (fun w hw => Finset.mem_image_of_mem _ hw)
   · -- Subgoal 2: l.foldr max 0 ≤ unique_roots p V' (Injective Projection)
-    -- For each fiber F_s: drop_pos is injective on F_s (same symbol at p → same vertex).
-    -- So F_s.card ≤ |V'.image (drop_pos · p)| = unique_roots p V'.
-    -- Needs: Finset.card_image_of_injective + Finset.card_le_card (image subset).
-    sorry
+    -- For each fiber F_s, F_s.card ≤ unique_roots p V'.
+    -- So max of all fiber sizes ≤ unique_roots p V'.
+    -- Suffices to show: ∀ s ∈ active_syms, (fiber V' p s).card ≤ unique_roots p V'
+    suffices h : ∀ c ∈ active_syms.toList.map (fun s => (fiber V' p s).card),
+        c ≤ unique_roots p V' by
+      induction active_syms.toList with
+      | nil => simp
+      | cons a t iht =>
+        simp only [List.map_cons, List.foldr_cons]
+        exact Nat.max_le.mpr ⟨h _ (List.mem_cons_self _ _),
+          iht (fun c hc => h c (List.mem_cons_of_mem _ hc))⟩
+    intro c hc
+    simp only [List.mem_map, Finset.mem_toList] at hc
+    obtain ⟨s, _, rfl⟩ := hc
+    -- Need: (fiber V' p s).card ≤ unique_roots p V'
+    -- fiber V' p s ⊆ V', so (fiber V' p s).image f ⊆ V'.image f
+    unfold unique_roots
+    calc (fiber V' p s).card
+        ≤ ((fiber V' p s).image (fun w => drop_pos w p)).card :=
+          Finset.card_le_card_of_injOn _ (fun _ _ => rfl)
+            (by intro a ha b hb hab
+                simp [fiber] at ha hb
+                exact Subtype.ext (funext fun q => by
+                  by_cases hq : q = p
+                  · subst hq; exact ha.2 ▸ hb.2 ▸ rfl
+                  · have := congr_fun hab ⟨q, hq⟩; exact this))
+      _ ≤ (V'.image (fun w => drop_pos w p)).card :=
+          Finset.card_le_card (Finset.image_subset _ (Finset.filter_subset _ _))
   · -- Subgoal 3: ∀ c ∈ l, c < V'.card (Strict Decrease)
     intro c hc
     simp only [List.mem_map, Finset.mem_toList] at hc
