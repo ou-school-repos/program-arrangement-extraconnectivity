@@ -98,3 +98,46 @@ A000788(2m+1) = 2 · A000788(m) + m + popcount(m)
 This works by splitting {0..2m-1} into even and odd subsets: popcount(2k) = popcount(k)
 and popcount(2k+1) = popcount(k) + 1, so the even half contributes A000788(m) and the
 odd half contributes A000788(m) + m.
+
+## Complexity Analysis
+
+### Predictor: O(R³)
+
+The `predict.cpp` formula computation has three phases:
+
+1. **Build Hamming ball**: O(R · log R) — R vertices, ⌈log₂R⌉ dimensions each
+2. **Anonymous coefficient** (`compute_formula`): O(R² · R) = **O(R³)** —
+   for each position (R), for each vertex (R), compare against group keys (≤R)
+3. **Named neighbors**: O(R² · M · R) where M = R + ⌈log₂R⌉ ≈ R, so **O(R⁴)**
+4. **Brute-force verification** (R ≤ 12): O(R · R · 2R · R) = **O(R⁴)**
+
+Total: **O(R⁴)** — runs in microseconds for R ≤ 32.
+
+### Exhaustive search: super-exponential
+
+The search enumerates all connected subgraphs of size R in A(n,k), with nauty-based
+isomorphism pruning. Observed growth from single-threaded benchmarks:
+
+| R   | Subgraphs evaluated | Growth factor | Wall time |
+| --- | ------------------- | ------------- | --------- |
+| 6   | 5,436               |               | 0.02s     |
+| 7   | 120,172             | ×22           | 0.3s      |
+| 8   | 3,827,325           | ×32           | 10.5s     |
+| 9   | 162,163,337         | ×42           | 8.2 min   |
+
+The growth factor itself increases by ~10 per step, giving a rough model:
+
+```text
+T(R) ≈ T(R-1) × (10R + c)
+```
+
+Extrapolated estimates:
+
+- R=10: ~7 hours
+- R=11: ~20 days
+- R=12: ~4 years
+- R=13: ~300 years
+- R=15: ~3 million years
+
+This super-exponential growth is why the O(R⁴) predictor is transformative:
+it replaces a computation that scales worse than R! with one that scales as R⁴.

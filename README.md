@@ -165,6 +165,15 @@ Done: 490.892s, 166116718 generated, 162163337 evaluated, 2921832 iso-pruned, 0 
 
 \newpage
 
+### Complexity
+
+The exhaustive search evaluates all connected R-subgraphs with nauty-based dedup.
+The growth factor increases by ~10× per R step (×22 at R=7, ×32 at R=8, ×42 at R=9),
+giving T(R) ≈ T(R−1) × (10R + c) — worse than R!.
+
+The **Hamming ball predictor** (`predict.cpp`) constructs the optimal vertex set directly
+and computes the formula in **O(R⁴)** time, enabling instant predictions for any R.
+
 ### Summary table
 
 | R   | (R-1)-extraconnectivity | Paper reference         | \|N(V')\| at n=2R, k=R     | Runtime |
