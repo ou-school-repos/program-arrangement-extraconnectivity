@@ -420,9 +420,24 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
     -- Thus F_s.card = (F_s.image drop_pos).card ≤ y.
     sorry
   · -- Subgoal 3: ∀ c ∈ l, c < V'.card (Strict Decrease)
-    -- Since u.val p ≠ v.val p, they cannot both be in any fiber F_s.
-    -- Thus each F_s is strictly missing either u or v, so F_s.card < V'.card.
-    sorry
+    intro c hc
+    simp only [List.mem_map, Finset.mem_toList] at hc
+    obtain ⟨s, hs, rfl⟩ := hc
+    -- c = (fiber V' p s).card, need this < V'.card
+    -- fiber V' p s ⊂ V' because ∃ w ∈ V' with w.val p ≠ s
+    have : fiber V' p s ⊂ V' := by
+      constructor
+      · intro w hw; simp [fiber] at hw; exact hw.1
+      · -- V' has an element NOT in this fiber
+        -- Either u.val p ≠ s or v.val p ≠ s (since u.val p ≠ v.val p)
+        simp only [Finset.not_subset]
+        by_cases hus : u.val p = s
+        · -- u is in fiber s, so v is not (since v.val p ≠ u.val p = s)
+          refine ⟨v, hv, ?_⟩
+          simp [fiber]; intro _; exact fun hvs => hp (hus ▸ hvs ▸ rfl)
+        · refine ⟨u, hu, ?_⟩
+          simp [fiber]; intro _; exact hus
+    exact Finset.card_lt_card this
   · -- Subgoal 4: The Algebraic Composition (Defect Decomposition + IH)
     -- For q ≠ p, drop_pos retains coordinate p. Roots from different fibers are
     -- STRICTLY DISJOINT at q. Apply ih to each fiber, sum over active_syms.
