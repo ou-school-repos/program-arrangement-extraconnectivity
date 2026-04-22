@@ -1,7 +1,7 @@
-# Extraconnectivity of Arrangement Graphs: Computational Lemmas (April 2026)
+# Extraconnectivity of Arrangement Graphs: Computational Lemmas (2026)
 
-Computational verification of g-extraconnectivity bounds for arrangement graphs
-A(n,k), based on Cheng, Lipták & Tian (2022).
+Computational findings on $g$-extraconnectivity of arrangement graphs $A(n,k)$,
+based on Cheng, Lipták & Tian (2022).
 
 ## Background
 
@@ -164,6 +164,8 @@ which coincides at R=5,6,7 but diverges at powers of 2.
 
 | R   | A000788 formula    | \|N(V')\| | Cheng's formula | \|N(V')\| | Search  |
 | --- | ------------------ | --------- | --------------- | --------- | ------- |
+| 2   | (3)(2) - 1         | 5         | **(5)(2) - 3**  | **7**     | **5**   |
+| 3   | (7)(3) - 3         | 18        | **(8)(3) - 5**  | **19**    | **18**  |
 | 5   | (20)(5) - 7        | 93        | (20)(5) - 9     | 91        | **93**  |
 | 6   | (29)(6) - 9        | 165       | (29)(6) - 11    | 163       | **165** |
 | 7   | (40)(7) - 11       | 269       | (40)(7) - 13    | 267       | **269** |
@@ -188,10 +190,12 @@ Verify independently: `python3 docs/verify-counterexample.py`
 
 \newpage
 
-#### nk1 coefficient divergence
+### nk1 coefficient divergence
 
 | R    | A000788 (true E) | Paper's 2R-5 | Winner                          |
 | ---- | ---------------- | ------------ | ------------------------------- |
+| 2    | **1**            | **-1**       | **Cheng undefined (negative)**  |
+| 3    | **2**            | 1            | **Cheng wrong**                 |
 | 4    | **4**            | 3            | Hypercube wins                  |
 | 5    | 5                | 5            | _Tie_                           |
 | 6    | 7                | 7            | _Tie_                           |
@@ -213,7 +217,7 @@ Verify independently: `python3 docs/verify-counterexample.py`
 
 The closed form E(2^d) = d · 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
 
-### Asymptotic agreement
+## Asymptotic agreement
 
 While the exact correction terms differ, the asymptotic result of Cheng et al.
 (Proposition 6) is confirmed: as k, n-k tend to infinity, the (R-1)-extraconnectivity
