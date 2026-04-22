@@ -418,8 +418,12 @@ static void solve(int point, int nodl, int largchg, int acc_nk1, int acc_cons) {
         auto it = results.find(acc_nk1);
         if (it == results.end() || it->second.cons < acc_cons) {
             std::string exa;
-            for (int i = 0; i < R; i++)
-                exa += vertex_to_string(ver[i]) + " ";
+            for (int i = 0; i < R; i++) {
+                if (i) {
+                    exa += ' ';
+                }
+                exa += vertex_to_string(ver[i]);
+            }
             results[acc_nk1] = {acc_cons, exa};
         }
         return;
