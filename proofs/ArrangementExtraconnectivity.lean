@@ -13,7 +13,6 @@ def popcount (n : ℕ) : ℕ :=
   else (n % 2) + popcount (n / 2)
 termination_by n
 decreasing_by
-  simp_wf
   exact Nat.div_lt_self (Nat.pos_of_ne_zero h) (by decide)
 
 def E_seq : ℕ → ℕ
@@ -57,7 +56,8 @@ lemma E_seq_odd (m : ℕ) : E_seq (2 * m + 1) = E_seq m + E_seq (m + 1) + m := b
     _ = E_seq m + E_seq (m + 1) + m := rfl
 
 theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y) := by
-  induction' h : x + y using Nat.strong_induction_on with n ih generalizing x y
+  induction h : x + y using Nat.strong_induction_on generalizing x y
+  case h n ih =>
   subst h
   if hx : x = 0 then
     subst hx
@@ -68,53 +68,48 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
     have : E_seq 0 = 0 := rfl
     omega
   else
-    let a := x / 2; let b := y / 2
-    have ha : x = 2 * a ∨ x = 2 * a + 1 := by omega
-    have hb : y = 2 * b ∨ y = 2 * b + 1 := by omega
-    rcases ha with rfl | rfl <;> rcases hb with rfl | rfl
-    · -- Case: Even, Even
-      have h_lt : a + b < 2 * a + 2 * b := by omega
-      have ih1 := ih (a + b) h_lt a b (by omega)
-      rw [E_seq_even a, E_seq_even b, E_seq_even (a + b)]
+    obtain ⟨a, rfl | rfl⟩ : ∃ a, x = 2 * a ∨ x = 2 * a + 1 := ⟨x / 2, by omega⟩
+    · obtain ⟨b, rfl | rfl⟩ : ∃ b, y = 2 * b ∨ y = 2 * b + 1 := ⟨y / 2, by omega⟩
+      · -- Case: Even, Even
+        have h_lt : a + b < 2 * a + 2 * b := by omega
+        have ih1 := ih (a + b) h_lt a b rfl
+        rw [E_seq_even a, E_seq_even b]
+        have h_sum : 2 * a + 2 * b = 2 * (a + b) := by omega
+        rw [h_sum, E_seq_even (a + b)]
       have : min (2 * a) (2 * b) = 2 * min a b := by omega
       omega
-    · -- Case: Even, Odd
-      have h_lt1 : a + b < 2 * a + (2 * b + 1) := by omega
-      have h_lt2 : a + (b + 1) < 2 * a + (2 * b + 1) := by omega
-      have ih1 := ih (a + b) h_lt1 a b (by omega)
-      have ih2 := ih (a + b + 1) h_lt2 a (b + 1) (by omega)
-      rw [E_seq_even a, E_seq_odd b]
-      have eq3 : E_seq (2 * a + (2 * b + 1)) = E_seq (a + b) + E_seq (a + b + 1) + a + b := by
-        have : 2 * a + (2 * b + 1) = 2 * (a + b) + 1 := by omega
-        rw [this, E_seq_odd]
-      rw [eq3]
-      have : min (2 * a) (2 * b + 1) ≤ min a b + min a (b + 1) := by omega
-      omega
-    · -- Case: Odd, Even
-      have h_lt1 : a + b < 2 * a + 1 + 2 * b := by omega
-      have h_lt2 : a + 1 + b < 2 * a + 1 + 2 * b := by omega
-      have ih1 := ih (a + b) h_lt1 a b (by omega)
-      have ih2 := ih (a + 1 + b) h_lt2 (a + 1) b (by omega)
-      rw [E_seq_odd a, E_seq_even b]
-      have eq3 : E_seq (2 * a + 1 + 2 * b) = E_seq (a + b) + E_seq (a + b + 1) + a + b := by
-        have : 2 * a + 1 + 2 * b = 2 * (a + b) + 1 := by omega
-        rw [this, E_seq_odd]
-      rw [eq3]
-      have : min (2 * a + 1) (2 * b) ≤ min a b + min (a + 1) b := by omega
-      omega
-    · -- Case: Odd, Odd
-      have h_lt1 : a + b + 1 < 2 * a + 1 + (2 * b + 1) := by omega
-      have h_lt2 : a + 1 + b < 2 * a + 1 + (2 * b + 1) := by omega
-      have ih1 := ih (a + b + 1) h_lt1 a (b + 1) (by omega)
-      have ih2 := ih (a + 1 + b) h_lt2 (a + 1) b (by omega)
-      rw [E_seq_odd a, E_seq_odd b]
-      have eq3 : E_seq (2 * a + 1 + (2 * b + 1)) = 2 * E_seq (a + b + 1) + a + b + 1 := by
-        have : 2 * a + 1 + (2 * b + 1) = 2 * (a + b + 1) := by omega
-        rw [this, E_seq_even]
-      rw [eq3]
-      have : min (2 * a + 1) (2 * b + 1) = 2 * min a b + 1 := by omega
-      have : 2 * min a b ≤ min a (b + 1) + min (a + 1) b := by omega
-      omega
+      · -- Case: Even, Odd
+        have h_lt1 : a + b < 2 * a + (2 * b + 1) := by omega
+        have h_lt2 : a + (b + 1) < 2 * a + (2 * b + 1) := by omega
+        have ih1 := ih (a + b) h_lt1 a b rfl
+        have ih2 := ih (a + b + 1) h_lt2 a (b + 1) rfl
+        rw [E_seq_even a, E_seq_odd b]
+        have h_sum : 2 * a + (2 * b + 1) = 2 * (a + b) + 1 := by omega
+        rw [h_sum, E_seq_odd]
+        have : min (2 * a) (2 * b + 1) ≤ min a b + min a (b + 1) := by omega
+        omega
+    · obtain ⟨b, rfl | rfl⟩ : ∃ b, y = 2 * b ∨ y = 2 * b + 1 := ⟨y / 2, by omega⟩
+      · -- Case: Odd, Even
+        have h_lt1 : a + b < 2 * a + 1 + 2 * b := by omega
+        have h_lt2 : a + 1 + b < 2 * a + 1 + 2 * b := by omega
+        have ih1 := ih (a + b) h_lt1 a b rfl
+        have ih2 := ih (a + 1 + b) h_lt2 (a + 1) b rfl
+        rw [E_seq_odd a, E_seq_even b]
+        have h_sum : 2 * a + 1 + 2 * b = 2 * (a + b) + 1 := by omega
+        rw [h_sum, E_seq_odd]
+        have : min (2 * a + 1) (2 * b) ≤ min a b + min (a + 1) b := by omega
+        omega
+      · -- Case: Odd, Odd
+        have h_lt1 : a + b + 1 < 2 * a + 1 + (2 * b + 1) := by omega
+        have h_lt2 : a + 1 + b < 2 * a + 1 + (2 * b + 1) := by omega
+        have ih1 := ih (a + b + 1) h_lt1 a (b + 1) rfl
+        have ih2 := ih (a + 1 + b) h_lt2 (a + 1) b rfl
+        rw [E_seq_odd a, E_seq_odd b]
+        have h_sum : 2 * a + 1 + (2 * b + 1) = 2 * (a + b + 1) := by omega
+        rw [h_sum, E_seq_even]
+        have : min (2 * a + 1) (2 * b + 1) = 2 * min a b + 1 := by omega
+        have : 2 * min a b ≤ min a (b + 1) + min (a + 1) b := by omega
+        omega
 
 
 /-!
@@ -130,20 +125,20 @@ instance instDecidableEqCube (d : ℕ) : DecidableEq (Cube d) :=
   | 0 => instDecidableEqPUnit
   | d + 1 => @instDecidableEqSum _ _ (instDecidableEqCube d) (instDecidableEqCube d)
 
-open Classical
-
-def S0 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
+open Classical in
+noncomputable def S0 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
   (S.filter (fun x => match x with | Sum.inl _ => True | _ => False)).map
     ⟨fun x => match x with | Sum.inl y => y | _ => Classical.choice sorry, sorry⟩
 
-def S1 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
+open Classical in
+noncomputable def S1 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
   (S.filter (fun x => match x with | Sum.inr _ => True | _ => False)).map
     ⟨fun x => match x with | Sum.inr y => y | _ => Classical.choice sorry, sorry⟩
 
 lemma cube_card_split {d : ℕ} (S : Finset (Cube (d + 1))) :
   S.card = (S0 S).card + (S1 S).card := by sorry
 
-def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
+noncomputable def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
   | 0, _ => 0
   | d + 1, S =>
     let s0 := S0 S
@@ -165,8 +160,8 @@ theorem harpers_edge_isoperimetry {d : ℕ} (S : Finset (Cube d)) :
 
     have h_cross : (s0 ∩ s1).card ≤ min s0.card s1.card := by
       apply Nat.le_min.mpr
-      exact ⟨Finset.card_le_card (Finset.inter_subset_left _ _),
-             Finset.card_le_card (Finset.inter_subset_right _ _)⟩
+      exact ⟨Finset.card_le_card Finset.inter_subset_left,
+             Finset.card_le_card Finset.inter_subset_right⟩
 
     have h_card : S.card = s0.card + s1.card := cube_card_split S
 
@@ -190,7 +185,7 @@ def can_embed_hypercube (R n k : ℕ) : Prop :=
 
 /-- Map the binary bits of integers 0..(R-1) into fresh symbols -/
 def embed_cube (n k : ℕ) : ∀ d, (d ≤ k) → (d ≤ n - k) → Cube d → (Fin k → Fin n)
-  | 0, _, _, _ => fun p => ⟨p.val, by omega⟩
+  | 0, _, _, _ => fun p => ⟨p.val, by have := p.isLt; omega⟩
   | d + 1, hk, hnk, Sum.inl c =>
       embed_cube n k d (by omega) (by omega) c
   | d + 1, hk, hnk, Sum.inr c =>
