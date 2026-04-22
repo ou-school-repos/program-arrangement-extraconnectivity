@@ -464,10 +464,60 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         · refine ⟨u, hu, ?_⟩
           simp [fiber]; intro _; exact hus
     exact Finset.card_lt_card this
-  · -- Subgoal 4: The Algebraic Composition (Defect Decomposition + IH)
-    -- For q ≠ p, drop_pos retains coordinate p. Roots from different fibers are
-    -- STRICTLY DISJOINT at q. Apply ih to each fiber, sum over active_syms.
-    sorry
+  · -- Subgoal 4: D(V') ≤ ∑ E_seq(cₛ) + R - y
+    -- Step A: Apply IH to each fiber → D(Fₛ) ≤ E_seq(cₛ)
+    -- Step B: Prove decomposition D(V') ≤ ∑ D(Fₛ) + R - y
+    -- Step C: Combine to get the result
+    --
+    -- Step B requires: sum_unique_roots V' ≥ y + ∑ₛ sum_unique_roots(Fₛ) - R
+    -- which follows from root disjointness at q ≠ p and injectivity at p.
+    --
+    -- For now, sorry the decomposition identity and focus on the IH + algebra.
+
+    -- Step A: IH gives D(Fₛ) ≤ E_seq(cₛ) for each fiber
+    have h_ih_fibers : ∀ s ∈ active_syms,
+        (fiber V' p s).card * k - sum_unique_roots (fiber V' p s) ≤
+        E_seq (fiber V' p s).card := by
+      intro s hs
+      have h_lt : (fiber V' p s).card < V'.card := by
+        exact Finset.card_lt_card (by
+          constructor
+          · intro w hw; exact (Finset.mem_filter.mp hw).1
+          · simp only [Finset.not_subset]
+            simp only [Finset.mem_image] at hs
+            obtain ⟨w, hw, rfl⟩ := hs
+            by_cases hus : u.val p = w.val p
+            · refine ⟨v, hv, ?_⟩
+              simp [fiber, Finset.mem_filter]
+              intro _; exact fun hvs => hp (hus ▸ hvs ▸ rfl)
+            · refine ⟨u, hu, ?_⟩
+              simp [fiber, Finset.mem_filter]
+              intro _; exact hus)
+      have := ih (fiber V' p s) h_lt
+      omega
+
+    -- Step B: Decomposition identity (root disjointness)
+    -- sum_unique_roots V' ≥ unique_roots p V' + ∑ₛ (sum_unique_roots Fₛ - cₛ)
+    -- Equivalently: V'.card * k - sum_unique_roots V' ≤
+    --   ∑ₛ (cₛ * k - sum_unique_roots Fₛ) + V'.card - unique_roots p V'
+    have h_decomp : V'.card * k - sum_unique_roots V' ≤
+        (active_syms.toList.map (fun s =>
+          (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum +
+        V'.card - unique_roots p V' := by
+      sorry -- Root disjointness + algebraic identity
+
+    -- Step C: Chain IH bounds with decomposition
+    -- ∑ₛ D(Fₛ) ≤ ∑ₛ E_seq(cₛ) (from h_ih_fibers)
+    have h_sum_ih : (active_syms.toList.map (fun s =>
+        (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum ≤
+        (active_syms.toList.map (fun s => E_seq (fiber V' p s).card)).sum := by
+      apply List.sum_le_sum
+      intro s hs
+      simp only [List.mem_map] at hs
+      sorry -- Need: this follows from h_ih_fibers applied to each s
+    -- Final: chain h_decomp with h_sum_ih
+    -- D(V') ≤ ∑ D(Fₛ) + R - y ≤ ∑ E_seq(cₛ) + R - y
+    sorry -- omega from h_decomp and h_sum_ih
 
 -- ── BRIDGE LEMMA 2: The Defect Bound (proven by strong induction) ─────────
 
