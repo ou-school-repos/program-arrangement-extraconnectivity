@@ -586,9 +586,10 @@ int main(int argc, const char *argv[]) {
                 std::chrono::duration<double>(
                     std::chrono::high_resolution_clock::now() - t0_global)
                     .count();
-            std::cerr << "\r  " << (b + 1) << "/" << total << " branches"
+            std::cerr << "\r" << std::string(120, ' ') << "\r  " << (b + 1)
+                      << "/" << total << " branches"
                       << " | " << nodes_evaluated << " evaluated"
-                      << " | " << elapsed << "s        \n"
+                      << " | " << elapsed << "s\n"
                       << std::flush;
         }
     }
