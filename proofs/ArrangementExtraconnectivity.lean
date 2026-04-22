@@ -62,10 +62,10 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
   subst h
   if hx : x = 0 then
     subst hx
-    sorry
+    simp [Nat.min_zero]
   else if hy : y = 0 then
     subst hy
-    sorry
+    simp [Nat.zero_min, Nat.add_zero]
   else
     obtain ⟨a, rfl | rfl⟩ : ∃ a, x = 2 * a ∨ x = 2 * a + 1 := ⟨x / 2, by omega⟩
     · obtain ⟨b, rfl | rfl⟩ : ∃ b, y = 2 * b ∨ y = 2 * b + 1 := ⟨y / 2, by omega⟩
@@ -112,7 +112,7 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
         rw [eq3]
         have hmin1 : min (2 * a + 1) (2 * b + 1) = 2 * min a b + 1 := by omega
         have hmin2 : 2 * min a b ≤ min a (b + 1) + min (a + 1) b := by omega
-        sorry
+        omega
 
 /-!
   # Layer 2: Harper's Theorem via Sum Types
@@ -127,11 +127,30 @@ instance instDecidableEqCube (d : ℕ) : DecidableEq (Cube d) :=
   | 0 => instDecidableEqPUnit
   | d + 1 => @instDecidableEqSum _ _ (instDecidableEqCube d) (instDecidableEqCube d)
 
-def S0 {d : ℕ} (_ : Finset (Cube (d + 1))) : Finset (Cube d) := ∅
-def S1 {d : ℕ} (_ : Finset (Cube (d + 1))) : Finset (Cube d) := ∅
+def S0 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
+  S.filterMap (fun x => match x with | Sum.inl y => some y | Sum.inr _ => none)
+    (by
+      intro a b ha hb
+      match a, b with
+      | Sum.inl a', Sum.inl b' => simp; intro h; exact h
+      | Sum.inl _, Sum.inr _ => simp
+      | Sum.inr _, Sum.inl _ => simp
+      | Sum.inr _, Sum.inr _ => simp)
+
+def S1 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
+  S.filterMap (fun x => match x with | Sum.inr y => some y | Sum.inl _ => none)
+    (by
+      intro a b ha hb
+      match a, b with
+      | Sum.inr a', Sum.inr b' => simp; intro h; exact h
+      | Sum.inr _, Sum.inl _ => simp
+      | Sum.inl _, Sum.inr _ => simp
+      | Sum.inl _, Sum.inl _ => simp)
 
 lemma cube_card_split {d : ℕ} (S : Finset (Cube (d + 1))) :
-  S.card = (S0 S).card + (S1 S).card := by sorry
+  S.card = (S0 S).card + (S1 S).card := by
+  simp only [S0, S1]
+  sorry -- Requires showing the filterMap partition is exhaustive
 
 def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
   | 0, _ => 0
@@ -145,7 +164,8 @@ theorem harpers_edge_isoperimetry {d : ℕ} (S : Finset (Cube d)) :
   cubeEdges S ≤ E_seq S.card := by
   induction d with
   | zero =>
-    sorry -- Base case
+    -- Cube 0 = PUnit, so cubeEdges trivially 0 and E_seq of card ≤ 1 ≥ 0
+    simp [cubeEdges]
   | succ d ih =>
     let s0 := S0 S
     let s1 := S1 S
@@ -160,7 +180,11 @@ theorem harpers_edge_isoperimetry {d : ℕ} (S : Finset (Cube d)) :
     have h_card : S.card = s0.card + s1.card := cube_card_split S
 
     -- The Inductive Squeeze
-    sorry
+    calc cubeEdges S
+      _ = cubeEdges s0 + cubeEdges s1 + (s0 ∩ s1).card := rfl
+      _ ≤ E_seq s0.card + E_seq s1.card + min s0.card s1.card := by omega
+      _ ≤ E_seq (s0.card + s1.card) := E_add_min_le s0.card s1.card
+      _ = E_seq S.card := by rw [h_card]
 
 
 /-!
@@ -178,15 +202,15 @@ def can_embed_hypercube (R n k : ℕ) : Prop :=
 
 /-- Map the binary bits of integers 0..(R-1) into fresh symbols -/
 def embed_cube (n k : ℕ) : ∀ d, (d ≤ k) → (d ≤ n - k) → Cube d → (Fin k → Fin n)
-  | 0, _, _, _ => fun p => ⟨p.val, by sorry⟩
+  | 0, _, _, _ => fun p => ⟨p.val, by omega⟩
   | d + 1, hk, hnk, Sum.inl c =>
-      embed_cube n k d (by sorry) (by sorry) c
+      embed_cube n k d (by omega) (by omega) c
   | d + 1, hk, hnk, Sum.inr c =>
       fun p =>
-        if h : p.val = d then
-          ⟨k + d, by sorry⟩
+        if p.val = d then
+          ⟨k + d, by omega⟩
         else
-          embed_cube n k d (by sorry) (by sorry) c p
+          embed_cube n k d (by omega) (by omega) c p
 
 -- ── INJECTIVITY PROOF ───────────────────────────────────────────────────
 lemma permutation_is_injective {n k d} (hk : d ≤ k) (hnk : d ≤ n - k) (c : Cube d) :
