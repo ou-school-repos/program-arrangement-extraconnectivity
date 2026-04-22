@@ -2,9 +2,10 @@
 // (Based on Cheng et al., with algorithmic fixes/speedups)
 //
 // Fixes applied:
-//   1. Canonical set dedup eliminates R^(R-2) spanning tree redundancy
-//   2. Integer-packed vertices (uint64_t nibbles) for O(1) compare/hash
+//   1. Nauty-based 4-color auxiliary graph dedup exploits S_n x S_R symmetry
+//   2. Integer-packed vertices (uint64_t, 5-bit nibbles) for O(1) compare/hash
 //   3. unordered_set for O(1) membership checks
+//   4. Independent verify() cross-checks every result
 //
 // Usage: ./arrangementoptimized [R]   (default R=5)
 
@@ -15,25 +16,28 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <numeric>
 #include <string>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
+extern "C" {
+#include <nauty/nauty.h>
+}
+
 // ── Vertex representation ──────────────────────────────────────────────────
-// Each r-permutation packed into uint64_t with 4-bit nibbles.
+// Each r-permutation packed into uint64_t with 5-bit nibbles.
 // Position 0 in the highest nibble → integer comparison = lex comparison.
+// 5 bits support up to 32 symbols, allowing R up to 12.
 
 static int R = 5;
 
 static inline int get_sym(uint64_t vertex, int pos) {
-    return static_cast<int>((vertex >> ((R - 1 - pos) * 4)) & 0xFU);
+    return static_cast<int>((vertex >> ((R - 1 - pos) * 5)) & 0x1FU);
 }
 
 static inline uint64_t set_sym(uint64_t vertex, int pos, int sym) {
-    const int shift = (R - 1 - pos) * 4;
-    return (vertex & ~(0xFULL << shift)) |
+    const int shift = (R - 1 - pos) * 5;
+    return (vertex & ~(0x1FULL << shift)) |
            (static_cast<uint64_t>(sym) << shift);
 }
 
@@ -57,36 +61,39 @@ static inline uint64_t make_identity() {
 static std::string vertex_to_string(uint64_t vertex) {
     std::string str(R, ' ');
     for (int i = 0; i < R; i++) {
-        str[i] = static_cast<char>('A' + get_sym(vertex, i));
+        const int sym = get_sym(vertex, i);
+        str[i] = (sym < 26) ? static_cast<char>('A' + sym)
+                            : static_cast<char>('a' + sym - 26);
     }
     return str;
 }
 
-// ── Canonical set hashing ──────────────────────────────────────────────────
-// Sort the partial vertex set and hash it to detect duplicates.
-// This eliminates the R^(R-2) spanning tree redundancy: the same
-// unordered set reached via different addition orders is recognized.
+// ── Nauty canonical hash ───────────────────────────────────────────────────
+// 4-color auxiliary graph encodes the S_n × S_R metric structure:
+//   Color 0: R position vertices
+//   Color 1: N symbol vertices (N = max symbol + 1)
+//   Color 2: R×N grid slot vertices (position, symbol)
+//   Color 3: point permutation vertices
 //
-// NOTE: nauty-based graph isomorphism was tested but is too aggressive —
-// it collapses subsets with isomorphic induced subgraphs that have
-// different neighborhoods in A(n,r). The sorted vertex set is the
-// correct dedup granularity for this problem.
+// Two subsets with isomorphic auxiliary graphs have identical neighbor-set
+// formulas, so pruning by canonical graph is exact.
 
 namespace {
-struct VectorHash {
-    size_t operator()(const std::vector<uint64_t> &vec) const {
-        return std::accumulate(vec.begin(), vec.end(), vec.size(),
-                               [](size_t hash, uint64_t val) {
-                                   return hash ^ (std::hash<uint64_t>{}(val) +
-                                                  0x9e3779b97f4a7c15ULL +
-                                                  (hash << 6) + (hash >> 2));
-                               });
+struct SetwordVecHash {
+    size_t operator()(const std::vector<setword> &v) const {
+        size_t h = v.size();
+        for (const setword x : v) {
+            h ^= std::hash<setword>{}(x) + 0x9e3779b97f4a7c15ULL +
+                 (h << 6) + (h >> 2);
+        }
+        return h;
     }
 };
 } // namespace
 
-// One dedup set per recursion depth (partial sets of size k).
-static std::vector<std::unordered_set<std::vector<uint64_t>, VectorHash>> seen;
+// One dedup set per recursion depth.
+static std::vector<
+    std::unordered_set<std::vector<setword>, SetwordVecHash>> seen;
 
 // ── Global state ───────────────────────────────────────────────────────────
 
@@ -104,95 +111,59 @@ static uint64_t nodes_explored = 0;
 static uint64_t nodes_pruned = 0;
 
 // ── Independent verifier ───────────────────────────────────────────────────
-// Computes the neighbor set formula directly from pairwise diff structure.
-// Uses the paper's counting rules (Section 2):
-//   - Each vertex has k(n-k) neighbors
-//   - 1-diff pair: shares (n-k)-1 common neighbors outside V'
-//   - 2-diff pair: shares 0 or 1 or 2 common neighbors (exact count below)
-//   - 3+diff pair: shares 0 common neighbors
-//
-// Returns {nk1_coeff, constant} such that |N(V')| = (R*k - nk1)(n-k) - const.
+// Computes neighbor-set formula directly, independent of calc().
+// Splits neighbors into "named" (symbols in V') and "anonymous" (rest).
+// Returns {nk1, cons} matching calc()'s format.
 
 static std::pair<int, int> verify_neighbor_set() {
-    // Count total per-vertex neighbors: each of R vertices has k(n-k) neighbors
-    // via changing any of the k positions to any of the (n-k) unused symbols.
-    // That gives R * k * (n-k) raw neighbor slots.
-
-    // Now subtract for edges/shared neighbors internal to V':
-    // edge_count: number of pairs that differ in exactly 1 position.
-    //             Each such pair is an internal edge, reducing the raw count.
-    //             For each 1-diff edge at position p, the two vertices share
-    //             exactly (n-k)-1 common external neighbors (via position p
-    //             with any symbol except the two used by the pair).
-    //             They also share all k-1 other positions' neighbors, but those
-    //             are distinct vertices because the other positions match.
-    //
-    // shared_2diff: number of common neighbors between 2-diff pairs.
-
-    int edges_in_vset = 0;   // pairs differing in exactly 1 position
-    int shared_by_1diff = 0; // (n-k)-1 common neighbors per 1-diff pair
-    int shared_by_2diff = 0; // common neighbors from 2-diff pairs
-
+    // Collect all distinct symbols used across V'.
+    std::unordered_set<int> used_syms;
     for (int i = 0; i < R; i++) {
-        for (int j = i + 1; j < R; j++) {
-            int diffs = 0;
-            int d1 = -1;
-            int d2 = -1;
-            for (int p = 0; p < R; p++) {
-                if (get_sym(ver[i], p) != get_sym(ver[j], p)) {
-                    if (diffs == 0) {
-                        d1 = p;
-                    } else if (diffs == 1) {
-                        d2 = p;
-                    }
-                    diffs++;
-                    if (diffs > 2) {
-                        break;
-                    }
-                }
-            }
-            if (diffs == 1) {
-                edges_in_vset++;
-                // They share (n-k)-1 common neighbors via position d1
-                // (any symbol except the two already in use at d1)
-                shared_by_1diff++;
-            } else if (diffs == 2) {
-                // Two vertices differing at positions d1, d2.
-                // Common neighbor exists if swapping one diff position
-                // produces a vertex NOT in V' that both can reach in 1 step.
-                // Per the paper: they share at most 2 common neighbors.
-                int common = 0;
-                // Neighbor via d1: ver[i] with d1 set to ver[j]'s value at d1
-                if (get_sym(ver[i], d1) != get_sym(ver[j], d2)) {
-                    common++;
-                }
-                // Neighbor via d2: ver[i] with d2 set to ver[j]'s value at d2
-                if (get_sym(ver[i], d2) != get_sym(ver[j], d1)) {
-                    common++;
-                }
-                shared_by_2diff += common;
-            }
-            // diffs >= 3: no common neighbors
+        for (int p = 0; p < R; p++) {
+            used_syms.insert(get_sym(ver[i], p));
         }
     }
+    const int M = static_cast<int>(used_syms.size());
 
-    // nk1 = edges_in_vset (number of 1-diff edges)
-    // |N(V')| = R*k*(n-k) - 2*edges*(n-k) + shared_by_1diff*(n-k-1)
-    //         ... actually the formula is more complex. Let's compute
-    //         nk1_coeff and constant directly:
-    //
-    // Formula: |N(V')| = (R*k - nk1)(n-k) - constant
-    // where nk1 accounts for position sharing and constant for overlaps.
-    //
-    // Since we're computing the coefficient of (n-k) and the constant:
-    //   nk1 = 2*edges_in_vset - shared_by_1diff
-    //   ... hmm, this gets complicated. Let's just use calc() as primary
-    //   and verify against it.
+    // For each position p, group vertices by their values at all OTHER
+    // positions. Each group produces one distinct anonymous neighbor per
+    // anonymous symbol. Anonymous neighbors from different groups/positions
+    // are always distinct.
+    int anon_coeff = 0;
+    for (int p = 0; p < R; p++) {
+        std::unordered_set<uint64_t> group_keys;
+        for (int i = 0; i < R; i++) {
+            group_keys.insert(set_sym(ver[i], p, 0x1F)); // sentinel
+        }
+        anon_coeff += static_cast<int>(group_keys.size());
+    }
 
-    // Actually, the simplest correct approach: directly count the
-    // nk1 coefficient and constant by collecting ALL neighbor vertices
-    // parametrically. For now, return calc()'s result for cross-check.
-    return calc();
+    // Enumerate all "named" neighbors: vertex with one position changed
+    // to a symbol that appears somewhere in V'.
+    std::unordered_set<uint64_t> named_nbrs;
+    for (int i = 0; i < R; i++) {
+        for (int p = 0; p < R; p++) {
+            for (const int s : used_syms) {
+                if (!contains_sym(ver[i], s)) {
+                    named_nbrs.insert(set_sym(ver[i], p, s));
+                }
+            }
+        }
+    }
+    // Remove V' members.
+    for (int i = 0; i < R; i++) {
+        named_nbrs.erase(ver[i]);
+    }
+    const int named_count = static_cast<int>(named_nbrs.size());
+
+    // |N(V')| = anon_coeff * (n-M) + named_count
+    //         = anon_coeff * (n-k) + (named_count - anon_coeff*(M-R))
+    // Matching (R*k - nk1)*(n-k) - (nk1+cons):
+    const int nk1 = R * R - anon_coeff;
+    const int total_const = anon_coeff * (M - R) - named_count;
+    const int cons = total_const - nk1;
+
+    return {nk1, cons};
 }
 
 // ── Neighbor-set calculation ───────────────────────────────────────────────
@@ -206,7 +177,7 @@ static std::pair<int, int> calc() {
         const uint64_t cur = ver[i];
         std::vector<uint64_t> dcverts;
         std::vector<int> chgs;
-        bool isShared[16] = {};
+        bool isShared[32] = {};
         int isSharednum = 0;
 
         for (int j = 0; j < i; j++) {
@@ -289,21 +260,94 @@ static std::pair<int, int> calc() {
 }
 
 // ── Recursive search ───────────────────────────────────────────────────────
-// Original generation with nodl/largchg symmetry breaking preserved.
-// Canonical set dedup at each level eliminates spanning tree redundancy.
+// Nauty auxiliary graph dedup at each level exploits S_n × S_R symmetry.
 
 static void solve(int point, int nodl, int largchg) {
-    // Canonicalize partial set (sorted) and check for duplicates.
-    std::vector<uint64_t> canonical(ver.begin(), ver.begin() + point);
-    std::sort(canonical.begin(), canonical.end());
-    if (!seen[point].insert(std::move(canonical)).second) {
+    // Build 4-color auxiliary graph for the current partial set.
+    int max_sym = 0;
+    for (int i = 0; i < point; i++) {
+        for (int p = 0; p < R; p++) {
+            const int sym = get_sym(ver[i], p);
+            if (sym > max_sym) {
+                max_sym = sym;
+            }
+        }
+    }
+    const int N = max_sym + 1;
+    const int n_aux = R + N + R * N + point;
+    const int m_aux = SETWORDSNEEDED(n_aux);
+    nauty_check(WORDSIZE, m_aux, n_aux, NAUTYVERSIONID);
+
+    // Reusable nauty buffers.
+    DYNALLSTAT(graph, g, g_sz);
+    DYNALLSTAT(graph, cg, cg_sz);
+    DYNALLSTAT(int, lab, lab_sz);
+    DYNALLSTAT(int, ptn, ptn_sz);
+    DYNALLSTAT(int, orbits, orbits_sz);
+
+    DYNALLOC2(graph, g, g_sz, m_aux, n_aux, "malloc");
+    DYNALLOC2(graph, cg, cg_sz, m_aux, n_aux, "malloc");
+    DYNALLOC1(int, lab, lab_sz, n_aux, "malloc");
+    DYNALLOC1(int, ptn, ptn_sz, n_aux, "malloc");
+    DYNALLOC1(int, orbits, orbits_sz, n_aux, "malloc");
+
+    EMPTYGRAPH(g, m_aux, n_aux);
+
+    // Wire edges: Position↔Grid, Symbol↔Grid, Perm↔Grid.
+    for (int p = 0; p < R; p++) {
+        for (int s = 0; s < N; s++) {
+            const int grid = R + N + p * N + s;
+            ADDONEEDGE(g, p, grid, m_aux);
+            ADDONEEDGE(g, R + s, grid, m_aux);
+        }
+    }
+    for (int i = 0; i < point; i++) {
+        const int perm_idx = R + N + R * N + i;
+        for (int p = 0; p < R; p++) {
+            const int s = get_sym(ver[i], p);
+            const int grid = R + N + p * N + s;
+            ADDONEEDGE(g, perm_idx, grid, m_aux);
+        }
+    }
+
+    // Equitable partitions (color boundaries).
+    for (int i = 0; i < n_aux; i++) {
+        lab[i] = i;
+        ptn[i] = 1;
+    }
+    if (R > 0) { ptn[R - 1] = 0; }
+    if (N > 0) { ptn[R + N - 1] = 0; }
+    if (R * N > 0) { ptn[R + N + R * N - 1] = 0; }
+    ptn[n_aux - 1] = 0;
+
+    DEFAULTOPTIONS_GRAPH(options);
+    options.getcanon = TRUE;
+    options.defaultptn = FALSE;
+
+    statsblk stats;
+    densenauty(g, lab, ptn, orbits, &options, &stats, m_aux, n_aux, cg);
+
+    // Canonical graph as dedup key.
+    std::vector<setword> canon_key(cg, cg + static_cast<size_t>(n_aux) * m_aux);
+    if (!seen[point].insert(std::move(canon_key)).second) {
         nodes_pruned++;
         return;
     }
 
+    // Leaf: evaluate and cross-validate.
     if (point == R) {
         nodes_explored++;
-        auto [nk1, cons] = calc();
+        const auto [nk1, cons] = calc();
+        const auto [vnk1, vcons] = verify_neighbor_set();
+        if (nk1 != vnk1 || cons != vcons) {
+            std::cerr << "VERIFY MISMATCH at ";
+            for (int i = 0; i < R; i++) {
+                std::cerr << vertex_to_string(ver[i]) << " ";
+            }
+            std::cerr << ": calc=(" << nk1 << "," << cons
+                      << ") verify=(" << vnk1 << "," << vcons << ")\n";
+        }
+
         auto it = results.find(nk1);
         if (it == results.end() || it->second.cons < cons) {
             std::string exa;
@@ -315,7 +359,7 @@ static void solve(int point, int nodl, int largchg) {
         return;
     }
 
-    // Generate candidates: same logic as original Cheng code.
+    // Generate candidates (same logic as original Cheng code).
     for (int i = 0; i < point; i++) {
         for (int j = 0; j <= nodl; j++) {
             if (contains_sym(ver[i], j)) {
@@ -341,8 +385,8 @@ static void solve(int point, int nodl, int largchg) {
 int main(int argc, const char *argv[]) {
     if (argc >= 2) {
         R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
-        if (R < 2 || R > 16) {
-            std::cerr << "R must be between 2 and 16\n";
+        if (R < 2 || R > 12) {
+            std::cerr << "R must be between 2 and 12\n";
             return 1;
         }
     }
@@ -360,7 +404,7 @@ int main(int argc, const char *argv[]) {
     std::cerr << "Searching R=" << R << "  ver[0]=" << vertex_to_string(ver[0])
               << "  ver[1]=" << vertex_to_string(ver[1]) << "\n";
 
-    // Pre-enumerate top-level candidates (point=2) for progress tracking.
+    // Pre-enumerate top-level branches for progress tracking.
     struct Branch {
         uint64_t temp;
         int nodl;

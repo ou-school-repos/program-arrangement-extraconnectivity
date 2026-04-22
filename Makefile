@@ -86,7 +86,7 @@ build:	##H @Build Compile original with optimizations (-O2)
 .PHONY: build/opt
 build/opt:	##H @Build Compile optimized variant (-O2)
 	@$(call print_info,Building $(BIN_OPT))
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT)
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
 	@$(call print_success,Build complete.)
 
 .PHONY: debug
