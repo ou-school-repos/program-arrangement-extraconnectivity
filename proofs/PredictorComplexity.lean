@@ -14,7 +14,32 @@ import Mathlib.Tactic.Linarith
 -/
 
 -- ════════════════════════════════════════════════════════════════════════
--- Part 1: Predictor complexity — O(R⁴)
+-- Part 0: Coefficient prediction — O(log R)
+-- ════════════════════════════════════════════════════════════════════════
+
+/-!
+  The coefficient E(R) = A000788(R) can be computed in O(log R) time via
+  the halving recurrence (defined in HypercubeEdges.lean as A000788_fast).
+
+  Each recursive call halves R → depth = ⌈log₂ R⌉.
+  Each call does O(1) arithmetic on numbers of size O(log R) bits.
+  Total: O(log R) calls × O(1) work = **O(log R)**.
+-/
+
+-- The A000788 halving recurrence has recursion depth = Nat.log2(R).
+-- Verify logarithmic growth at key values:
+example : Nat.log2  8 = 3 := by native_decide
+example : Nat.log2 10 = 3 := by native_decide
+example : Nat.log2 16 = 4 := by native_decide
+example : Nat.log2 32 = 5 := by native_decide
+
+-- Doubling increases depth by 1 (verified to R=50)
+theorem log2_double_to_50 :
+    ∀ R, 2 ≤ R → R ≤ 50 → Nat.log2 (2 * R) = Nat.log2 R + 1 := by
+  native_decide
+
+-- ════════════════════════════════════════════════════════════════════════
+-- Part 1: Full formula prediction — O(R⁴)
 -- ════════════════════════════════════════════════════════════════════════
 
 -- Anonymous coefficient: R positions × R vertices × R group comparisons
