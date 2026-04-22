@@ -174,6 +174,8 @@ format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
 	find . -name '*.md' -exec sed -i 's/[[:space:]]*$$//' {} +
 	-prettier -w .
+	-black docs/
+	-isort docs/
 	-pre-commit run --all-files
 	clang-format -i $(SRC_OPT) $(SRC_PRED)
 	@$(call print_success,Format complete.)

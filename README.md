@@ -174,7 +174,37 @@ which coincides at R=5,6,7 but diverges at powers of 2.
 The A000788 formula matches exhaustive search for every R tested (2-9).
 At R=8, Cheng's formula predicts |N(V')|=409, but the true minimum is **404**.
 
-**nk1 coefficient divergence:**
+**R=8 counterexample structure** — a 3-cube Q(3) in A(16,8):
+
+```mermaid
+graph LR
+    subgraph sub["R=8 minimum-cut subgraph V' in A(16,8)"]
+        direction LR
+        info["8 vertices, 12 internal edges (A000788=12, Cheng=11)<br/>|N(V')| = 404 (Cheng predicts 409)"]
+        style info fill:none,stroke:none
+
+        A["ABCDEFGH<br/>(000)"] --- I["IBCDEFGH<br/>(100)"]
+        A --- J["AJCDEFGH<br/>(010)"]
+        A --- K["ABKDEFGH<br/>(001)"]
+        I --- IJ["IJCDEFGH<br/>(110)"]
+        I --- IK["IBKDEFGH<br/>(101)"]
+        J --- IJ
+        J --- JK["AJKDEFGH<br/>(011)"]
+        K --- IK
+        K --- JK
+        IJ --- IJK["IJKDEFGH<br/>(111)"]
+        IK --- IJK
+        JK --- IJK
+    end
+```
+
+Binary labels show which of the 3 positions {0,1,2} have been swapped
+(A to I, B to J, C to K). Each edge = vertices differ in exactly 1 position.
+The 12 internal edges match A000788(8) = 12, not Cheng's 2(8)-5 = 11.
+
+Verify independently: `python3 docs/verify-counterexample.py`
+
+#### nk1 coefficient divergence
 
 | R    | A000788 (true E) | Paper's 2R-5 | Winner                          |
 | ---- | ---------------- | ------------ | ------------------------------- |
@@ -199,18 +229,22 @@ At R=8, Cheng's formula predicts |N(V')|=409, but the true minimum is **404**.
 
 The closed form E(2^d) = d · 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
 
-> **Note:** For R=5..7, the minimum follows ((r+1)k−(2r−3))(n−k)−(2r−1).
-> **Pattern break at R=8.** For R=5..7, the minimum follows
-> ((r+1)k−(2r−3))(n−k)−(2r−1), which assumes tree-like vertex cuts with R−1
-> internal edges. At R=8, the vertices lock into a 3-dimensional hypercube
-> (12 internal edges vs. the tree-predicted 7), causing the coefficient to
-> drop from (8k−7) to **(8k−12)**. The internal edge count E(R) matches
-> [OEIS A000788](https://oeis.org/A000788) — the cumulative binary weight —
-> which predicts R=10 will give **(10k−15)** without running the search.
->
-> Each formula is independently verified by brute-force neighbor enumeration
-> in A(2R, R). See [docs/hypercube-isoperimetry.md](docs/hypercube-isoperimetry.md)
-> for the full mathematical analysis.
+#### Asymptotic agreement
+
+While the exact correction terms differ, the asymptotic result of Cheng et al.
+(Proposition 6) is confirmed: as k, n-k tend to infinity, the (R-1)-extraconnectivity
+approaches (R)k(n-k) under both formulas.
+
+|                    | Coefficient     | Constant | Asymptotic              |
+| ------------------ | --------------- | -------- | ----------------------- |
+| **Cheng et al.**   | Rk - (2R-5)     | 2R-1     | (g+1)k(n-k) **correct** |
+| **A000788 (ours)** | Rk - A000788(R) | C(R)     | (g+1)k(n-k) **correct** |
+
+The disagreement is only in the sub-leading terms, which vanish relative to
+Rk(n-k) in the limit. For finite n,k the A000788 formula gives the exact value.
+
+See [docs/hypercube-isoperimetry.md](docs/hypercube-isoperimetry.md)
+for the full mathematical analysis.
 
 ## Reference
 
