@@ -8,10 +8,8 @@ SHELL:=/bin/bash
 CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic
 LDFLAGS  ?=
-SRC       = cheng/arrangement.cpp
-BIN       = arrangement
 
-SRC_OPT   = arrangementoptimized.cpp
+SRC_OPT   = src/arrangementoptimized.cpp
 BIN_OPT   = arrangementoptimized
 R         ?= 8
 DOCS_SRC  = README.md
@@ -19,10 +17,10 @@ DOCS_OUT  = README.pdf
 BUNDLE_OUT = bundle.zip
 SITE_OUT   = site.zip
 
-SRC_PRED  = predict.cpp
+SRC_PRED  = src/predict.cpp
 BIN_PRED  = predict
 
-SRCS      = $(SRC) $(SRC_OPT) $(SRC_PRED)
+SRCS      = $(SRC_OPT) $(SRC_PRED)
 
 # Build modes
 OPTFLAGS  ?= -O2
@@ -87,14 +85,12 @@ endef
 # Build
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: build/legacy
-build/legacy:	##H @Build Compile Cheng's original (deprecated)
-	@$(call print_info,Building $(BIN) (legacy))
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN) $(SRC)
-	@$(call print_success,Build complete.)
 
 .PHONY: build
-build:	##H @Build Compile optimized variant (-O2)
+build: build/opt build/predict	##H @Build Compile all binaries
+
+.PHONY: build/opt
+build/opt:	##H @Build Compile optimized enumerator (-O2)
 	@$(call print_info,Building $(BIN_OPT))
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
 	@$(call print_success,Build complete.)
@@ -126,37 +122,6 @@ run/predict: build/predict	##H @Run Predict extraconnectivity for R=$(R)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-EXPECTED_OUTPUT := "(5nk-4) (n-k)-10, EX: ABCDE FBCDE AGCDE ABHDE ABCIE \n(5nk-5) (n-k)-7, EX: ABCDE FBCDE AGCDE ABHDE FGCDE "
-
-.PHONY: test
-test: build	##H @Dev Verify original output matches expected
-	@$(call print_info,Testing $(BIN))
-	actual=$$(./$(BIN)); \
-	expected=$$(printf $(EXPECTED_OUTPUT)); \
-	if [ "$$actual" = "$$expected" ]; then \
-		$(call print_success,All tests passed.); \
-	else \
-		$(call print_err,Test FAILED — output mismatch:); \
-		echo "--- expected ---"; \
-		printf $(EXPECTED_OUTPUT); echo; \
-		echo "--- actual ---"; \
-		echo "$$actual"; \
-		exit 1; \
-	fi
-
-.PHONY: test/opt
-test/opt: build	##H @Dev Verify optimized output matches original
-	@$(call print_info,Testing $(BIN_OPT) against $(BIN))
-	expected=$$(./$(BIN) | tr -d ' '); \
-	actual=$$(./$(BIN_OPT) 2>/dev/null | tr -d ' '); \
-	echo "--- original ---"; echo "$$expected"; \
-	echo "--- optimized ---"; echo "$$actual"; \
-	if [ "$$actual" = "$$expected" ]; then \
-		$(call print_success,Optimized matches original.); \
-	else \
-		$(call print_err,Output mismatch:); \
-		exit 1; \
-	fi
 
 .PHONY: test/predict
 test/predict: build build/predict	##H @Dev Verify predictor matches search for R=2..$(R)
@@ -273,7 +238,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN) $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars

@@ -448,7 +448,7 @@ int main(int argc, const char *argv[]) {
     if (argc >= 2)
         R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
 
-    global_nauty_limit = std::min(R - 1, std::max(3, R / 2 + 1));
+    global_nauty_limit = std::max(3, R - 2);
     if (argc >= 3)
         global_nauty_limit =
             static_cast<int>(std::strtol(argv[2], nullptr, 10));
