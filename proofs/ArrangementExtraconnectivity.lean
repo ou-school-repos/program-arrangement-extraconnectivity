@@ -410,9 +410,10 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
   refine ⟨active_syms.toList.map (fun s => (fiber V' p s).card),
           unique_roots p V', ?_, ?_, ?_, ?_⟩
   · -- Subgoal 1: l.sum = V'.card (Exhaustiveness)
-    -- Show it equals ∑ s ∈ active_syms, (fiber V' p s).card.
-    -- List.sum_map and Finset.sum_toList bridge the List/Finset boundary.
-    -- Then Finset.sum_card_fiberwise (or sum_card_filter) closes this.
+    -- active_syms.toList.map f sums to the same as active_syms.val.map f
+    -- since toList preserves multiset equivalence.
+    -- Then: ∑ s ∈ active_syms, (fiber V' p s).card = V'.card
+    -- because fibers partition V'.
     sorry
   · -- Subgoal 2: l.foldr max 0 ≤ unique_roots p V' (Injective Projection)
     -- y = (V'.image (drop_pos · p)).card
