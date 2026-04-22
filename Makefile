@@ -13,7 +13,7 @@ BIN       = arrangement
 
 SRC_OPT   = arrangementoptimized.cpp
 BIN_OPT   = arrangementoptimized
-R         ?= 7
+R         ?= 8
 DOCS_SRC  = README.md
 DOCS_OUT  = README.pdf
 BUNDLE_OUT = bundle.zip
