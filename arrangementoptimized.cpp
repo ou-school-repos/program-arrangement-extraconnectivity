@@ -609,10 +609,94 @@ int main(int argc, const char *argv[]) {
             max_nk_w, static_cast<int>(std::to_string(nk1 + res.cons).size()));
     }
 
+    // Determine concrete n for brute-force verification.
+    int max_sym_global = 0;
+    for (const auto &[nk1, res] : results) {
+        std::istringstream iss(res.example);
+        std::string tok;
+        while (iss >> tok) {
+            for (char c : tok) {
+                int s = c >= 'a' ? (c - 'a' + 26) : (c - 'A');
+                max_sym_global = std::max(max_sym_global, s);
+            }
+        }
+    }
+    const int ver_n = std::max(2 * R, max_sym_global + 1);
+    const int ver_k = R;
+
+    // Print results with inline brute-force verification.
+    bool all_ok = true;
     for (const auto &[nk1, res] : results) {
         std::cout << "(" << R << "nk-" << std::setw(max_nk1_w) << nk1
                   << ") (n-k)-" << std::setw(max_nk_w) << (nk1 + res.cons)
                   << ", EX: " << res.example << "\n";
+
+        // Parse example back into ver[] and vset[]
+        uint64_t vset[16];
+        {
+            std::istringstream iss(res.example);
+            std::string tok;
+            for (int i = 0; i < R && (iss >> tok); i++) {
+                uint64_t v = 0;
+                for (int p = 0; p < R; p++)
+                    v = set_sym(v, p,
+                                tok[p] >= 'a' ? (tok[p] - 'a' + 26)
+                                              : (tok[p] - 'A'));
+                ver[i] = v;
+                vset[i] = v;
+            }
+        }
+
+        // Oracle cross-check (independent algorithm)
+        const auto [vnk1, vcons] = verify_neighbor_set();
+        if (nk1 != vnk1) {
+            std::cout << "  VERIFY FAIL: nk1 mismatch: calc=" << nk1
+                      << " verify=" << vnk1 << "\n";
+            all_ok = false;
+            continue;
+        }
+
+        // Brute-force neighbor enumeration in A(ver_n, ver_k)
+        std::vector<uint64_t> neighbors;
+        for (int i = 0; i < R; i++) {
+            for (int p = 0; p < ver_k; p++) {
+                for (int s = 0; s < ver_n; s++) {
+                    if (contains_sym(vset[i], s))
+                        continue;
+                    uint64_t nbr = set_sym(vset[i], p, s);
+                    bool in_vprime = false;
+                    for (int q = 0; q < R; q++) {
+                        if (vset[q] == nbr) {
+                            in_vprime = true;
+                            break;
+                        }
+                    }
+                    if (!in_vprime)
+                        neighbors.push_back(nbr);
+                }
+            }
+        }
+        std::sort(neighbors.begin(), neighbors.end());
+        neighbors.erase(std::unique(neighbors.begin(), neighbors.end()),
+                        neighbors.end());
+        const int brute_count = static_cast<int>(neighbors.size());
+
+        const int coeff = R * ver_k - nk1;
+        const int constant = nk1 + res.cons;
+        const int formula_val = coeff * (ver_n - ver_k) - constant;
+
+        std::cout << "  verify(n=" << ver_n << ",k=" << ver_k
+                  << "): |N(V')| = (" << R << "\xc2\xb7" << ver_k << "-" << nk1
+                  << ")(" << ver_n << "-" << ver_k << ")-" << constant << " = "
+                  << coeff << "\xc2\xb7" << (ver_n - ver_k) << " - " << constant
+                  << " = " << formula_val << "\n";
+        std::cout << "  brute-force neighbor count: " << brute_count;
+        if (brute_count == formula_val) {
+            std::cout << " \xe2\x9c\x93\n";
+        } else {
+            std::cout << " \xe2\x9c\x97 MISMATCH!\n";
+            all_ok = false;
+        }
     }
 
     std::cerr << "Done: " << std::fixed << std::setprecision(3) << elapsed
@@ -620,30 +704,10 @@ int main(int argc, const char *argv[]) {
               << " evaluated, " << nodes_pruned_iso << " iso-pruned, "
               << nodes_pruned_exact << " exact-pruned\n";
 
-    // Post-search verification: cross-check each result with verify().
-    bool all_ok = true;
-    for (const auto &[nk1, res] : results) {
-        std::istringstream iss(res.example);
-        std::string tok;
-        for (int i = 0; i < R && (iss >> tok); i++) {
-            uint64_t v = 0;
-            for (int p = 0; p < R; p++) {
-                v = set_sym(
-                    v, p, tok[p] >= 'a' ? (tok[p] - 'a' + 26) : (tok[p] - 'A'));
-            }
-            ver[i] = v;
-        }
-        const auto [vnk1, vcons] = verify_neighbor_set();
-        if (nk1 != vnk1) {
-            std::cerr << "VERIFY FAIL: nk1 mismatch for " << res.example
-                      << ": calc=" << nk1 << " verify=" << vnk1 << "\n";
-            all_ok = false;
-        }
-    }
     if (all_ok && !results.empty()) {
-        std::cerr << "\u2713 Verified.\n";
+        std::cerr << "\xe2\x9c\x93 Verified.\n";
     } else if (!all_ok) {
-        std::cerr << "\u2717 Verification failed.\n";
+        std::cerr << "\xe2\x9c\x97 Verification failed.\n";
     }
 
     return 0;
