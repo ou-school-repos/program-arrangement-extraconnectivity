@@ -221,27 +221,43 @@ def can_embed_hypercube (R n k : ℕ) : Prop :=
 
 /-- Map hypercube vertex to arrangement graph vertex.
     If bit p is true → use fresh symbol (k + p), else → use base symbol p. -/
-def embed_cube (n k d : ℕ) (v : Cube d) : Fin k → Fin n :=
+def embed_cube (n k d : ℕ) (_hk : d ≤ k) (hnk : k + d ≤ n) (v : Cube d) : Fin k → Fin n :=
   fun p =>
     if hp : p.val < d then
       if v ⟨p.val, hp⟩ = true then
-        ⟨k + p.val, by sorry⟩  -- needs d ≤ n - k
+        ⟨k + p.val, by omega⟩
       else
-        ⟨p.val, by sorry⟩      -- needs d ≤ k, p.val < k
+        ⟨p.val, by omega⟩
     else
-      ⟨p.val, by sorry⟩        -- needs p.val < k ≤ n
+      ⟨p.val, by omega⟩
 
 -- ── INJECTIVITY ───────────────────────────────────────────────────────────
 -- Fresh symbols (≥ k) never collide with base symbols (< k), and within
 -- each class the mapping is injective by construction.
 lemma embedding_is_injective (d : ℕ) (v : Cube d)
-    (hk : d ≤ k) (hnk : d ≤ n - k) :
-    Function.Injective (embed_cube n k d v) := by
-  sorry
+    (hk : d ≤ k) (hnk : k + d ≤ n) :
+    Function.Injective (embed_cube n k d hk hnk v) := by
+  intro p1 p2 heq
+  ext
+  simp only [embed_cube] at heq
+  -- Extract the Fin.val equality from the Fin equality
+  have hval := Fin.val_eq_of_eq heq
+  simp at hval
+  -- Case split on whether each position is in the flipped range
+  by_cases h1 : p1.val < d <;> by_cases h2 : p2.val < d <;> simp [h1, h2] at hval
+  · -- Both in range: split on bit values
+    by_cases hv1 : v ⟨p1.val, h1⟩ = true <;> by_cases hv2 : v ⟨p2.val, h2⟩ = true <;>
+      simp [hv1, hv2] at hval <;> omega
+  · -- p1 in range, p2 out: fresh vs base collision impossible
+    by_cases hv1 : v ⟨p1.val, h1⟩ = true <;> simp [hv1] at hval <;> omega
+  · -- p1 out, p2 in range: same
+    by_cases hv2 : v ⟨p2.val, h2⟩ = true <;> simp [hv2] at hval <;> omega
+  · -- Both out of range: identity
+    omega
 
-def embed_vertex (n k d : ℕ) (v : Cube d) (hk : d ≤ k) (hnk : d ≤ n - k) :
+def embed_vertex (n k d : ℕ) (v : Cube d) (hk : d ≤ k) (hnk : k + d ≤ n) :
     ArrVertex n k :=
-  ⟨embed_cube n k d v, embedding_is_injective d v hk hnk⟩
+  ⟨embed_cube n k d hk hnk v, embedding_is_injective d v hk hnk⟩
 
 def external_neighbors (_V' : Finset (ArrVertex n k)) : ℕ :=
   0 -- Boundary counting implementation
