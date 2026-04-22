@@ -179,12 +179,17 @@ Done: 490.892s, 166116718 generated, 162163337 evaluated, 2921832 iso-pruned, 0 
 | 9   | **(9k−13)(n−k) − 16**   | **New (this work)** | **(68)(9) − 16 = 596**       |
 
 > **Note:** For R=5..7, the minimum follows ((r+1)k−(2r−3))(n−k)−(2r−1).
-> R=8 and R=9 **break this pattern** — the (n-k) coefficient jumps by more than 2,
-> and the intermediate classes are absent.
+> **Pattern break at R=8.** For R=5..7, the minimum follows
+> ((r+1)k−(2r−3))(n−k)−(2r−1), which assumes tree-like vertex cuts with R−1
+> internal edges. At R=8, the vertices lock into a 3-dimensional hypercube
+> (12 internal edges vs. the tree-predicted 7), causing the coefficient to
+> drop from (8k−7) to **(8k−12)**. The internal edge count E(R) matches
+> [OEIS A000788](https://oeis.org/A000788) — the cumulative binary weight —
+> which predicts R=10 will give **(10k−15)** without running the search.
 >
 > Each formula is independently verified by brute-force neighbor enumeration
-> in A(2R, R). The full output above shows the programmatic check for each
-> result class.
+> in A(2R, R). See [docs/hypercube-isoperimetry.md](docs/hypercube-isoperimetry.md)
+> for the full mathematical analysis.
 
 ## Reference
 
