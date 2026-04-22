@@ -281,6 +281,14 @@ static std::pair<int, int> verify_neighbor_set() {
 // ── Incremental calc: O(R) contribution of the last-added vertex ───────────
 // Processes only ver[idx] against ver[0..idx-1], returning its delta.
 
+// Lookup: bit position → 5-bit chunk index (avoids division by 5)
+static constexpr int chunk_idx[64] = {
+    0, 0, 0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  3,
+    3, 3, 3,  3,  4,  4,  4,  4,  4,  5,  5,  5,  5,  5,  6,  6,
+    6, 6, 6,  7,  7,  7,  7,  7,  8,  8,  8,  8,  8,  9,  9,  9,
+    9, 9, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12,
+};
+
 static std::pair<int, int> calc_step(int count) {
     const int idx = count - 1;
     const uint64_t cur = ver[idx];
@@ -299,19 +307,21 @@ static std::pair<int, int> calc_step(int count) {
             continue;
 
         int differs = 0, diff1 = 0, diff2 = 0;
-        int pos = R - 1;
-        while (xor_val > 0) {
-            if (xor_val & 0x1FU) {
-                if (differs == 0)
-                    diff1 = pos;
-                else if (differs == 1)
-                    diff2 = pos;
-                differs++;
-                if (differs > 2)
-                    break;
-            }
-            xor_val >>= 5;
-            pos--;
+        while (xor_val) {
+            int bit = __builtin_ctzll(xor_val);
+            int chunk = chunk_idx[bit];
+            int pos = (R - 1) - chunk;
+
+            if (differs == 0)
+                diff1 = pos;
+            else if (differs == 1)
+                diff2 = pos;
+            differs++;
+            if (differs > 2)
+                break;
+
+            // Clear entire 5-bit chunk
+            xor_val &= ~(0x1FULL << (chunk * 5));
         }
 
         if (differs == 1 && !isShared[diff1]) {
