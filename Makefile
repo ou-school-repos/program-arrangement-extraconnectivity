@@ -177,6 +177,27 @@ format:	##H @Dev Format C++ sources (clang-format)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Lean 4 Proofs
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.PHONY: lean
+lean:	##H @Build Build Lean 4 proofs (proofs/)
+	@$(call print_info,Building Lean proofs)
+	cd proofs && lake build
+	@$(call print_success,Lean proofs verified.)
+
+.PHONY: lean/cache
+lean/cache:	##H @Build Download pre-built Mathlib cache
+	@$(call print_info,Fetching Mathlib cache)
+	cd proofs && lake exe cache get
+	@$(call print_success,Mathlib cache downloaded.)
+
+.PHONY: lean/docs
+lean/docs:	##H @Build Generate Lean documentation
+	@$(call print_info,Generating Lean docs)
+	cd proofs && lake build Proofs:docs
+	@$(call print_success,Lean docs generated in proofs/.lake/build/doc/)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: docs
