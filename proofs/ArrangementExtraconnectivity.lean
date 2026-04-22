@@ -410,15 +410,15 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
   refine ⟨active_syms.toList.map (fun s => (fiber V' p s).card),
           unique_roots p V', ?_, ?_, ?_, ?_⟩
   · -- Subgoal 1: l.sum = V'.card (Exhaustiveness)
-    -- active_syms.toList.map f sums to the same as active_syms.val.map f
-    -- since toList preserves multiset equivalence.
-    -- Then: ∑ s ∈ active_syms, (fiber V' p s).card = V'.card
-    -- because fibers partition V'.
+    -- Fibers partition V': each w ∈ V' is in exactly one fiber (for s = w.val p).
+    -- Sum of fiber sizes = V'.card.
+    -- Needs: Finset.biUnion_filter_eq_of_maps_to + card reasoning, or
+    --        import Mathlib.Algebra.BigOperators.Group.Finset for Finset.sum API.
     sorry
   · -- Subgoal 2: l.foldr max 0 ≤ unique_roots p V' (Injective Projection)
-    -- y = (V'.image (drop_pos · p)).card
-    -- For any fiber F_s, drop_pos is injective (same symbol at p + same root → same vertex).
-    -- Thus F_s.card = (F_s.image drop_pos).card ≤ y.
+    -- For each fiber F_s: drop_pos is injective on F_s (same symbol at p → same vertex).
+    -- So F_s.card ≤ |V'.image (drop_pos · p)| = unique_roots p V'.
+    -- Needs: Finset.card_image_of_injective + Finset.card_le_card (image subset).
     sorry
   · -- Subgoal 3: ∀ c ∈ l, c < V'.card (Strict Decrease)
     intro c hc
