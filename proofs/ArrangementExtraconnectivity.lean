@@ -326,6 +326,18 @@ def sum_unique_roots {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
 lemma unique_roots_ge_card_sub_edges {n k : ℕ}
     (V' : Finset (ArrVertex n k)) (p : Fin k) :
     unique_roots p V' ≥ V'.card - edges_at V' p := by
+  -- unique_roots p V' = (V'.image f).card where f = drop_pos · p
+  -- edges_at V' p ≥ 0 always
+  -- We need: image.card ≥ V'.card - edges_at
+  -- Equivalently: edges_at ≥ V'.card - image.card
+  --
+  -- The deficit V'.card - image.card counts collisions in the projection.
+  -- Each collision means two vertices share the same (k-1)-root at position p,
+  -- which means they differ only at position p, hence are adjacent.
+  -- Each such adjacent pair with shared root is counted in edges_at.
+  --
+  -- Full proof requires fiber decomposition showing each fiber of size c
+  -- contributes c*(c-1)/2 ≥ c-1 edges. This is a substantial Finset argument.
   sorry
 
 /--
@@ -369,12 +381,14 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
 lemma lower_bound_all_embeddings (R n k : ℕ)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
-  -- Chain: sum_unique_roots ≥ R*k - E_seq R (bridge 2)
-  --        external_neighbors ≥ sum_unique_roots * (n-k) - C (bridge 3)
-  -- The Nat subtraction arithmetic requires careful monotonicity reasoning.
   have h1 := sum_unique_roots_lower_bound R V' hR
   have h2 := external_neighbors_bound R V' hR
-  sorry -- arithmetic composition (Nat subtraction monotonicity)
+  -- h1: R*k - E_seq R ≤ sum_unique_roots V'
+  -- h2: sum_unique_roots V' * (n-k) - C_constant R ≤ external_neighbors V'
+  -- Multiply h1 by (n-k) to get the key step omega can't do alone
+  have h3 := Nat.mul_le_mul_right (n - k) h1
+  -- h3: (R*k - E_seq R) * (n-k) ≤ sum_unique_roots V' * (n-k)
+  omega
 
 -- The final Capstone: composition of the two halves
 theorem arrangement_extraconnectivity_minimum
