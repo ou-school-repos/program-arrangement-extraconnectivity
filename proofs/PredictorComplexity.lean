@@ -119,8 +119,8 @@ example : search_lower_bound 10 = 100000000 := by native_decide
   Summary:
 
   ✓ Proven (Lean):
-    • predictor_work(R) = R³ + 4R⁴           (exact bound)
-    • predictor_work(R) ≤ 5R⁴ for R ≥ 1      (O(R⁴) certificate)
+    • predictor_work(R) = R³ + 4R⁴            (exact bound)
+    • predictor_work(R) ≤ 5R⁴ for R ≥ 1       (O(R⁴) certificate)
     • search_lower_bound(R) = R^(R-2)         (Cayley's formula)
     • predictor_work(R) < R^(R-2) for R ≥ 9   (predictor is faster)
 
