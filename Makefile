@@ -226,7 +226,7 @@ docs:	##H @General Generate PDF documentation from README
 .PHONY: bundle
 bundle:	##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
-	zip -rv9 $(BUNDLE_OUT) README.md arrangementoptimized.cpp cheng/arrangement.cpp
+	zip -rv9 $(BUNDLE_OUT) README.md arrangementoptimized.cpp cheng/arrangement.cpp proofs/docbuild/.lake/build/doc/
 	@$(call print_success,Bundle created.)
 
 .PHONY: clean
