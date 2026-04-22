@@ -123,7 +123,6 @@ benchmark: build	##H @Run Benchmark search for R=2..$(R)
 benchmark/full: build build/predict	##H @Run Search + verify for R=2..$(R)
 	@for i in $$(seq 2 $(R)); do \
 		./$(BIN_OPT) $$i; \
-		./$(BIN_PRED) $$i 2>&1 | grep 'formula\|brute-force\|(Rnk'; \
 		echo ""; \
 	done
 
