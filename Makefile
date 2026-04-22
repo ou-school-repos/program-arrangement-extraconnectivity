@@ -86,7 +86,7 @@ build:	##H @Build Compile original with optimizations (-O2)
 .PHONY: build/opt
 build/opt:	##H @Build Compile optimized variant (-O2)
 	@$(call print_info,Building $(BIN_OPT)...)
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT)
 	@$(call print_success,Build complete.)
 
 .PHONY: debug
@@ -155,8 +155,8 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting...)
 	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC) $(SRC_OPT)
-	-clang-tidy $(SRC) -- $(CXXFLAGS)
-	-clang-tidy $(SRC_OPT) -- $(CXXFLAGS)
+	-clang-tidy $(SRC) --checks='*,-llvmlibc-*' -- $(CXXFLAGS)
+	-clang-tidy $(SRC_OPT) --checks='*,-llvmlibc-*' -- $(CXXFLAGS)
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
