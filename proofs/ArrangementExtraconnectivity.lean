@@ -484,15 +484,12 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
           constructor
           · intro w hw; exact (Finset.mem_filter.mp hw).1
           · simp only [Finset.not_subset]
-            simp only [Finset.mem_image] at hs
-            obtain ⟨w, hw, rfl⟩ := hs
+            obtain ⟨w, hw, rfl⟩ := Finset.mem_image.mp hs
             by_cases hus : u.val p = w.val p
             · refine ⟨v, hv, ?_⟩
-              simp [fiber, Finset.mem_filter]
-              intro _; exact fun hvs => hp (hus ▸ hvs ▸ rfl)
+              simp [fiber]; intro _; exact fun hvs => hp (hus ▸ hvs ▸ rfl)
             · refine ⟨u, hu, ?_⟩
-              simp [fiber, Finset.mem_filter]
-              intro _; exact hus)
+              simp [fiber]; intro _; exact hus)
       have := ih (fiber V' p s) h_lt
       omega
 
@@ -511,9 +508,8 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
     have h_sum_ih : (active_syms.toList.map (fun s =>
         (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum ≤
         (active_syms.toList.map (fun s => E_seq (fiber V' p s).card)).sum := by
-      apply List.sum_le_sum
-      intro s hs
-      simp only [List.mem_map] at hs
+      -- Each D(F_s) ≤ E_seq(c_s) by h_ih_fibers
+      -- Sum preserves ≤
       sorry -- Need: this follows from h_ih_fibers applied to each s
     -- Final: chain h_decomp with h_sum_ih
     -- D(V') ≤ ∑ D(Fₛ) + R - y ≤ ∑ E_seq(cₛ) + R - y
