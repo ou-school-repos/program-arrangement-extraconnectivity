@@ -411,46 +411,44 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
   refine ⟨active_syms.toList.map (fun s => (fiber V' p s).card),
           unique_roots p V', ?_, ?_, ?_, ?_⟩
   · -- Subgoal 1: l.sum = V'.card (Exhaustiveness)
-    -- Convert List.sum to Finset.sum, then use card_eq_sum_card_fiberwise.
-    -- (active_syms.toList.map f).sum = ∑ s ∈ active_syms, f s
-    have h_list_sum : (active_syms.toList.map (fun s => (fiber V' p s).card)).sum =
-        ∑ s ∈ active_syms, (fiber V' p s).card := by
-      rw [← Finset.sum_toList]
-      congr 1
-      simp [List.map_map]
-    rw [h_list_sum]
-    -- Now: ∑ s ∈ active_syms, (V'.filter (w.val p = s)).card = V'.card
+    -- Bridge List.sum to Finset.sum, then use fiberwise partition identity
+    rw [Finset.sum_map_toList]
+    -- Now: active_syms.sum (fun s => (fiber V' p s).card) = V'.card
     symm
     exact Finset.card_eq_sum_card_fiberwise (fun w hw => Finset.mem_image_of_mem _ hw)
   · -- Subgoal 2: l.foldr max 0 ≤ unique_roots p V' (Injective Projection)
-    -- For each fiber F_s, F_s.card ≤ unique_roots p V'.
-    -- So max of all fiber sizes ≤ unique_roots p V'.
-    -- Suffices to show: ∀ s ∈ active_syms, (fiber V' p s).card ≤ unique_roots p V'
-    suffices h : ∀ c ∈ active_syms.toList.map (fun s => (fiber V' p s).card),
-        c ≤ unique_roots p V' by
-      induction active_syms.toList with
-      | nil => simp
-      | cons a t iht =>
-        simp only [List.map_cons, List.foldr_cons]
-        exact Nat.max_le.mpr ⟨h _ (List.mem_cons_self _ _),
-          iht (fun c hc => h c (List.mem_cons_of_mem _ hc))⟩
-    intro c hc
-    simp only [List.mem_map, Finset.mem_toList] at hc
-    obtain ⟨s, _, rfl⟩ := hc
-    -- Need: (fiber V' p s).card ≤ unique_roots p V'
-    -- fiber V' p s ⊆ V', so (fiber V' p s).image f ⊆ V'.image f
-    unfold unique_roots
-    calc (fiber V' p s).card
-        ≤ ((fiber V' p s).image (fun w => drop_pos w p)).card :=
-          Finset.card_le_card_of_injOn _ (fun _ _ => rfl)
-            (by intro a ha b hb hab
-                simp [fiber] at ha hb
-                exact Subtype.ext (funext fun q => by
-                  by_cases hq : q = p
-                  · subst hq; exact ha.2 ▸ hb.2 ▸ rfl
-                  · have := congr_fun hab ⟨q, hq⟩; exact this))
-      _ ≤ (V'.image (fun w => drop_pos w p)).card :=
-          Finset.card_le_card (Finset.image_subset _ (Finset.filter_subset _ _))
+    -- Each fiber size ≤ unique_roots p V', so max ≤ unique_roots p V'.
+    -- First prove: ∀ s ∈ active_syms, (fiber V' p s).card ≤ unique_roots p V'
+    -- Then lift to: foldr max 0 (map ...) ≤ unique_roots p V'
+    have h_le : ∀ s ∈ active_syms, (fiber V' p s).card ≤ unique_roots p V' := by
+      intro s _
+      unfold unique_roots
+      -- |fiber| ≤ |fiber.image drop_pos| ≤ |V'.image drop_pos|
+      -- First: fiber ⊆ V' → fiber.image ⊆ V'.image → card ≤ card
+      exact le_trans
+        (Finset.card_le_card_of_injOn (fun w => drop_pos w p)
+          (fun _ _ => Finset.mem_image_of_mem _ (Finset.mem_of_mem_filter _ ‹_›))
+          (by intro a ha b hb hab
+              simp [fiber] at ha hb
+              exact Subtype.ext (funext fun q => by
+                by_cases hq : q = p
+                · subst hq; rw [ha.2, hb.2]
+                · exact congr_fun (show drop_pos a p = drop_pos b p from hab) ⟨q, hq⟩)))
+        (Finset.card_le_card (Finset.image_mono _ (Finset.filter_subset _ _)))
+    -- Now show: foldr max 0 of the mapped list ≤ unique_roots p V'
+    -- Generic: if ∀ x ∈ l, x ≤ b, then l.foldr max 0 ≤ b
+    suffices ∀ (l : List ℕ) (b : ℕ), (∀ x ∈ l, x ≤ b) → l.foldr max 0 ≤ b by
+      exact this _ _ (by
+        intro x hx; simp only [List.mem_map] at hx
+        obtain ⟨s, hs, rfl⟩ := hx
+        exact h_le s (active_syms.mem_toList.mp hs))
+    intro l b hl
+    induction l with
+    | nil => simp
+    | cons a t iht =>
+      simp only [List.foldr_cons]
+      exact Nat.max_le.mpr ⟨hl a (List.mem_cons_self _ _),
+        iht (fun x hx => hl x (List.mem_cons_of_mem _ hx))⟩
   · -- Subgoal 3: ∀ c ∈ l, c < V'.card (Strict Decrease)
     intro c hc
     simp only [List.mem_map, Finset.mem_toList] at hc
