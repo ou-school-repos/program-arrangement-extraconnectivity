@@ -1,0 +1,46 @@
+# ── C++ build artifacts ──────────────────────────────────────
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.lib
+*.d
+*.pch
+*.gch
+
+# Extensionless binaries (compiled output)
+*
+!*/
+!*.*
+!Makefile
+!LICENSE
+!README
+
+# ── Java build artifacts ─────────────────────────────────────
+*.class
+*.jar
+
+# ── Build directories ────────────────────────────────────────
+build/
+cmake-build-*/
+out/
+
+# ── CMake ────────────────────────────────────────────────────
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# ── IDE / editor ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS junk ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.tmp/
