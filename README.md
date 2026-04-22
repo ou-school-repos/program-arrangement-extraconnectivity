@@ -219,8 +219,6 @@ Predictions for R=2..1024 are available in [`docs/predictions.csv`](docs/predict
 | `coeff`         | R·k − nk1 (the leading coefficient at k=R)           |
 | `formula_at_2R` | \|N(V')\| evaluated at n=2R, k=R: coeff·R − constant |
 
-\newpage
-
 ### Internal edge divergence: OEIS A000788 vs. linear prediction
 
 The paper extrapolated E(R) = 2R-5 internal edges from R=5,6,7. The true
@@ -252,6 +250,12 @@ At R=8, Cheng's formula predicts |N(V')|=409, but the true minimum is **404**.
 Binary labels show which of the 3 positions {0,1,2} have been swapped
 (A to I, B to J, C to K). Each edge = vertices differ in exactly 1 position.
 The 12 internal edges match A000788(8) = 12, not Cheng's 2(8)-5 = 11.
+
+**R=9 and R=10 minimum-cut subgraphs** (generated empirically by the C++ oracle) showing the topological expansion beyond the perfect 3-cube:
+
+![R=9 minimum-cut subgraph](docs/R9_graph.svg)
+
+![R=10 minimum-cut subgraph](docs/R10_graph.svg)
 
 Verify independently: `python3 docs/verify-counterexample.py`
 
