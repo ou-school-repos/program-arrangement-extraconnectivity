@@ -5,22 +5,15 @@ A(n,k), based on Cheng, Lipták & Tian (2022).
 
 ## Background
 
-The **arrangement graph** A(n,k) has vertices corresponding to k-permutations of
-{1,...,n}, with edges between permutations differing in exactly one position.
-The **(r-1)-extraconnectivity** is the minimum vertex cut such that every remaining
-component has at least r vertices.
+The **arrangement graph** $A(n,k)$ consists of $k$-permutations of $\{1,\dots,n\}$ joined by edges if they differ in exactly one position. The **$(r-1)$-extraconnectivity** is the minimum vertex cut leaving all remaining components with at least $r$ vertices.
 
-**Proposition 6** (Cheng et al.): As k and n-k → ∞, the r-extraconnectivity of
-A(n,k) is asymptotically **(r+1)·k·(n-k)**.
+**Proposition 6** (Cheng et al.): As $k, n-k \to \infty$, $r$-extraconnectivity is asymptotically $(r+1)k(n-k)$.
 
-This program enumerates all connected subgraphs of R vertices and computes their
-neighbor set sizes, establishing exact extraconnectivity formulas for each R.
+This program enumerates all connected subgraphs of size $R$ to compute exact extraconnectivity formulas.
 
 ## Results
 
-Each line reports a distinct neighbor-set formula `(coefficient)(n-k) - constant`
-for a connected subgraph of R vertices. The **minimum** line (last for each R) gives
-the (R-1)-extraconnectivity, matching the paper's Theorems 1–7.
+Each line reports a neighbor-set formula `(coeff)(n-k) - const` for a connected subgraph of $R$ vertices. The **minimum** (last line for each $R$) gives the $(R-1)$-extraconnectivity, verifying Theorems 1–7.
 
 ```text
 Searching R=2 (nauty depth limit: 1)  ver[0]=AB  ver[1]=CB
@@ -121,6 +114,8 @@ Searching R=9 (nauty depth limit: 8)  ver[0]=ABCDEFGHI  ver[1]=JBCDEFGHI
 Done: 647.703s, 199291099 generated, 194499500 evaluated, 3760050 iso-pruned, 0 exact-pruned
 ✓ Verified.
 ```
+
+\newpage
 
 ### Summary table
 

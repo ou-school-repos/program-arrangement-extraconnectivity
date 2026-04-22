@@ -187,12 +187,16 @@ docs:	##H @General Generate PDF documentation from README
 	@$(call print_info,Generating $(DOCS_OUT) from $(DOCS_SRC))
 	pandoc $(DOCS_SRC) -o $(DOCS_OUT) \
 		--pdf-engine=xelatex \
-		-V geometry:margin=1in \
-		-V monofont="DejaVu Sans Mono" || \
+		-V geometry:margin=0.5in \
+		-V monofont="DejaVu Sans Mono" \
+		-V monofontoptions="Scale=0.8" \
+		-V pagestyle=empty || \
 	pandoc $(DOCS_SRC) -o $(DOCS_OUT) \
 		--pdf-engine=lualatex \
-		-V geometry:margin=1in \
-		-V monofont="DejaVu Sans Mono"
+		-V geometry:margin=0.5in \
+		-V monofont="DejaVu Sans Mono" \
+		-V monofontoptions="Scale=0.8" \
+		-V pagestyle=empty
 	@$(call print_success,Documentation generated.)
 
 .PHONY: bundle
