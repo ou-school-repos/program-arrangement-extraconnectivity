@@ -2,9 +2,7 @@
 
 ## Overview
 
-For large R, the exhaustive search becomes impractical (~8 min for R=9, ~7h estimated
-for R=10). The **predictor** (`predict.cpp`) bypasses the search entirely by constructing
-the known-optimal vertex set directly.
+For large R, the exhaustive search becomes impractical (~72 sec for R=9, ~69 minutes for R=10). The **predictor** (`predict.cpp`) bypasses the search entirely by constructing the known-optimal vertex set directly.
 
 ## The Topological Phase Transition (Embedding Condition)
 
