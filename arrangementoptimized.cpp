@@ -5,18 +5,26 @@
 //   1. Canonical set dedup eliminates R^(R-2) spanning tree redundancy
 //   2. Integer-packed vertices (uint64_t nibbles) for O(1) compare/hash
 //   3. unordered_set for O(1) membership checks
+//   4. nauty canonical graph labeling for isomorphism rejection (~R! reduction)
 //
 // Usage: ./arrangementoptimized [R]   (default R=5)
+//
+// Compile: g++ -O2 -std=c++17 -I/usr/include/nauty -lnauty ...
 
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <string>
 #include <unordered_set>
 #include <vector>
+
+extern "C" {
+#include <nauty/nauty.h>
+}
 
 // ── Vertex representation ──────────────────────────────────────────────────
 // Each r-permutation packed into uint64_t with 4-bit nibbles.
@@ -51,27 +59,66 @@ static std::string vertex_to_string(uint64_t v) {
     return s;
 }
 
-// ── Canonical set hashing ──────────────────────────────────────────────────
-// Sort the partial vertex set and hash it to detect duplicates.
-// This eliminates the R^(R-2) spanning tree redundancy: the same
-// unordered set reached via different addition orders is recognized.
+// ── Canonical graph dedup via nauty ────────────────────────────────────────
+// Build the induced subgraph of the partial vertex set on the arrangement
+// graph (edges = Hamming distance 1), compute its canonical form via nauty,
+// and use that as the dedup key. This collapses both:
+//   - spanning tree redundancy (same set, different addition order)
+//   - isomorphic copies (different vertices, same structure)
 
-struct VectorHash {
-    size_t operator()(const std::vector<uint64_t>& v) const {
+static std::vector<uint64_t> ver;
+static std::unordered_set<uint64_t> ver_set;
+
+struct CanonicalGraphHash {
+    size_t operator()(const std::vector<graph>& v) const {
         size_t h = v.size();
-        for (uint64_t x : v)
-            h ^= std::hash<uint64_t>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        for (auto x : v) {
+            h ^= std::hash<graph>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        }
         return h;
     }
 };
 
-// One dedup set per recursion depth (partial sets of size k).
-static std::vector<std::unordered_set<std::vector<uint64_t>, VectorHash>> seen;
+// One dedup set per recursion depth.
+static std::vector<std::unordered_set<std::vector<graph>, CanonicalGraphHash>> seen;
 
-// ── Global state ───────────────────────────────────────────────────────────
+// Compute canonical graph for the first 'count' vertices in ver[].
+// Returns the canonical adjacency matrix as a vector<graph>.
+static std::vector<graph> canonical_graph(int count) {
+    int n = count;
+    int m = SETWORDSNEEDED(n);
 
-static std::vector<uint64_t> ver;
-static std::unordered_set<uint64_t> ver_set;
+    std::vector<graph> g(n * m);
+    std::vector<graph> cg(n * m);
+    std::vector<int> lab(n), ptn(n), orbits(n);
+
+    EMPTYGRAPH(g.data(), m, n);
+
+    // Build edges: vertices i,j are adjacent if they differ in exactly 1 position.
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int diffs = 0;
+            for (int k = 0; k < R; k++) {
+                if (get_sym(ver[i], k) != get_sym(ver[j], k)) {
+                    diffs++;
+                    if (diffs > 1) break;
+                }
+            }
+            if (diffs == 1) ADDONEEDGE(g.data(), i, j, m);
+        }
+    }
+
+    DEFAULTOPTIONS_GRAPH(options);
+    options.getcanon = TRUE;
+    statsblk stats;
+
+    densenauty(g.data(), lab.data(), ptn.data(), orbits.data(),
+               &options, &stats, m, n, cg.data());
+
+    return cg;
+}
+
+
 
 struct Result { int cons; std::string example; };
 static std::map<int, Result> results;
@@ -154,13 +201,13 @@ static std::pair<int, int> calc() {
 
 // ── Recursive search ───────────────────────────────────────────────────────
 // Original generation with nodl/largchg symmetry breaking preserved.
-// Canonical set dedup at each level eliminates spanning tree redundancy.
+// nauty canonical graph dedup at each level eliminates both spanning tree
+// redundancy AND isomorphic copies.
 
 static void solve(int point, int nodl, int largchg) {
-    // Canonicalize partial set (sorted) and check for duplicates.
-    std::vector<uint64_t> canonical(ver.begin(), ver.begin() + point);
-    std::sort(canonical.begin(), canonical.end());
-    if (!seen[point].insert(std::move(canonical)).second) {
+    // Compute canonical graph and check for duplicates.
+    auto cg = canonical_graph(point);
+    if (!seen[point].insert(std::move(cg)).second) {
         nodes_pruned++;
         return;
     }

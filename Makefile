@@ -19,6 +19,10 @@ R         ?= 5
 OPTFLAGS  ?= -O2
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 
+# nauty (canonical graph labeling)
+NAUTY_CFLAGS = -I/usr/include/nauty
+NAUTY_LIBS   = -lnauty
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,7 +86,7 @@ build:	##H @Build Compile original with optimizations (-O2)
 .PHONY: build/opt
 build/opt:	##H @Build Compile optimized variant (-O2)
 	@$(call print_info,Building $(BIN_OPT)...)
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT)
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
 	@$(call print_success,Build complete.)
 
 .PHONY: debug
