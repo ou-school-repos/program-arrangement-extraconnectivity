@@ -1,12 +1,11 @@
 // Extraconnectivity of Arrangement Graphs — optimized search
 // (Based on Cheng et al., with algorithmic fixes/speedups)
 //
-// Optimizations:
-//   1. Nauty 4-color auxiliary graph dedup at shallow depths (S_n × S_R)
-//   2. Sorted vertex-set dedup at deep depths (cheap O(R log R))
-//   3. 5-bit nibble packing for R up to 12
-//   4. OpenMP parallelism on top-level branches
-//   5. Independent verify() cross-checks every result
+// Fixes applied:
+//   1. Nauty-based 4-color auxiliary graph dedup exploits S_n x S_R symmetry
+//   2. Integer-packed vertices (uint64_t, 5-bit nibbles) for O(1) compare/hash
+//   3. unordered_set for O(1) membership checks
+//   4. Independent verify() cross-checks every result
 //
 // Usage: ./arrangementoptimized [R]   (default R=5)
 
@@ -21,12 +20,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
-#include <mutex>
 #include <vector>
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 extern "C" {
 #include <nauty/nauty.h>
@@ -34,6 +28,8 @@ extern "C" {
 
 // ── Vertex representation ──────────────────────────────────────────────────
 // Each r-permutation packed into uint64_t with 5-bit nibbles.
+// Position 0 in the highest nibble → integer comparison = lex comparison.
+// 5 bits support up to 32 symbols, allowing R up to 12.
 
 static int R = 5;
 
@@ -74,111 +70,119 @@ static std::string vertex_to_string(uint64_t vertex) {
     return str;
 }
 
-// ── Hash functors ──────────────────────────────────────────────────────────
+// ── Nauty canonical hash ───────────────────────────────────────────────────
+// 4-color auxiliary graph encodes the S_n × S_R metric structure:
+//   Color 0: R position vertices
+//   Color 1: N symbol vertices (N = max symbol + 1)
+//   Color 2: R×N grid slot vertices (position, symbol)
+//   Color 3: point permutation vertices
+//
+// Two subsets with isomorphic auxiliary graphs have identical neighbor-set
+// formulas, so pruning by canonical graph is exact.
 
 namespace {
-
 struct SetwordVecHash {
     size_t operator()(const std::vector<setword> &v) const {
         return std::accumulate(
-            v.begin(), v.end(), v.size(),
-            [](size_t h, setword x) {
-                return h ^ (std::hash<setword>{}(x) +
-                            0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+            v.begin(), v.end(), v.size(), [](size_t h, setword x) {
+                return h ^ (std::hash<setword>{}(x) + 0x9e3779b97f4a7c15ULL +
+                            (h << 6) + (h >> 2));
             });
     }
 };
+} // namespace
 
-struct SortedVecHash {
-    size_t operator()(const std::vector<uint64_t> &v) const {
-        return std::accumulate(
-            v.begin(), v.end(), v.size(),
-            [](size_t h, uint64_t x) {
-                return h ^ (std::hash<uint64_t>{}(x) +
-                            0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
-            });
-    }
-};
+// One dedup set per recursion depth.
+static std::vector<std::unordered_set<std::vector<setword>, SetwordVecHash>>
+    seen;
 
+// ── Global state ───────────────────────────────────────────────────────────
+
+static std::vector<uint64_t> ver;
+static std::unordered_set<uint64_t> ver_set;
+
+namespace {
 struct Result {
     int cons = 0;
     std::string example;
 };
-
 } // namespace
-
-// ── Per-thread search context ──────────────────────────────────────────────
-// Each OpenMP thread gets its own context — zero contention.
-
-struct SearchContext {
-    std::vector<uint64_t> ver;
-    std::unordered_set<uint64_t> ver_set;
-    std::map<int, Result> results;
-    uint64_t nodes_explored = 0;
-    uint64_t nodes_pruned = 0;
-
-    // Dedup tables (one per recursion depth).
-    std::vector<std::unordered_set<std::vector<setword>, SetwordVecHash>> seen;
-    std::vector<
-        std::unordered_set<std::vector<uint64_t>, SortedVecHash>> seen_sorted;
-};
+static std::map<int, Result> results;
+static uint64_t nodes_explored = 0;
+static uint64_t nodes_pruned = 0;
 
 // ── Independent verifier ───────────────────────────────────────────────────
+// Computes neighbor-set formula directly, independent of calc().
+// Splits neighbors into "named" (symbols in V') and "anonymous" (rest).
+// Returns {nk1, cons} matching calc()'s format.
 
-static std::pair<int, int> verify_neighbor_set(const SearchContext &ctx) {
+static std::pair<int, int> verify_neighbor_set() {
+    // Collect all distinct symbols used across V'.
     std::unordered_set<int> used_syms;
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++) {
-            used_syms.insert(get_sym(ctx.ver[i], p));
+            used_syms.insert(get_sym(ver[i], p));
         }
     }
     const int M = static_cast<int>(used_syms.size());
 
+    // For each position p, group vertices by their values at all OTHER
+    // positions. Each group produces one distinct anonymous neighbor per
+    // anonymous symbol. Anonymous neighbors from different groups/positions
+    // are always distinct.
     int anon_coeff = 0;
     for (int p = 0; p < R; p++) {
         std::unordered_set<uint64_t> group_keys;
         for (int i = 0; i < R; i++) {
-            group_keys.insert(set_sym(ctx.ver[i], p, 0x1F));
+            group_keys.insert(set_sym(ver[i], p, 0x1F)); // sentinel
         }
         anon_coeff += static_cast<int>(group_keys.size());
     }
 
+    // Enumerate all "named" neighbors: vertex with one position changed
+    // to a symbol that appears somewhere in V'.
     std::unordered_set<uint64_t> named_nbrs;
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++) {
             for (const int s : used_syms) {
-                if (!contains_sym(ctx.ver[i], s)) {
-                    named_nbrs.insert(set_sym(ctx.ver[i], p, s));
+                if (!contains_sym(ver[i], s)) {
+                    named_nbrs.insert(set_sym(ver[i], p, s));
                 }
             }
         }
     }
+    // Remove V' members.
     for (int i = 0; i < R; i++) {
-        named_nbrs.erase(ctx.ver[i]);
+        named_nbrs.erase(ver[i]);
     }
     const int named_count = static_cast<int>(named_nbrs.size());
 
+    // |N(V')| = anon_coeff * (n-M) + named_count
+    //         = anon_coeff * (n-k) + (named_count - anon_coeff*(M-R))
+    // Matching (R*k - nk1)*(n-k) - (nk1+cons):
     const int nk1 = R * R - anon_coeff;
     const int total_const = anon_coeff * (M - R) - named_count;
     const int cons = total_const - nk1;
+
     return {nk1, cons};
 }
 
 // ── Neighbor-set calculation ───────────────────────────────────────────────
+// Faithful port of Cheng's calc() using integer operations.
 
-static std::pair<int, int> calc(const SearchContext &ctx) {
+static std::pair<int, int> calc() {
     int nk1coef = 0;
     int cons = 0;
 
     for (int i = 1; i < R; i++) {
-        const uint64_t cur = ctx.ver[i];
+        const uint64_t cur = ver[i];
         std::vector<uint64_t> dcverts;
         std::vector<int> chgs;
         bool isShared[32] = {};
         int isSharednum = 0;
 
         for (int j = 0; j < i; j++) {
-            const uint64_t cur2 = ctx.ver[j];
+            const uint64_t cur2 = ver[j];
             int differs = 0;
             int diff1 = 0;
             int diff2 = 0;
@@ -257,18 +261,40 @@ static std::pair<int, int> calc(const SearchContext &ctx) {
 }
 
 // ── Recursive search ───────────────────────────────────────────────────────
+// Depth-gated dedup:
+//   - Shallow depths (point ≤ threshold): nauty canonical graph (expensive but
+//     powerful — exploits full S_n × S_R symmetry to prune large subtrees)
+//   - Deep depths: sorted vertex-set dedup (cheap O(R log R) per node)
 
-static std::mutex nauty_mtx;  // Serialize nauty (not compiled with TLS).
+// Sorted-set dedup structures (for deep levels).
+namespace {
+struct SortedVecHash {
+    size_t operator()(const std::vector<uint64_t> &v) const {
+        return std::accumulate(
+            v.begin(), v.end(), v.size(), [](size_t h, uint64_t x) {
+                return h ^ (std::hash<uint64_t>{}(x) + 0x9e3779b97f4a7c15ULL +
+                            (h << 6) + (h >> 2));
+            });
+    }
+};
+} // namespace
 
-static void solve(int point, int nodl, int largchg, SearchContext &ctx) {
+static std::vector<std::unordered_set<std::vector<uint64_t>, SortedVecHash>>
+    seen_sorted;
+
+static void solve(int point, int nodl, int largchg) {
+    // Depth gate: use nauty at shallow depths, sorted-set at deep.
+    // Threshold: nauty for the first half of the recursion where subtrees
+    // are large and pruning is most valuable.
     const int nauty_limit = std::max(3, R / 2 + 2);
     const bool use_nauty = (point <= nauty_limit);
 
     if (use_nauty) {
+        // Build 4-color auxiliary graph for the current partial set.
         int max_sym = 0;
         for (int i = 0; i < point; i++) {
             for (int p = 0; p < R; p++) {
-                const int sym = get_sym(ctx.ver[i], p);
+                const int sym = get_sym(ver[i], p);
                 if (sym > max_sym) {
                     max_sym = sym;
                 }
@@ -279,15 +305,21 @@ static void solve(int point, int nodl, int largchg, SearchContext &ctx) {
         const int m_aux = SETWORDSNEEDED(n_aux);
         nauty_check(WORDSIZE, m_aux, n_aux, NAUTYVERSIONID);
 
-        const size_t g_total = static_cast<size_t>(m_aux) * n_aux;
-        std::vector<graph> gv(g_total, 0);
-        std::vector<graph> cgv(g_total);
-        std::vector<int> lab(n_aux);
-        std::vector<int> ptn(n_aux);
-        std::vector<int> orbits(n_aux);
-        graph *g = gv.data();
-        graph *cg = cgv.data();
+        DYNALLSTAT(graph, g, g_sz);
+        DYNALLSTAT(graph, cg, cg_sz);
+        DYNALLSTAT(int, lab, lab_sz);
+        DYNALLSTAT(int, ptn, ptn_sz);
+        DYNALLSTAT(int, orbits, orbits_sz);
 
+        DYNALLOC2(graph, g, g_sz, m_aux, n_aux, "malloc");
+        DYNALLOC2(graph, cg, cg_sz, m_aux, n_aux, "malloc");
+        DYNALLOC1(int, lab, lab_sz, n_aux, "malloc");
+        DYNALLOC1(int, ptn, ptn_sz, n_aux, "malloc");
+        DYNALLOC1(int, orbits, orbits_sz, n_aux, "malloc");
+
+        EMPTYGRAPH(g, m_aux, n_aux);
+
+        // Wire edges: Position↔Grid, Symbol↔Grid, Perm↔Grid.
         for (int p = 0; p < R; p++) {
             for (int s = 0; s < N; s++) {
                 const int grid = R + N + p * N + s;
@@ -298,19 +330,26 @@ static void solve(int point, int nodl, int largchg, SearchContext &ctx) {
         for (int i = 0; i < point; i++) {
             const int perm_idx = R + N + R * N + i;
             for (int p = 0; p < R; p++) {
-                const int s = get_sym(ctx.ver[i], p);
+                const int s = get_sym(ver[i], p);
                 const int grid = R + N + p * N + s;
                 ADDONEEDGE(g, perm_idx, grid, m_aux);
             }
         }
 
+        // Equitable partitions (color boundaries).
         for (int i = 0; i < n_aux; i++) {
             lab[i] = i;
             ptn[i] = 1;
         }
-        if (R > 0) { ptn[R - 1] = 0; }
-        if (N > 0) { ptn[R + N - 1] = 0; }
-        if (R * N > 0) { ptn[R + N + R * N - 1] = 0; }
+        if (R > 0) {
+            ptn[R - 1] = 0;
+        }
+        if (N > 0) {
+            ptn[R + N - 1] = 0;
+        }
+        if (R * N > 0) {
+            ptn[R + N + R * N - 1] = 0;
+        }
         ptn[n_aux - 1] = 0;
 
         DEFAULTOPTIONS_GRAPH(options);
@@ -318,55 +357,56 @@ static void solve(int point, int nodl, int largchg, SearchContext &ctx) {
         options.defaultptn = FALSE;
 
         statsblk stats;
-        std::vector<setword> canon_key;
-        {
-            std::lock_guard<std::mutex> lk(nauty_mtx);
-            densenauty(g, lab.data(), ptn.data(), orbits.data(),
-                       &options, &stats, m_aux, n_aux, cg);
-            canon_key.assign(cg, cg + static_cast<size_t>(n_aux) * m_aux);
-        }
-        if (!ctx.seen[point].insert(std::move(canon_key)).second) {
-            ctx.nodes_pruned++;
+        densenauty(g, lab, ptn, orbits, &options, &stats, m_aux, n_aux, cg);
+
+        std::vector<setword> canon_key(cg,
+                                       cg + static_cast<size_t>(n_aux) * m_aux);
+        if (!seen[point].insert(std::move(canon_key)).second) {
+            nodes_pruned++;
             return;
         }
     } else {
-        std::vector<uint64_t> key(ctx.ver.begin(), ctx.ver.begin() + point);
+        // Cheap sorted-set dedup.
+        std::vector<uint64_t> key(ver.begin(), ver.begin() + point);
         std::sort(key.begin(), key.end());
-        if (!ctx.seen_sorted[point].insert(std::move(key)).second) {
-            ctx.nodes_pruned++;
+        if (!seen_sorted[point].insert(std::move(key)).second) {
+            nodes_pruned++;
             return;
         }
     }
 
+    // Leaf: evaluate.
     if (point == R) {
-        ctx.nodes_explored++;
-        const auto [nk1, cons] = calc(ctx);
-        auto it = ctx.results.find(nk1);
-        if (it == ctx.results.end() || it->second.cons < cons) {
+        nodes_explored++;
+        const auto [nk1, cons] = calc();
+
+        auto it = results.find(nk1);
+        if (it == results.end() || it->second.cons < cons) {
             std::string exa;
             for (int i = 0; i < R; i++) {
-                exa += vertex_to_string(ctx.ver[i]) + " ";
+                exa += vertex_to_string(ver[i]) + " ";
             }
-            ctx.results[nk1] = {cons, exa};
+            results[nk1] = {cons, exa};
         }
         return;
     }
 
+    // Generate candidates (same logic as original Cheng code).
     for (int i = 0; i < point; i++) {
         for (int j = 0; j <= nodl; j++) {
-            if (contains_sym(ctx.ver[i], j)) {
+            if (contains_sym(ver[i], j)) {
                 continue;
             }
             for (int k = 0; k <= largchg + 1 && k < R; k++) {
-                const uint64_t temp = set_sym(ctx.ver[i], k, j);
-                if (ctx.ver_set.count(temp) != 0) {
+                const uint64_t temp = set_sym(ver[i], k, j);
+                if (ver_set.count(temp) != 0) {
                     continue;
                 }
-                ctx.ver[point] = temp;
-                ctx.ver_set.insert(temp);
-                solve(point + 1, std::max(nodl, j + 1),
-                      std::max(largchg, k), ctx);
-                ctx.ver_set.erase(temp);
+
+                ver[point] = temp;
+                ver_set.insert(temp);
+                solve(point + 1, std::max(nodl, j + 1), std::max(largchg, k));
+                ver_set.erase(temp);
             }
         }
     }
@@ -385,30 +425,24 @@ int main(int argc, const char *argv[]) {
 
     const auto t0 = std::chrono::high_resolution_clock::now();
 
-    // Seed vertices: identity and one-swap.
-    const uint64_t v0 = make_identity();
-    const uint64_t v1 = set_sym(v0, 0, R);
+    ver.resize(R);
+    seen.resize(R + 1);
+    seen_sorted.resize(R + 1);
 
-    std::cerr << "Searching R=" << R << "  ver[0]=" << vertex_to_string(v0)
-              << "  ver[1]=" << vertex_to_string(v1) << "\n";
+    ver[0] = make_identity();
+    ver_set.insert(ver[0]);
+    ver[1] = set_sym(ver[0], 0, R);
+    ver_set.insert(ver[1]);
 
-    // Global results (merged from threads).
-    std::map<int, Result> results;
-    uint64_t total_explored = 0;
-    uint64_t total_pruned = 0;
+    std::cerr << "Searching R=" << R << "  ver[0]=" << vertex_to_string(ver[0])
+              << "  ver[1]=" << vertex_to_string(ver[1]) << "\n";
 
     if (R == 2) {
-        SearchContext ctx;
-        ctx.ver = {v0, v1};
-        ctx.ver_set = {v0, v1};
-        ctx.seen.resize(R + 1);
-        ctx.seen_sorted.resize(R + 1);
-        solve(2, R + 1, 0, ctx);
-        results = std::move(ctx.results);
-        total_explored = ctx.nodes_explored;
-        total_pruned = ctx.nodes_pruned;
+        // R=2: point=2 is the leaf, no branches to unroll.
+        solve(2, R + 1, 0);
     } else {
-        // Pre-enumerate top-level branches for progress + parallelism.
+
+        // Pre-enumerate top-level branches for progress tracking.
         struct Branch {
             uint64_t temp;
             int nodl;
@@ -417,16 +451,14 @@ int main(int argc, const char *argv[]) {
         std::vector<Branch> branches;
         const int init_nodl = R + 1;
         const int init_largchg = 0;
-        std::unordered_set<uint64_t> seed_set = {v0, v1};
         for (int i = 0; i < 2; i++) {
-            const uint64_t base = (i == 0) ? v0 : v1;
             for (int j = 0; j <= init_nodl; j++) {
-                if (contains_sym(base, j)) {
+                if (contains_sym(ver[i], j)) {
                     continue;
                 }
                 for (int k = 0; k <= init_largchg + 1 && k < R; k++) {
-                    const uint64_t temp = set_sym(base, k, j);
-                    if (seed_set.count(temp) != 0) {
+                    const uint64_t temp = set_sym(ver[i], k, j);
+                    if (ver_set.count(temp) != 0) {
                         continue;
                     }
                     branches.push_back({temp, std::max(init_nodl, j + 1),
@@ -435,63 +467,30 @@ int main(int argc, const char *argv[]) {
             }
         }
 
-        const int num_branches = static_cast<int>(branches.size());
-        std::vector<SearchContext> ctxs(num_branches);
-
-        // Initialize each branch's context.
-        for (int b = 0; b < num_branches; b++) {
-            ctxs[b].ver.resize(R);
-            ctxs[b].ver[0] = v0;
-            ctxs[b].ver[1] = v1;
-            ctxs[b].ver[2] = branches[b].temp;
-            ctxs[b].ver_set = {v0, v1, branches[b].temp};
-            ctxs[b].seen.resize(R + 1);
-            ctxs[b].seen_sorted.resize(R + 1);
-        }
-
-        int completed = 0;
+        const int total = static_cast<int>(branches.size());
         int next_pct = 5;
 
-        #pragma omp parallel for schedule(dynamic)
-        for (int b = 0; b < num_branches; b++) {
-            solve(3, branches[b].nodl, branches[b].largchg, ctxs[b]);
+        for (int b = 0; b < total; b++) {
+            ver[2] = branches[b].temp;
+            ver_set.insert(branches[b].temp);
+            solve(3, branches[b].nodl, branches[b].largchg);
+            ver_set.erase(branches[b].temp);
 
-            #pragma omp critical
-            {
-                completed++;
-                const int pct = completed * 100 / num_branches;
-                if (pct >= next_pct || completed == num_branches) {
-                    const double elapsed =
-                        std::chrono::duration<double>(
-                            std::chrono::high_resolution_clock::now() - t0)
-                            .count();
-                    // Sum explored so far.
-                    uint64_t exp = 0;
-                    for (int i = 0; i < num_branches; i++) {
-                        exp += ctxs[i].nodes_explored;
-                    }
-                    std::cerr << "\r  " << pct << "%  (" << completed << "/"
-                              << num_branches << " branches, " << exp
-                              << " evaluated, " << elapsed << "s)    "
-                              << std::flush;
-                    next_pct = pct + 5;
-                }
+            const int pct = (b + 1) * 100 / total;
+            if (pct >= next_pct || b + 1 == total) {
+                const double elapsed =
+                    std::chrono::duration<double>(
+                        std::chrono::high_resolution_clock::now() - t0)
+                        .count();
+                std::cerr << "\r  " << pct << "%  (" << (b + 1) << "/" << total
+                          << " branches, " << nodes_explored << " evaluated, "
+                          << elapsed << "s)    " << std::flush;
+                next_pct = pct + 5;
             }
         }
         std::cerr << "\n";
 
-        // Merge results from all threads.
-        for (int b = 0; b < num_branches; b++) {
-            total_explored += ctxs[b].nodes_explored;
-            total_pruned += ctxs[b].nodes_pruned;
-            for (auto &[nk1, res] : ctxs[b].results) {
-                auto it = results.find(nk1);
-                if (it == results.end() || it->second.cons < res.cons) {
-                    results[nk1] = std::move(res);
-                }
-            }
-        }
-    }
+    } // else R > 2
 
     const auto t1 = std::chrono::high_resolution_clock::now();
     const double elapsed = std::chrono::duration<double>(t1 - t0).count();
@@ -512,14 +511,13 @@ int main(int argc, const char *argv[]) {
                   << ", EX: " << res.example << "\n";
     }
 
-    std::cerr << "Done: " << elapsed << "s, " << total_explored
-              << " evaluated, " << total_pruned << " pruned\n";
+    std::cerr << "Done: " << elapsed << "s, " << nodes_explored
+              << " evaluated, " << nodes_pruned << " pruned\n";
 
-    // Post-search verification.
-    SearchContext vctx;
-    vctx.ver.resize(R);
+    // Post-search verification: cross-check each result example with verify().
     bool all_ok = true;
     for (const auto &[nk1, res] : results) {
+        // Parse example string "ABCDE FBCDE ..." back into ver[].
         std::istringstream iss(res.example);
         std::string tok;
         for (int i = 0; i < R && (iss >> tok); i++) {
@@ -527,9 +525,9 @@ int main(int argc, const char *argv[]) {
             for (int p = 0; p < R; p++) {
                 v = set_sym(v, p, tok[p] - 'A');
             }
-            vctx.ver[i] = v;
+            ver[i] = v;
         }
-        const auto [vnk1, vcons] = verify_neighbor_set(vctx);
+        const auto [vnk1, vcons] = verify_neighbor_set();
         if (nk1 != vnk1) {
             std::cerr << "VERIFY FAIL: nk1 mismatch for " << res.example
                       << ": calc=" << nk1 << " verify=" << vnk1 << "\n";

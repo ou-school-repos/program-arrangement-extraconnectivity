@@ -16,7 +16,7 @@ BIN_OPT   = arrangementoptimized
 R         ?= 7
 
 # Build modes
-OPTFLAGS  ?= -O2 -fopenmp
+OPTFLAGS  ?= -O2
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 
 # nauty (canonical graph labeling)
