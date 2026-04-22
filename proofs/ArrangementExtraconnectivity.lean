@@ -437,7 +437,10 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
         suffices ∀ (m : Multiset (Fin k)),
             (∀ p ∈ m, unique_roots p V' ≥ 1) →
             (m.map (fun p => unique_roots p V')).sum ≥ m.card by
-          exact this Finset.univ.val (fun p _ => h_each p)
+          have huniv : (Finset.univ : Finset (Fin k)).val.card = k := by
+            simp [Finset.card_univ, Fintype.card_fin]
+          have := this Finset.univ.val (fun p _ => h_each p)
+          omega
         intro m hm
         induction m using Multiset.induction with
         | empty => simp
