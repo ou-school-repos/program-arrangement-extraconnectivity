@@ -5,9 +5,6 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Fintype.Pi
 import Mathlib.Data.Fintype.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset
-
-open Finset
 
 /-!
   # Layer 1: The Combinatorial Heart — Subadditivity of A000788
@@ -310,11 +307,15 @@ def unique_roots {n k : ℕ} (p : Fin k) (V' : Finset (ArrVertex n k)) : ℕ :=
   (V'.image (fun v => drop_pos v p)).card
 
 /-- Internal edges strictly along dimension p.
-    Counts ordered pairs (u, v) with u < v sharing a root at position p. -/
+    Counts ordered pairs sharing a root at position p, divided by 2. -/
 def edges_at {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) : ℕ :=
-  V'.sum (fun u =>
+  (V'.val.bind (fun u =>
     (V'.filter (fun v => arr_adjacent u v ∧
-      drop_pos u p = drop_pos v p)).card) / 2
+      drop_pos u p = drop_pos v p)).val)).card / 2
+
+/-- Sum of unique_roots across all k dimensions -/
+def sum_unique_roots {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
+  (Finset.univ : Finset (Fin k)).val.map (fun p => unique_roots p V') |>.sum
 
 /--
   BRIDGE LEMMA 1: The Clique Squeeze
@@ -334,10 +335,10 @@ lemma unique_roots_ge_card_sub_edges {n k : ℕ}
 -/
 lemma sum_unique_roots_lower_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
-    (Finset.univ.sum (fun p : Fin k => unique_roots p V')) ≥ R * k - E_seq R := by
+    sum_unique_roots V' ≥ R * k - E_seq R := by
   -- Proof strategy:
-  -- 1. Sum BRIDGE LEMMA 1 over all p: ∑ U_p ≥ R*k - ∑ E_p
-  -- 2. Observe ∑ E_p = E_int (total internal edges)
+  -- 1. Sum BRIDGE LEMMA 1 over all p: sum_unique_roots ≥ R*k - total_edges
+  -- 2. Observe total_edges = E_int (total internal edges)
   -- 3. Apply Layer 2 `harpers_edge_isoperimetry`: E_int ≤ E_seq R
   -- 4. omega
   sorry
@@ -351,8 +352,7 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
 lemma external_neighbors_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥
-      (Finset.univ.sum (fun p : Fin k => unique_roots p V')) * (n - k) -
-        C_constant R := by
+      sum_unique_roots V' * (n - k) - C_constant R := by
   sorry
 
 -- ── THE CROWNING THEOREM DECOMPOSED ────────────────────────────────────────
@@ -369,10 +369,12 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
 lemma lower_bound_all_embeddings (R n k : ℕ)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
-  -- Chain: BRIDGE LEMMA 2 + BRIDGE LEMMA 3 + linarith
+  -- Chain: sum_unique_roots ≥ R*k - E_seq R (bridge 2)
+  --        external_neighbors ≥ sum_unique_roots * (n-k) - C (bridge 3)
+  -- The Nat subtraction arithmetic requires careful monotonicity reasoning.
   have h1 := sum_unique_roots_lower_bound R V' hR
   have h2 := external_neighbors_bound R V' hR
-  omega
+  sorry -- arithmetic composition (Nat subtraction monotonicity)
 
 -- The final Capstone: composition of the two halves
 theorem arrangement_extraconnectivity_minimum
