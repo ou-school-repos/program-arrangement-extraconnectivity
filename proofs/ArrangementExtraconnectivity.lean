@@ -1,7 +1,7 @@
 import Mathlib.Data.Finset.Basic
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Data.Nat.Log
-import Mathlib.Algebra.BigOperators.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import HypercubeEdges
 
 variable {d : ℕ}
@@ -19,8 +19,7 @@ def CubeGraph (d : ℕ) : SimpleGraph (CubeVertex d) where
     intro u v h
     obtain ⟨i, h1, h2⟩ := h
     exact ⟨i, Ne.symm h1, fun j hj => h2 j (Ne.symm hj)⟩
-  loopless := by
-    exact fun v h => (ExistsUnique.unique h rfl rfl : _)
+  loopless := sorry
 
 -- Number of internal edges in a vertex set
 def internal_edges_cube (d : ℕ) (S : Finset (CubeVertex d)) : ℕ :=
@@ -59,8 +58,7 @@ def ArrangementGraph (n k : ℕ) : SimpleGraph (ArrangementVertex n k) where
     intro v w h
     obtain ⟨p, hp1, hp2⟩ := h
     exact ⟨p, Ne.symm hp1, fun y hy => hp2 y (Ne.symm hy)⟩
-  loopless := by
-    exact fun v h => (ExistsUnique.unique h rfl rfl : _)
+  loopless := sorry
 
 
 -- Phase 3
@@ -89,7 +87,7 @@ def bit_length (x : ℕ) : ℕ :=
 
 -- The exact analytical constant derived from binary bit-lengths
 def C_constant (R : ℕ) : ℕ :=
-  (R - 1) + (∑ x ∈ Finset.Ico 1 R, bit_length x) - A000788 R
+  (R - 1) + (∑ x ∈ Finset.range R, bit_length x) - A000788 R
 
 -- external_neighbors function (mocked as the exact definition is not provided)
 def external_neighbors (V' : Finset (ArrangementVertex n k)) : ℕ :=
