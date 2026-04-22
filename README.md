@@ -107,7 +107,7 @@ The search space is Ω(R^(R−2)) by Cayley's formula; observed growth is ×22 a
 | Method                     | Complexity | What it computes                     |
 | -------------------------- | ---------- | ------------------------------------ |
 | Exhaustive search          | Ω(R^(R−2)) | All topological classes              |
-| Hamming ball predictor     | O(R⁴)      | Full formula: coefficient + constant |
+| Hamming ball predictor     | O(R^4)     | Full formula: coefficient + constant |
 | A000788 halving recurrence | O(log R)   | Coefficient only (nk1 = E(R))        |
 
 ### Summary table
@@ -132,7 +132,7 @@ The search space is Ω(R^(R−2)) by Cayley's formula; observed growth is ×22 a
 | 24  | **(24k−52)(n−k) − 60**  | **Predicted**           | **(524)(24) − 60 = 12516** | infeas. |
 | 32  | **(32k−80)(n−k) − 80**  | **Predicted (5-cube)**  | **(944)(32) − 80 = 30128** | infeas. |
 
-† R≥10 predicted via Hamming ball construction (`predict.cpp`), brute-force verified for R≤20.
+† R>=10 predicted via Hamming ball construction (`predict.cpp`), brute-force verified for R<=20.
 
 Predictions for R=2..1024 are available in [`docs/predictions.csv`](docs/predictions.csv) (`make csv`):
 
