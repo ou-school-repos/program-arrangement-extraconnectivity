@@ -12,6 +12,7 @@
 
 # Compiled binaries
 /arrangement
+/arrangementv5
 /arrangementoptimized
 /predict
 

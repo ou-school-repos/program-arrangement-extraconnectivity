@@ -215,8 +215,8 @@ int main(int argc, const char *argv[]) {
 
     if (argc >= 2) {
         R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
-        if (R < 2 || R > 64) {
-            std::cerr << "R must be between 2 and 64\n";
+        if (R < 2) {
+            std::cerr << "R must be >= 2\n";
             return 1;
         }
     }

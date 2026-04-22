@@ -22,6 +22,11 @@ SITE_OUT   = site.zip
 SRC_PRED  = predict.cpp
 BIN_PRED  = predict
 
+SRC_V5    = arrangementv5.cpp
+BIN_V5    = arrangementv5
+
+SRCS      = $(SRC) $(SRC_OPT) $(SRC_PRED) $(SRC_V5)
+
 # Build modes
 OPTFLAGS  ?= -O2
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
@@ -85,8 +90,11 @@ endef
 # Build
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: build
-build:	##H @Build Compile original with optimizations (-O2)
-	@$(call print_info,Building $(BIN))
+build: build/opt build/predict build/v5	##H @Build Compile all active binaries
+
+.PHONY: build/legacy
+build/legacy:	##H @Build Compile Cheng's original (deprecated)
+	@$(call print_info,Building $(BIN) (legacy))
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN) $(SRC)
 	@$(call print_success,Build complete.)
 
@@ -102,6 +110,12 @@ build/predict:	##H @Build Compile Hamming ball predictor
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
 	@$(call print_success,Build complete.)
 
+.PHONY: build/v5
+build/v5:	##H @Build Compile v5 POC enumerator
+	@$(call print_info,Building $(BIN_V5))
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_V5) $(SRC_V5) $(NAUTY_LIBS)
+	@$(call print_success,Build complete.)
+
 .PHONY: debug
 debug:	##H @Build Compile original with debug symbols and sanitizers
 	@$(call print_info,Building $(BIN) (debug))
@@ -112,7 +126,7 @@ debug:	##H @Build Compile original with debug symbols and sanitizers
 # Run
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: run
-run: build	##H @Run Build and run original
+run: build/legacy	##H @Run Build and run original (legacy)
 	@$(call print_info,Running $(BIN))
 	./$(BIN)
 
@@ -130,6 +144,14 @@ run/debug: debug	##H @Run Build (debug) and run
 benchmark: build/opt	##H @Run Benchmark optimized for R=2..$(R)
 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
+
+.PHONY: run/predict
+run/predict: build/predict	##H @Run Predict extraconnectivity for R=$(R)
+	./$(BIN_PRED) $(R)
+
+.PHONY: run/v5
+run/v5: build/v5	##H @Run V5 enumerator for R=$(R)
+	./$(BIN_V5) $(R)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
@@ -196,8 +218,8 @@ csv: build/predict	##H @General Generate docs/predictions.csv (R=2..1024)
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
-	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC_OPT) $(SRC_PRED) | tee lint.log
-	-clang-tidy $(SRC_OPT) $(SRC_PRED) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
+	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRCS) | tee lint.log
+	-clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
@@ -262,7 +284,7 @@ bundle:	##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
 	zip -rv9 $(BUNDLE_OUT) \
-		README.md README.pdf arrangementoptimized.cpp predict.cpp \
+		README.md README.pdf $(SRC_OPT) $(SRC_PRED) $(SRC_V5) \
 		cheng/arrangement.cpp proofs/*.lean \
 		-x proofs/lakefile.lean
 	# Uncomment to include
@@ -281,7 +303,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN) $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN) $(BIN_OPT) $(BIN_PRED) $(BIN_V5) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars

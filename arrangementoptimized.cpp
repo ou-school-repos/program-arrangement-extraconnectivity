@@ -294,7 +294,7 @@ static std::pair<int, int> calc_step(int count) {
     const uint64_t cur = ver[idx];
     int step_nk1 = 0;
     int dc_count = 0;
-    bool isShared[32] = {};
+    uint32_t isSharedMask = 0;
     int isSharednum = 0;
     uint64_t dcverts[256];
     int chgs[256];
@@ -324,8 +324,8 @@ static std::pair<int, int> calc_step(int count) {
             xor_val &= ~(0x1FULL << (chunk * 5));
         }
 
-        if (differs == 1 && !isShared[diff1]) {
-            isShared[diff1] = true;
+        if (differs == 1 && !(isSharedMask & (1U << diff1))) {
+            isSharedMask |= (1U << diff1);
             isSharednum++;
             step_nk1++;
         }
@@ -368,7 +368,7 @@ static std::pair<int, int> calc_step(int count) {
 
     for (int n = 0; n < dc_count; n++) {
         bool prune = false;
-        if (isShared[chgs[n]]) {
+        if (isSharedMask & (1U << chgs[n])) {
             prune = true;
         } else {
             const int pos = chgs[n];
