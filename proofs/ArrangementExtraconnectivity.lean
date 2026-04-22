@@ -418,25 +418,20 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
     exact Finset.card_eq_sum_card_fiberwise (fun w hw => Finset.mem_image_of_mem _ hw)
   · -- Subgoal 2: l.foldr max 0 ≤ unique_roots p V' (Injective Projection)
     -- Each fiber size ≤ unique_roots p V', so max ≤ unique_roots p V'.
-    -- First prove: ∀ s ∈ active_syms, (fiber V' p s).card ≤ unique_roots p V'
-    -- Then lift to: foldr max 0 (map ...) ≤ unique_roots p V'
     have h_le : ∀ s ∈ active_syms, (fiber V' p s).card ≤ unique_roots p V' := by
       intro s _
       unfold unique_roots
-      -- |fiber| ≤ |fiber.image drop_pos| ≤ |V'.image drop_pos|
-      -- First: fiber ⊆ V' → fiber.image ⊆ V'.image → card ≤ card
-      exact le_trans
-        (Finset.card_le_card_of_injOn (fun w => drop_pos w p)
-          (fun _ _ => Finset.mem_image_of_mem _ (Finset.mem_of_mem_filter _ ‹_›))
-          (by intro a ha b hb hab
-              simp [fiber] at ha hb
-              exact Subtype.ext (funext fun q => by
-                by_cases hq : q = p
-                · subst hq; rw [ha.2, hb.2]
-                · exact congr_fun (show drop_pos a p = drop_pos b p from hab) ⟨q, hq⟩)))
-        (Finset.card_le_card (Finset.image_mono _ (Finset.filter_subset _ _)))
-    -- Now show: foldr max 0 of the mapped list ≤ unique_roots p V'
-    -- Generic: if ∀ x ∈ l, x ≤ b, then l.foldr max 0 ≤ b
+      -- |fiber| ≤ |V'.image drop_pos| via injective mapping
+      exact Finset.card_le_card_of_injOn (fun w => drop_pos w p)
+        (fun w hw => Finset.mem_image_of_mem _ (Finset.mem_filter.mp hw).1)
+        (fun a ha b hb hab => by
+          have ha' := (Finset.mem_filter.mp ha).2
+          have hb' := (Finset.mem_filter.mp hb).2
+          exact Subtype.ext (funext fun q => by
+            by_cases hq : q = p
+            · subst hq; rw [ha', hb']
+            · exact congr_fun hab ⟨q, hq⟩))
+    -- Lift to: foldr max 0 (map ...) ≤ unique_roots p V'
     suffices ∀ (l : List ℕ) (b : ℕ), (∀ x ∈ l, x ≤ b) → l.foldr max 0 ≤ b by
       exact this _ _ (by
         intro x hx; simp only [List.mem_map] at hx
@@ -448,8 +443,8 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
     | cons a t iht =>
       intro b hl
       simp only [List.foldr_cons]
-      exact Nat.max_le.mpr ⟨hl a (List.mem_cons_self a t),
-        iht b (fun x hx => hl x (List.mem_cons_of_mem _ hx))⟩
+      exact Nat.max_le.mpr ⟨hl a (@List.mem_cons_self _ a t),
+        iht b (fun x hx => hl x (List.mem_cons_of_mem a hx))⟩
   · -- Subgoal 3: ∀ c ∈ l, c < V'.card (Strict Decrease)
     intro c hc
     simp only [List.mem_map, Finset.mem_toList] at hc
