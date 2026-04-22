@@ -306,53 +306,84 @@ def drop_pos {n k : ℕ} (v : ArrVertex n k) (p : Fin k) : {x : Fin k // x ≠ p
 def unique_roots {n k : ℕ} (p : Fin k) (V' : Finset (ArrVertex n k)) : ℕ :=
   (V'.image (fun v => drop_pos v p)).card
 
-/-- Internal edges strictly along dimension p.
-    Counts ordered pairs sharing a root at position p, divided by 2. -/
-def edges_at {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) : ℕ :=
-  (V'.val.bind (fun u =>
-    (V'.filter (fun v => arr_adjacent u v ∧
-      drop_pos u p = drop_pos v p)).val)).card / 2
-
 /-- Sum of unique_roots across all k dimensions -/
 def sum_unique_roots {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
   (Finset.univ : Finset (Fin k)).val.map (fun p => unique_roots p V') |>.sum
 
-/--
-  BRIDGE LEMMA 1: The Clique Squeeze
-  For any dimension p, the number of unique roots is at least R minus the
-  internal edges along p. This holds because a root shared by c vertices
-  forms a clique, and choose(c,2) ≥ c - 1.
--/
-lemma unique_roots_ge_card_sub_edges {n k : ℕ}
-    (V' : Finset (ArrVertex n k)) (p : Fin k) :
-    unique_roots p V' ≥ V'.card - edges_at V' p := by
-  -- unique_roots p V' = (V'.image f).card where f = drop_pos · p
-  -- edges_at V' p ≥ 0 always
-  -- We need: image.card ≥ V'.card - edges_at
-  -- Equivalently: edges_at ≥ V'.card - image.card
-  --
-  -- The deficit V'.card - image.card counts collisions in the projection.
-  -- Each collision means two vertices share the same (k-1)-root at position p,
-  -- which means they differ only at position p, hence are adjacent.
-  -- Each such adjacent pair with shared root is counted in edges_at.
-  --
-  -- Full proof requires fiber decomposition showing each fiber of size c
-  -- contributes c*(c-1)/2 ≥ c-1 edges. This is a substantial Finset argument.
-  sorry
+-- ── THE GENERIC ALGEBRAIC SQUEEZE ─────────────────────────────────────────
+-- Generalizes E_add_min_le from binary splits to arbitrary partitions.
+-- This is the algebraic engine that powers the Defect-based proof of Bridge 2.
+--
+-- KEY INSIGHT (Triangle Anomaly):
+-- The naive path (sum edges_at over dimensions, apply Harper) is WRONG because
+-- Harper's theorem bounds edges in *hypercubes*, not arrangement graph cliques.
+-- Example: R=3 in A(n,1), the triangle K_3 has 3 edges > E_seq(3) = 2.
+--
+-- Instead, we prove D(V') ≤ E_seq(|V'|) where D(V') = |V'|·k - sum_unique_roots
+-- is the "Defect". This bound holds even for cliques (the triangle has defect
+-- 3·1 - 1 = 2 ≤ E_seq(3) = 2).
+
+lemma foldr_max_le_sum (l : List ℕ) : l.foldr max 0 ≤ l.sum := by
+  induction l with
+  | nil => rfl
+  | cons a t ih =>
+    change max a (t.foldr max 0) ≤ a + t.sum
+    omega
+
+lemma E_seq_add_bound (a E_t S_t Mt y : ℕ)
+    (h1 : E_t + S_t - Mt ≤ E_seq S_t)
+    (h2 : a ≤ y)
+    (h3 : Mt ≤ y)
+    (h4 : Mt ≤ S_t) :
+    E_seq a + E_t + (a + S_t) - y ≤ E_seq (a + S_t) := by
+  have step3 : E_seq a + E_t + (a + S_t) - y ≤
+    E_seq a + (E_t + S_t - Mt) + min a S_t := by omega
+  have step4 : E_seq a + (E_t + S_t - Mt) + min a S_t ≤
+    E_seq a + E_seq S_t + min a S_t := by omega
+  have step5 := E_add_min_le a S_t
+  omega
 
 /--
-  BRIDGE LEMMA 2: Harper's Integration
-  Summing the roots over all dimensions and applying Layer 2 gives the
-  fundamental lower bound.
+  The generalized subadditivity of A000788 for any partition.
+  If y ≥ max(partition sizes), the defect bound holds.
 -/
+lemma E_seq_list_sum_le (l : List ℕ) (y : ℕ) (hy : l.foldr max 0 ≤ y) :
+    (l.map E_seq).sum + l.sum - y ≤ E_seq l.sum := by
+  induction l generalizing y with
+  | nil =>
+    simp only [List.foldr, List.map, List.sum_nil] at hy ⊢
+    omega
+  | cons a t ih =>
+    simp only [List.foldr, List.map, List.sum_cons] at hy ⊢
+    let Mt := t.foldr max 0
+    have h1 : (t.map E_seq).sum + t.sum - Mt ≤ E_seq t.sum := ih Mt (by rfl)
+    have h2 : a ≤ y := by omega
+    have h3 : Mt ≤ y := by omega
+    have h4 : Mt ≤ t.sum := foldr_max_le_sum t
+    exact E_seq_add_bound a (t.map E_seq).sum t.sum Mt y h1 h2 h3 h4
+
+-- ── BRIDGE LEMMA 2: The Defect Bound ──────────────────────────────────────
+-- D(V') = |V'|·k - sum_unique_roots(V') ≤ E_seq(|V'|)
+-- Equivalently: sum_unique_roots(V') ≥ |V'|·k - E_seq(|V'|)
+--
+-- Proof strategy (using the Defect invariant):
+-- 1. Pick any coordinate p; partition V' into fibers {S_1,...,S_m} by
+--    the symbol at position p. Each fiber has size c_i, sum c_i = R.
+-- 2. At position p: unique_roots = y (number of distinct projected roots).
+--    Since projection is injective on each fiber: y ≥ max(c_i).
+-- 3. At all OTHER positions: fibers have disjoint root sets (different
+--    symbol at position p forces different roots).
+-- 4. So: D(V') ≤ sum D(S_i) + sum c_i - y
+-- 5. By induction: D(S_i) ≤ E_seq(c_i)
+-- 6. By E_seq_list_sum_le: sum E_seq(c_i) + sum c_i - y ≤ E_seq(sum c_i)
+-- 7. Therefore: D(V') ≤ E_seq(R)
+
 lemma sum_unique_roots_lower_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     sum_unique_roots V' ≥ R * k - E_seq R := by
-  -- Proof strategy:
-  -- 1. Sum BRIDGE LEMMA 1 over all p: sum_unique_roots ≥ R*k - total_edges
-  -- 2. Observe total_edges = E_int (total internal edges)
-  -- 3. Apply Layer 2 `harpers_edge_isoperimetry`: E_int ≤ E_seq R
-  -- 4. omega
+  -- The full proof requires the coordinate partition induction described above,
+  -- powered by E_seq_list_sum_le. The algebraic engine is fully proven;
+  -- the remaining work is the Finset partition decomposition.
   sorry
 
 /--
