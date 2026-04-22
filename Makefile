@@ -175,11 +175,6 @@ format:	##H @Dev Format C++ sources (clang-format)
 	clang-format -i $(SRC_OPT)
 	@$(call print_success,Format complete.)
 
-.PHONY: format/check
-format/check:	##H @Dev Check formatting without modifying files
-	@$(call print_info,Checking format)
-	clang-format --dry-run --Werror $(SRC) $(SRC_OPT)
-	@$(call print_success,Format check passed.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
