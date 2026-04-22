@@ -151,19 +151,22 @@ def S1 {d : ℕ} (S : Finset (Cube (d + 1))) : Finset (Cube d) :=
 lemma cube_card_split {d : ℕ} (S : Finset (Cube (d + 1))) :
     S.card = (S0 S).card + (S1 S).card := by
   unfold S0 S1
-  -- dropLast is injective on each filter half
-  have hinj0 : Set.InjOn dropLast (↑(Finset.filter (fun v => v (Fin.last d) = false) S)) := by
+  let sf := S.filter (fun v => v (Fin.last d) = false)
+  let st := S.filter (fun v => v (Fin.last d) = true)
+  change S.card = (sf.image dropLast).card + (st.image dropLast).card
+  have hinj0 : Set.InjOn dropLast (sf : Set (Cube (d + 1))) := by
     intro u hu v hv heq
-    simp [Finset.mem_coe, Finset.mem_filter] at hu hv
+    simp at hu hv
     exact dropLast_inj_of_last_eq (by rw [hu.2, hv.2]) heq
-  have hinj1 : Set.InjOn dropLast (↑(Finset.filter (fun v => v (Fin.last d) = true) S)) := by
+  have hinj1 : Set.InjOn dropLast (st : Set (Cube (d + 1))) := by
     intro u hu v hv heq
-    simp [Finset.mem_coe, Finset.mem_filter] at hu hv
+    simp at hu hv
     exact dropLast_inj_of_last_eq (by rw [hu.2, hv.2]) heq
   rw [Finset.card_image_of_injOn hinj0, Finset.card_image_of_injOn hinj1]
-  have := Finset.filter_card_add_filter_neg_card_eq_card S (fun v => v (Fin.last d) = false)
-  simp only [Bool.not_eq_false] at this
-  omega
+  have h1 := Finset.filter_card_add_filter_neg_card_eq_card S (fun v => v (Fin.last d) = false)
+  have h2 : S.filter (fun v => ¬(v (Fin.last d) = false)) = st := by
+    ext v; simp [Bool.not_eq_false]
+  rw [h2] at h1; omega
 
 -- Recursive edge count: edges within S0 + edges within S1 + crossing edges
 def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
