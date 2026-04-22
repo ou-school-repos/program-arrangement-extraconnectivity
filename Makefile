@@ -22,10 +22,7 @@ SITE_OUT   = site.zip
 SRC_PRED  = predict.cpp
 BIN_PRED  = predict
 
-SRC_V5    = arrangementv5.cpp
-BIN_V5    = arrangementv5
-
-SRCS      = $(SRC) $(SRC_OPT) $(SRC_PRED) $(SRC_V5)
+SRCS      = $(SRC) $(SRC_OPT) $(SRC_PRED)
 
 # Build modes
 OPTFLAGS  ?= -O2
@@ -89,8 +86,6 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Build
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.PHONY: build
-build: build/opt build/predict build/v5	##H @Build Compile all active binaries
 
 .PHONY: build/legacy
 build/legacy:	##H @Build Compile Cheng's original (deprecated)
@@ -98,8 +93,8 @@ build/legacy:	##H @Build Compile Cheng's original (deprecated)
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN) $(SRC)
 	@$(call print_success,Build complete.)
 
-.PHONY: build/opt
-build/opt:	##H @Build Compile optimized variant (-O2)
+.PHONY: build
+build:	##H @Build Compile optimized variant (-O2)
 	@$(call print_info,Building $(BIN_OPT))
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
 	@$(call print_success,Build complete.)
@@ -110,48 +105,23 @@ build/predict:	##H @Build Compile Hamming ball predictor
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
 	@$(call print_success,Build complete.)
 
-.PHONY: build/v5
-build/v5:	##H @Build Compile v5 POC enumerator
-	@$(call print_info,Building $(BIN_V5))
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_V5) $(SRC_V5) $(NAUTY_LIBS)
-	@$(call print_success,Build complete.)
-
-.PHONY: debug
-debug:	##H @Build Compile original with debug symbols and sanitizers
-	@$(call print_info,Building $(BIN) (debug))
-	$(CXX) $(CXXFLAGS) $(DBGFLAGS) $(LDFLAGS) -o $(BIN) $(SRC)
-	@$(call print_success,Debug build complete.)
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Run
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.PHONY: run
-run: build/legacy	##H @Run Build and run original (legacy)
-	@$(call print_info,Running $(BIN))
-	./$(BIN)
 
-.PHONY: run/opt
-run/opt: build/opt	##H @Run Build and run optimized (R=$(R))
+.PHONY: run
+run: build	##H @Run Build and run optimized (R=$(R))
 	@$(call print_info,Running $(BIN_OPT) R=$(R))
 	./$(BIN_OPT) $(R)
 
-.PHONY: run/debug
-run/debug: debug	##H @Run Build (debug) and run
-	@$(call print_info,Running $(BIN) (debug))
-	./$(BIN)
-
 .PHONY: benchmark
-benchmark: build/opt	##H @Run Benchmark optimized for R=2..$(R)
+benchmark: build	##H @Run Benchmark optimized for R=2..$(R)
 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 .PHONY: run/predict
 run/predict: build/predict	##H @Run Predict extraconnectivity for R=$(R)
 	./$(BIN_PRED) $(R)
-
-.PHONY: run/v5
-run/v5: build/v5	##H @Run V5 enumerator for R=$(R)
-	./$(BIN_V5) $(R)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
@@ -175,7 +145,7 @@ test: build	##H @Dev Verify original output matches expected
 	fi
 
 .PHONY: test/opt
-test/opt: build build/opt	##H @Dev Verify optimized output matches original
+test/opt: build	##H @Dev Verify optimized output matches original
 	@$(call print_info,Testing $(BIN_OPT) against $(BIN))
 	expected=$$(./$(BIN) | tr -d ' '); \
 	actual=$$(./$(BIN_OPT) 2>/dev/null | tr -d ' '); \
@@ -189,7 +159,7 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 	fi
 
 .PHONY: test/predict
-test/predict: build/opt build/predict	##H @Dev Verify predictor matches search for R=2..$(R)
+test/predict: build build/predict	##H @Dev Verify predictor matches search for R=2..$(R)
 	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
 	@fail=0; \
 	for r in $$(seq 2 $(R)); do \
@@ -303,7 +273,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN) $(BIN_OPT) $(BIN_PRED) $(BIN_V5) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN) $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
