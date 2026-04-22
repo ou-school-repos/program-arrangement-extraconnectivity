@@ -167,16 +167,16 @@ Done: 490.892s, 166116718 generated, 162163337 evaluated, 2921832 iso-pruned, 0 
 
 ### Summary table
 
-| R   | (R-1)-extraconnectivity | Paper reference     | \|N(V')\| at n=2R, k=R       |
-| --- | ----------------------- | ------------------- | ---------------------------- |
-| 2   | (2k−1)(n−k) − 1         | Theorem 1           | (3)(2) − 1 = 5               |
-| 3   | (3k−2)(n−k) − 3         | Theorem 2           | (7)(3) − 3 = 18              |
-| 4   | (4k−4)(n−k) − 4         | Theorem 3           | (12)(4) − 4 = 44             |
-| 5   | (5k−5)(n−k) − 7         | Theorem 5           | (20)(5) − 7 = 93             |
-| 6   | (6k−7)(n−k) − 9         | Theorem 6           | (29)(6) − 9 = 165            |
-| 7   | (7k−9)(n−k) − 11        | Theorem 7           | (40)(7) − 11 = 269           |
-| 8   | **(8k−12)(n−k) − 12**   | **New (this work)** | **(52)(8) − 12 = 404**       |
-| 9   | **(9k−13)(n−k) − 16**   | **New (this work)** | **(68)(9) − 16 = 596**       |
+| R   | (R-1)-extraconnectivity | Paper reference     | \|N(V')\| at n=2R, k=R |
+| --- | ----------------------- | ------------------- | ---------------------- |
+| 2   | (2k−1)(n−k) − 1         | Theorem 1           | (3)(2) − 1 = 5         |
+| 3   | (3k−2)(n−k) − 3         | Theorem 2           | (7)(3) − 3 = 18        |
+| 4   | (4k−4)(n−k) − 4         | Theorem 3           | (12)(4) − 4 = 44       |
+| 5   | (5k−5)(n−k) − 7         | Theorem 5           | (20)(5) − 7 = 93       |
+| 6   | (6k−7)(n−k) − 9         | Theorem 6           | (29)(6) − 9 = 165      |
+| 7   | (7k−9)(n−k) − 11        | Theorem 7           | (40)(7) − 11 = 269     |
+| 8   | **(8k−12)(n−k) − 12**   | **New (this work)** | **(52)(8) − 12 = 404** |
+| 9   | **(9k−13)(n−k) − 16**   | **New (this work)** | **(68)(9) − 16 = 596** |
 
 ### Internal edge divergence: OEIS A000788 vs. linear prediction
 
@@ -184,17 +184,17 @@ The paper extrapolated E(R) = 2R−5 internal edges from R=5,6,7. The true
 sequence is [OEIS A000788](https://oeis.org/A000788) (cumulative binary weight),
 which coincides at R=5,6,7 but diverges at powers of 2:
 
-| R  | A000788 (true E) | Paper's 2R-5 | Winner |
-| -- | ---------------- | ------------ | ------ |
-| 4  | **4**            | 3            | Hypercube wins |
-| 5  | 5                | 5            | *Tie* |
-| 6  | 7                | 7            | *Tie* |
-| 7  | 9                | 9            | *Tie* |
-| 8  | **12**           | 11           | **Hypercube wins (3-cube)** |
-| 9  | 13               | 13           | *Tie* |
-| 10 | 15               | 15           | *Tie* |
-| 12 | 20               | 19           | Hypercube wins |
-| 16 | **32**           | 27           | **Total divergence (4-cube)** |
+| R   | A000788 (true E) | Paper's 2R-5 | Winner                        |
+| --- | ---------------- | ------------ | ----------------------------- |
+| 4   | **4**            | 3            | Hypercube wins                |
+| 5   | 5                | 5            | _Tie_                         |
+| 6   | 7                | 7            | _Tie_                         |
+| 7   | 9                | 9            | _Tie_                         |
+| 8   | **12**           | 11           | **Hypercube wins (3-cube)**   |
+| 9   | 13               | 13           | _Tie_                         |
+| 10  | 15               | 15           | _Tie_                         |
+| 12  | 20               | 19           | Hypercube wins                |
+| 16  | **32**           | 27           | **Total divergence (4-cube)** |
 
 The closed form E(2^d) = d · 2^{d-1} is proven in `proofs/HypercubeEdges.lean`.
 
@@ -217,4 +217,5 @@ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs."
 _Springer Proceedings in Mathematics & Statistics_ 388, pp. 275–282, 2022.
 
 ---
-*Computational verification by Shane Jaroch.*
+
+_Computational verification by Shane Jaroch._
