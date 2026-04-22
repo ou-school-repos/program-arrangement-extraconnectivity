@@ -3,100 +3,99 @@
 // Three-tier prediction:
 //   1. O(R)    — analytical: A000788 coefficient + cumulative-zeros constant
 //   2. O(R³)   — construction: Hamming ball + formula computation
-//   3. O(R⁴)   — verification: brute-force neighbor enumeration (R ≤ 20)
+//   3. O(R³logR)— verification: brute-force neighbor enumeration (R ≤ 40)
 //
-// Usage: ./predict [R]
+// Usage: ./predict [R]       Single R prediction (R ≤ 64)
+//        ./predict --csv N   CSV output for R=2..N
+//
+// Vertex representation: stack-allocated uint8_t[64] with memcmp ordering.
+// Zero heap allocation in the hot path enables instant verification.
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
-#include <set>
 #include <string>
 #include <vector>
 
 static int R = 10;
 
-// ── Vertex type ───────────────────────────────────────────────────────
+// ── Vertex type: fixed-size stack struct ──────────────────────────────
 
-using Vertex = std::vector<int>;
+struct Vertex {
+    uint8_t syms[64] = {};
+    bool operator<(const Vertex &o) const {
+        return std::memcmp(syms, o.syms, R) < 0;
+    }
+    bool operator==(const Vertex &o) const {
+        return std::memcmp(syms, o.syms, R) == 0;
+    }
+};
 
 static bool contains_sym(const Vertex &v, int sym) {
-    return std::any_of(v.begin(), v.end(), [sym](int s) { return s == sym; });
+    for (int i = 0; i < R; i++)
+        if (v.syms[i] == static_cast<uint8_t>(sym))
+            return true;
+    return false;
 }
 
 static std::string vertex_to_string(const Vertex &v) {
     std::string str(R, ' ');
     for (int i = 0; i < R; i++) {
-        str[i] = (v[i] < 26) ? static_cast<char>('A' + v[i])
-                             : static_cast<char>('a' + v[i] - 26);
+        str[i] = (v.syms[i] < 26) ? static_cast<char>('A' + v.syms[i])
+                                  : static_cast<char>('a' + v.syms[i] - 26);
     }
     return str;
 }
 
 // ── A000788: cumulative popcount — O(log R) ──────────────────────────
 
-static int popcount_u(unsigned n) {
-    int c = 0;
-    while (n) {
-        c += n & 1;
-        n >>= 1;
-    }
-    return c;
+static uint64_t popcount_u(uint64_t n) {
+    return static_cast<uint64_t>(__builtin_popcountll(n));
 }
 
-static int A000788(int n) {
+static uint64_t bit_length_u(uint64_t n) {
+    return n == 0 ? 0 : 64 - static_cast<uint64_t>(__builtin_clzll(n));
+}
+
+static int64_t A000788(int64_t n) {
     if (n <= 0)
         return 0;
-    int m = n / 2;
+    int64_t m = n / 2;
     if (n % 2 == 0)
         return 2 * A000788(m) + m;
     else
-        return 2 * A000788(m) + m + popcount_u(static_cast<unsigned>(m));
+        return 2 * A000788(m) + m +
+               static_cast<int64_t>(popcount_u(static_cast<uint64_t>(m)));
 }
 
-// ── Cumulative zero-count constant — O(R) ────────────────────────────
-// C(R) = (R-1) + Σ_{x=1}^{R-1} Z(x)
-// where Z(x) = number of 0-bits in binary(x) up to its MSB.
+// ── Constant C(R) — O(R) ─────────────────────────────────────────────
+// C(R) = (R-1) + Σ_{x=1}^{R-1} bit_length(x) - E(R)
+// Equivalently: (R-1) + Σ zero-bits in binary(1..R-1)
 
-static int bit_length(int x) {
-    int len = 0;
-    while (x > 0) {
-        len++;
-        x >>= 1;
-    }
-    return len;
+static int64_t constant_analytical(int64_t R_val) {
+    int64_t nk1 = A000788(R_val);
+    int64_t L = 0;
+    for (int64_t x = 1; x < R_val; x++)
+        L += static_cast<int64_t>(bit_length_u(static_cast<uint64_t>(x)));
+    return (R_val - 1) + L - nk1;
 }
 
-static int zero_bits(int x) {
-    if (x <= 0)
-        return 0;
-    return bit_length(x) - popcount_u(static_cast<unsigned>(x));
-}
-
-static int constant_analytical(int R_val) {
-    int sum = R_val - 1;
-    for (int x = 1; x < R_val; x++)
-        sum += zero_bits(x);
-    return sum;
-}
-
-// ── Hamming ball construction — O(R log R) ───────────────────────────
+// ── Hamming ball construction ────────────────────────────────────────
 
 static std::vector<Vertex> build_hamming_ball() {
     int dims = 0;
     while ((1 << dims) < R)
         dims++;
 
-    Vertex identity(R);
-    for (int j = 0; j < R; j++)
-        identity[j] = j;
-
     std::vector<Vertex> verts(R);
     for (int i = 0; i < R; i++) {
-        verts[i] = identity;
+        for (int p = 0; p < R; p++)
+            verts[i].syms[p] = static_cast<uint8_t>(p);
         for (int d = 0; d < dims; d++) {
             if (i & (1 << d))
-                verts[i][d] = R + d;
+                verts[i].syms[d] = static_cast<uint8_t>(R + d);
         }
     }
     return verts;
@@ -105,73 +104,93 @@ static std::vector<Vertex> build_hamming_ball() {
 // ── Formula computation via construction — O(R³) ─────────────────────
 
 struct FormulaResult {
-    int nk1;
-    int constant;
+    int64_t nk1;
+    int64_t constant;
 };
 
 static FormulaResult compute_formula(const std::vector<Vertex> &verts) {
     // Collect used symbols
-    std::set<int> used_set;
-    for (const auto &v : verts)
-        for (int s : v)
-            used_set.insert(s);
-    std::vector<int> used_syms(used_set.begin(), used_set.end());
+    std::vector<uint8_t> used_syms;
+    for (const auto &v : verts) {
+        for (int p = 0; p < R; p++) {
+            uint8_t s = v.syms[p];
+            if (!std::any_of(used_syms.begin(), used_syms.end(),
+                             [s](uint8_t u) { return u == s; }))
+                used_syms.push_back(s);
+        }
+    }
     const int M = static_cast<int>(used_syms.size());
 
     // Anonymous coefficient: distinct groups per position
     int anon_coeff = 0;
     for (int p = 0; p < R; p++) {
-        std::set<Vertex> group_keys;
+        std::vector<Vertex> group_keys;
         for (int i = 0; i < R; i++) {
             Vertex key = verts[i];
-            key[p] = -1;
-            group_keys.insert(key);
+            key.syms[p] = 255; // sentinel
+            if (!std::any_of(group_keys.begin(), group_keys.end(),
+                             [&key](const Vertex &g) { return g == key; }))
+                group_keys.push_back(key);
         }
         anon_coeff += static_cast<int>(group_keys.size());
     }
 
-    // Named neighbors (using set for O(log N) dedup)
-    std::set<Vertex> ball(verts.begin(), verts.end());
-    std::set<Vertex> named_set;
+    // Named neighbors (sort-based dedup, zero heap alloc in hot path)
+    std::vector<Vertex> sorted_verts = verts;
+    std::sort(sorted_verts.begin(), sorted_verts.end());
+
+    std::vector<Vertex> named_nbrs;
+    named_nbrs.reserve(R * R * M);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++) {
-            for (int s : used_syms) {
+            for (auto s : used_syms) {
                 if (!contains_sym(verts[i], s)) {
                     Vertex vtx = verts[i];
-                    vtx[p] = s;
-                    if (ball.count(vtx) == 0)
-                        named_set.insert(vtx);
+                    vtx.syms[p] = s;
+                    if (!std::binary_search(sorted_verts.begin(),
+                                            sorted_verts.end(), vtx))
+                        named_nbrs.push_back(vtx);
                 }
             }
         }
     }
+    std::sort(named_nbrs.begin(), named_nbrs.end());
+    named_nbrs.erase(std::unique(named_nbrs.begin(), named_nbrs.end()),
+                     named_nbrs.end());
 
-    const int nk1 = R * R - anon_coeff;
-    const int named_sz = static_cast<int>(named_set.size());
-    const int constant = anon_coeff * (M - R) - named_sz;
+    const int64_t nk1 = R * R - anon_coeff;
+    const int64_t named_sz = static_cast<int64_t>(named_nbrs.size());
+    const int64_t constant =
+        static_cast<int64_t>(anon_coeff) * (M - R) - named_sz;
 
     return {nk1, constant};
 }
 
-// ── Brute-force verification — O(R⁴) ─────────────────────────────────
+// ── Brute-force verification — O(R³ log R) ───────────────────────────
 
-static int brute_force_neighbors(const std::vector<Vertex> &verts, int n,
-                                 int k) {
-    std::set<Vertex> ball(verts.begin(), verts.end());
-    std::set<Vertex> neighbors;
+static int64_t brute_force_neighbors(const std::vector<Vertex> &verts, int n,
+                                     int k) {
+    std::vector<Vertex> sorted_verts = verts;
+    std::sort(sorted_verts.begin(), sorted_verts.end());
+
+    std::vector<Vertex> nbrs;
+    nbrs.reserve(R * k * n);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < k; p++) {
             for (int s = 0; s < n; s++) {
                 if (contains_sym(verts[i], s))
                     continue;
                 Vertex nbr = verts[i];
-                nbr[p] = s;
-                if (ball.count(nbr) == 0)
-                    neighbors.insert(nbr);
+                nbr.syms[p] = static_cast<uint8_t>(s);
+                if (!std::binary_search(sorted_verts.begin(),
+                                        sorted_verts.end(), nbr))
+                    nbrs.push_back(nbr);
             }
         }
     }
-    return static_cast<int>(neighbors.size());
+    std::sort(nbrs.begin(), nbrs.end());
+    nbrs.erase(std::unique(nbrs.begin(), nbrs.end()), nbrs.end());
+    return static_cast<int64_t>(nbrs.size());
 }
 
 // ── Main ──────────────────────────────────────────────────────────────
@@ -184,10 +203,10 @@ int main(int argc, const char *argv[]) {
             max_r = 2;
         std::cout << "R,nk1,constant,coeff,formula_at_2R\n";
         for (int r = 2; r <= max_r; r++) {
-            int nk1 = A000788(r);
-            int c = constant_analytical(r);
-            int coeff = r * r - nk1;
-            int val = coeff * r - c;
+            int64_t nk1 = A000788(r);
+            int64_t c = constant_analytical(r);
+            int64_t coeff = static_cast<int64_t>(r) * r - nk1;
+            int64_t val = coeff * r - c;
             std::cout << r << "," << nk1 << "," << c << "," << coeff << ","
                       << val << "\n";
         }
@@ -203,8 +222,8 @@ int main(int argc, const char *argv[]) {
     }
 
     // ── Tier 1: Analytical — O(R) ─────────────────────────────────────
-    const int expected_nk1 = A000788(R);
-    const int expected_const = constant_analytical(R);
+    const int64_t expected_nk1 = A000788(R);
+    const int64_t expected_const = constant_analytical(R);
 
     std::cerr << "Hamming ball prediction for R=" << R << "\n";
     std::cerr << "  [analytical] nk1 = A000788(" << R << ") = " << expected_nk1
@@ -212,7 +231,7 @@ int main(int argc, const char *argv[]) {
     std::cerr << "  [analytical] constant = " << expected_const << "\n";
 
     // ── Tier 2: Construction verification — O(R³) ─────────────────────
-    if (R <= 32) {
+    if (R <= 40) {
         auto verts = build_hamming_ball();
 
         if (R <= 12) {
@@ -240,30 +259,26 @@ int main(int argc, const char *argv[]) {
             return 1;
         }
 
-        // ── Tier 3: Brute-force verification — O(R⁴) ─────────────────
-        if (R <= 20) {
-            const int ver_n = 2 * R;
-            const int brute_count = brute_force_neighbors(verts, ver_n, R);
-            const int coeff = R * R - nk1;
-            const int formula_val = coeff * R - constant;
-            std::cerr << "  [brute-force] |N(V')| = " << brute_count;
-            if (brute_count == formula_val)
-                std::cerr << " \xe2\x9c\x93\n";
-            else {
-                std::cerr << " \xe2\x9c\x97 MISMATCH (formula gives "
-                          << formula_val << ")\n";
-                return 1;
-            }
-        } else {
-            std::cerr << "  [brute-force] skipped (R>20)\n";
+        // ── Tier 3: Brute-force verification — O(R³ log R) ───────────
+        const int ver_n = 2 * R;
+        const int64_t brute_count = brute_force_neighbors(verts, ver_n, R);
+        const int64_t coeff = static_cast<int64_t>(R) * R - nk1;
+        const int64_t formula_val = coeff * R - constant;
+        std::cerr << "  [brute-force] |N(V')| = " << brute_count;
+        if (brute_count == formula_val)
+            std::cerr << " \xe2\x9c\x93\n";
+        else {
+            std::cerr << " \xe2\x9c\x97 MISMATCH (formula gives " << formula_val
+                      << ")\n";
+            return 1;
         }
     } else {
-        std::cerr << "  [construction] skipped (R>32)\n";
+        std::cerr << "  [construction] skipped (R>40)\n";
     }
 
     // ── Output ────────────────────────────────────────────────────────
-    const int coeff = R * R - expected_nk1;
-    const int formula_val = coeff * R - expected_const;
+    const int64_t coeff = static_cast<int64_t>(R) * R - expected_nk1;
+    const int64_t formula_val = coeff * R - expected_const;
 
     std::cout << "(" << R << "nk-" << expected_nk1 << ") (n-k)-"
               << expected_const << ", EX:";

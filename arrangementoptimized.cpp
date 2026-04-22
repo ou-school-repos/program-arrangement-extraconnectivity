@@ -331,8 +331,8 @@ static std::pair<int, int> calc_step(int count) {
         }
 
         if (differs == 2) {
-            if (diff1 > diff2)
-                std::swap(diff1, diff2);
+            // Note: __builtin_ctzll finds lowest bits first → highest pos
+            // first, so diff1 > diff2 is guaranteed. No swap needed.
 
             if (get_sym(cur, diff1) != get_sym(cur2, diff2)) {
                 const uint64_t vtx = set_sym(cur, diff1, get_sym(cur2, diff1));

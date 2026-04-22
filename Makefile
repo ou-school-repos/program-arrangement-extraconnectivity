@@ -266,6 +266,7 @@ bundle:	##H @General Create a zip archive of the project sources
 		cheng/arrangement.cpp proofs/*.lean \
 		-x proofs/lakefile.lean
 	# Uncomment to include
+	zip -rv9 $(BUNDLE_OUT) docs/*.csv
 	# zip -rv9 $(BUNDLE_OUT) docs/
 	# zip -rv9 $(BUNDLE_OUT) .git/
 	@$(call print_success,Bundle created.)
