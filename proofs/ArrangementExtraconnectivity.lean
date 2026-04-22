@@ -399,29 +399,33 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
       l.foldr max 0 ≤ y ∧
       (∀ c ∈ l, c < V'.card) ∧
       V'.card * k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y := by
-  -- Step 1: Find coordinate p where two vertices in V' disagree
-  obtain ⟨u, hu, v, hv, huv⟩ := Finset.one_lt_card.mp hR
-  have ⟨p, hp⟩ : ∃ p : Fin k, u.val p ≠ v.val p := by
-    by_contra h
-    simp only [not_exists, ne_eq, not_not] at h
-    exact huv (Subtype.ext (funext h))
-  -- Step 2: Define witnesses
-  let active := V'.image (fun w => w.val p)
-  refine ⟨active.toList.map (fun s => (fiber V' p s).card),
+  -- 1. Find a coordinate p where two vertices disagree
+  have h1 : 1 < V'.card := by omega
+  obtain ⟨u, hu, v, hv, huv⟩ := Finset.one_lt_card.mp h1
+  have hval : u.val ≠ v.val := fun h => huv (Subtype.ext h)
+  have hdiff : ∃ p : Fin k, u.val p ≠ v.val p := Function.ne_iff.mp hval
+  obtain ⟨p, hp⟩ := hdiff
+  -- 2. Define the partition variables
+  let active_syms := V'.image (fun w => w.val p)
+  refine ⟨active_syms.toList.map (fun s => (fiber V' p s).card),
           unique_roots p V', ?_, ?_, ?_, ?_⟩
-  · -- Property 1: l.sum = V'.card (fiber sizes sum to total)
+  · -- Subgoal 1: l.sum = V'.card (Exhaustiveness)
+    -- Show it equals ∑ s ∈ active_syms, (fiber V' p s).card.
+    -- List.sum_map and Finset.sum_toList bridge the List/Finset boundary.
+    -- Then Finset.sum_card_fiberwise (or sum_card_filter) closes this.
     sorry
-  · -- Property 2: l.foldr max 0 ≤ unique_roots p V' (y ≥ max fiber size)
-    -- Each fiber F_s has drop_pos injective on it, contributing c_s distinct
-    -- roots to the total unique_roots. So unique_roots ≥ c_s for each s.
+  · -- Subgoal 2: l.foldr max 0 ≤ unique_roots p V' (Injective Projection)
+    -- y = (V'.image (drop_pos · p)).card
+    -- For any fiber F_s, drop_pos is injective (same symbol at p + same root → same vertex).
+    -- Thus F_s.card = (F_s.image drop_pos).card ≤ y.
     sorry
-  · -- Property 3: ∀ c ∈ l, c < V'.card (each fiber strictly smaller)
-    -- Because u.val p ≠ v.val p, there are ≥ 2 active symbols,
-    -- so each fiber misses at least one vertex from V'.
+  · -- Subgoal 3: ∀ c ∈ l, c < V'.card (Strict Decrease)
+    -- Since u.val p ≠ v.val p, they cannot both be in any fiber F_s.
+    -- Thus each F_s is strictly missing either u or v, so F_s.card < V'.card.
     sorry
-  · -- Property 4: D(V') ≤ sum E_seq(c_i) + R - y (defect decomposition + IH)
-    -- Uses: D(V') = R - y + sum D(F_i), then IH: D(F_i) ≤ E_seq(c_i)
-    -- Requires root disjointness at positions q ≠ p
+  · -- Subgoal 4: The Algebraic Composition (Defect Decomposition + IH)
+    -- For q ≠ p, drop_pos retains coordinate p. Roots from different fibers are
+    -- STRICTLY DISJOINT at q. Apply ih to each fiber, sum over active_syms.
     sorry
 
 -- ── BRIDGE LEMMA 2: The Defect Bound (proven by strong induction) ─────────
