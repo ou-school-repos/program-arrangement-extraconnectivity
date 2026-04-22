@@ -399,13 +399,30 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
       l.foldr max 0 ≤ y ∧
       (∀ c ∈ l, c < V'.card) ∧
       V'.card * k - sum_unique_roots V' ≤ (l.map E_seq).sum + l.sum - y := by
-  -- 1. Find coordinate p where two vertices in V' disagree
-  -- 2. Define fibers: fiber V' p s = V'.filter (v.val p = s)
-  -- 3. l = active_syms.toList.map (fiber sizes), y = unique_roots p V'
-  -- 4. Use IH on each fiber: D(F_s) ≤ E_seq(c_s)
-  -- 5. Prove D(V') = R - y + sum D(F_s) via root disjointness
-  -- 6. Compose: D(V') ≤ sum E_seq(c_s) + R - y
-  sorry
+  -- Step 1: Find coordinate p where two vertices in V' disagree
+  obtain ⟨u, hu, v, hv, huv⟩ := Finset.one_lt_card.mp hR
+  have ⟨p, hp⟩ : ∃ p : Fin k, u.val p ≠ v.val p := by
+    by_contra h
+    simp only [not_exists, ne_eq, not_not] at h
+    exact huv (Subtype.ext (funext h))
+  -- Step 2: Define witnesses
+  let active := V'.image (fun w => w.val p)
+  refine ⟨active.toList.map (fun s => (fiber V' p s).card),
+          unique_roots p V', ?_, ?_, ?_, ?_⟩
+  · -- Property 1: l.sum = V'.card (fiber sizes sum to total)
+    sorry
+  · -- Property 2: l.foldr max 0 ≤ unique_roots p V' (y ≥ max fiber size)
+    -- Each fiber F_s has drop_pos injective on it, contributing c_s distinct
+    -- roots to the total unique_roots. So unique_roots ≥ c_s for each s.
+    sorry
+  · -- Property 3: ∀ c ∈ l, c < V'.card (each fiber strictly smaller)
+    -- Because u.val p ≠ v.val p, there are ≥ 2 active symbols,
+    -- so each fiber misses at least one vertex from V'.
+    sorry
+  · -- Property 4: D(V') ≤ sum E_seq(c_i) + R - y (defect decomposition + IH)
+    -- Uses: D(V') = R - y + sum D(F_i), then IH: D(F_i) ≤ E_seq(c_i)
+    -- Requires root disjointness at positions q ≠ p
+    sorry
 
 -- ── BRIDGE LEMMA 2: The Defect Bound (proven by strong induction) ─────────
 
