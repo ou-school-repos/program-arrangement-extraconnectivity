@@ -494,14 +494,20 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
       omega
 
     -- Step B: Decomposition identity (root disjointness)
-    -- sum_unique_roots V' ≥ unique_roots p V' + ∑ₛ (sum_unique_roots Fₛ - cₛ)
-    -- Equivalently: V'.card * k - sum_unique_roots V' ≤
-    --   ∑ₛ (cₛ * k - sum_unique_roots Fₛ) + V'.card - unique_roots p V'
+    -- With disjointness at q ≠ p, we get EQUALITY:
+    --   sum_unique_roots V' = y + ∑_s sum_unique_roots F_s - R
+    -- so D(V') = ∑ D(F_s) + R - y, and ≤ holds trivially.
     have h_decomp : V'.card * k - sum_unique_roots V' ≤
         (active_syms.toList.map (fun s =>
           (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum +
         V'.card - unique_roots p V' := by
-      sorry -- Root disjointness + algebraic identity
+      -- Root disjointness: for q ≠ p, drop_pos at q retains position p,
+      -- so vertices from different fibers map to different roots.
+      -- This gives: unique_roots q V' = ∑_s unique_roots q F_s
+      -- Combined with unique_roots p F_s = c_s (injectivity), we get
+      -- sum_unique_roots V' = y + ∑_s (sum_unique_roots F_s - c_s)
+      -- = y + ∑_s sum_unique_roots F_s - R
+      sorry -- Root disjointness identity (advisor guidance needed)
 
     -- Step C: Chain IH bounds with decomposition
     -- ∑ₛ D(Fₛ) ≤ ∑ₛ E_seq(cₛ) (from h_ih_fibers)
