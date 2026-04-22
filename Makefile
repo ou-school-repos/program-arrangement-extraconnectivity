@@ -155,8 +155,8 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting...)
 	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC) $(SRC_OPT)
-	-clang-tidy $(SRC) --checks='*,-llvmlibc-*' -- $(CXXFLAGS)
-	-clang-tidy $(SRC_OPT) --checks='*,-llvmlibc-*' -- $(CXXFLAGS)
+	-clang-tidy $(SRC) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-abseil-*,-boost-*,-llvm-*,-google-readability-casting,-modernize-use-trailing-return-type,-readability-identifier-length,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-use-anonymous-namespace,-cppcoreguidelines-avoid-non-const-global-variables,-misc-no-recursion,-hicpp-signed-bitwise,-cppcoreguidelines-pro-bounds-*,-hicpp-avoid-c-arrays,-modernize-avoid-c-arrays,-cppcoreguidelines-avoid-c-arrays' -- $(CXXFLAGS)
+	-clang-tidy $(SRC_OPT) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-abseil-*,-boost-*,-llvm-*,-google-readability-casting,-modernize-use-trailing-return-type,-readability-identifier-length,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-use-anonymous-namespace,-cppcoreguidelines-avoid-non-const-global-variables,-misc-no-recursion,-hicpp-signed-bitwise,-cppcoreguidelines-pro-bounds-*,-hicpp-avoid-c-arrays,-modernize-avoid-c-arrays,-cppcoreguidelines-avoid-c-arrays' -- $(CXXFLAGS)
 	@$(call print_success,Lint complete.)
 
 .PHONY: format

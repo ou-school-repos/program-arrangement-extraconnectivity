@@ -44,3 +44,4 @@ Makefile
 .DS_Store
 Thumbs.db
 .tmp/
+/*.log

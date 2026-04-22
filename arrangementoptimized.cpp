@@ -35,19 +35,22 @@ static inline uint64_t set_sym(uint64_t v, int pos, int sym) {
 
 static inline bool contains_sym(uint64_t v, int sym) {
     for (int i = 0; i < R; i++)
-        if (get_sym(v, i) == sym) return true;
+        if (get_sym(v, i) == sym)
+            return true;
     return false;
 }
 
 static inline uint64_t make_identity() {
     uint64_t v = 0;
-    for (int i = 0; i < R; i++) v = set_sym(v, i, i);
+    for (int i = 0; i < R; i++)
+        v = set_sym(v, i, i);
     return v;
 }
 
 static std::string vertex_to_string(uint64_t v) {
     std::string s(R, ' ');
-    for (int i = 0; i < R; i++) s[i] = 'A' + get_sym(v, i);
+    for (int i = 0; i < R; i++)
+        s[i] = 'A' + get_sym(v, i);
     return s;
 }
 
@@ -62,10 +65,11 @@ static std::string vertex_to_string(uint64_t v) {
 // correct dedup granularity for this problem.
 
 struct VectorHash {
-    size_t operator()(const std::vector<uint64_t>& v) const {
+    size_t operator()(const std::vector<uint64_t> &v) const {
         size_t h = v.size();
         for (uint64_t x : v)
-            h ^= std::hash<uint64_t>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+            h ^= std::hash<uint64_t>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) +
+                 (h >> 2);
         return h;
     }
 };
@@ -78,7 +82,10 @@ static std::vector<std::unordered_set<std::vector<uint64_t>, VectorHash>> seen;
 static std::vector<uint64_t> ver;
 static std::unordered_set<uint64_t> ver_set;
 
-struct Result { int cons; std::string example; };
+struct Result {
+    int cons;
+    std::string example;
+};
 static std::map<int, Result> results;
 static uint64_t nodes_explored = 0;
 static uint64_t nodes_pruned = 0;
@@ -103,9 +110,16 @@ static std::pair<int, int> calc() {
 
             for (int k = 0; k < R; k++) {
                 if (get_sym(cur, k) != get_sym(cur2, k)) {
-                    if (differs == 0) { diff1 = k; differs++; }
-                    else if (differs == 1) { diff2 = k; differs++; }
-                    else { differs++; break; }
+                    if (differs == 0) {
+                        diff1 = k;
+                        differs++;
+                    } else if (differs == 1) {
+                        diff2 = k;
+                        differs++;
+                    } else {
+                        differs++;
+                        break;
+                    }
                 }
             }
 
@@ -116,17 +130,20 @@ static std::pair<int, int> calc() {
             }
 
             if (differs == 2) {
-                if (diff1 > diff2) std::swap(diff1, diff2);
+                if (diff1 > diff2)
+                    std::swap(diff1, diff2);
                 if (get_sym(cur, diff1) != get_sym(cur2, diff2)) {
                     uint64_t v = set_sym(cur, diff1, get_sym(cur2, diff1));
-                    if (std::find(dcverts.begin(), dcverts.end(), v) == dcverts.end()) {
+                    if (std::find(dcverts.begin(), dcverts.end(), v) ==
+                        dcverts.end()) {
                         dcverts.push_back(v);
                         chgs.push_back(diff1);
                     }
                 }
                 if (get_sym(cur, diff2) != get_sym(cur2, diff1)) {
                     uint64_t v = set_sym(cur, diff2, get_sym(cur2, diff2));
-                    if (std::find(dcverts.begin(), dcverts.end(), v) == dcverts.end()) {
+                    if (std::find(dcverts.begin(), dcverts.end(), v) ==
+                        dcverts.end()) {
                         dcverts.push_back(v);
                         chgs.push_back(diff2);
                     }
@@ -142,7 +159,10 @@ static std::pair<int, int> calc() {
                 int pos = chgs[n];
                 int ch = get_sym(dcverts[n], pos);
                 for (int p = pos + 1; p < R; p++)
-                    if (get_sym(dcverts[n], p) == ch) { prune = true; break; }
+                    if (get_sym(dcverts[n], p) == ch) {
+                        prune = true;
+                        break;
+                    }
             }
             if (prune) {
                 chgs.erase(chgs.begin() + n);
@@ -176,7 +196,8 @@ static void solve(int point, int nodl, int largchg) {
         auto it = results.find(nk1);
         if (it == results.end() || it->second.cons < cons) {
             std::string exa;
-            for (int i = 0; i < R; i++) exa += vertex_to_string(ver[i]) + " ";
+            for (int i = 0; i < R; i++)
+                exa += vertex_to_string(ver[i]) + " ";
             results[nk1] = {cons, exa};
         }
         return;
@@ -185,10 +206,12 @@ static void solve(int point, int nodl, int largchg) {
     // Generate candidates: same logic as original Cheng code.
     for (int i = 0; i < point; i++) {
         for (int j = 0; j <= nodl; j++) {
-            if (contains_sym(ver[i], j)) continue;
+            if (contains_sym(ver[i], j))
+                continue;
             for (int k = 0; k <= largchg + 1 && k < R; k++) {
                 uint64_t temp = set_sym(ver[i], k, j);
-                if (ver_set.count(temp)) continue;
+                if (ver_set.count(temp))
+                    continue;
 
                 ver[point] = temp;
                 ver_set.insert(temp);
@@ -201,7 +224,7 @@ static void solve(int point, int nodl, int largchg) {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[]) {
     if (argc >= 2) {
         R = std::atoi(argv[1]);
         if (R < 2 || R > 16) {
@@ -220,8 +243,7 @@ int main(int argc, const char* argv[]) {
     ver[1] = set_sym(ver[0], 0, R);
     ver_set.insert(ver[1]);
 
-    std::cerr << "Searching R=" << R
-              << "  ver[0]=" << vertex_to_string(ver[0])
+    std::cerr << "Searching R=" << R << "  ver[0]=" << vertex_to_string(ver[0])
               << "  ver[1]=" << vertex_to_string(ver[1]) << "\n";
 
     solve(2, R + 1, 0);
@@ -229,15 +251,13 @@ int main(int argc, const char* argv[]) {
     auto t1 = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration<double>(t1 - t0).count();
 
-    for (auto& [nk1, res] : results) {
-        std::cout << "(" << R << "nk-" << nk1
-                  << ") (n-k)-" << (nk1 + res.cons)
+    for (auto &[nk1, res] : results) {
+        std::cout << "(" << R << "nk-" << nk1 << ") (n-k)-" << (nk1 + res.cons)
                   << ", EX: " << res.example << "\n";
     }
 
-    std::cerr << "Done: " << elapsed << "s, "
-              << nodes_explored << " evaluated, "
-              << nodes_pruned << " pruned\n";
+    std::cerr << "Done: " << elapsed << "s, " << nodes_explored
+              << " evaluated, " << nodes_pruned << " pruned\n";
 
     return 0;
 }

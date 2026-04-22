@@ -26,7 +26,7 @@ static std::pair<int, int> calc() {
     int cons = 0;
 
     for (int i = 1; i < R; i++) {
-        const std::string& cur = ver[i];
+        const std::string &cur = ver[i];
         std::vector<std::string> dcverts;
         std::vector<int> chgs;
 
@@ -34,7 +34,7 @@ static std::pair<int, int> calc() {
         int isSharednum = 0;
 
         for (int j = 0; j < i; j++) {
-            const std::string& cur2 = ver[j];
+            const std::string &cur2 = ver[j];
             int differs = 0, diff1 = 0, diff2 = 0;
 
             for (int k = 0; k < R; k++) {
@@ -61,12 +61,14 @@ static std::pair<int, int> calc() {
             }
 
             if (differs == 2) {
-                if (diff1 > diff2) std::swap(diff1, diff2);
+                if (diff1 > diff2)
+                    std::swap(diff1, diff2);
 
                 if (cur[diff1] != cur2[diff2]) {
                     std::string v = cur;
                     v[diff1] = cur2[diff1];
-                    if (std::find(dcverts.begin(), dcverts.end(), v) == dcverts.end()) {
+                    if (std::find(dcverts.begin(), dcverts.end(), v) ==
+                        dcverts.end()) {
                         dcverts.push_back(v);
                         chgs.push_back(diff1);
                     }
@@ -74,7 +76,8 @@ static std::pair<int, int> calc() {
                 if (cur[diff2] != cur2[diff1]) {
                     std::string v = cur;
                     v[diff2] = cur2[diff2];
-                    if (std::find(dcverts.begin(), dcverts.end(), v) == dcverts.end()) {
+                    if (std::find(dcverts.begin(), dcverts.end(), v) ==
+                        dcverts.end()) {
                         dcverts.push_back(v);
                         chgs.push_back(diff2);
                     }
@@ -90,13 +93,16 @@ static std::pair<int, int> calc() {
                 dcverts.erase(dcverts.begin() + n);
                 n--;
             } else {
-                const std::string& dv = dcverts[n];
+                const std::string &dv = dcverts[n];
                 int pos = chgs[n];
                 char ch = dv[pos];
                 // Check if same char appears at a later position in dv.
                 bool dup = false;
                 for (int p = pos + 1; p < R; p++) {
-                    if (dv[p] == ch) { dup = true; break; }
+                    if (dv[p] == ch) {
+                        dup = true;
+                        break;
+                    }
                 }
                 if (dup) {
                     chgs.erase(chgs.begin() + n);
@@ -131,7 +137,8 @@ static void solve(int point, int nodl, int largchg) {
         for (int i = 0; i < point; i++) {
             for (int j = 0; j <= nodl; j++) {
                 char c = static_cast<char>('A' + j);
-                if (ver[i].find(c) != std::string::npos) continue;
+                if (ver[i].find(c) != std::string::npos)
+                    continue;
 
                 for (int k = 0; k <= largchg + 1; k++) {
                     std::string temp = ver[i];
@@ -139,7 +146,8 @@ static void solve(int point, int nodl, int largchg) {
                     if (seen.find(temp) == seen.end()) {
                         seen.insert(temp);
                         ver[point] = temp;
-                        solve(point + 1, std::max(nodl, j + 1), std::max(largchg, k));
+                        solve(point + 1, std::max(nodl, j + 1),
+                              std::max(largchg, k));
                         seen.erase(temp);
                     }
                 }
@@ -154,14 +162,16 @@ static void solve(int point, int nodl, int largchg) {
             nk1ans.push_back(nk1);
             consans.push_back(cons);
             std::string exa;
-            for (int i = 0; i < R; i++) exa += ver[i] + " ";
+            for (int i = 0; i < R; i++)
+                exa += ver[i] + " ";
             ex.push_back(exa);
         } else {
             int poi = static_cast<int>(it - nk1ans.begin());
             if (consans[poi] < cons) {
                 consans[poi] = cons;
                 std::string exa;
-                for (int i = 0; i < R; i++) exa += ver[i] + " ";
+                for (int i = 0; i < R; i++)
+                    exa += ver[i] + " ";
                 ex[poi] = exa;
             }
         }
@@ -186,9 +196,8 @@ int main() {
     solve(2, R + 1, 0);
 
     for (size_t i = 0; i < nk1ans.size(); i++) {
-        std::cout << "(" << R << "nk-" << nk1ans[i]
-                  << ") (n-k)-" << (nk1ans[i] + consans[i])
-                  << ", EX: " << ex[i] << "\n";
+        std::cout << "(" << R << "nk-" << nk1ans[i] << ") (n-k)-"
+                  << (nk1ans[i] + consans[i]) << ", EX: " << ex[i] << "\n";
     }
 
     return 0;
