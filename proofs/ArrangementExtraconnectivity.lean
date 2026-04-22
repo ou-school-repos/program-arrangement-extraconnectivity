@@ -412,10 +412,14 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
   intro V' hR
   by_cases hR2 : R ≤ 1
   · -- Base case: R ≤ 1
-    -- For R = 0: goal is 0 ≥ 0 - E_seq 0 = 0. Trivial.
-    -- For R = 1: sum_unique_roots ≥ 0, and 1*k - E_seq 1 = k - 0 = k.
-    --   But sum_unique_roots of a singleton is k (1 unique root at each position).
-    sorry -- base case: R ≤ 1
+    by_cases h0 : R = 0
+    · -- R = 0: goal is sum_unique_roots V' ≥ 0, trivially true
+      subst h0; omega
+    · -- R = 1: goal is sum_unique_roots V' ≥ k - E_seq 1 = k
+      have hR1 : R = 1 := by omega
+      subst hR1
+      -- V' is a singleton. Each unique_roots p V' = 1, so sum = k.
+      sorry -- singleton base case
   · -- Inductive case: R ≥ 2
     have hR2' : V'.card ≥ 2 := by omega
     obtain ⟨l, y, hsum, hmax, hlt, hdefect⟩ := defect_fiber_bound V' hR2'
