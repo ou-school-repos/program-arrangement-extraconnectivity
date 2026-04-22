@@ -268,7 +268,53 @@ int main(int argc, const char *argv[]) {
     std::cerr << "Searching R=" << R << "  ver[0]=" << vertex_to_string(ver[0])
               << "  ver[1]=" << vertex_to_string(ver[1]) << "\n";
 
-    solve(2, R + 1, 0);
+    // Pre-enumerate top-level candidates (point=2) for progress tracking.
+    struct Branch {
+        uint64_t temp;
+        int nodl;
+        int largchg;
+    };
+    std::vector<Branch> branches;
+    const int init_nodl = R + 1;
+    const int init_largchg = 0;
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j <= init_nodl; j++) {
+            if (contains_sym(ver[i], j)) {
+                continue;
+            }
+            for (int k = 0; k <= init_largchg + 1 && k < R; k++) {
+                const uint64_t temp = set_sym(ver[i], k, j);
+                if (ver_set.count(temp) != 0) {
+                    continue;
+                }
+                branches.push_back({temp, std::max(init_nodl, j + 1),
+                                    std::max(init_largchg, k)});
+            }
+        }
+    }
+
+    const int total = static_cast<int>(branches.size());
+    int next_pct = 5;
+
+    for (int b = 0; b < total; b++) {
+        ver[2] = branches[b].temp;
+        ver_set.insert(branches[b].temp);
+        solve(3, branches[b].nodl, branches[b].largchg);
+        ver_set.erase(branches[b].temp);
+
+        const int pct = (b + 1) * 100 / total;
+        if (pct >= next_pct || b + 1 == total) {
+            const double elapsed =
+                std::chrono::duration<double>(
+                    std::chrono::high_resolution_clock::now() - t0)
+                    .count();
+            std::cerr << "\r  " << pct << "%  (" << (b + 1) << "/" << total
+                      << " branches, " << nodes_explored << " evaluated, "
+                      << elapsed << "s)    " << std::flush;
+            next_pct = pct + 5;
+        }
+    }
+    std::cerr << "\n";
 
     const auto t1 = std::chrono::high_resolution_clock::now();
     const double elapsed = std::chrono::duration<double>(t1 - t0).count();

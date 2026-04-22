@@ -116,7 +116,7 @@ run/debug: debug	##H @Run Build (debug) and run
 .PHONY: benchmark
 benchmark: build/opt	##H @Run Benchmark optimized for R=2..$(R)
 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
-	@for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
+	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
@@ -159,8 +159,8 @@ test/opt: build build/opt	##H @Dev Verify optimized output matches original
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
-	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC_OPT)
-	-clang-tidy $(SRC_OPT) --checks='*' -- $(CXXFLAGS)
+	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRC_OPT) | tee lint.log
+	-clang-tidy $(SRC_OPT) --checks='*' -- $(CXXFLAGS) | tee -a lint.log
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
