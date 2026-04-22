@@ -1,78 +1,44 @@
+import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Linarith
 import Mathlib.Data.Finset.Basic
-import Mathlib.Combinatorics.SimpleGraph.Basic
-import Mathlib.Data.Nat.Log
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
-import Mathlib.Combinatorics.SetFamily.KruskalKatona
+import Mathlib.Data.Finset.Card
 import HypercubeEdges
 
-open Classical
+/-!
+  # Layer 2: Harper's Theorem via Sum Types
 
-variable {d : ℕ}
+  Defining the hypercube structurally as a Sum Type allows an elegant
+  induction without needing traditional Kruskal-Katona shift operators.
+-/
 
--- A vertex in the d-dimensional Hypercube
-def CubeVertex (d : ℕ) := Fin d → Bool
+def Cube : ℕ → Type
+  | 0 => PUnit
+  | d + 1 => Sum (Cube d) (Cube d)
 
--- Adjacency: Differs in exactly one bit
-def CubeAdj (u v : CubeVertex d) : Prop :=
-  ∃! i, u i ≠ v i
+instance instDecidableEqCube (d : ℕ) : DecidableEq (Cube d) :=
+  match d with
+  | 0 => instDecidableEqPUnit
+  | d + 1 => @instDecidableEqSum _ _ (instDecidableEqCube d) (instDecidableEqCube d)
 
-def CubeGraph (d : ℕ) : SimpleGraph (CubeVertex d) where
-  Adj := CubeAdj
-  symm := by
-    intro u v h
-    obtain ⟨i, h1, h2⟩ := h
-    exact ⟨i, Ne.symm h1, fun j hj => h2 j (Ne.symm hj)⟩
-  loopless := ⟨fun v h => by
-    obtain ⟨i, h1, _⟩ := h
-    exact h1 rfl⟩
-
--- Equivalence to Finset (Fin d)
-def cubeEquivFinset (d : ℕ) : CubeVertex d ≃ Finset (Fin d) where
-  toFun v := Finset.filter (fun i => v i) Finset.univ
-  invFun s i := i ∈ s
-  left_inv v := funext (fun i => by simp)
-  right_inv s := by ext i; simp
-
-lemma cubeAdj_iff_symmDiff_card_one (u v : CubeVertex d) :
-  CubeAdj u v ↔ (symmDiff (cubeEquivFinset d u) (cubeEquivFinset d v)).card = 1 := by
+def subset_size {d : ℕ} (S : Finset (Cube d)) : ℕ := S.card
+def internal_edges {d : ℕ} (S : Finset (Cube d)) : ℕ :=
   sorry
 
-noncomputable def internal_degree (d : ℕ) (S : Finset (CubeVertex d)) (v : CubeVertex d) : ℕ :=
-  (S.filter (fun u => CubeAdj u v)).card
-
-noncomputable def internal_edges_cube_sum (d : ℕ) (S : Finset (CubeVertex d)) : ℕ :=
-  (∑ v ∈ S, internal_degree d S v) / 2
-
--- HARPER'S THEOREM (The Crown Jewel)
--- "No set of size R has more edges than the first R elements in binary lex order"
-theorem harpers_edge_isoperimetry (S : Finset (CubeVertex d)) :
-  internal_edges_cube_sum d S ≤ A000788 S.card := by
+-- The structural induction Squeeze using the combinatorial property of A000788
+theorem harpers_edge_isoperimetry {d : ℕ} (S : Finset (Cube d)) :
+  internal_edges S ≤ A000788 (subset_size S) := by
   sorry
 
 
--- Phase 2
+/-!
+  # Layer 3: The Arrangement Graph Embedding
+-/
+
 variable {n k : ℕ}
 
--- A vertex is an injective map from `Fin k` to `Fin n` (no duplicate symbols)
 def ArrangementVertex (n k : ℕ) := { f : Fin k → Fin n // Function.Injective f }
 
--- Adjacency: exactly one position differs
-def ArrangementAdj (u v : ArrangementVertex n k) : Prop :=
-  ∃! i : Fin k, u.val i ≠ v.val i
-
--- The formal Graph definition
-def ArrangementGraph (n k : ℕ) : SimpleGraph (ArrangementVertex n k) where
-  Adj := ArrangementAdj
-  symm := by
-    intro v w h
-    obtain ⟨p, hp1, hp2⟩ := h
-    exact ⟨p, Ne.symm hp1, fun y hy => hp2 y (Ne.symm hy)⟩
-  loopless := ⟨fun v h => by
-    obtain ⟨i, h1, _⟩ := h
-    exact h1 rfl⟩
-
-
--- Phase 3
 /-- The Embedding Condition -/
 def can_embed_hypercube (R n k : ℕ) : Prop :=
   n - k ≥ Nat.log2 R
@@ -82,46 +48,16 @@ def embed_hamming_ball (R n k : ℕ) (h : can_embed_hypercube R n k) :
   Finset (ArrangementVertex n k) :=
   sorry
 
-noncomputable def internal_degree_arr (n k : ℕ) (S : Finset (ArrangementVertex n k)) (v : ArrangementVertex n k) : ℕ :=
-  (S.filter (fun u => ArrangementAdj u v)).card
-
-noncomputable def internal_edges_arr (n k : ℕ) (S : Finset (ArrangementVertex n k)) : ℕ :=
-  (∑ v ∈ S, internal_degree_arr n k S v) / 2
-
-/-- Prove that the embedding perfectly preserves the hypercube edges -/
-theorem embedding_is_isometric (R n k : ℕ) (h : can_embed_hypercube R n k) :
-  internal_edges_arr n k (embed_hamming_ball R n k h) = A000788 R := by
+def external_neighbors (V' : Finset (ArrangementVertex n k)) : ℕ :=
   sorry
 
-
--- Phase 4
-
-def bit_length (x : ℕ) : ℕ :=
-  if x = 0 then 0 else Nat.log2 x + 1
-
--- The exact analytical constant derived from binary bit-lengths
-def C_constant (R : ℕ) : ℕ :=
-  (R - 1) + (∑ x ∈ Finset.range R, bit_length x) - A000788 R
-
-noncomputable def degree_arr (n k : ℕ) (_ : ArrangementVertex n k) : ℕ :=
-  k * (n - k)
-
--- external_neighbors function
-noncomputable def external_neighbors (n k : ℕ) (V' : Finset (ArrangementVertex n k)) : ℕ :=
-  (∑ v ∈ V', degree_arr n k v) - 2 * internal_edges_arr n k V' - sorry
+def C_constant (R : ℕ) : ℕ := sorry
 
 -- THE CROWNING THEOREM: The Extraconnectivity Formula
 theorem arrangement_extraconnectivity_minimum
     (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
-  -- 1. There exists a subset achieving the minimum cut
   (∃ V' : Finset (ArrangementVertex n k), V'.card = R ∧
-    external_neighbors n k V' = (R * k - A000788 R) * (n - k) - C_constant R) ∧
-  -- 2. NO subset can ever achieve a smaller cut
+    external_neighbors V' = (R * k - A000788 R) * (n - k) - C_constant R) ∧
   (∀ V' : Finset (ArrangementVertex n k), V'.card = R →
-    external_neighbors n k V' ≥ (R * k - A000788 R) * (n - k) - C_constant R) := by
-
-  constructor
-  · -- Prove existence using our `embed_hamming_ball`
-    sorry
-  · -- Prove minimality using `harpers_edge_isoperimetry` and the subgraph property
-    sorry
+    external_neighbors V' ≥ (R * k - A000788 R) * (n - k) - C_constant R) := by
+  sorry

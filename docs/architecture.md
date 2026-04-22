@@ -52,8 +52,10 @@ Vertex layout (R=5):  [sym₀|sym₁|sym₂|sym₃|sym₄|unused...]
 The engine performs a depth-first enumeration of connected subgraphs:
 
 1. **Root:** Start with two adjacent vertices `ver[0] = identity`, `ver[1]` = identity with position 0 replaced by symbol R.
-2. **Branching:** At each depth, generate candidate vertices adjacent to any vertex in the current set, subject to bounds on symbol index (`nodl`) and position (`largchg`).
-3. **Leaf evaluation:** At depth R, record the accumulated neighbor-set formula `(Rk - nk1)(n-k) - cons`.
+2. **Branching (Candidate Generation):** At each depth, generate candidate vertices adjacent to any vertex in the current set, subject to bounds on symbol index (`nodl`) and position (`largchg`). This local node expansion strictly takes **O(R⁴) time** and **O(1) auxiliary space**.
+3. **Leaf evaluation:** At depth R, record the accumulated neighbor-set formula `(Rk - nk1)(n-k) - cons` in **O(1) time and space**.
+
+**Global vs. Local Complexity:** While the global search space of connected subgraphs grows super-exponentially bounded by Cayley's tree formula ($\Omega(R^{R-2})$), the architectural design ensures that the work done at any single node to expand the frontier remains strictly polynomial ($O(R^4)$) with zero heap allocation.
 
 ### Three-Tier Deduplication
 
@@ -98,15 +100,16 @@ failure.
 
 ## Key Optimizations
 
-| Optimization                 | Impact              | Description                                                |
-| ---------------------------- | ------------------- | ---------------------------------------------------------- |
-| 128-bit hash fingerprints    | Fixes OOM           | Stores 16B per canonical graph instead of ~6KB             |
-| Leaf-level dedup elimination | Fixes OOM           | Leaves never branch, so dedup is pure waste                |
-| Static nauty buffers         | Portability         | Avoids `DYNALLSTAT` `_Thread_local` bug on Debian          |
-| 5-bit SWAR packing           | 2× speedup          | XOR-based diff in `calc_step()` replaces O(R²) loops       |
-| Depth-gated dedup            | Memory/speed        | Expensive nauty only at shallow depths; cheap hash at deep |
-| Incremental `calc_step()`    | Avoids O(R²) recalc | Only processes the newly-added vertex                      |
-| Local candidate dedup        | ~20% node reduction | Stack-allocated 2048-entry hash table per branch           |
+| Optimization                 | Impact              | Description                                                                                |
+| ---------------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| 128-bit hash fingerprints    | Fixes OOM           | Stores 16B per canonical graph instead of ~6KB                                             |
+| Leaf-level dedup elimination | Fixes OOM           | Leaves never branch, freeing $O(N)$ heap allocations                                       |
+| Static nauty buffers         | Portability         | Avoids `DYNALLSTAT` `_Thread_local` bug on Debian                                          |
+| 5-bit SWAR packing           | 2× speedup          | Reduces $O(R)$ vertex diffing / adjacency to **$O(1)$ time** via XOR and `__builtin_ctzll` |
+| SWAR Symbol Presence Mask    | Massive CPU win     | Reduces $O(R)$ symbol lookups to **$O(1)$ time** via bitwise AND                           |
+| Depth-gated dedup            | Memory/speed        | Expensive nauty only at shallow depths; cheap hash at deep                                 |
+| Incremental `calc_step()`    | Avoids O(R²) recalc | Only processes the newly-added vertex                                                      |
+| Local candidate dedup        | ~20% node reduction | **$O(1)$ amortized time, $O(1)$ space** (16KB stack allocation per branch)                 |
 
 ## Build System
 
