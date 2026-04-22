@@ -5,12 +5,14 @@ searchData = {
   {6, 0.058},
   {7, 3.353},
   {8, 304.064},
-  {9, 4320.0} (* Estimated: R=9 was ~71s in high-opt, but ~1.2h in base. Using 4320s for search curve. *)
+  {9, 4320.0},
+  {10, 4140.057} (* Actual R=10 high-opt time *)
 };
 
 predictorData = {
   {6, 0.0001},
   {8, 0.0002},
+  {10, 0.0003},
   {16, 0.0005},
   {32, 0.002}
 };
