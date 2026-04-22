@@ -113,7 +113,7 @@ Searching R=7 (nauty limit: 5)
 (7nk-7) (n-k)-16, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG ABCDLFG HICDEFG
 (7nk-8) (n-k)-13, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG HICDEFG HBJDEFG
 (7nk-9) (n-k)-11, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG HICDEFG HBJDEFG AIJDEFG
-Done: 0.067s | Gen: 394905 | Eval: 389021
+Done: 0.066s | Gen: 394905 | Eval: 389021
 Pruned | Iso: 323 | Exact: 729 | Local: 88799
   [brute-force] |N(V')| = 269 ✓
   formula(n=14,k=7): |N(V')| = 40·7 - 11 = 269
@@ -125,7 +125,7 @@ Searching R=8 (nauty limit: 6)
 (8nk- 9) (n-k)-18, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH ABCDMFGH IJCDEFGH IBKDEFGH
 (8nk-10) (n-k)-16, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH IJCDEFGH IBKDEFGH IBCLEFGH
 (8nk-12) (n-k)-12, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH IJCDEFGH IBKDEFGH AJKDEFGH IJKDEFGH
-Done: 1.764s | Gen: 12053012 | Eval: 11926956
+Done: 1.765s | Gen: 12053012 | Eval: 11926956
 Pruned | Iso: 4264 | Exact: 21554 | Local: 2544542
   [brute-force] |N(V')| = 404 ✓
   formula(n=16,k=8): |N(V')| = 52·8 - 12 = 404
@@ -138,7 +138,7 @@ Searching R=9 (nauty limit: 7)
 (9nk-11) (n-k)-21, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI ABCDNFGHI JKCDEFGHI JBLDEFGHI JBCMEFGHI
 (9nk-12) (n-k)-18, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI JKCDEFGHI JBLDEFGHI JBCMEFGHI AKLDEFGHI
 (9nk-13) (n-k)-16, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI JKCDEFGHI JBLDEFGHI AKLDEFGHI JKLDEFGHI
-Done: 71.470s | Gen: 502684606 | Eval: 498731225
+Done: 72.166s | Gen: 502684606 | Eval: 498731225
 Pruned | Iso: 91823 | Exact: 846078 | Local: 99682702
   [brute-force] |N(V')| = 596 ✓
   formula(n=18,k=9): |N(V')| = 68·9 - 16 = 596
@@ -156,6 +156,8 @@ The search space is Ω(R^(R−2)) by Cayley's formula; observed growth is ×22 a
 | Exhaustive search          | Ω(R^(R−2)) | All topological classes              |
 | Hamming ball predictor     | O(R^4)     | Full formula: coefficient + constant |
 | A000788 halving recurrence | O(log R)   | Coefficient only (nk1 = E(R))        |
+
+![Search vs. Predictor Complexity (Log Scale)](docs/complexity-curves.png)
 
 ### Summary table
 

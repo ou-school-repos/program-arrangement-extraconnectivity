@@ -84,21 +84,25 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Build
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Build modes
+OPTFLAGS  ?= -O3 -march=native -fopenmp
+DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 
+# nauty (canonical graph labeling)
 
 .PHONY: build
 build: build/opt build/predict	##H @Build Compile all binaries
 
 .PHONY: build/opt
-build/opt:	##H @Build Compile optimized enumerator (-O2)
-	@$(call print_info,Building $(BIN_OPT))
+build/opt:	##H @Build Compile ultra-optimized enumerator (O3, march=native, OpenMP)
+	@$(call print_info,Building $(BIN_OPT) with native optimizations and OpenMP)
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
 	@$(call print_success,Build complete.)
 
 .PHONY: build/predict
 build/predict:	##H @Build Compile Hamming ball predictor
 	@$(call print_info,Building $(BIN_PRED))
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
+	$(CXX) $(CXXFLAGS) -O3 $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
 	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,7 +123,7 @@ benchmark: build	##H @Run Benchmark search for R=2..$(R)
 benchmark/full: build build/predict	##H @Run Search + verify for R=2..$(R)
 	@for i in $$(seq 2 $(R)); do \
 		./$(BIN_OPT) $$i; \
-		./$(BIN_PRED) $$i 2>&1 | grep 'formula\|brute-force'; \
+		./$(BIN_PRED) $$i 2>&1 | grep 'formula\|brute-force\|(Rnk'; \
 		echo ""; \
 	done
 
@@ -177,7 +181,7 @@ format:	##H @Dev Format C++ sources (clang-format)
 	-black docs/
 	-isort docs/
 	-pre-commit run --all-files
-	clang-format -i $(SRC_OPT) $(SRC_PRED)
+	clang-format -i $(SRCS)
 	@$(call print_success,Format complete.)
 
 
@@ -233,14 +237,15 @@ bundle:	##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
 	zip -rv9 $(BUNDLE_OUT) \
-		README.md README.pdf $(SRC_OPT) $(SRC_PRED) $(SRC_V5) \
-		cheng/arrangement.cpp proofs/*.lean \
+		README.md README.pdf $(SRCS) \
+		proofs/*.lean \
 		-x proofs/lakefile.lean
 	# Uncomment to include
 	zip -rv9 $(BUNDLE_OUT) Makefile
 	zip -rv9 $(BUNDLE_OUT) docs/*.csv
+	zip -rv9 $(BUNDLE_OUT) docs/
 	zip -rv9 $(BUNDLE_OUT) proofs/lakefile.lean proofs/lakefile.toml
-	# zip -rv9 $(BUNDLE_OUT) docs/
+	# zip -rv9 $(BUNDLE_OUT) cheng/
 	# zip -rv9 $(BUNDLE_OUT) .git/
 	@$(call print_success,Bundle created.)
 

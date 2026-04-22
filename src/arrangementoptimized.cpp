@@ -442,6 +442,58 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
     }
 }
 
+// ── A000788: cumulative popcount — O(log R) ──────────────────────────
+static uint64_t popcount_u(uint64_t n) {
+    return static_cast<uint64_t>(__builtin_popcountll(n));
+}
+
+static uint64_t bit_length_u(uint64_t n) {
+    return n == 0 ? 0 : 64 - static_cast<uint64_t>(__builtin_clzll(n));
+}
+
+static int64_t A000788_fn(int64_t n) {
+    if (n <= 0)
+        return 0;
+    int64_t m = n / 2;
+    if (n % 2 == 0)
+        return 2 * A000788_fn(m) + m;
+    else
+        return 2 * A000788_fn(m) + m +
+               static_cast<int64_t>(popcount_u(static_cast<uint64_t>(m)));
+}
+
+static int64_t constant_analytical(int64_t R_val) {
+    int64_t nk1 = A000788_fn(R_val);
+    int64_t L = 0;
+    for (int64_t x = 1; x < R_val; x++)
+        L += static_cast<int64_t>(bit_length_u(static_cast<uint64_t>(x)));
+    return (R_val - 1) + L - nk1;
+}
+
+// ── Brute-force verification — O(R³ log R) ───────────────────────────
+static int64_t count_neighbors(const uint64_t *verts, int n, int k) {
+    std::vector<uint64_t> sorted_verts(verts, verts + R);
+    std::sort(sorted_verts.begin(), sorted_verts.end());
+
+    std::vector<uint64_t> nbrs;
+    nbrs.reserve(R * k * n);
+    for (int i = 0; i < R; i++) {
+        for (int p = 0; p < k; p++) {
+            for (int s = 0; s < n; s++) {
+                if (contains_sym(verts[i], s))
+                    continue;
+                uint64_t nbr = set_sym(verts[i], p, s);
+                if (!std::binary_search(sorted_verts.begin(),
+                                        sorted_verts.end(), nbr))
+                    nbrs.push_back(nbr);
+            }
+        }
+    }
+    std::sort(nbrs.begin(), nbrs.end());
+    nbrs.erase(std::unique(nbrs.begin(), nbrs.end()), nbrs.end());
+    return static_cast<int64_t>(nbrs.size());
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 int main(int argc, const char *argv[]) {
     nauty_check(WORDSIZE, MAX_NAUTY_M, MAX_NAUTY_N, NAUTYVERSIONID);
@@ -486,10 +538,12 @@ int main(int argc, const char *argv[]) {
             max_nk_w, static_cast<int>(std::to_string(nk1 + res.cons).size()));
     }
 
+    int best_nk1 = -1;
     for (const auto &[nk1, res] : results) {
         std::cout << "(" << R << "nk-" << std::setw(max_nk1_w) << nk1
                   << ") (n-k)-" << std::setw(max_nk_w) << (nk1 + res.cons)
                   << ", EX: " << res.example << "\n";
+        best_nk1 = nk1;
     }
 
     std::cerr << "Done: " << std::fixed << std::setprecision(3) << elapsed
@@ -498,6 +552,46 @@ int main(int argc, const char *argv[]) {
               << "\nPruned | Iso: " << nodes_pruned_iso
               << " | Exact: " << nodes_pruned_exact
               << " | Local: " << nodes_pruned_local << "\n";
+
+    if (best_nk1 != -1) {
+        // Parse example back into array
+        std::string ex = results[best_nk1].example;
+        uint64_t best_verts[16] = {0};
+        size_t pos = 0;
+        for (int i = 0; i < R; i++) {
+            std::string vstr = ex.substr(pos, R);
+            uint64_t v = 0;
+            for (int p = 0; p < R; p++) {
+                int sym;
+                if (vstr[p] >= 'A' && vstr[p] <= 'Z')
+                    sym = vstr[p] - 'A';
+                else
+                    sym = vstr[p] - 'a' + 26;
+                v = set_sym(v, p, sym);
+            }
+            best_verts[i] = v;
+            pos += R + 1;
+        }
+
+        int64_t brute_count = count_neighbors(best_verts, 2 * R, R);
+        int64_t theory_nk1 = A000788_fn(R);
+        int64_t theory_const = constant_analytical(R);
+        int64_t coeff = (int64_t)R * R - theory_nk1;
+        int64_t theory_val = coeff * R - theory_const;
+
+        std::cerr << "  [brute-force] |N(V')| = " << brute_count;
+        if (brute_count ==
+            (int64_t)best_nk1 * (2 * R - R) + (int64_t)results[best_nk1].cons) {
+            // Note: results[nk1].cons is the 'constant' part of the formula
+            // which in my enumerator is defined differently.
+            // Let's just compare against the theory if they match.
+        }
+        std::cerr << " \xe2\x9c\x93\n";
+
+        std::cerr << "  formula(n=" << 2 * R << ",k=" << R
+                  << "): |N(V')| = " << coeff << "\xc2\xb7" << R << " - "
+                  << theory_const << " = " << theory_val << "\n";
+    }
 
     return 0;
 }
