@@ -215,6 +215,15 @@ variable {n k : ℕ}
 -- A vertex in A(n,k) is an injective sequence of k symbols from {0..n-1}
 def ArrVertex (n k : ℕ) := { f : Fin k → Fin n // Function.Injective f }
 
+-- Provide Fintype and DecidableEq for ArrVertex (injective functions)
+instance {n k : ℕ} : DecidableEq (ArrVertex n k) := Subtype.instDecidableEqSubtype
+
+instance {n k : ℕ} : Fintype (ArrVertex n k) := by
+  unfold ArrVertex
+  haveI : (f : Fin k → Fin n) → Decidable (Function.Injective f) :=
+    fun f => Fintype.decidableInjective f
+  exact Fintype.subtype Finset.univ (fun f => Finset.mem_univ f)
+
 -- The Embedding Condition
 def can_embed_hypercube (R n k : ℕ) : Prop :=
   n - k ≥ Nat.log2 R
@@ -259,8 +268,23 @@ def embed_vertex (n k d : ℕ) (v : Cube d) (hk : d ≤ k) (hnk : k + d ≤ n) :
     ArrVertex n k :=
   ⟨embed_cube n k d hk hnk v, embedding_is_injective d v hk hnk⟩
 
-def external_neighbors (_V' : Finset (ArrVertex n k)) : ℕ :=
-  0 -- Boundary counting implementation
+-- ── ADJACENCY ─────────────────────────────────────────────────────────────
+
+/-- Two vertices in A(n,k) are adjacent if they differ in exactly one position. -/
+def arr_adjacent {n k : ℕ} (u v : ArrVertex n k) : Prop :=
+  (Finset.univ.filter (fun p : Fin k => u.val p ≠ v.val p)).card = 1
+
+instance {n k : ℕ} (u v : ArrVertex n k) : Decidable (arr_adjacent u v) :=
+  inferInstance
+
+-- ── EXTERNAL NEIGHBORS (computable) ───────────────────────────────────────
+
+/-- Computable definition of the external boundary.
+    Counts vertices outside V' that are adjacent to at least one member of V'. -/
+def external_neighbors {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
+  (Finset.univ.filter (fun v => v ∉ V' ∧ ∃ u ∈ V', arr_adjacent u v)).card
+
+-- ── FORMULA COMPONENTS ────────────────────────────────────────────────────
 
 def bit_length (x : ℕ) : ℕ :=
   if x = 0 then 0 else Nat.log2 x + 1
@@ -272,11 +296,85 @@ def sum_bit_length : ℕ → ℕ
 def C_constant (R : ℕ) : ℕ :=
   (R - 1) + sum_bit_length R - E_seq R
 
--- ── THE CROWNING THEOREM: The Extraconnectivity Formula ────────────────
+-- ── THE DEGREE & COLLISION BRIDGE (LAYER 3.5) ─────────────────────────────
+
+/-- Drop coordinate `p` from an arrangement vertex to get a (k-1)-sequence root -/
+def drop_pos {n k : ℕ} (v : ArrVertex n k) (p : Fin k) : {x : Fin k // x ≠ p} → Fin n :=
+  fun q => v.val q.val
+
+/-- The number of unique roots when projecting V' along coordinate `p`.
+    This exactly formalizes `anon_coeff` from the C++ predictor! -/
+def unique_roots {n k : ℕ} (p : Fin k) (V' : Finset (ArrVertex n k)) : ℕ :=
+  (V'.image (fun v => drop_pos v p)).card
+
+/-- Internal edges strictly along dimension p -/
+def edges_at {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) : ℕ :=
+  ((V' ×ˢ V').filter (fun ⟨u, v⟩ => arr_adjacent u v ∧
+    drop_pos u p = drop_pos v p)).card / 2
+
+/--
+  BRIDGE LEMMA 1: The Clique Squeeze
+  For any dimension p, the number of unique roots is at least R minus the
+  internal edges along p. This holds because a root shared by c vertices
+  forms a clique, and choose(c,2) ≥ c - 1.
+-/
+lemma unique_roots_ge_card_sub_edges {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    unique_roots p V' ≥ V'.card - edges_at V' p := by
+  sorry
+
+/--
+  BRIDGE LEMMA 2: Harper's Integration
+  Summing the roots over all dimensions and applying Layer 2 gives the
+  fundamental lower bound.
+-/
+lemma sum_unique_roots_lower_bound {n k : ℕ}
+    (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
+    (∑ p : Fin k, unique_roots p V') ≥ R * k - E_seq R := by
+  -- Proof strategy:
+  -- 1. Sum BRIDGE LEMMA 1 over all p: ∑ U_p ≥ R*k - ∑ E_p
+  -- 2. Observe ∑ E_p = E_int (total internal edges)
+  -- 3. Apply Layer 2 `harpers_edge_isoperimetry`: E_int ≤ E_seq R
+  -- 4. omega
+  sorry
+
+/--
+  BRIDGE LEMMA 3: The Collision Formula
+  Each unique root can be extended by (n-k) fresh symbols to form distinct
+  external neighbors. The constant C_constant(R) exactly bounds the maximum
+  overlaps from reused active symbols.
+-/
+lemma external_neighbors_bound {n k : ℕ}
+    (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
+    external_neighbors V' ≥
+      (∑ p : Fin k, unique_roots p V') * (n - k) - C_constant R := by
+  sorry
+
+-- ── THE CROWNING THEOREM DECOMPOSED ────────────────────────────────────────
+
+-- Part 1: Existence of the Optimal Cut (Constructive Upper Bound)
+lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
+    ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
+      external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R := by
+  -- Provide the `embed_vertex` Hamming ball construction.
+  -- The embedding condition n-k ≥ log2(R) ensures no intra-alphabet collisions.
+  sorry
+
+-- Part 2: Universal Lower Bound (Squeezing via Bridge Lemmas)
+lemma lower_bound_all_embeddings (R n k : ℕ)
+    (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
+  -- Chain: BRIDGE LEMMA 2 + BRIDGE LEMMA 3 + linarith
+  have h1 := sum_unique_roots_lower_bound R V' hR
+  have h2 := external_neighbors_bound R V' hR
+  omega
+
+-- The final Capstone: composition of the two halves
 theorem arrangement_extraconnectivity_minimum
     (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
   (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
     external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
   (∀ V' : Finset (ArrVertex n k), V'.card = R →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
-  sorry
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) :=
+  ⟨exists_optimal_embedding R n k h_cond,
+   fun V' hR => lower_bound_all_embeddings R n k V' hR⟩
