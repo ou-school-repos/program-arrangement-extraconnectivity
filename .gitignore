@@ -45,3 +45,4 @@ Makefile
 Thumbs.db
 .tmp/
 /*.log
+/*.md
