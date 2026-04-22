@@ -126,7 +126,7 @@ EXPECTED_OUTPUT := "(5nk-4) (n-k)-10, EX: ABCDE FBCDE AGCDE ABHDE ABCIE \n(5nk-5
 .PHONY: test
 test: build	##H @Dev Verify original output matches expected
 	@$(call print_info,Testing $(BIN))
-	@actual=$$(./$(BIN)); \
+	actual=$$(./$(BIN)); \
 	expected=$$(printf $(EXPECTED_OUTPUT)); \
 	if [ "$$actual" = "$$expected" ]; then \
 		$(call print_success,All tests passed.); \
@@ -142,14 +142,14 @@ test: build	##H @Dev Verify original output matches expected
 .PHONY: test/opt
 test/opt: build build/opt	##H @Dev Verify optimized output matches original
 	@$(call print_info,Testing $(BIN_OPT) against $(BIN))
-	@expected=$$(./$(BIN) | tr -d ' '); \
+	expected=$$(./$(BIN) | tr -d ' '); \
 	actual=$$(./$(BIN_OPT) 2>/dev/null | tr -d ' '); \
+	echo "--- original ---"; echo "$$expected"; \
+	echo "--- optimized ---"; echo "$$actual"; \
 	if [ "$$actual" = "$$expected" ]; then \
 		$(call print_success,Optimized matches original.); \
 	else \
 		$(call print_err,Output mismatch:); \
-		echo "--- original ---"; echo "$$expected"; \
-		echo "--- optimized ---"; echo "$$actual"; \
 		exit 1; \
 	fi
 
