@@ -238,7 +238,7 @@ bundle:	##H @General Create a zip archive of the project sources
 	zip -rv9 $(BUNDLE_OUT) \
 		README.md README.pdf $(SRCS) \
 		proofs/*.lean \
-		-x proofs/lakefile.lean docs/.mypy_cache
+		-x proofs/lakefile.lean docs/.mypy_cache \*.png \*.gif \*.svg
 	# Uncomment to include
 	zip -rv9 $(BUNDLE_OUT) Makefile
 	zip -rv9 $(BUNDLE_OUT) docs/*.csv
