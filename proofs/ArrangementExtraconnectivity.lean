@@ -603,7 +603,9 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
               unique_roots q (fiber V' p s) from
           Finset.sum_congr rfl h_q_eq, Finset.sum_comm]
 
-      -- 8. Final algebraic squeeze
+      -- ── THE INDUCTIVE ALGEBRAIC SQUEEZE ──────────────────────────────────
+      -- omega combines the fiber splits and disjointness identities to
+      -- prove the overall bound for V' from its fibers.
       omega
 
     -- Step C: Chain IH bounds with decomposition
@@ -730,13 +732,22 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
 lemma lower_bound_all_embeddings (R n k : ℕ)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
+  -- ── THE MULTI-HYPOTHESIS SQUEEZE ──────────────────────────────────────────
+  -- Step 1: Get the lower bound for unique roots (from BRIDGE LEMMA 1)
+  -- h1: (R*k - E_seq R) ≤ sum_unique_roots V'
   have h1 := sum_unique_roots_lower_bound R V' hR
+
+  -- Step 2: Get the collision-adjusted neighbor bound (from BRIDGE LEMMA 3)
+  -- h2: external_neighbors V' ≥ sum_unique_roots V' * (n-k) - C_constant R
   have h2 := external_neighbors_bound R V' hR
-  -- h1: R*k - E_seq R ≤ sum_unique_roots V'
-  -- h2: sum_unique_roots V' * (n-k) - C_constant R ≤ external_neighbors V'
-  -- Multiply h1 by (n-k) to get the key step omega can't do alone
-  have h3 := Nat.mul_le_mul_right (n - k) h1
+
+  -- Step 3: Scale the root bound by the (n-k) dimension factor
   -- h3: (R*k - E_seq R) * (n-k) ≤ sum_unique_roots V' * (n-k)
+  have h3 := Nat.mul_le_mul_right (n - k) h1
+
+  -- Step 4: Final Algebraic Squeeze
+  -- omega combines h2 and h3 to close the gap:
+  -- Target: external_neighbors V' ≥ (R*k - E_seq R) * (n-k) - C_constant R
   omega
 
 -- The final Capstone: composition of the two halves
