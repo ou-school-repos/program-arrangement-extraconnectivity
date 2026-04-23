@@ -5,6 +5,8 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Fintype.Pi
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Fintype.Basic
 
 /-!
@@ -498,10 +500,11 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         (active_syms.toList.map (fun s =>
           (fiber V' p s).card * k - sum_unique_roots (fiber V' p s))).sum +
         V'.card - unique_roots p V' := by
-      sorry
+      rw [Finset.sum_map_toList]
 
       -- sum_unique_roots is definitionally a Finset.sum
-      have h_sure : ∀ W : Finset (ArrVertex n k), sum_unique_roots W = ∑ q : Fin k, unique_roots q W := by
+      have h_sure : ∀ W : Finset (ArrVertex n k),
+          sum_unique_roots W = ∑ q : Fin k, unique_roots q W := by
         intro W; rfl
 
       -- 1. For q ≠ p, roots from different fibers are disjoint
@@ -519,13 +522,14 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
           constructor
           · rintro ⟨⟨w, hw, rfl⟩, heq⟩; exact ⟨w, ⟨hw, heq⟩, rfl⟩
           · rintro ⟨w, ⟨hw, heq⟩, rfl⟩; exact ⟨⟨w, hw, rfl⟩, heq⟩
-        have h_sum := @Finset.card_eq_sum_card_fiberwise _ _ _
-          (V'.image (fun v => drop_pos v q))
-          (fun (r : {i : Fin k // i ≠ q} → Fin n) => r ⟨p, hpq⟩)
-          active_syms
-          (fun r (hr : r ∈ V'.image (fun v => drop_pos v q)) => by
-            obtain ⟨w, hw, rfl⟩ := Finset.mem_image.mp hr
-            exact Finset.mem_image_of_mem (fun (v : ArrVertex n k) => v.val p) hw)
+        have h_maps : Set.MapsTo (fun (r : {i : Fin k // i ≠ q} → Fin n) => r ⟨p, hpq⟩)
+            ↑(V'.image (fun v => drop_pos v q)) ↑active_syms := by
+          intro r hr
+          simp only [Finset.coe_image, Set.mem_image] at hr
+          obtain ⟨w, hw, rfl⟩ := hr
+          simp only [active_syms, Finset.mem_coe, Finset.mem_image]
+          exact ⟨w, hw, by simp [drop_pos]⟩
+        have h_sum := Finset.card_eq_sum_card_fiberwise h_maps
         rw [h_sum]
         exact Finset.sum_congr rfl (fun s hs => congr_arg _ (h_fibers s hs))
 
@@ -534,18 +538,19 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
         have h_inj : ∀ s ∈ active_syms,
             unique_roots p (fiber V' p s) = (fiber V' p s).card := by
           intro s _; unfold unique_roots
-          rw [Finset.card_image_of_injOn]
-          intro v1 hv1 v2 hv2 heq
-          simp only [fiber, Finset.mem_filter] at hv1 hv2
-          exact Subtype.ext (funext fun q' => by
-            by_cases hq' : q' = p
-            · subst hq'; exact hv1.2 ▸ hv2.2 ▸ rfl
-            · exact congr_fun heq ⟨q', hq'⟩)
+          exact Finset.card_image_of_injOn (fun v1 hv1 v2 hv2 heq => by
+            rw [Finset.mem_coe] at hv1 hv2
+            simp only [fiber, Finset.mem_filter] at hv1 hv2
+            exact Subtype.ext (funext fun q' => by
+              by_cases hq' : q' = p
+              · subst hq'; exact hv1.2 ▸ hv2.2 ▸ rfl
+              · exact congr_fun heq ⟨q', hq'⟩))
         rw [Finset.sum_congr rfl h_inj]
-        exact (Finset.card_eq_sum_card_fiberwise
-          (f := fun (w : ArrVertex n k) => w.val p)
-          (fun (w : ArrVertex n k) (hw : w ∈ V') =>
-            Finset.mem_image_of_mem (fun (v : ArrVertex n k) => v.val p) hw)).symm
+        have h_maps : Set.MapsTo (fun (w : ArrVertex n k) => w.val p) ↑V' ↑active_syms := by
+          intro w hw
+          simp only [active_syms, Finset.mem_coe, Finset.mem_image]
+          exact ⟨w, Finset.mem_coe.mp hw, rfl⟩
+        exact (Finset.card_eq_sum_card_fiberwise h_maps).symm
 
       -- 3. sum_unique_roots F_s ≤ c_s * k (for Nat.sub_add_cancel)
       have h_bounds : ∀ s ∈ active_syms,
@@ -555,19 +560,22 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
             ≤ ∑ q : Fin k, (fiber V' p s).card :=
               Finset.sum_le_sum (fun q _ => Finset.card_image_le)
           _ = (fiber V' p s).card * k := by
-              simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
-              ring
+              simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
 
       -- 4. ∑ D(F_s) + ∑ S_s = R*k
       have h_sum_sub_aux :
           (∑ s ∈ active_syms, ((fiber V' p s).card * k - sum_unique_roots (fiber V' p s))) +
           ∑ s ∈ active_syms, sum_unique_roots (fiber V' p s) = V'.card * k := by
         rw [← Finset.sum_add_distrib]
-        have h_cs := Finset.card_eq_sum_card_fiberwise
-          (f := fun (w : ArrVertex n k) => w.val p)
-          (fun (w : ArrVertex n k) (hw : w ∈ V') =>
-            Finset.mem_image_of_mem (fun (v : ArrVertex n k) => v.val p) hw)
-        conv_rhs => rw [h_cs, ← Finset.sum_mul]
+        have h_maps : Set.MapsTo (fun (w : ArrVertex n k) => w.val p) ↑V' ↑active_syms := by
+          intro w hw
+          simp only [active_syms, Finset.mem_coe, Finset.mem_image]
+          exact ⟨w, Finset.mem_coe.mp hw, rfl⟩
+        have h_card_rw := Finset.card_eq_sum_card_fiberwise h_maps
+        have h_rhs : V'.card * k = ∑ s ∈ active_syms, (fiber V' p s).card * k := by
+          rw [h_card_rw, Finset.sum_mul]
+          exact Finset.sum_congr rfl (fun s _ => by simp [fiber])
+        rw [h_rhs]
         exact Finset.sum_congr rfl (fun s hs => Nat.sub_add_cancel (h_bounds s hs))
 
       -- 5. Split sum_unique_roots V' = y + ∑_{q≠p} unique_roots q V'
