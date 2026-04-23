@@ -235,17 +235,9 @@ docs:	##H @General Generate PDF documentation from README
 bundle:	##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
-	zip -rv9 $(BUNDLE_OUT) \
-		README.md README.pdf $(SRCS) \
-		proofs/*.lean \
-		-x proofs/lakefile.lean docs/.mypy_cache \*.png \*.gif \*.svg
-	# Uncomment to include
-	zip -rv9 $(BUNDLE_OUT) Makefile
-	zip -rv9 $(BUNDLE_OUT) docs/*.csv
-	zip -rv9 $(BUNDLE_OUT) docs/ -x 'docs/.mypy_cache/*' 'docs/__pycache__/*'
-	zip -rv9 $(BUNDLE_OUT) proofs/lakefile.lean proofs/lakefile.toml
-	# zip -rv9 $(BUNDLE_OUT) cheng/
-	# zip -rv9 $(BUNDLE_OUT) .git/
+	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/*.lean -x proofs/lakefile.lean
+	zip -rv9 $(BUNDLE_OUT) Makefile docs/*.csv proofs/lakefile.lean proofs/lakefile.toml
+	zip -rv9 $(BUNDLE_OUT) docs/ -x "docs/.mypy_cache/*" "docs/__pycache__/*" "*.png" "*.gif" "*.svg"
 	@$(call print_success,Bundle created.)
 
 .PHONY: site
