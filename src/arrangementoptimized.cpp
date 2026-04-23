@@ -580,16 +580,15 @@ int main(int argc, const char *argv[]) {
         int64_t theory_val = coeff * R - theory_const;
 
         std::cerr << "  [brute-force] |N(V')| = " << brute_count;
-        if (brute_count ==
-            (int64_t)best_nk1 * (2 * R - R) + (int64_t)results[best_nk1].cons) {
-            // Note: results[nk1].cons is the 'constant' part of the formula
-            // which in my enumerator is defined differently.
-            // Let's just compare against the theory if they match.
+        if (brute_count == theory_val) {
+            std::cerr << " \xe2\x9c\x93\n";
+        } else {
+            std::cerr << " \xe2\x9c\x97 MISMATCH (theory gives " << theory_val
+                      << ")\n";
         }
-        std::cerr << " \xe2\x9c\x93\n";
 
         std::cerr << "  formula(n=" << 2 * R << ",k=" << R
-                  << "): |N(V')| = " << coeff << "\xc2\xb7" << R << " - "
+                  << "): |N(V')| = " << coeff << " \xc2\xb7 " << R << " - "
                   << theory_const << " = " << theory_val << "\n";
     }
 

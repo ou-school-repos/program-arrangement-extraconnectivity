@@ -50,3 +50,6 @@ Thumbs.db
 
 # Lean
 .lake/
+
+# Generated graph previews
+docs/*.gif
