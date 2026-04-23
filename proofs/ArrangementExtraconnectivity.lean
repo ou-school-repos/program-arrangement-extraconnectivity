@@ -767,7 +767,7 @@ theorem arrangement_extraconnectivity_minimum
   - IMPLICATION: There is no "hidden" value of R where a non-standard
     configuration (clique, path, etc.) can outperform the Hamming Ball.
 -/
-corollary globally_optimal_growth_strategy
+theorem globally_optimal_growth_strategy
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R →
       external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧

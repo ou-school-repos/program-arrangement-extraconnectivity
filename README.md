@@ -36,19 +36,21 @@ Remarkably, the 2022 paper required $n - k \ge R - 1$ for some of their sub-opti
 
 While the 2022 Proposition 6 provided an **asymptotic** result ($|N(V')| / (Rk(n-k)) \to 1$), our Lean 4 proof provides the **precise integer count** for any finite $n, k$ (provided the alphabet constraint is met).
 
-The "Squeeze" is completed in the final lines of our formal proof, leading to the following corollary:
+The "Squeeze" is completed in the final lines of our formal proof, leading to the following theorem:
 
 ```lean
 /--
-  The Capstone Corollary: The (R-1)-extraconnectivity of A(n,k) is exactly:
+  The Capstone Theorem: The (R-1)-extraconnectivity of A(n,k) is exactly:
   κ_R = (R*k - E_seq R) * (n - k) - C_constant R
 -/
-corollary globally_optimal_growth_strategy ... :
+theorem globally_optimal_growth_strategy ... :
   (∀ V' ... external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
   (∃ V' ... external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R)
 ```
 
 **Key Distinction:** This result establishes the **Full Isoperimetric Profile** for the graph. It is not merely a collection of bounds for "perfect" hypercubes ($R=2^d$); the formula remains exact for **every natural number R** because the Hamming Ball ordering maintains the mathematical ceiling for shielding (defect minimization) at every step of growth ($R \to R+1$).
+
+For the current status of the formalization, including remaining bridge lemmas and theoretical challenges, see [docs/lean-proof-status.md](docs/lean-proof-status.md).
 
 ---
 
