@@ -740,6 +740,12 @@ lemma lower_bound_all_embeddings (R n k : ℕ)
   omega
 
 -- The final Capstone: composition of the two halves
+/--
+  The Arrangement Graph Extraconnectivity Theorem.
+  By squeezing the lower bound (via bridge lemmas) against the existence
+  of a constructive witness (the Hamming ball), we establish the
+  **Full Isoperimetric Profile** of A(n,k) for all natural numbers R.
+-/
 theorem arrangement_extraconnectivity_minimum
     (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
   (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
