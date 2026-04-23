@@ -287,9 +287,6 @@ The A000788 formula subsumes all published cases and extends to arbitrary R.
 
 ## Reference
 
-E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs."
-_Springer Proceedings in Mathematics & Statistics_ 388, pp. 275–282, 2022.
-
----
+E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." 2022.
 
 _Computational results and Lean 4 proofs by Shane Jaroch (Oakland University)._
