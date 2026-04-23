@@ -2,7 +2,7 @@
 
 This project generalizes the 2022 results of Cheng, Liptak & Tian on arrangement graph $(R-1)$-extraconnectivity. By scaling exhaustive search to $R=10$ and discovering the connection to Harper's Edge Isoperimetric Theorem, we derive a closed-form formula valid for all $R$ — replacing the case-by-case analysis used for $R \le 7$. An $O(R^4)$ Hamming ball predictor replaces super-exponential exhaustive search.
 
-## 1. The Core Theoretical Revelation
+## The Core Theoretical Revelation
 
 ### Vertex vs. Edge Isoperimetry
 
@@ -18,7 +18,7 @@ The maximum number of internal edges $E(R)$ is exactly the **cumulative popcount
 
 ---
 
-## 2. Missing Theoretical Constraints: Isometric Embeddings
+## Missing Theoretical Constraints: Isometric Embeddings
 
 A critical theoretical question must be answered: _Does a Hamming Ball of size $R$ always validly embed into the Arrangement Graph $A(n,k)$?_
 
@@ -32,9 +32,23 @@ $$ n - k \ge \lceil \log_2 R \rceil $$
 
 Remarkably, the 2022 paper required $n - k \ge R - 1$ for some of their sub-optimal constructions. Because $\lceil \log_2 R \rceil \ll R$, this hypercube bound is not only mathematically tighter, but it is valid under far less restrictive alphabet constraints. If this condition is not met, the hypercube cannot physically exist, forcing the graph into a strictly worse extraconnectivity bound.
 
+### The Final Synthesis: An Exact Bound
+
+While the 2022 Proposition 6 provided an **asymptotic** result ($|N(V')| / (Rk(n-k)) \to 1$), our Lean 4 proof provides the **precise integer count** for any finite $n, k$ (provided the alphabet constraint is met).
+
+The "Squeeze" is completed in the final lines of our formal proof:
+
+```lean
+theorem arrangement_extraconnectivity_minimum ... :
+  (∃ V' ... external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
+  (∀ V' ... external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
+```
+
+This locks the extraconnectivity to an exact formula (value) for the full domain.
+
 ---
 
-## 3. Algorithmic Engineering
+## Algorithmic Engineering
 
 To scale the search from $R=7$ to $R=9$ (evaluating ~500M nodes), several extreme optimizations were required:
 

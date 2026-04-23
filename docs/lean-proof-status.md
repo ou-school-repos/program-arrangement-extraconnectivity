@@ -89,6 +89,31 @@ vertices using `Nat.testBit` and compute external_neighbors exactly on it.
 
 **Estimated effort**: ~80-100 lines.
 
+## Theoretical Defects & Implementation Challenges
+
+### 1. The Triangle Anomaly (The Failure of Edge counting)
+
+The most significant theoretical challenge was the discovery that **maximizing internal edges ($E_{int}$) is a false goal** in arrangement graphs.
+
+- In hypercubes (bipartite), maximizing internal edges is equivalent to minimizing external neighbors.
+- In arrangement graphs, $K_3$ cliques (triangles) exist. For $R=3$, a clique has $E_{int} = 3$, whereas the Hamming ball has $E_{int} = 2$.
+- Naively using Harper's Theorem on edges would yield $3 \le 2$, a contradiction.
+
+**Resolution:** The proof was refactored to use the **Defect Invariant** (Unique Roots). By counting projections ($U_p$) instead of edges, the proof correctly penalizes cliques (which collapse to single roots) and preserves the hypercube bounds.
+
+### 2. The Collision Constant $C_{constant}(R)$
+
+While the leading coefficient $(Rk - E_{seq} R)$ is grounded in hypercube isoperimetry, the constant term $C_{constant}$ arises from symbol collisions specific to the arrangement graph's permutation structure.
+
+- **Defect:** Currently, the link between "Unique Roots" and "Vertex Neighbors" in `external_neighbors_bound` assumes a uniform collision penalty.
+- **Formalization Gap:** Proving that the Hamming Ball's collision pattern is the absolute global minimum for _any_ set of size $R$ is the most mathematically dense remaining piece of the project.
+
+### 3. The Alphabet Constraint Embedding
+
+The existence proof `exists_optimal_embedding` requires a formal constructive proof that the Hamming ball's vertices are injective (unique symbols) and connected.
+
+- **Defect:** The proof currently assumes $n-k \ge \lceil \log_2 R \rceil$. A complete formalization must explicitly handle the case where $n-k$ is small, forcing the graph into a non-hypercube regime.
+
 ## Key Proven Infrastructure
 
 ### The Triangle Anomaly (Why edges_at was removed)
