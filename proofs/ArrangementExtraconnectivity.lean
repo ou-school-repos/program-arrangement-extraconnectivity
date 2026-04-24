@@ -699,9 +699,12 @@ private lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k 
     congr_arg Subtype.val heq
   funext ⟨p, hp⟩
   have hpf := congr_fun hval ⟨p, by omega⟩
-  simp only [embed_cube, hp, dite_true] at hpf
-  by_cases hv1 : v1 ⟨p, hp⟩ <;> by_cases hv2 : v2 ⟨p, hp⟩ <;>
-    simp_all <;> omega
+  simp only [embed_cube] at hpf
+  split at hpf
+  · -- p < d case: compare bit values
+    split at hpf <;> split at hpf <;> simp_all <;> omega
+  · -- p ≥ d case: both map to p, trivially equal
+    simp_all
 
 /-- Axiom: The explicit Hamming Ball construction achieves the exact boundary.
     The construction is fully defined (hamming_ball_subset) and its cardinality
