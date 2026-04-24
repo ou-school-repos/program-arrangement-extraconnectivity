@@ -611,7 +611,7 @@ int main(int argc, const char *argv[]) {
         }
 
         std::cerr << "  formula(n=" << 2 * R << ",k=" << R
-                  << "): |N(V')| = " << coeff << " \xc2\xb7 " << R << " - "
+                  << "): |N(V')| = " << coeff << "\xc2\xb7" << R << " - "
                   << theory_const << " = " << theory_val << "\n";
     }
 
