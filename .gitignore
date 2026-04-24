@@ -49,7 +49,7 @@ Thumbs.db
 *.tar.*
 
 # Lean
-.lake/
+.lake
 
 # Generated graph previews
 docs/*.gif
