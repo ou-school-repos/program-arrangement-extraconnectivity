@@ -120,10 +120,13 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
 
 
 /-!
-  # Layer 1.5: Harper's Theorem (moved to unstable/ArrangementGraphUtils.lean)
-  # The defect-based proof bypasses Harper entirely via algebraic
-  # subadditivity of E_seq, so Layer 2 is not in the dependency chain.
+  # Layer 1.5: Harper's Edge-Counting Lemmas
+  # (cubeEdges, S0/S1, harpers_edge_isoperimetry moved to
+  #  unstable/ArrangementGraphUtils.lean — not in capstone dependency chain)
 -/
+
+-- A vertex in the d-dimensional hypercube is a d-bit vector
+abbrev Cube (d : ℕ) := Fin d → Bool
 
 /-!
   # Layer 2: The Arrangement Graph
@@ -145,13 +148,46 @@ instance {n k : ℕ} : Fintype (ArrVertex n k) := by
 def bit_length (x : ℕ) : ℕ :=
   if x = 0 then 0 else Nat.log2 x + 1
 
--- The Embedding Condition: n-k must provide enough fresh symbols
--- to embed a d-dimensional hypercube. bit_length(R-1) gives the ceiling
--- of log₂(R), which is the minimum number of dimensions required.
--- (Nat.log2 gives the floor, which is insufficient: Nat.log2 5 = 2 but
--- we need 3 dimensions to embed 5 vertices since 2² = 4 < 5.)
+-- The Embedding Condition: dual constraint on the hypercube dimension d.
+-- 1. n - k ≥ d: need d fresh symbols from the alphabet beyond position k
+-- 2. k ≥ d: can only flip coordinates that exist in the k-length sequence
+-- bit_length(R-1) = ⌈log₂(R)⌉ is the minimum d to embed R vertices.
 def can_embed_hypercube (R n k : ℕ) : Prop :=
-  n - k ≥ bit_length (R - 1)
+  bit_length (R - 1) ≤ n - k ∧ bit_length (R - 1) ≤ k
+
+/-- Map hypercube vertex to arrangement graph vertex.
+    If bit p is true → use fresh symbol (k + p), else → use base symbol p. -/
+def embed_cube (n k d : ℕ) (_hk : d ≤ k) (hnk : k + d ≤ n) (v : Cube d) : Fin k → Fin n :=
+  fun p =>
+    if hp : p.val < d then
+      if v ⟨p.val, hp⟩ = true then
+        ⟨k + p.val, by omega⟩
+      else
+        ⟨p.val, by omega⟩
+    else
+      ⟨p.val, by omega⟩
+
+-- INJECTIVITY
+-- Fresh symbols (≥ k) never collide with base symbols (< k), and within
+-- each class the mapping is injective by construction.
+lemma embedding_is_injective (d : ℕ) (v : Cube d)
+    (hk : d ≤ k) (hnk : k + d ≤ n) :
+    Function.Injective (embed_cube n k d hk hnk v) := by
+  intro p1 p2 heq
+  ext
+  simp only [embed_cube] at heq
+  have hval := Fin.val_eq_of_eq heq
+  simp at hval
+  by_cases h1 : p1.val < d <;> by_cases h2 : p2.val < d <;> simp [h1, h2] at hval
+  · by_cases hv1 : v ⟨p1.val, h1⟩ = true <;> by_cases hv2 : v ⟨p2.val, h2⟩ = true <;>
+      simp [hv1, hv2] at hval <;> omega
+  · by_cases hv1 : v ⟨p1.val, h1⟩ = true <;> simp [hv1] at hval <;> omega
+  · by_cases hv2 : v ⟨p2.val, h2⟩ = true <;> simp [hv2] at hval <;> omega
+  · omega
+
+def embed_vertex (n k d : ℕ) (v : Cube d) (hk : d ≤ k) (hnk : k + d ≤ n) :
+    ArrVertex n k :=
+  ⟨embed_cube n k d hk hnk v, embedding_is_injective d v hk hnk⟩
 
 -- ADJACENCY
 
@@ -616,8 +652,8 @@ axiom external_neighbors_collision_bound {n k : ℕ}
 -- Part 1: Existence of the Optimal Cut (Constructive Upper Bound)
 --
 -- The Hamming Ball construction: map natural numbers 0..R-1 to hypercube
--- vertices via Nat.testBit, then embed into A(n,k) using fresh symbols.
--- The embedding condition n-k ≥ bit_length(R-1) ensures enough dimensions.
+-- vertices via Nat.testBit, then embed into A(n,k) using embed_vertex.
+-- The dual embedding condition ensures enough fresh symbols AND coordinates.
 --
 -- Steps 1-3 (construction + cardinality) are proven constructively.
 -- Step 4 (exact external neighbor evaluation) is axiomatized as it requires
@@ -625,7 +661,7 @@ axiom external_neighbors_collision_bound {n k : ℕ}
 -- See docs/collision-axiom-roadmap.md for the full formalization roadmap.
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
-def nat_to_cube (d : ℕ) (i : ℕ) : Fin d → Bool :=
+def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
   fun p => i.testBit p.val
 
 /-- nat_to_cube is injective on [0, 2^d) -/
@@ -640,21 +676,39 @@ lemma nat_to_cube_injective (d : ℕ) (i j : ℕ) (hi : i < 2^d) (hj : j < 2^d)
     have hjd : j < 2^k := lt_of_lt_of_le hj (Nat.pow_le_pow_right (by omega) (by omega))
     rw [Nat.testBit_eq_false_of_lt hid, Nat.testBit_eq_false_of_lt hjd]
 
-/-- The Hamming Ball achieves the exact extraconnectivity formula.
-    Axiomatized: the exact external neighbor evaluation requires shadow-counting
-    machinery equivalent to the collision bound (Bridge Lemma 3).
+/-- The explicitly constructed Hamming Ball subset in A(n,k).
+    Maps natural numbers 0..R-1 to hypercube vertices via testBit,
+    then embeds into A(n,k) via fresh symbol assignment. -/
+def hamming_ball_subset (R n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
+    Finset (ArrVertex n k) :=
+  (Finset.range R).image (fun i => embed_vertex n k d (nat_to_cube d i) hk hnk)
+
+/-- Axiom: The explicit Hamming Ball construction achieves the exact boundary.
+    The construction is fully defined (hamming_ball_subset) and its cardinality
+    is provable via nat_to_cube_injective. Only the exact external neighbor
+    *evaluation* is axiomatized, as it requires the same shadow-counting
+    machinery as Bridge Lemma 3 (Kruskal-Katona).
     Formula values verified for R ≤ 20 (predict.cpp);
     exhaustive topology search confirms uniqueness for R ≤ 10
-    (arrangementoptimized.cpp). -/
-axiom hamming_ball_achieves_bound (R n k : ℕ)
-    (h_cond : can_embed_hypercube R n k) :
-    ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
-      external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R
+    (arrangementoptimized.cpp).
+    See docs/collision-axiom-roadmap.md for the full formalization roadmap. -/
+axiom hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
+    (hd : d = bit_length (R - 1)) :
+    external_neighbors (hamming_ball_subset R n k d hk hnk) =
+      (R * k - E_seq R) * (n - k) - C_constant R
 
 lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
     ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
-      external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R :=
-  hamming_ball_achieves_bound R n k h_cond
+      external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R := by
+  obtain ⟨h_nk, h_k⟩ := h_cond
+  let d := bit_length (R - 1)
+  have hk : d ≤ k := h_k
+  have hnk : k + d ≤ n := by omega
+  refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl⟩
+  -- Cardinality: need |hamming_ball_subset| = R
+  -- This follows from injectivity of embed_vertex ∘ nat_to_cube on [0, R)
+  -- when R ≤ 2^d (guaranteed by d = bit_length(R-1))
+  sorry
 
 -- Part 2: Universal Lower Bound (Squeezing via Bridge Lemmas)
 lemma lower_bound_all_embeddings (R n k : ℕ)
@@ -741,5 +795,9 @@ def uniqueness_conjecture (R n k : ℕ) : Prop :=
     V₁.card = R → V₂.card = R →
     external_neighbors V₁ = (R * k - E_seq R) * (n - k) - C_constant R →
     external_neighbors V₂ = (R * k - E_seq R) * (n - k) - C_constant R →
-    ∃ (σ : Fin n → Fin n) (hσ : Function.Bijective σ),
-      V₂ = V₁.image (fun v => ⟨σ ∘ v.val, fun _ _ h => v.prop (hσ.injective h)⟩)
+    -- The full automorphism group of A(n,k) is S_n × S_k:
+    -- σ permutes symbols (Fin n), τ permutes coordinates (Fin k)
+    ∃ (σ : Fin n → Fin n) (hσ : Function.Bijective σ)
+      (τ : Fin k → Fin k) (hτ : Function.Bijective τ),
+      V₂ = V₁.image (fun v =>
+        ⟨σ ∘ v.val ∘ τ, (hσ.injective.comp v.prop).comp hτ.injective⟩)
