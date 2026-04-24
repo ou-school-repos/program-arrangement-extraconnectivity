@@ -277,115 +277,136 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
     return 0;
 }
 
+// ── FNV-1a 64-bit: per-R deterministic digest ───────────────────────
+
+static uint64_t fnv_digest(int64_t r, int64_t nk1, int64_t c) {
+    uint64_t h = UINT64_C(14695981039346656037);
+    auto feed = [&h](int64_t val) {
+        for (int i = 0; i < 8; i++) {
+            h ^= static_cast<uint64_t>(val & 0xFF);
+            h *= UINT64_C(1099511628211);
+            val >>= 8;
+        }
+    };
+    feed(r);
+    feed(nk1);
+    feed(c);
+    return h;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────
 
 int main(int argc, const char *argv[]) {
-    // CSV mode: ./predict --csv N
-    if (argc >= 3 && std::string(argv[1]) == "--csv") {
-        int max_r = static_cast<int>(std::strtol(argv[2], nullptr, 10));
-        if (max_r < 2)
-            max_r = 2;
-        std::cout << "R,nk1,constant,coeff,formula_at_2R\n";
-        for (int r = 2; r <= max_r; r++) {
-            int64_t nk1 = A000788(r);
-            int64_t c = constant_analytical(r);
-            int128_t coeff = widen(r) * r - nk1;
-            int128_t val = coeff * r - c;
-            std::cout << r << "," << nk1 << "," << c << ","
-                      << i128_to_string(coeff) << "," << i128_to_string(val)
-                      << "\n";
-        }
-        return 0;
+    // ── Flag parsing ──────────────────────────────────────────────────
+    bool csv_mode = false;
+    bool verify_mode = false;
+    bool range_mode = false;
+    int start_r = 2, end_r = 0;
+
+    std::vector<std::string> positional;
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "--csv")
+            csv_mode = true;
+        else if (arg == "--verify")
+            verify_mode = true;
+        else if (arg == "--verify-range")
+            range_mode = true;
+        else
+            positional.push_back(arg);
     }
 
-    // --verify-range mode: sweep R=start..end with brute-force cross-check
-    // Outputs a deterministic FNV-1a digest as proof-of-work.
-    if (argc >= 3 && std::string(argv[1]) == "--verify-range") {
-        int start_r = 2, end_r = 0;
-        if (argc >= 4) {
-            start_r = static_cast<int>(std::strtol(argv[2], nullptr, 10));
-            end_r = static_cast<int>(std::strtol(argv[3], nullptr, 10));
-        } else {
-            end_r = static_cast<int>(std::strtol(argv[2], nullptr, 10));
+    // Parse positional args based on mode
+    if (range_mode) {
+        if (positional.size() == 1) {
+            end_r = static_cast<int>(
+                std::strtol(positional[0].c_str(), nullptr, 10));
+        } else if (positional.size() >= 2) {
+            start_r = static_cast<int>(
+                std::strtol(positional[0].c_str(), nullptr, 10));
+            end_r = static_cast<int>(
+                std::strtol(positional[1].c_str(), nullptr, 10));
         }
         if (start_r < 2 || end_r < start_r || end_r > 255) {
             std::cerr
                 << "Error: --verify-range requires 2 <= start <= end <= 255\n";
             return 1;
         }
+    } else if (csv_mode && !positional.empty()) {
+        end_r =
+            static_cast<int>(std::strtol(positional[0].c_str(), nullptr, 10));
+        if (end_r < 2)
+            end_r = 2;
+    } else if (!positional.empty()) {
+        R = static_cast<int>(std::strtol(positional[0].c_str(), nullptr, 10));
+    }
 
-        // FNV-1a 64-bit hash for deterministic digest
-        uint64_t hash = UINT64_C(14695981039346656037);
-        auto fnv_feed = [&hash](int64_t val) {
-            for (int i = 0; i < 8; i++) {
-                hash ^= static_cast<uint64_t>(val & 0xFF);
-                hash *= UINT64_C(1099511628211);
-                val >>= 8;
-            }
-        };
+    // ── Usage ─────────────────────────────────────────────────────────
+    if (positional.empty() && !range_mode && !csv_mode) {
+        std::cerr
+            << "Usage:\n"
+            << "  ./predict <R>                     Analytical formula\n"
+            << "  ./predict --verify <R>             Brute-force cross-check\n"
+            << "  ./predict --verify-range [s] <e>   Sweep R=s..e\n"
+            << "  ./predict --csv <N>                CSV table for R=2..N\n"
+            << "  ./predict --csv --verify-range <N> Verified CSV for R=2..N\n";
+        return 1;
+    }
+
+    // ── Range/CSV mode ────────────────────────────────────────────────
+    if (range_mode || (csv_mode && end_r > 0)) {
+        if (csv_mode && !range_mode)
+            start_r = 2;
+
+        std::cout << "R,nk1,constant,coeff,formula_at_2R,digest";
+        if (range_mode)
+            std::cout << ",verified";
+        std::cout << "\n";
 
         for (int r = start_r; r <= end_r; r++) {
             R = r;
             const int64_t nk1 = A000788(R);
             const int64_t cst = constant_analytical(R);
-            // Feed verified values into running digest
-            fnv_feed(R);
-            fnv_feed(nk1);
-            fnv_feed(cst);
+            const int128_t coeff = widen(R) * R - nk1;
+            const int128_t val = coeff * R - cst;
             char hex[17];
-            std::snprintf(hex, sizeof(hex), "%016llx",
-                          static_cast<unsigned long long>(hash));
-            std::cerr << "R=" << R << " ... ";
-            int rc;
-            if (R <= 127)
-                rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true);
-            else
-                rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true);
-            if (rc != 0) {
-                std::cerr << "FAILED at R=" << R << "\n";
-                return 1;
+            std::snprintf(
+                hex, sizeof(hex), "%016llx",
+                static_cast<unsigned long long>(fnv_digest(R, nk1, cst)));
+
+            if (range_mode) {
+                std::cerr << "R=" << R << " ... ";
+                int rc;
+                if (R <= 127)
+                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true);
+                else
+                    rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true);
+                if (rc != 0) {
+                    std::cerr << "FAILED at R=" << R << "\n";
+                    return 1;
+                }
             }
-            std::cout << "R=" << R << " nk1=" << nk1 << " C=" << cst
-                      << " digest=" << hex << "\n";
+
+            std::cout << R << "," << nk1 << "," << cst << ","
+                      << i128_to_string(coeff) << "," << i128_to_string(val)
+                      << "," << hex;
+            if (range_mode)
+                std::cout << ",true";
+            std::cout << "\n";
         }
 
-        // Output reproducible digest
-        char hex[17];
-        std::snprintf(hex, sizeof(hex), "%016llx",
-                      static_cast<unsigned long long>(hash));
-        std::cerr << "All R=" << start_r << ".." << end_r
-                  << " verified ✓  digest=" << hex << "\n";
-        std::cout << "VERIFIED R=" << start_r << ".." << end_r
-                  << " digest=" << hex << "\n";
+        if (range_mode)
+            std::cerr << "All R=" << start_r << ".." << end_r
+                      << " verified ✓\n";
         return 0;
     }
 
-    // --verify mode: explicit brute-force O(R³) cross-check
-    bool verify_mode = false;
-    if (argc >= 3 && std::string(argv[1]) == "--verify") {
-        verify_mode = true;
-        R = static_cast<int>(std::strtol(argv[2], nullptr, 10));
-        if (R < 2 || R > 255) {
-            std::cerr << "Error: --verify requires 2 <= R <= 255\n";
-            return 1;
-        }
-    } else if (argc >= 2) {
-        R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
-        if (R < 2) {
-            std::cerr << "Usage:\n"
-                      << "  ./predict <R>                     O(log R) "
-                         "analytical formula\n"
-                      << "  ./predict --verify <R>            O(R³) "
-                         "brute-force cross-check\n"
-                      << "  ./predict --verify-range [s] <e>  Sweep R=s..e "
-                         "(default s=2)\n"
-                      << "  ./predict --csv <max_R>           CSV table for "
-                         "R=2..max_R\n";
-            return 1;
-        }
+    // ── Single R mode ─────────────────────────────────────────────────
+    if (R < 2) {
+        std::cerr << "Error: R must be >= 2\n";
+        return 1;
     }
 
-    // ── Tier 1: Analytical — O(log R) ─────────────────────────────────
     const int64_t expected_nk1 = A000788(R);
     const int64_t expected_const = constant_analytical(R);
 
@@ -394,15 +415,16 @@ int main(int argc, const char *argv[]) {
               << "\n";
     std::cerr << "  [analytical] constant = " << expected_const << "\n";
 
-    // ── Tier 2+3: Construction + Brute-force — O(R³) ──────────────────
     if (verify_mode) {
+        if (R > 255) {
+            std::cerr << "Error: --verify requires R <= 255\n";
+            return 1;
+        }
         int rc;
         if (R <= 127) {
-            // uint8_t path: symbols fit in [0, R+dims) < 128+7 = 135 < 256
             std::cerr << "  [type] uint8_t symbols\n";
             rc = run_verify<uint8_t>(expected_nk1, expected_const);
         } else {
-            // uint16_t path: symbols >= 128
             std::cerr << "  [type] uint16_t symbols\n";
             rc = run_verify<uint16_t>(expected_nk1, expected_const);
         }
@@ -410,7 +432,6 @@ int main(int argc, const char *argv[]) {
             return rc;
     }
 
-    // ── Output ────────────────────────────────────────────────────────
     const int128_t coeff = widen(R) * R - expected_nk1;
     const int128_t formula_val = coeff * R - expected_const;
 

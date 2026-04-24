@@ -5,9 +5,9 @@ SHELL:=/bin/bash
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Variables
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CXX      ?= g++
-CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic
-LDFLAGS  ?=
+CXX      = g++
+CXXFLAGS = -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -fopenmp
+LDFLAGS  =
 
 SRC_OPT   = src/arrangement.cpp
 BIN_OPT   = arrangement
@@ -86,25 +86,20 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Build
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Build modes
-OPTFLAGS  ?= -O3 -march=native -fopenmp
-DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 
-# nauty (canonical graph labeling)
+# Header dependencies for arrangement
+ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 .PHONY: build
-build: build/opt build/predict	##H @Build Compile all binaries
+build: $(BIN_OPT) $(BIN_PRED)	##H @Build Compile all binaries
 
-.PHONY: build/opt
-build/opt:	##H @Build Compile ultra-optimized enumerator (O3, march=native, OpenMP)
-	@$(call print_info,Building $(BIN_OPT) with native optimizations and OpenMP)
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $(BIN_OPT) $(SRC_OPT) $(NAUTY_LIBS)
-	@$(call print_success,Build complete.)
+$(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
+$(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
+$(BIN_OPT): $(ARRANGEMENT_HDRS)
 
-.PHONY: build/predict
-build/predict:	##H @Build Compile Hamming ball predictor
-	@$(call print_info,Building $(BIN_PRED))
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
+$(BIN_OPT) $(BIN_PRED): %: src/%.cpp
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) $(EXTRA_CFLAGS) $(LDFLAGS) -o $@ $< $(EXTRA_LIBS)
 	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,18 +117,18 @@ benchmark: build	##H @Run Benchmark search for R=2..$(R)
 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 .PHONY: benchmark/full
-benchmark/full: build build/predict	##H @Run Search + verify for R=2..$(R)
+benchmark/full: build	##H @Run Search + verify for R=2..$(R)
 	@for i in $$(seq 2 $(R)); do \
 		./$(BIN_OPT) $$i; \
 		echo ""; \
 	done
 
 .PHONY: run/predict
-run/predict: build/predict	##H @Run Predict extraconnectivity for R=$(R)
+run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
 	./$(BIN_PRED) $(R)
 
 .PHONY: benchmark/predict
-benchmark/predict: build/predict	##H @Run Predict for R=2..$(R)
+benchmark/predict: build	##H @Run Predict for R=2..$(R)
 	@for i in $$(seq 2 $(R)); do ./$(BIN_PRED) $$i 2>&1; echo ""; done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,7 +136,7 @@ benchmark/predict: build/predict	##H @Run Predict for R=2..$(R)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: test/predict
-test/predict: build build/predict	##H @Dev Verify predictor matches search for R=2..$(R)
+test/predict: build	##H @Dev Verify predictor matches search for R=2..$(R)
 	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
 	@fail=0; \
 	for r in $$(seq 2 $(R)); do \
@@ -159,7 +154,7 @@ test/predict: build build/predict	##H @Dev Verify predictor matches search for R
 	if [ $$fail -eq 1 ]; then exit 1; fi
 
 .PHONY: csv
-csv: build/predict	##H @General Generate docs/predictions.csv (R=2..1024)
+csv: build	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_info,Generating predictions CSV)
 	./$(BIN_PRED) --csv 1024 | tee docs/predictions.csv
 	@$(call print_success,docs/predictions.csv written.)
