@@ -176,6 +176,7 @@ static uint32_t ver_sym_mask[16];
 
 struct Result {
     int cons = 0;
+    int internal_edges = 0;
     std::string example;
 };
 static std::map<int, Result> results;
@@ -299,6 +300,26 @@ static inline std::pair<int, int> calc_step(int count) {
     return {step_nk1, dc_count - isSharednum + 1};
 }
 
+// ── Internal edge count ────────────────────────────────────────────────────
+// Count edges within the subset: pairs differing in exactly 1 position.
+static int count_internal_edges(const uint64_t *verts, int n) {
+    int edges = 0;
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            uint64_t xv = verts[i] ^ verts[j];
+            int diffs = 0;
+            while (xv && diffs <= 1) {
+                int chunk = chunk_idx[__builtin_ctzll(xv)];
+                xv &= ~(0x1FULL << (chunk * 5));
+                diffs++;
+            }
+            if (diffs == 1)
+                edges++;
+        }
+    }
+    return edges;
+}
+
 // ── Recursive search ───────────────────────────────────────────────────────
 static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
                   int current_nk1, int current_cons) {
@@ -330,7 +351,8 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
                     exa += ' ';
                 exa += vertex_to_string(ver[i]);
             }
-            results[current_nk1] = {current_cons, exa};
+            results[current_nk1] = {current_cons, count_internal_edges(ver, R),
+                                    exa};
         }
         return;
     }
@@ -542,6 +564,7 @@ int main(int argc, const char *argv[]) {
     for (const auto &[nk1, res] : results) {
         std::cout << "(" << R << "nk-" << std::setw(max_nk1_w) << nk1
                   << ") (n-k)-" << std::setw(max_nk_w) << (nk1 + res.cons)
+                  << ", iedges=" << res.internal_edges
                   << ", EX: " << res.example << "\n";
         best_nk1 = nk1;
     }
