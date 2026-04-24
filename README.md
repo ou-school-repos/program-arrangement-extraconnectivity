@@ -56,11 +56,11 @@ For the current status of the formalization, including remaining bridge lemmas a
 
 ## Algorithmic Engineering
 
-To scale the search from $R=7$ to $R=9$ (evaluating ~500M nodes), several extreme optimizations were required:
+To scale the search from $R=7$ to $R=10$ (evaluating ~25B nodes), several extreme optimizations were required:
 
 1.  **Hardware-Accelerated SWAR (SIMD Within A Register):** Symbols are packed into 5-bit nibbles, replacing $O(R)$ loops with `__builtin_ctzll` bit-scans to detect dimension flips.
 2.  **$S_n \times S_R$ Symmetry Pruning:** McKay's **Nauty** algorithm canonicalizes graph states, collapsing isomorphic topologies and reducing the search tree by >99%.
-3.  **OOM-Safe Leaf Processing:** By bypassing deduplication for leaf nodes (which never branch), we reduced RAM overhead from 6GB to under 50MB.
+3.  **OOM-Safe Leaf Processing:** By bypassing deduplication for leaf nodes (which never branch), we reduced RAM overhead from 85GB to under 50MB.
 4.  **BFS Task Unrolling:** A top-level Breadth-First search queue saturates all CPU cores via OpenMP.
 
 ---
