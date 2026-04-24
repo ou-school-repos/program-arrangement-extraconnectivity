@@ -237,15 +237,30 @@ int main(int argc, const char *argv[]) {
         return 0;
     }
 
-    if (argc >= 2) {
+    // --verify mode: explicit brute-force O(R³) cross-check
+    bool verify_mode = false;
+    if (argc >= 3 && std::string(argv[1]) == "--verify") {
+        verify_mode = true;
+        R = static_cast<int>(std::strtol(argv[2], nullptr, 10));
+        if (R < 2 || R > 127) {
+            std::cerr << "Error: --verify requires 2 <= R <= 127 (uint8_t "
+                         "symbol limit)\n";
+            return 1;
+        }
+    } else if (argc >= 2) {
         R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
         if (R < 2) {
-            std::cerr << "R must be >= 2\n";
+            std::cerr
+                << "Usage:\n"
+                << "  ./predict <R>            O(log R) analytical formula\n"
+                << "  ./predict --verify <R>   O(R³) brute-force cross-check "
+                   "(R ≤ 127)\n"
+                << "  ./predict --csv <max_R>  CSV table for R=2..max_R\n";
             return 1;
         }
     }
 
-    // ── Tier 1: Analytical — O(R) ─────────────────────────────────────
+    // ── Tier 1: Analytical — O(log R) ─────────────────────────────────
     const int64_t expected_nk1 = A000788(R);
     const int64_t expected_const = constant_analytical(R);
 
@@ -254,8 +269,8 @@ int main(int argc, const char *argv[]) {
               << "\n";
     std::cerr << "  [analytical] constant = " << expected_const << "\n";
 
-    // ── Tier 2: Construction verification — O(R³) ─────────────────────
-    if (R <= 1000) {
+    // ── Tier 2+3: Construction + Brute-force — O(R³) ──────────────────
+    if (verify_mode) {
         auto verts = build_hamming_ball();
 
         if (R <= 12) {
@@ -269,17 +284,16 @@ int main(int argc, const char *argv[]) {
 
         std::cerr << "  [construction] nk1 = " << nk1;
         if (nk1 == expected_nk1)
-            std::cerr << " \xe2\x9c\x93\n";
+            std::cerr << " ✓\n";
         else {
-            std::cerr << " \xe2\x9c\x97 MISMATCH\n";
+            std::cerr << " ✗ MISMATCH\n";
             return 1;
         }
         std::cerr << "  [construction] constant = " << constant;
         if (constant == expected_const)
-            std::cerr << " \xe2\x9c\x93\n";
+            std::cerr << " ✓\n";
         else {
-            std::cerr << " \xe2\x9c\x97 MISMATCH (expected " << expected_const
-                      << ")\n";
+            std::cerr << " ✗ MISMATCH (expected " << expected_const << ")\n";
             return 1;
         }
 
@@ -290,14 +304,12 @@ int main(int argc, const char *argv[]) {
         const int128_t formula_val = coeff * R - constant;
         std::cerr << "  [brute-force] |N(V')| = " << brute_count;
         if (brute_count == formula_val)
-            std::cerr << " \xe2\x9c\x93\n";
+            std::cerr << " ✓\n";
         else {
-            std::cerr << " \xe2\x9c\x97 MISMATCH (formula gives "
+            std::cerr << " ✗ MISMATCH (formula gives "
                       << i128_to_string(formula_val) << ")\n";
             return 1;
         }
-    } else {
-        std::cerr << "  [construction] skipped (R>1000)\n";
     }
 
     // ── Output ────────────────────────────────────────────────────────

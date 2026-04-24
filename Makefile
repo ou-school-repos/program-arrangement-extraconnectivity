@@ -22,8 +22,7 @@ BIN_PRED  = predict
 
 SRCS      = $(SRC_OPT) $(SRC_PRED)
 
-# Build modes
-OPTFLAGS  ?= -O2
+# Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 
 # nauty (canonical graph labeling)
@@ -105,7 +104,7 @@ build/opt:	##H @Build Compile ultra-optimized enumerator (O3, march=native, Open
 .PHONY: build/predict
 build/predict:	##H @Build Compile Hamming ball predictor
 	@$(call print_info,Building $(BIN_PRED))
-	$(CXX) $(CXXFLAGS) -O3 $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(LDFLAGS) -o $(BIN_PRED) $(SRC_PRED)
 	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
