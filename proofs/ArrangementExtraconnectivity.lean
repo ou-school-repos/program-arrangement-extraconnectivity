@@ -675,19 +675,29 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
 /--
-  The Kruskal-Katona Shadow Bound (Refined Axiom)
+  **Axiom 1 of 2 (KK Duality — Universal Half)**
 
-  The sum of the internal defect D(V') = R·k - sum_unique_roots(V') and
-  the external cross-collisions is bounded by C_constant(R) for ANY
-  R-element subset. This is maximized by the dense Hamming Ball.
+  The Kruskal-Katona Shadow Bound: for ANY R-element subset V' of A(n,k),
+  the total "waste" — cross-collisions plus internal defect — is bounded
+  by C_constant(R), the waste of the Hamming Ball.
 
-  This axiom is:
-  - Independent of n and k (purely a function of R and the graph topology)
-  - Computationally verified for R ≤ 20.
-  - Exhaustive topology search confirms for R ≤ 10.
-  - Mathematically equivalent to: "the Hamming Ball maximizes 4-cycles
-    among all R-element subsets" (Kruskal-Katona shadow theorem)
-  - See docs/collision-axiom-roadmap.md for the full formalization roadmap
+  Mathematically: the Hamming Ball **maximizes** internal shielding
+  (4-cycle count) among all R-element subsets. This is equivalent to the
+  Kruskal-Katona theorem applied to the binary shadow of the vertex
+  neighborhood structure.
+
+  **Duality with hamming_ball_eval**: These two axioms are dual faces of
+  the same extremal inequality:
+  - This axiom: ∀ V', waste(V') ≤ C_constant(R)   [universal lower bound]
+  - hamming_ball_eval: waste(HB) = C_constant(R)   [existential upper bound]
+  Both follow from: "Hamming Ball = initial colex segment = shadow minimizer"
+
+  **Properties**:
+  - Independent of n and k (purely a function of R and internal topology)
+  - Computationally verified for R ≤ 20 (predict.cpp)
+  - Exhaustive topology search confirms for R ≤ 10 (arrangement.cpp)
+  - See docs/axiom-equivalence.md for the full duality explanation
+  - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/
 axiom max_collision_defect_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
@@ -903,14 +913,29 @@ private lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k 
   · -- p ≥ d case: both map to p, trivially equal
     simp_all
 
-/-- Axiom: The explicit Hamming Ball construction achieves the exact boundary.
-    The construction is fully defined (hamming_ball_subset) and its cardinality
-    is provable via nat_to_cube_injective. Only the exact external neighbor
-    *evaluation* is axiomatized, as it requires the same shadow-counting
-    machinery as Bridge Lemma 3 (Kruskal-Katona).
-    Formula values verified for R ≤ 20; exhaustive topology search confirms
-    uniqueness for R ≤ 10.
-    See docs/collision-axiom-roadmap.md for the full formalization roadmap. -/
+/--
+  **Axiom 2 of 2 (KK Duality — Existential Half)**
+
+  The Hamming Ball construction achieves the exact minimum boundary.
+  The construction itself is fully proven:
+  - hamming_ball_subset: explicit Finset of R embedded hypercube vertices
+  - Cardinality |HB| = R: proven via nat_to_cube_injective + embed_vertex_injective
+  - Embedding validity: proven via can_embed_hypercube conditions
+
+  Only the exact external neighbor COUNT is axiomatized, because evaluating
+  it requires the same shadow-counting machinery as Axiom 1.
+
+  **Duality with max_collision_defect_bound**: These two axioms form a
+  tight sandwich pinning the isoperimetric profile to a single value:
+  - max_collision_defect_bound: ∀ V', |N(V')| ≥ formula(R)  [lower bound]
+  - This axiom: |N(HB)| = formula(R)                        [upper bound]
+  Together: min_{|V'|=R} |N(V')| = formula(R).
+
+  **Verification**:
+  - Formula values verified for R ≤ 20 (predict.cpp)
+  - Exhaustive topology search confirms uniqueness for R ≤ 10 (arrangement.cpp)
+  - See docs/axiom-equivalence.md for the full duality explanation
+-/
 axiom hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     (hd : d = bit_length (R - 1)) :
     external_neighbors (hamming_ball_subset R n k d hk hnk) =

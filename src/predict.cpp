@@ -29,7 +29,7 @@ static int R = 10;
 // ── Vertex type: fixed-size stack struct ──────────────────────────────
 
 struct Vertex {
-    uint8_t syms[64] = {};
+    uint8_t syms[256] = {};
     bool operator<(const Vertex &o) const {
         return std::memcmp(syms, o.syms, R) < 0;
     }
@@ -255,7 +255,7 @@ int main(int argc, const char *argv[]) {
     std::cerr << "  [analytical] constant = " << expected_const << "\n";
 
     // ── Tier 2: Construction verification — O(R³) ─────────────────────
-    if (R <= 40) {
+    if (R <= 1000) {
         auto verts = build_hamming_ball();
 
         if (R <= 12) {
@@ -297,7 +297,7 @@ int main(int argc, const char *argv[]) {
             return 1;
         }
     } else {
-        std::cerr << "  [construction] skipped (R>40)\n";
+        std::cerr << "  [construction] skipped (R>1000)\n";
     }
 
     // ── Output ────────────────────────────────────────────────────────
