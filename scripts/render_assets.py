@@ -3,34 +3,79 @@ import sys
 import subprocess
 import os
 
-def render_dots(asset_dir="assets"):
+def gen_comparison_dot(d, output):
+    """
+    Generates a single DOT file with two clusters (side-by-side)
+    comparing the optimal and fractured topologies.
+    """
+    R = 2**d
+    E_opt = d * (2**(d-1))
+    E_max = E_opt - d + 1
+
+    with open(output, "w") as f:
+        f.write(f'graph Comparison_{d} {{\n')
+        f.write(f'  graph [label="Stability Analysis (R={R})\nOptimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankdir=LR];\n')
+        f.write('  node [fontname="Helvetica", style=filled];\n')
+
+        # Optimal Cluster
+        f.write('  subgraph cluster_opt {\n')
+        f.write(f'    label="Optimal {d}-Cube (E={E_opt})";\n')
+        f.write('    color=blue; fontcolor=blue; style=dashed;\n')
+        f.write('    node [fillcolor=lightblue];\n')
+        for i in range(R):
+            for bit in range(d):
+                j = i ^ (1 << bit)
+                if i < j:
+                    f.write(f'    o{i} -- o{j};\n')
+        f.write('  }\n')
+
+        # Fractured Cluster
+        f.write('  subgraph cluster_frac {\n')
+        f.write(f'    label="Fractured {d}-Cube (E={E_max})";\n')
+        f.write('    color=red; fontcolor=red; style=dashed;\n')
+        f.write('    node [fillcolor=lightpink];\n')
+        for i in range(R - 1):
+            for bit in range(d):
+                j = i ^ (1 << bit)
+                if i < j and j < R - 1:
+                    f.write(f'    f{i} -- f{j};\n')
+        f.write(f'    f{R-1} [fillcolor=orange, label="N{R-1}\n(Splintered)"];\n')
+        f.write(f'    f0 -- f{R-1} [color=red, penwidth=2.0];\n')
+        f.write('  }\n')
+        f.write('}\n')
+
+def render_dots(asset_dir="assets", output_dir="assets/out"):
     """
     Renders all .dot files in the asset directory to .png using fdp.
     """
     if not os.path.exists(asset_dir):
         print(f"Error: {asset_dir} not found.")
         return
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     dot_files = [f for f in os.listdir(asset_dir) if f.endswith(".dot")]
     if not dot_files:
         print(f"No .dot files found in {asset_dir}.")
         return
 
-    print(f"Rendering {len(dot_files)} files from {asset_dir}...")
+    print(f"Rendering {len(dot_files)} files to {output_dir}...")
     for f in dot_files:
         input_path = os.path.join(asset_dir, f)
-        output_path = os.path.join(asset_dir, f.replace(".dot", ".png"))
+        output_path = os.path.join(output_dir, f.replace(".dot", ".png"))
 
-        # Using fdp for compact circular/force-directed layout
         cmd = ["fdp", "-Tpng", input_path, "-o", output_path]
         try:
             subprocess.run(cmd, check=True)
             print(f"  ✓ Rendered: {output_path}")
         except subprocess.CalledProcessError as e:
             print(f"  ✗ Failed: {input_path} ({e})")
-        except FileNotFoundError:
-            print("Error: 'fdp' command not found. Please install Graphviz.")
-            sys.exit(1)
 
 if __name__ == "__main__":
+    # Generate side-by-side comparison DOTs natively
+    gen_comparison_dot(3, "assets/r8_stability.dot")
+    gen_comparison_dot(4, "assets/r16_stability.dot")
+    print("Generated stability comparison DOTs natively.")
+
+    # Render all assets
     render_dots()

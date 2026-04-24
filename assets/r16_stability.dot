@@ -1,0 +1,78 @@
+graph Comparison_4 {
+  graph [label="Stability Analysis (R=16)
+Optimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankdir=LR];
+  node [fontname="Helvetica", style=filled];
+  subgraph cluster_opt {
+    label="Optimal 4-Cube (E=32)";
+    color=blue; fontcolor=blue; style=dashed;
+    node [fillcolor=lightblue];
+    o0 -- o1;
+    o0 -- o2;
+    o0 -- o4;
+    o0 -- o8;
+    o1 -- o3;
+    o1 -- o5;
+    o1 -- o9;
+    o2 -- o3;
+    o2 -- o6;
+    o2 -- o10;
+    o3 -- o7;
+    o3 -- o11;
+    o4 -- o5;
+    o4 -- o6;
+    o4 -- o12;
+    o5 -- o7;
+    o5 -- o13;
+    o6 -- o7;
+    o6 -- o14;
+    o7 -- o15;
+    o8 -- o9;
+    o8 -- o10;
+    o8 -- o12;
+    o9 -- o11;
+    o9 -- o13;
+    o10 -- o11;
+    o10 -- o14;
+    o11 -- o15;
+    o12 -- o13;
+    o12 -- o14;
+    o13 -- o15;
+    o14 -- o15;
+  }
+  subgraph cluster_frac {
+    label="Fractured 4-Cube (E=29)";
+    color=red; fontcolor=red; style=dashed;
+    node [fillcolor=lightpink];
+    f0 -- f1;
+    f0 -- f2;
+    f0 -- f4;
+    f0 -- f8;
+    f1 -- f3;
+    f1 -- f5;
+    f1 -- f9;
+    f2 -- f3;
+    f2 -- f6;
+    f2 -- f10;
+    f3 -- f7;
+    f3 -- f11;
+    f4 -- f5;
+    f4 -- f6;
+    f4 -- f12;
+    f5 -- f7;
+    f5 -- f13;
+    f6 -- f7;
+    f6 -- f14;
+    f8 -- f9;
+    f8 -- f10;
+    f8 -- f12;
+    f9 -- f11;
+    f9 -- f13;
+    f10 -- f11;
+    f10 -- f14;
+    f12 -- f13;
+    f12 -- f14;
+    f15 [fillcolor=orange, label="N15
+(Splintered)"];
+    f0 -- f15 [color=red, penwidth=2.0];
+  }
+}
