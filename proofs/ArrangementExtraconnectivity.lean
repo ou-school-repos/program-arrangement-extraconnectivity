@@ -725,6 +725,7 @@ lemma external_neighbors_collision_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥
       sum_unique_roots V' * (n - k) - C_constant R := by
+
   have h_bound := max_collision_defect_bound R V' hR
   have h_le := external_neighbors_le_total_coord V'
   have h_decomp := external_neighbors_decomp V' h_le
