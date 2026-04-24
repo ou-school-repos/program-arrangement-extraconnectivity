@@ -608,20 +608,22 @@ int main(int argc, const char *argv[]) {
     std::cout << "\nSearch Summary:\n"
               << "  Done       | " << std::fixed << std::setprecision(3)
               << elapsed << "s\n"
-              << "  Gen / Eval | " << nodes_generated << " / "
-              << nodes_evaluated << "\n"
-              << "  Pruned     | Iso: " << std::left << std::setw(12)
-              << nodes_pruned_iso << " Exact: " << std::setw(12)
-              << nodes_pruned_exact << " Local: " << nodes_pruned_local << "\n"
-              << "  Symmetry   | Power: " << std::setw(10)
+              << "  Gen / Eval | " << fcom(nodes_generated) << " / "
+              << fcom(nodes_evaluated) << "\n"
+              << "  Pruned     | Iso: " << std::left << std::setw(15)
+              << fcom(nodes_pruned_iso) << " Exact: " << std::setw(15)
+              << fcom(nodes_pruned_exact)
+              << " Local: " << fcom(nodes_pruned_local) << "\n"
+              << "  Symmetry   | Power: " << std::setw(13)
               << std::setprecision(3)
               << (volume_pruned_iso > 0
                       ? (double)nodes_pruned_iso / volume_pruned_iso
                       : 0.0)
-              << " Coverage: " << volume_pruned_iso << " orbits\n"
-              << "  Savings    | Iso: " << std::setw(14) << std::setprecision(1)
-              << est_saved_iso << " Exact: " << std::setw(14) << est_saved_exact
-              << " Local: " << est_saved_local << " evals\n"
+              << " Coverage: " << fcom(volume_pruned_iso, 3) << " orbits\n"
+              << "  Savings    | Iso: " << std::setw(17)
+              << fcom(est_saved_iso, 1) << " Exact: " << std::setw(17)
+              << fcom(est_saved_exact, 1)
+              << " Local: " << fcom(est_saved_local, 1) << " evals\n"
               << "  Prune Rate |";
     for (int i = 2; i < R; i++) {
         double rate = 0;
@@ -634,7 +636,7 @@ int main(int argc, const char *argv[]) {
         }
         std::cout << " [" << i << (i <= global_nauty_limit ? "-n" : "") << "] "
                   << std::fixed << std::setprecision(1) << rate << "%"
-                  << (i == R - 1 ? "" : " /");
+                  << (i == R - 1 ? "" : "   ");
     }
     std::cout << "\n\n";
 
