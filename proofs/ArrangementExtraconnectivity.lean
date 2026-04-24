@@ -149,11 +149,13 @@ def bit_length (x : ℕ) : ℕ :=
   if x = 0 then 0 else Nat.log2 x + 1
 
 -- The Embedding Condition: dual constraint on the hypercube dimension d.
--- 1. n - k ≥ d: need d fresh symbols from the alphabet beyond position k
--- 2. k ≥ d: can only flip coordinates that exist in the k-length sequence
+-- 1. k + d ≤ n: need d fresh symbols beyond the k base positions
+-- 2. d ≤ k: can only flip coordinates that exist in the k-length sequence
 -- bit_length(R-1) = ⌈log₂(R)⌉ is the minimum d to embed R vertices.
+-- NOTE: constraint 1 uses addition (k + d ≤ n) rather than subtraction
+-- (d ≤ n - k) to avoid the ℕ saturating subtraction trap.
 def can_embed_hypercube (R n k : ℕ) : Prop :=
-  bit_length (R - 1) ≤ n - k ∧ bit_length (R - 1) ≤ k
+  k + bit_length (R - 1) ≤ n ∧ bit_length (R - 1) ≤ k
 
 /-- Map hypercube vertex to arrangement graph vertex.
     If bit p is true → use fresh symbol (k + p), else → use base symbol p. -/
