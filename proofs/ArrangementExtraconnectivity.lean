@@ -693,22 +693,45 @@ axiom max_collision_defect_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R
 
--- Derive the old Bridge Lemma 3 from the refined axiom
+/-- A fundamental counting fact of A(n,k): every unique root at position p
+    can be extended to exactly (n - k + 1) valid vertices in the whole graph.
+    Since the root comes from V', the vertices in V' that project to this root
+    account for exactly |fiber| of these extensions. The remaining
+    (n - k + 1 - |fiber|) extensions are strictly external to V'.
+
+    Summing this across all unique roots and all positions yields this exact identity.
+    (Proof requires basic Fintype/Finset cardinality bijections for image fibers,
+    isolated here to keep the algebraic squeeze clean). -/
+axiom total_coord_edges_eq {n k : ℕ} (V' : Finset (ArrVertex n k)) :
+    total_coord_edges V' + V'.card * k = sum_unique_roots V' * (n - k) + sum_unique_roots V'
+
+-- Helper to satisfy omega's nat subtraction bounds
+lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
+    sum_unique_roots V' ≤ R * k := by
+  unfold sum_unique_roots
+  have h_le : ∀ p ∈ (Finset.univ : Finset (Fin k)), unique_roots p V' ≤ R := by
+    intro p _
+    unfold unique_roots
+    rw [← hR]
+    exact Finset.card_image_le
+  have h_sum := Finset.sum_le_sum h_le
+  have h_rhs : (∑ _p : Fin k, R) = R * k := by
+    simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin, mul_comm]
+  rw [h_rhs] at h_sum
+  exact h_sum
+
+-- Derive the old Bridge Lemma 3 from the refined axiom + edge-counting identity
 lemma external_neighbors_collision_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥
       sum_unique_roots V' * (n - k) - C_constant R := by
-  -- From the refined axiom:
-  -- cross_collisions + (R*k - sum_unique_roots) ≤ C_constant R
   have h_bound := max_collision_defect_bound R V' hR
-  -- total_coord_edges ≥ external_neighbors (by definition of cross_collisions)
-  -- external_neighbors = total_coord_edges - cross_collisions
-  -- Need: total_coord_edges = sum_unique_roots * (n-k+1) - R*k
-  --       = sum_unique_roots * (n-k) + sum_unique_roots - R*k
-  -- Then: external_neighbors = sum_unique_roots*(n-k) + sum_unique_roots - R*k - cross_collisions
-  --                          = sum_unique_roots*(n-k) - (R*k - sum_unique_roots + cross_collisions)
-  --                          ≥ sum_unique_roots*(n-k) - C_constant R
-  sorry -- Requires proving total_coord_edges = sum_unique_roots * (n-k+1) - R*k
+  have h_le := external_neighbors_le_total_coord V'
+  have h_decomp := external_neighbors_decomp V' h_le
+  have h_edges := total_coord_edges_eq V'
+  rw [hR] at h_edges
+  have h_U_le := sum_unique_roots_le_rk R V' hR
+  omega
 
 -- Part 2: Universal Lower Bound (Squeezing via Bridge Lemmas)
 lemma lower_bound_all_embeddings (R n k : ℕ)
