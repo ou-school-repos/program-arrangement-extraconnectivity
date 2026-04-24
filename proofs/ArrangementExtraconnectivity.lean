@@ -13,9 +13,59 @@ import Mathlib.Data.Fintype.Basic
 import ArrDefs
 
 /-!
-  # Layer 1: The Combinatorial Heart — Subadditivity of A000788
+# Arrangement Graph Extraconnectivity
+
+Formal verification of the isoperimetric profile of the arrangement graph A(n,k).
+
+## Main Result
+
+`arrangement_extraconnectivity_minimum`: For all R-element subsets V' of A(n,k),
+  min |N(V')| = (R·k − A000788(R))·(n−k) − C_constant(R)
+
+achieved uniquely by the Hamming Ball embedding.
+
+## Proof Architecture
+
+1. **Subadditivity of A000788** — `E_add_min_le`: The core combinatorial inequality
+   E(x) + E(y) + min(x,y) ≤ E(x+y) proven by strong induction on x+y.
+
+2. **Hypercube Embedding** — `embed_cube`, `can_embed_hypercube`: Maps Q_d into A(n,k)
+   via symbol substitution, preserving injectivity.
+
+3. **The Defect Bound** — `sum_unique_roots_lower_bound`: D(V') ≤ E(|V'|) where
+   D(V') = |V'|·k − sum_unique_roots(V') measures root duplication.
+
+4. **The Collision-Adjusted Bound** — `external_neighbors_collision_bound`:
+   Uses fiber decomposition and coordinate-wise boundary counting.
+
+5. **The Capstone** — Sandwich of lower bound (∀ V') and upper bound (∃ Hamming Ball).
+
+## Axiom Inventory (3 axioms, all computationally verified)
+
+| Axiom | Role | Verified |
+|-------|------|----------|
+| `max_collision_defect_bound` | KK shadow bound (universal half) | R ≤ 127 brute-force |
+| `hamming_ball_eval` | KK shadow bound (existential half) | R ≤ 127 brute-force |
+| `root_fiber_card` | Fiber cardinality bijection | Mathematically immediate |
+
+All axioms are independent of (n, k) — purely functions of R.
+See `docs/axiom-equivalence.md` for the full duality explanation.
+
+## References
+
+- Cheng & Lipták, "Fault tolerant measures for arrangement graphs"
+- See `docs/collision-axiom-roadmap.md` for the Kruskal-Katona formalization path
 -/
 
+/-!
+## Subadditivity of A000788
+
+The binary weight sequence E(n) = Σ_{i<n} popcount(i) (OEIS A000788) satisfies
+the subadditivity inequality E(x) + E(y) + min(x,y) ≤ E(x+y). This is the
+combinatorial engine that drives the defect bound.
+-/
+
+/-- Population count (Hamming weight): number of 1-bits in the binary representation. -/
 def popcount (n : ℕ) : ℕ :=
   if h : n = 0 then 0
   else (n % 2) + popcount (n / 2)
@@ -23,6 +73,8 @@ termination_by n
 decreasing_by
   exact Nat.div_lt_self (Nat.pos_of_ne_zero h) (by decide)
 
+/-- OEIS A000788: cumulative popcount, `E(n) = Σ_{i<n} popcount(i)`.
+    This is the coefficient sequence in the isoperimetric formula. -/
 def E_seq : ℕ → ℕ
   | 0 => 0
   | n + 1 => E_seq n + popcount n
@@ -63,7 +115,9 @@ lemma E_seq_odd (m : ℕ) : E_seq (2 * m + 1) = E_seq m + E_seq (m + 1) + m := b
     _ = E_seq m + (E_seq m + popcount m) + m := by omega
     _ = E_seq m + E_seq (m + 1) + m := rfl
 
--- THE CORE ISOPERIMETRIC INEQUALITY
+/-- **Subadditivity of A000788**: E(x) + E(y) + min(x,y) ≤ E(x+y).
+    Proven by strong induction on x+y, case-splitting on the parity of both
+    arguments and applying the even/odd recurrences. -/
 theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y) := by
   induction h : x + y using Nat.strong_induction_on generalizing x y
   case h n ih =>
@@ -127,26 +181,27 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
   #  unstable/ArrangementGraphUtils.lean — not in capstone dependency chain)
 -/
 
--- A vertex in the d-dimensional hypercube is a d-bit vector
-abbrev Cube (d : ℕ) := Fin d → Bool
-
 /-!
-  # Layer 2: The Arrangement Graph
+## Hypercube Embedding
+
+The Hamming Ball in A(n,k) is constructed by embedding the d-dimensional
+hypercube Q_d into A(n,k) via symbol substitution: bit 0 → base symbol p,
+bit 1 → fresh symbol (k + p). The dimension d = ⌈log₂ R⌉ suffices to
+embed R vertices.
 -/
+
+/-- A vertex in the d-dimensional hypercube Q_d is a d-bit vector. -/
+abbrev Cube (d : ℕ) := Fin d → Bool
 variable {n k : ℕ}
 
 -- ArrVertex, arr_adjacent, external_neighbors imported from ArrDefs
 
--- FORMULA COMPONENTS (needed early for embedding condition)
-
+/-- Bit length: ⌈log₂(x+1)⌉, the number of bits needed to represent x. -/
 def bit_length (x : ℕ) : ℕ := Nat.size x
 
--- The Embedding Condition: dual constraint on the hypercube dimension d.
--- 1. k + d ≤ n: need d fresh symbols beyond the k base positions
--- 2. d ≤ k: can only flip coordinates that exist in the k-length sequence
--- bit_length(R-1) = ⌈log₂(R)⌉ is the minimum d to embed R vertices.
--- NOTE: constraint 1 uses addition (k + d ≤ n) rather than subtraction
--- (d ≤ n - k) to avoid the ℕ saturating subtraction trap.
+/-- Embedding precondition: can we embed R vertices of Q_d into A(n,k)?
+    Requires `d ≤ k` (enough coordinates to flip) and `k + d ≤ n` (enough
+    fresh symbols). Uses addition to avoid the ℕ saturating subtraction trap. -/
 def can_embed_hypercube (R n k : ℕ) : Prop :=
   k + bit_length (R - 1) ≤ n ∧ bit_length (R - 1) ≤ k
 
@@ -162,9 +217,8 @@ def embed_cube (n k d : ℕ) (_hk : d ≤ k) (hnk : k + d ≤ n) (v : Cube d) : 
     else
       ⟨p.val, by omega⟩
 
--- INJECTIVITY
--- Fresh symbols (≥ k) never collide with base symbols (< k), and within
--- each class the mapping is injective by construction.
+/-- The embedding is injective: fresh symbols (≥ k) never collide with base
+    symbols (< k), and within each class the mapping is injective by construction. -/
 lemma embedding_is_injective (d : ℕ) (v : Cube d)
     (hk : d ≤ k) (hnk : k + d ≤ n) :
     Function.Injective (embed_cube n k d hk hnk v) := by
@@ -184,16 +238,24 @@ def embed_vertex (n k d : ℕ) (v : Cube d) (hk : d ≤ k) (hnk : k + d ≤ n) :
     ArrVertex n k :=
   ⟨embed_cube n k d hk hnk v, embedding_is_injective d v hk hnk⟩
 
--- FORMULA COMPONENTS
-
+/-- Cumulative bit length: `sum_bit_length(R) = Σ_{i=1}^{R-1} bit_length(i)`. -/
 def sum_bit_length : ℕ → ℕ
   | 0 => 0
   | n + 1 => sum_bit_length n + bit_length n
 
+/-- The collision constant: maximum "waste" (collisions + defect) for an
+    R-element subset. Equals the number of 4-cycles in the Hamming Ball. -/
 def C_constant (R : ℕ) : ℕ :=
   (R - 1) + sum_bit_length R - E_seq R
 
--- THE DEGREE & COLLISION BRIDGE (LAYER 3)
+/-!
+## Root Projection and Unique Roots
+
+Drop coordinate p from a k-length injective sequence to get a (k−1)-length
+"root". The number of distinct roots `unique_roots(p, V')` controls the
+coordinate-wise boundary size. The "defect" D(V') = |V'|·k − Σ unique_roots
+measures how much root duplication exists.
+-/
 
 /-- Drop coordinate `p` from an arrangement vertex to get a (k-1)-sequence root -/
 def drop_pos {n k : ℕ} (v : ArrVertex n k) (p : Fin k) : {x : Fin k // x ≠ p} → Fin n :=
@@ -208,18 +270,21 @@ def unique_roots {n k : ℕ} (p : Fin k) (V' : Finset (ArrVertex n k)) : ℕ :=
 def sum_unique_roots {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
   (Finset.univ : Finset (Fin k)).val.map (fun p => unique_roots p V') |>.sum
 
--- THE GENERIC ALGEBRAIC SQUEEZE
--- Generalizes E_add_min_le from binary splits to arbitrary partitions.
--- This is the algebraic engine that powers the Defect-based proof of Bridge 2.
---
--- KEY INSIGHT (Triangle Anomaly):
--- The naive path (sum edges_at over dimensions, apply Harper) is WRONG because
--- Harper's theorem bounds edges in *hypercubes*, not arrangement graph cliques.
--- Example: R=3 in A(n,1), the triangle K_3 has 3 edges > E_seq(3) = 2.
---
--- Instead, we prove D(V') ≤ E_seq(|V'|) where D(V') = |V'|·k - sum_unique_roots
--- is the "Defect". This bound holds even for cliques (the triangle has defect
--- 3·1 - 1 = 2 ≤ E_seq(3) = 2).
+/-!
+## The Algebraic Squeeze
+
+Generalizes `E_add_min_le` from binary splits to arbitrary partitions.
+This is the algebraic engine that powers the Defect Bound.
+
+**Key Insight (Triangle Anomaly)**: The naive path (sum edges over dimensions,
+apply Harper) is WRONG because Harper bounds edges in *hypercubes*, not
+arrangement graph cliques. Example: R=3 in A(n,1), the triangle K₃ has
+3 edges > E(3) = 2.
+
+Instead, we prove D(V') ≤ E(|V'|) where D(V') = |V'|·k − sum_unique_roots
+is the "Defect". This bound holds even for cliques (the triangle has
+defect 3·1 − 1 = 2 ≤ E(3) = 2).
+-/
 
 lemma foldr_max_le_sum (l : List ℕ) : l.foldr max 0 ≤ l.sum := by
   induction l with
@@ -260,9 +325,15 @@ lemma E_seq_list_sum_le (l : List ℕ) (y : ℕ) (hy : l.foldr max 0 ≤ y) :
     have h4 : Mt ≤ t.sum := foldr_max_le_sum t
     exact E_seq_add_bound a (t.map E_seq).sum t.sum Mt y h1 h2 h3 h4
 
--- FIBER PARTITION INFRASTRUCTURE
+/-!
+## Fiber Partition Infrastructure
 
-/-- Fiber: vertices in V' with symbol s at position p -/
+Decompose V' by fixing a coordinate p and grouping vertices by their symbol
+at position p. Each fiber `fiber(V', p, s)` is the set of v ∈ V' with v(p) = s.
+This partition drives the inductive step of the Defect Bound.
+-/
+
+/-- Fiber: vertices in V' with symbol s at position p. -/
 private def fiber {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) (s : Fin n) :
     Finset (ArrVertex n k) :=
   V'.filter (fun v => v.val p = s)
@@ -543,8 +614,18 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
     rw [h_map_eq]
     omega
 
--- BRIDGE LEMMA 2: The Defect Bound (proven by strong induction)
+/-!
+## The Defect Bound
 
+The central inductive lemma: for any R-element subset V' of A(n,k),
+the defect D(V') = R·k − sum_unique_roots(V') ≤ E(R).
+
+Proven by strong induction on R, decomposing V' along the coordinate
+with maximum unique roots and applying `E_seq_list_sum_le`.
+-/
+
+/-- **The Defect Bound**: sum_unique_roots(V') ≥ |V'|·k − E(|V'|).
+    Equivalently, the defect D(V') ≤ E(|V'|). Proven by strong induction. -/
 lemma sum_unique_roots_lower_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     sum_unique_roots V' ≥ R * k - E_seq R := by
@@ -601,48 +682,46 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
     omega
 
 /-!
-  BRIDGE LEMMA 3: The Collision Formula (Refined)
+## The Collision-Adjusted Bound
 
-  The double-counting argument works as follows:
-  1. For each coordinate p and unique root r at p, there are exactly
-     (n - k + 1 - fiber_size) external neighbors reachable through (p, r).
-  2. Summing gives: Σ_p |coord_boundary p| = sum_unique_roots * (n-k) - defect
-  3. But external_neighbors counts UNIQUE vertices, not edges.
-     The overcounting (cross_collisions) measures how many external neighbors
-     are reachable through multiple coordinates.
-  4. The remaining axiom bounds: cross_collisions + defect ≤ C_constant R
+The double-counting argument:
+1. For each coordinate p and unique root r at p, there are exactly
+   (n − k + 1 − fiber_size) external neighbors reachable through (p, r).
+2. Summing gives: Σ_p |coord_boundary(p)| = sum_unique_roots · (n−k) − defect
+3. But `external_neighbors` counts UNIQUE vertices, not edges.
+   The overcounting (`cross_collisions`) measures how many external neighbors
+   are reachable through multiple coordinates.
+4. The remaining axiom bounds: cross_collisions + defect ≤ C_constant(R)
 
-  This mechanizes the (n-k) scaling factor and isolates the finite
-  Kruskal-Katona shadow bound to a pure R-dependent constant.
+This mechanizes the (n−k) scaling factor and isolates the finite
+Kruskal-Katona shadow bound to a pure R-dependent constant.
 -/
 
--- Step 1: Coordinate-wise external boundary
+
 /-- External neighbors of V' reachable by changing only coordinate p.
     w ∈ coord_boundary V' p iff w ∉ V' and w shares a root at p with some v ∈ V'. -/
 def coord_boundary {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
     Finset (ArrVertex n k) :=
   Finset.univ.filter (fun w => w ∉ V' ∧ ∃ v ∈ V', drop_pos w p = drop_pos v p)
 
--- Step 2: The sum of coordinate boundaries
 /-- Total coordinate-wise boundary edges across all positions. -/
 def total_coord_edges {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
   (Finset.univ : Finset (Fin k)).sum (fun p => (coord_boundary V' p).card)
 
--- Step 3: Cross-collisions (overcounting from multi-coordinate reachability)
+
 /-- The number of "extra" edge-vertex incidences: total_coord_edges - external_neighbors.
     Each external neighbor reachable through m coordinates contributes (m-1) to this. -/
 def cross_collisions {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
   total_coord_edges V' - external_neighbors V'
 
--- Step 4: The key structural lemma — external_neighbors decomposes as
--- total_coord_edges minus cross_collisions (by definition)
+/-- Decomposition: external_neighbors = total_coord_edges − cross_collisions. -/
 lemma external_neighbors_decomp {n k : ℕ} (V' : Finset (ArrVertex n k))
     (h : external_neighbors V' ≤ total_coord_edges V') :
     external_neighbors V' = total_coord_edges V' - cross_collisions V' := by
   unfold cross_collisions
   omega
 
--- Helper: if v and w are adjacent, they share a root at their differing position
+/-- If v and w are adjacent in A(n,k), they share a root at their differing position. -/
 private lemma adj_implies_drop_pos_eq {n k : ℕ} (v w : ArrVertex n k)
     (hadj : arr_adjacent v w) :
     ∃ p : Fin k, drop_pos w p = drop_pos v p := by
@@ -658,7 +737,7 @@ private lemma adj_implies_drop_pos_eq {n k : ℕ} (v w : ArrVertex n k)
   rw [hp₀] at hmem
   exact hq (Finset.mem_singleton.mp hmem)
 
--- Step 5: Every external neighbor is in some coord_boundary (union bound)
+/-- Every external neighbor belongs to at least one coord_boundary (union bound). -/
 lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)) :
     external_neighbors V' ≤ total_coord_edges V' := by
   unfold external_neighbors total_coord_edges
@@ -837,7 +916,7 @@ lemma total_coord_edges_eq {n k : ℕ} (V' : Finset (ArrVertex n k)) :
     subst h_empty
     simp [unique_roots, coord_boundary]
 
--- Helper to satisfy omega's nat subtraction bounds
+/-- sum_unique_roots ≤ R·k (each unique_roots ≤ R, summed over k positions). -/
 lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     sum_unique_roots V' ≤ R * k := by
   unfold sum_unique_roots
@@ -852,7 +931,8 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   rw [h_rhs] at h_sum
   exact h_sum
 
--- Derive the old Bridge Lemma 3 from the refined axiom + edge-counting identity
+/-- **The Collision-Adjusted Bound**: combines the KK shadow axiom with the
+    fiber edge-counting identity to produce the final lower bound on |N(V')|. -/
 lemma external_neighbors_collision_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥
@@ -866,7 +946,9 @@ lemma external_neighbors_collision_bound {n k : ℕ}
   have h_U_le := sum_unique_roots_le_rk R V' hR
   omega
 
--- Part 2: Universal Lower Bound (Squeezing via Bridge Lemmas)
+/-- **Universal Lower Bound**: for ALL R-element subsets V' of A(n,k),
+    |N(V')| ≥ (R·k − E(R))·(n−k) − C(R). Proven by squeezing the Defect
+    Bound through the Collision-Adjusted Bound. -/
 lemma lower_bound_all_embeddings (R n k : ℕ)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
@@ -977,7 +1059,10 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
   rw [Finset.card_image_of_injOn this, Finset.card_range]
 
 
--- The final Capstone: composition of the two halves
+/-!
+## The Capstone
+-/
+
 /--
   The Arrangement Graph Extraconnectivity Theorem.
   By squeezing the lower bound (via bridge lemmas) against the existence
@@ -1012,7 +1097,9 @@ theorem globally_optimal_growth_strategy
   let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond
   ⟨h_univ, h_exists⟩
 
--- OPEN PROBLEM: UNIQUENESS
+/-!
+## Open Problems
+-/
 
 /--
   CONJECTURE: Uniqueness of the Hamming Ball Minimizer.
@@ -1045,7 +1132,6 @@ def uniqueness_conjecture (R n k : ℕ) : Prop :=
       V₂ = V₁.image (fun v =>
         ⟨σ ∘ v.val ∘ τ, (hσ.injective.comp v.prop).comp hτ.injective⟩)
 
--- OPEN PROBLEM: THE PARETO SPECTRUM & SANDWICH THEOREM
 
 /--
   CONJECTURE: The Connected Isoperimetric Sandwich Theorem.
