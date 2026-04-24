@@ -229,6 +229,11 @@ lean/docs/clean:	##H @Build Clean project doc cache (fast targeted rebuild)
 	find proofs/docbuild/.lake/build -path '*Proofs*' -delete 2>/dev/null || true
 	@$(call print_success,Project doc cache cleared. Run make lean/docs to rebuild.)
 
+.PHONY: render
+render: ##H Render all visual assets (.dot to .png)
+	@$(call print_info,Rendering visual assets)
+	python3 scripts/render_assets.py
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -250,12 +255,10 @@ docs:	##H @General Generate PDF documentation from README
 	@$(call print_success,Documentation generated.)
 
 .PHONY: bundle
-bundle:	##H @General Create a zip archive of the project sources
+bundle: clean ##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
-	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/*.lean -x proofs/lakefile.lean
-	zip -rv9 $(BUNDLE_OUT) Makefile docs/*.csv proofs/lakefile.lean proofs/lakefile.toml
-	zip -rv9 $(BUNDLE_OUT) docs/ -x "docs/.mypy_cache/*" "docs/__pycache__/*" "*.png" "*.gif" "*.svg"
+	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/Arrangement/*.lean scripts/*.py assets/* Makefile
 	@$(call print_success,Bundle created.)
 
 .PHONY: site
