@@ -642,13 +642,37 @@ lemma external_neighbors_decomp {n k : ℕ} (V' : Finset (ArrVertex n k))
   unfold cross_collisions
   omega
 
+-- Helper: if v and w are adjacent, they share a root at their differing position
+private lemma adj_implies_drop_pos_eq {n k : ℕ} (v w : ArrVertex n k)
+    (hadj : arr_adjacent v w) :
+    ∃ p : Fin k, drop_pos w p = drop_pos v p := by
+  unfold arr_adjacent at hadj
+  rw [Finset.card_eq_one] at hadj
+  obtain ⟨p₀, hp₀⟩ := hadj
+  refine ⟨p₀, funext fun ⟨q, hq⟩ => ?_⟩
+  unfold drop_pos
+  show w.val q = v.val q
+  by_contra h_ne
+  have hmem : q ∈ Finset.univ.filter (fun p => v.val p ≠ w.val p) :=
+    Finset.mem_filter.mpr ⟨Finset.mem_univ q, fun h => h_ne h.symm⟩
+  rw [hp₀] at hmem
+  exact hq (Finset.mem_singleton.mp hmem)
+
 -- Step 5: Every external neighbor is in some coord_boundary (union bound)
 lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)) :
     external_neighbors V' ≤ total_coord_edges V' := by
-  unfold external_neighbors total_coord_edges coord_boundary
-  -- Each vertex in the external boundary is adjacent to some v ∈ V',
-  -- meaning they share a root at the coordinate where they differ
-  sorry -- Finset plumbing: card of union ≤ sum of cards
+  unfold external_neighbors total_coord_edges
+  -- |ext_boundary| ≤ |⋃_p coord_boundary p| ≤ Σ_p |coord_boundary p|
+  apply le_trans _ Finset.card_biUnion_le
+  apply Finset.card_le_card
+  intro w hw
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hw
+  obtain ⟨hw_not, v, hv, hadj⟩ := hw
+  obtain ⟨p₀, hdrop⟩ := adj_implies_drop_pos_eq v w hadj
+  simp only [Finset.mem_biUnion, Finset.mem_univ, true_and]
+  refine ⟨p₀, ?_⟩
+  unfold coord_boundary
+  refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
 /--
   The Kruskal-Katona Shadow Bound (Refined Axiom)
