@@ -192,6 +192,7 @@ static uint64_t nodes_local_d[MAX_R] = {0};
 static uint64_t nodes_generated = 0, nodes_evaluated = 0;
 static uint64_t nodes_pruned_iso = 0, nodes_pruned_exact = 0,
                 nodes_pruned_local = 0;
+static double volume_pruned_iso = 0;
 static std::chrono::high_resolution_clock::time_point t0_global, t_last_print;
 
 // ── chunk_idx SWAR lookup ──────────────────────────────────────────────────
@@ -400,6 +401,16 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
         densenauty(g_nauty, lab_nauty, ptn_nauty, orbits_nauty, &options,
                    &stats, m_aux, n_aux, cg_nauty);
 
+        // Track symmetry volume: |Orbit| = |Group| / |Aut(V)|
+        // stats.grpsize1 * 10^(stats.grpsize2)
+        double aut_size = stats.grpsize1;
+        for (int i = 0; i < stats.grpsize2; i++)
+            aut_size *= 10.0;
+
+        if (aut_size > 0) {
+            volume_pruned_iso += 1.0 / aut_size;
+        }
+
         Hash128 h = hash_nauty_graph(cg_nauty, m_aux, n_aux);
         if (!seen_nauty[point].insert(h)) {
             nodes_pruned_iso++;
@@ -576,6 +587,14 @@ int main(int argc, const char *argv[]) {
               << "\nPruned | Iso: " << nodes_pruned_iso
               << " | Exact: " << nodes_pruned_exact
               << " | Local: " << nodes_pruned_local << "\n"
+              << "Symmetry | Power: "
+              << (volume_pruned_iso > 0
+                      ? (double)nodes_pruned_iso / volume_pruned_iso
+                      : 0.0)
+              << " avg aut / Coverage: " << volume_pruned_iso << " orbits\n"
+              << "Savings | Iso: " << est_saved_iso
+              << " / Exact: " << est_saved_exact
+              << " / Local: " << est_saved_local << " evals\n"
               << "Prune Rate |";
     for (int i = 2; i < R; i++) {
         double rate = 0;

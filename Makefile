@@ -122,11 +122,6 @@ benchmark: build	##H @Run Benchmark search for R=2..$(R)
 run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
 	./$(BIN_PRED) $(R)
 
-.PHONY: benchmark/predict
-benchmark/predict: build	##H @Run Predict for R=0..$(R)
-	@$(call print_info,Predicting for R=0..$(R))
-	@for i in $$(seq 0 $(R)); do ./$(BIN_PRED) $$i; echo ""; done
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
