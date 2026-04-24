@@ -821,9 +821,13 @@ def uniqueness_conjecture (R n k : ℕ) : Prop :=
   For the Star Graph, the Defect is R-1, and Inclusion-Exclusion on
   the overlapping 2-paths yields a collision constant exactly equal
   to the triangular numbers (R choose 2).
--/
+
+  A vertex set V' is connected if every pair of vertices in V' is linked
+    by a path of adjacent vertices all within V'. We define this via the
+    reflexive-transitive closure of the restricted adjacency relation. -/
 def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
-  sorry -- Standard graph connectivity definition
+  ∀ u ∈ V', ∀ v ∈ V',
+    Relation.ReflTransGen (fun x y => arr_adjacent x y ∧ x ∈ V' ∧ y ∈ V') u v
 
 def topological_sandwich_conjecture (R n k : ℕ) : Prop :=
   ∀ V' : Finset (ArrVertex n k),
