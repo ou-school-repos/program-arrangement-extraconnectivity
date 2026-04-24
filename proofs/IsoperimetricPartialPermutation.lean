@@ -91,7 +91,81 @@ def compressSet (V' : Finset (ArrVertex n k)) (a b : Fin n) :
     Close with Finset.card_image_of_injOn. -/
 lemma compressSet_card (V' : Finset (ArrVertex n k)) (a b : Fin n) :
     (compressSet V' a b).card = V'.card := by
-  sorry
+  unfold compressSet
+  apply Finset.card_image_of_injOn
+  intro v1 hv1 v2 hv2 heq
+
+  -- Expand the inline 'let' binding manually to avoid `change f v1 = f v2`
+  -- which retains a `let` that makes `rw` fail on `if_pos`.
+  change (if shiftVertex v1 a b ∉ V' then shiftVertex v1 a b else v1) =
+         (if shiftVertex v2 a b ∉ V' then shiftVertex v2 a b else v2) at heq
+
+  -- Case split on whether each vertex successfully shifted
+  by_cases h1 : shiftVertex v1 a b ∉ V' <;> by_cases h2 : shiftVertex v2 a b ∉ V'
+
+  · -- Case 1: Both shifted successfully
+    rw [if_pos h1, if_pos h2] at heq
+
+    -- If they shifted, they must have satisfied the swap condition
+    have h_shift_neq1 : shiftVertex v1 a b ≠ v1 := fun eq => h1 (eq ▸ hv1)
+    have h_cond1 : uses_sym v1 b ∧ ¬uses_sym v1 a := by
+      by_contra hc
+      have h_eq : shiftVertex v1 a b = v1 := by unfold shiftVertex; rw [dif_neg hc]
+      exact h_shift_neq1 h_eq
+
+    have h_shift_neq2 : shiftVertex v2 a b ≠ v2 := fun eq => h2 (eq ▸ hv2)
+    have h_cond2 : uses_sym v2 b ∧ ¬uses_sym v2 a := by
+      by_contra hc
+      have h_eq : shiftVertex v2 a b = v2 := by unfold shiftVertex; rw [dif_neg hc]
+      exact h_shift_neq2 h_eq
+
+    -- Extract the underlying functions and evaluate
+    have h_val_eq : (shiftVertex v1 a b).val = (shiftVertex v2 a b).val :=
+      congr_arg Subtype.val heq
+    unfold shiftVertex at h_val_eq
+    rw [dif_pos h_cond1, dif_pos h_cond2] at h_val_eq
+    dsimp only at h_val_eq
+
+    apply Subtype.ext
+    funext p
+    have hp := congr_fun h_val_eq p
+
+    -- Evaluate the swap at each position
+    by_cases h_p1 : v1.val p = b
+    · rw [if_pos h_p1] at hp
+      by_cases h_p2 : v2.val p = b
+      · rw [h_p1, h_p2]
+      · rw [if_neg h_p2] at hp
+        -- Contradiction: v2 would contain 'a' originally
+        exact False.elim (h_cond2.2 ⟨p, hp.symm⟩)
+    · rw [if_neg h_p1] at hp
+      by_cases h_p2 : v2.val p = b
+      · rw [if_pos h_p2] at hp
+        -- Contradiction: v1 would contain 'a' originally
+        exact False.elim (h_cond1.2 ⟨p, hp⟩)
+      · rw [if_neg h_p2] at hp
+        exact hp
+
+  · -- Case 2: Mixed (v1 shifted, v2 did not)
+    rw [if_pos h1, if_neg h2] at heq
+    -- heq : shiftVertex v1 a b = v2
+    -- h1 : shiftVertex v1 a b ∉ V'  (Finset)
+    -- hv2 : v2 ∈ ↑V'  (Set, via InjOn)
+    -- subst eliminates v2, avoiding rw footgun inside shiftVertex
+    subst heq
+    exact absurd (Finset.mem_coe.mp hv2) h1
+
+  · -- Case 3: Mixed (v2 shifted, v1 did not)
+    rw [if_neg h1, if_pos h2] at heq
+    -- heq : v1 = shiftVertex v2 a b
+    -- h2 : shiftVertex v2 a b ∉ V'  (Finset)
+    -- hv1 : v1 ∈ ↑V'  (Set, via InjOn)
+    subst heq
+    exact absurd (Finset.mem_coe.mp hv1) h2
+
+  · -- Case 4: Neither shifted
+    rw [if_neg h1, if_neg h2] at heq
+    exact heq
 
 /-- Idempotence: compressing with the same symbols twice is a no-op.
     PROOF BLUEPRINT (case split on how v' entered the compressed set):
