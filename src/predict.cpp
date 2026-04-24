@@ -232,7 +232,7 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
 
 template <typename SymT>
 static int run_verify(int64_t expected_nk1, int64_t expected_const,
-                      bool quiet = false, int64_t *brute_out = nullptr) {
+                      bool quiet = false, int64_t *iedges_out = nullptr) {
     auto verts = build_hamming_ball<SymT>();
 
     if (!quiet && R <= 12) {
@@ -267,8 +267,20 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
         return 1;
     }
 
-    if (brute_out)
-        *brute_out = brute_count;
+    // Count internal edges: pairs adjacent in A(n,k) (differ in exactly 1 pos)
+    int64_t iedges = 0;
+    for (int i = 0; i < R; i++) {
+        for (int j = i + 1; j < R; j++) {
+            int diffs = 0;
+            for (int p = 0; p < R; p++)
+                if (verts[i].syms[p] != verts[j].syms[p])
+                    diffs++;
+            if (diffs == 1)
+                iedges++;
+        }
+    }
+    if (iedges_out)
+        *iedges_out = iedges;
 
     if (quiet) {
         std::cerr << "✓\n";
@@ -276,27 +288,9 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
         std::cerr << "  [construction] nk1 = " << nk1 << " ✓\n";
         std::cerr << "  [construction] constant = " << constant << " ✓\n";
         std::cerr << "  [brute-force] |N(V')| = " << brute_count << " ✓\n";
+        std::cerr << "  [internal] edges = " << iedges << "\n";
     }
     return 0;
-}
-
-// ── FNV-1a 64-bit: per-R deterministic digest ───────────────────────
-
-static uint64_t fnv_digest(int64_t r, int64_t nk1, int64_t c,
-                           int64_t brute_count) {
-    uint64_t h = UINT64_C(14695981039346656037);
-    auto feed = [&h](int64_t val) {
-        for (int i = 0; i < 8; i++) {
-            h ^= static_cast<uint64_t>(val & 0xFF);
-            h *= UINT64_C(1099511628211);
-            val >>= 8;
-        }
-    };
-    feed(r);
-    feed(nk1);
-    feed(c);
-    feed(brute_count);  // only obtainable via O(R³) computation
-    return h;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────
@@ -365,7 +359,7 @@ int main(int argc, const char *argv[]) {
 
         std::cout << "R,nk1,constant,coeff,formula_at_2R";
         if (range_mode)
-            std::cout << ",digest";
+            std::cout << ",iedges";
         std::cout << "\n";
 
         for (int r = start_r; r <= end_r; r++) {
@@ -375,14 +369,15 @@ int main(int argc, const char *argv[]) {
             const int128_t coeff = widen(R) * R - nk1;
             const int128_t val = coeff * R - cst;
 
-            int64_t brute_count = 0;
+            int64_t iedges = 0;
             if (range_mode) {
                 std::cerr << "R=" << R << " ... ";
                 int rc;
                 if (R <= 127)
-                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true, &brute_count);
+                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true, &iedges);
                 else
-                    rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true, &brute_count);
+                    rc =
+                        run_verify<uint16_t>(nk1, cst, /*quiet=*/true, &iedges);
                 if (rc != 0) {
                     std::cerr << "FAILED at R=" << R << "\n";
                     return 1;
@@ -391,12 +386,8 @@ int main(int argc, const char *argv[]) {
 
             std::cout << R << "," << nk1 << "," << cst << ","
                       << i128_to_string(coeff) << "," << i128_to_string(val);
-            if (range_mode) {
-                char hex[17];
-                std::snprintf(hex, sizeof(hex), "%016llx",
-                    static_cast<unsigned long long>(fnv_digest(R, nk1, cst, brute_count)));
-                std::cout << "," << hex;
-            }
+            if (range_mode)
+                std::cout << "," << iedges;
             std::cout << "\n";
         }
 
