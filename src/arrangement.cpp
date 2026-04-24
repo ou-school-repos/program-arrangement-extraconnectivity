@@ -183,6 +183,12 @@ struct Result {
 };
 static std::map<int, Result> results;
 
+#define MAX_R 20
+static uint64_t nodes_gen_d[MAX_R] = {0};
+static uint64_t nodes_iso_d[MAX_R] = {0};
+static uint64_t nodes_exact_d[MAX_R] = {0};
+static uint64_t nodes_local_d[MAX_R] = {0};
+
 static uint64_t nodes_generated = 0, nodes_evaluated = 0;
 static uint64_t nodes_pruned_iso = 0, nodes_pruned_exact = 0,
                 nodes_pruned_local = 0;
@@ -312,6 +318,8 @@ static int count_internal_edges(const uint64_t *verts, int n) {
 static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
                   int current_nk1, int current_cons) {
     nodes_generated++;
+    if (point < MAX_R)
+        nodes_gen_d[point]++;
 
     // Telemetry
     if ((nodes_generated & 0x3FFFF) == 0) {
@@ -395,6 +403,8 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
         Hash128 h = hash_nauty_graph(cg_nauty, m_aux, n_aux);
         if (!seen_nauty[point].insert(h)) {
             nodes_pruned_iso++;
+            if (point < MAX_R)
+                nodes_iso_d[point]++;
             return;
         }
     } else if (point < R) {
@@ -406,6 +416,8 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
         Hash128 h = hash_sorted_vertices(key_buf, point);
         if (!seen_sorted[point].insert(h)) {
             nodes_pruned_exact++;
+            if (point < MAX_R)
+                nodes_exact_d[point]++;
             return;
         }
     }
@@ -436,6 +448,8 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
                 }
                 if (duplicate) {
                     nodes_pruned_local++;
+                    if (point < MAX_R)
+                        nodes_local_d[point]++;
                     continue;
                 }
                 local_seen[h] = temp;
@@ -557,12 +571,27 @@ int main(int argc, const char *argv[]) {
         best_nk1 = nk1;
     }
 
-    std::cerr << "Done: " << std::fixed << std::setprecision(3) << elapsed
+    std::cout << "Done: " << std::fixed << std::setprecision(3) << elapsed
               << "s | Gen: " << nodes_generated
               << " | Eval: " << nodes_evaluated
               << "\nPruned | Iso: " << nodes_pruned_iso
               << " | Exact: " << nodes_pruned_exact
-              << " | Local: " << nodes_pruned_local << "\n";
+              << " | Local: " << nodes_pruned_local << "\n"
+              << "Prune Rate |";
+    for (int i = 2; i < R; i++) {
+        double rate = 0;
+        uint64_t loc = nodes_local_d[i - 1];
+        if (nodes_gen_d[i] + loc > 0) {
+            rate =
+                (static_cast<double>(nodes_iso_d[i] + nodes_exact_d[i] + loc) *
+                 100.0) /
+                (nodes_gen_d[i] + loc);
+        }
+        std::cout << " [" << i << (i <= global_nauty_limit ? "-n" : "") << "] "
+                  << std::fixed << std::setprecision(1) << rate << "%"
+                  << (i == R - 1 ? "" : " /");
+    }
+    std::cout << "\n";
 
     if (best_nk1 != -1) {
         // Parse example back into array
@@ -590,17 +619,17 @@ int main(int argc, const char *argv[]) {
         int64_t coeff = (int64_t)R * R - theory_nk1;
         int64_t theory_val = coeff * R - theory_const;
 
-        std::cerr << "  [brute-force] |N(V')| = " << brute_count;
+        std::cout << "  [brute-force] |N(V')| = " << brute_count;
         if (brute_count == theory_val) {
-            std::cerr << " \xe2\x9c\x93\n";
+            std::cout << " \xe2\x9c\x93\n";
         } else {
-            std::cerr << " \xe2\x9c\x97 MISMATCH (theory gives " << theory_val
+            std::cout << " \xe2\x9c\x97 MISMATCH (theory gives " << theory_val
                       << ")\n";
         }
-
-        std::cerr << "  formula(n=" << 2 * R << ",k=" << R
-                  << "): |N(V')| = " << coeff << "\xc2\xb7" << R << " - "
-                  << theory_const << " = " << theory_val << "\n";
+        std::cout << "  formula(n=" << 2 * R << ",k=" << R
+                  << "): |N(V')| = " << (int64_t)R * R - A000788_fn(R) << "·"
+                  << R << " - " << constant_analytical(R) << " = " << theory_val
+                  << "\n";
     }
 
     return 0;
