@@ -1,5 +1,6 @@
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Nat.Bitwise
+import Mathlib.Data.Nat.Size
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Data.Finset.Basic
@@ -692,12 +693,13 @@ private lemma le_pow_bit_length (R : ℕ) : R ≤ 2 ^ bit_length (R - 1) := by
   · by_cases h1 : R = 1
     · subst h1; simp [bit_length]
     · have hne : R - 1 ≠ 0 := by omega
-      simp only [bit_length, if_neg hne]
-      -- Nat.log2 satisfies: n < 2^(Nat.log2 n + 1) for n > 0
-      -- This is Nat.lt_pow_two_log2 or derivable from Nat.log2_lt
-      have h_lt : R - 1 < 2 ^ (Nat.log2 (R - 1) + 1) := by
-        have := @Nat.log2_lt (R - 1) hne
-        omega
+      -- bit_length(R-1) = Nat.size(R-1) for R-1 > 0
+      -- Nat.lt_size_self: ∀ n, n < 2^(Nat.size n)
+      -- So R-1 < 2^(Nat.size(R-1)), hence R ≤ 2^(Nat.size(R-1))
+      have h_size : bit_length (R - 1) = Nat.size (R - 1) := by
+        simp only [bit_length, if_neg hne, Nat.size_eq_succ_log2 hne]
+      rw [h_size]
+      have := Nat.lt_size_self (R - 1)
       omega
 
 /-- embed_vertex is injective in the cube argument -/
