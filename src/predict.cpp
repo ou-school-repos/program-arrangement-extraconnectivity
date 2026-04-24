@@ -232,7 +232,7 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
 
 template <typename SymT>
 static int run_verify(int64_t expected_nk1, int64_t expected_const,
-                      bool quiet = false, int64_t *iedges_out = nullptr) {
+                      bool quiet = false) {
     auto verts = build_hamming_ball<SymT>();
 
     if (!quiet && R <= 12) {
@@ -267,28 +267,12 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
         return 1;
     }
 
-    // Count internal edges: pairs adjacent in A(n,k) (differ in exactly 1 pos)
-    int64_t iedges = 0;
-    for (int i = 0; i < R; i++) {
-        for (int j = i + 1; j < R; j++) {
-            int diffs = 0;
-            for (int p = 0; p < R; p++)
-                if (verts[i].syms[p] != verts[j].syms[p])
-                    diffs++;
-            if (diffs == 1)
-                iedges++;
-        }
-    }
-    if (iedges_out)
-        *iedges_out = iedges;
-
     if (quiet) {
         std::cerr << "✓\n";
     } else {
         std::cerr << "  [construction] nk1 = " << nk1 << " ✓\n";
         std::cerr << "  [construction] constant = " << constant << " ✓\n";
         std::cerr << "  [brute-force] |N(V')| = " << brute_count << " ✓\n";
-        std::cerr << "  [internal] edges = " << iedges << "\n";
     }
     return 0;
 }
@@ -360,12 +344,8 @@ int main(int argc, const char *argv[]) {
         if (csv_mode && !range_mode)
             start_r = 2;
 
-        if (!no_header) {
-            std::cout << "R,nk1,constant,coeff,formula_at_2R";
-            if (range_mode)
-                std::cout << ",iedges";
-            std::cout << "\n" << std::flush;
-        }
+        if (!no_header)
+            std::cout << "R,nk1,constant,coeff,formula_at_2R\n" << std::flush;
 
         for (int r = start_r; r <= end_r; r++) {
             R = r;
@@ -374,15 +354,13 @@ int main(int argc, const char *argv[]) {
             const int128_t coeff = widen(R) * R - nk1;
             const int128_t val = coeff * R - cst;
 
-            int64_t iedges = 0;
             if (range_mode) {
                 std::cerr << "R=" << R << " ... ";
                 int rc;
                 if (R <= 127)
-                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true, &iedges);
+                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true);
                 else
-                    rc =
-                        run_verify<uint16_t>(nk1, cst, /*quiet=*/true, &iedges);
+                    rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true);
                 if (rc != 0) {
                     std::cerr << "FAILED at R=" << R << "\n";
                     return 1;
@@ -390,10 +368,9 @@ int main(int argc, const char *argv[]) {
             }
 
             std::cout << R << "," << nk1 << "," << cst << ","
-                      << i128_to_string(coeff) << "," << i128_to_string(val);
-            if (range_mode)
-                std::cout << "," << iedges;
-            std::cout << "\n" << std::flush;
+                      << i128_to_string(coeff) << "," << i128_to_string(val)
+                      << "\n"
+                      << std::flush;
         }
 
         if (range_mode)
