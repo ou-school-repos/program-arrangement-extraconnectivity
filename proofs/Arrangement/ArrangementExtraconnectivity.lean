@@ -10,7 +10,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Fintype.Basic
-import ArrDefs
+import Arrangement.ArrDefs
 
 /-!
 # Arrangement Graph Extraconnectivity
@@ -175,11 +175,6 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
         omega
 
 
-/-!
-  # Layer 1.5: Harper's Edge-Counting Lemmas
-  # (cubeEdges, S0/S1, harpers_edge_isoperimetry moved to
-  #  unstable/ArrangementGraphUtils.lean — not in capstone dependency chain)
--/
 
 /-!
 ## Hypercube Embedding

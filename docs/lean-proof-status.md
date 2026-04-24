@@ -10,28 +10,29 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 0 sorries, 3 axioms** (2 KK shadow bounds + 1 counting identity).
+Current status: **0 errors, 0 sorries, 4 axioms** (2 KK shadow bounds + 1 counting identity + 1 fiber cardinality).
 
 ## Architecture
 
-| Layer                  | Theorem / Definition                                   | Status   |
-| ---------------------- | ------------------------------------------------------ | -------- |
-| 1 - Combinatorics      | `E_add_min_le`: E(x)+E(y)+min(x,y) <= E(x+y)           | PROVEN   |
-| 1.5 - Algebraic Engine | `E_seq_list_sum_le`: generalized partition subaddivity | PROVEN   |
-| 2 - Hypercube          | `Cube`, `embed_cube`, `embedding_is_injective`         | PROVEN   |
-| 2 - Harper's Theorem   | `harpers_edge_isoperimetry`: cubeEdges(S) <= E(\|S\|)  | PROVEN\* |
-| 3 - Graph Definition   | `ArrVertex`, `Fintype`, `DecidableEq`, `arr_adjacent`  | PROVEN   |
-| 3 - External Neighbors | `external_neighbors` (computable definition)           | PROVEN   |
-| 3 - Embedding Cond.    | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)        | PROVEN   |
-| 3.5 - Bridge Lemma 2   | `sum_unique_roots_lower_bound` (defect bound)          | PROVEN   |
-| 3.5 - Bridge Lemma 3   | `external_neighbors_collision_bound`                   | PROVEN   |
-| 3.5 - Collision Axiom  | `max_collision_defect_bound` (KK shadow, R-only)       | AXIOM    |
-| 3.5 - Edge Identity    | `total_coord_edges_eq` (fiber counting)                | AXIOM    |
-| 3.5 - Construction     | `hamming_ball_subset` (named, explicit)                | PROVEN   |
-| 3.5 - Evaluation       | `hamming_ball_eval` (boundary count)                   | AXIOM    |
-| 3.5 - Cardinality      | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
-| 3.5 - Lower Bound      | `lower_bound_all_embeddings` (arithmetic composition)  | PROVEN   |
-| Capstone               | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN   |
+| Section                  | Theorem / Definition                                   | Status   |
+| ------------------------ | ------------------------------------------------------ | -------- |
+| Subadditivity of A000788 | `E_add_min_le`: E(x)+E(y)+min(x,y) <= E(x+y)           | PROVEN   |
+| Defect Bound             | `E_seq_list_sum_le`: generalized partition subaddivity | PROVEN   |
+| Hypercube Embedding      | `Cube`, `embed_cube`, `embedding_is_injective`         | PROVEN   |
+| Harper's Theorem         | `harpers_edge_isoperimetry`: cubeEdges(S) <= E(\|S\|)  | PROVEN\* |
+| Graph Definition         | `ArrVertex`, `Fintype`, `DecidableEq`, `arr_adjacent`  | PROVEN   |
+| External Neighbors       | `external_neighbors` (computable definition)           | PROVEN   |
+| Embedding Condition      | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)        | PROVEN   |
+| Defect Bound             | `sum_unique_roots_lower_bound`                         | PROVEN   |
+| Collision-Adjusted Bound | `external_neighbors_collision_bound`                   | PROVEN   |
+| Collision Axiom          | `max_collision_defect_bound` (KK shadow, R-only)       | AXIOM    |
+| Fiber Identity           | `total_coord_edges_eq` (fiber counting)                | AXIOM    |
+| Fiber Cardinality        | `root_fiber_card` (n-k+1 extensions per root)          | AXIOM    |
+| Construction             | `hamming_ball_subset` (named, explicit)                | PROVEN   |
+| Evaluation               | `hamming_ball_eval` (boundary count)                   | AXIOM    |
+| Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
+| Lower Bound              | `lower_bound_all_embeddings` (arithmetic composition)  | PROVEN   |
+| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN   |
 
 \*Harper's Theorem is proven but **not in the dependency chain** of the
 capstone theorem. The defect-based proof bypasses it entirely via algebraic
@@ -49,19 +50,20 @@ arrangement_extraconnectivity_minimum
   │    ├─ le_pow_bit_length           (R ≤ 2^d via Nat.lt_size_self)
   │    ├─ embed_vertex_injective_cube (injectivity of embedding)
   │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
-  │    └─ hamming_ball_eval           (exact boundary evaluation)
+  │    └─ hamming_ball_eval [AXIOM]   (exact boundary evaluation)
   └─ lower_bound_all_embeddings
-       ├─ sum_unique_roots_lower_bound  (Bridge Lemma 2)
+       ├─ sum_unique_roots_lower_bound  (defect bound)
        │    └─ defect_fiber_bound
-       │         └─ E_seq_list_sum_le   (Layer 1.5 algebraic engine)
-       │              └─ E_add_min_le   (Layer 1 core inequality)
-        └─ external_neighbors_collision_bound        (Bridge Lemma 3)
-             ├─ max_collision_defect_bound [AXIOM]   (KK shadow bound)
-             ├─ total_coord_edges_eq [AXIOM]         (fiber counting identity)
-             └─ sum_unique_roots_le_rk               (helper bound)
+       │         └─ E_seq_list_sum_le   (partition subadditivity)
+       │              └─ E_add_min_le   (A000788 core inequality)
+       └─ external_neighbors_collision_bound  (collision-adjusted bound)
+            ├─ max_collision_defect_bound [AXIOM]   (KK shadow bound)
+            ├─ total_coord_edges_eq [AXIOM]         (fiber counting identity)
+            │    └─ root_fiber_card [AXIOM]          (n-k+1 fiber cardinality)
+            └─ sum_unique_roots_le_rk               (helper bound)
 ```
 
-## Axioms (2)
+## Axioms (4)
 
 ### Axiom 1: `max_collision_defect_bound` — Collision Formula
 

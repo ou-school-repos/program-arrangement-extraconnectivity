@@ -216,6 +216,18 @@ lean/docs:	##H @Build Generate Lean documentation
 	cd proofs/docbuild && lake build Proofs:docs
 	@$(call print_success,Lean docs generated in proofs/docbuild/.lake/build/doc/)
 
+.PHONY: lean/docs/clean
+lean/docs/clean:	##H @Build Clean project doc cache (fast targeted rebuild)
+	@$(call print_info,Cleaning project doc artifacts)
+	rm -rf proofs/docbuild/.lake/build/doc/Arrangement \
+	       proofs/docbuild/.lake/build/doc/index.html \
+	       proofs/docbuild/.lake/build/doc/style.css \
+	       proofs/docbuild/.lake/build/doc/doc-manifest.json \
+	       proofs/docbuild/.lake/build/api-docs.db
+	find proofs/docbuild/.lake/build -path '*Arrangement*' -delete 2>/dev/null || true
+	find proofs/docbuild/.lake/build -path '*Proofs*' -delete 2>/dev/null || true
+	@$(call print_success,Project doc cache cleared. Run make lean/docs to rebuild.)
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

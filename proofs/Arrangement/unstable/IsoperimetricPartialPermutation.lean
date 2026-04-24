@@ -20,7 +20,7 @@
   - Section 6: The Isoperimetric Theorem (replaces both axioms)
 -/
 
-import ArrDefs
+import Arrangement.ArrDefs
 import Mathlib.Data.Finset.Image
 
 set_option autoImplicit false

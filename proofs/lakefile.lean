@@ -11,10 +11,10 @@ require mathlib from git
 lean_lib «Proofs» where
   srcDir := "."
   roots := #[
-    `ArrDefs,
-    `HypercubeEdges,
-    `PredictorComplexity,
-    `ArrangementExtraconnectivity,
-    `unstable.IsoperimetricPartialPermutation,
-    `unstable.ArrangementGraphUtils
+    `Arrangement.ArrDefs,
+    `Arrangement.HypercubeEdges,
+    `Arrangement.PredictorComplexity,
+    `Arrangement.ArrangementExtraconnectivity,
+    `Arrangement.unstable.IsoperimetricPartialPermutation,
+    `Arrangement.unstable.ArrangementGraphUtils
   ]
