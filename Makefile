@@ -193,7 +193,7 @@ export LAKE_HOME
 .PHONY: lean
 lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
-	cd proofs && lake build
+	cd proofs && lake build | tee lean.log
 	@$(call print_success,Lean proofs verified.)
 
 .PHONY: lean/cache

@@ -191,45 +191,23 @@ lemma shift_mem_compress {V' : Finset (ArrVertex n k)} {a b : Fin n}
   unfold compressSet at hw ⊢
   rw [Finset.mem_image] at hw ⊢
   rcases hw with ⟨v, hv, heq⟩
-  simp only at heq
-  -- Case split: did v get shifted when building compressSet?
+  change (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) = w at heq
   by_cases hc : shiftVertex v a b ∉ V'
   · -- v was shifted: w = shiftVertex v a b
-    have heq' : (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) =
-        shiftVertex v a b := if_pos hc
-    rw [show (fun v_1 => let v_shifted := shiftVertex v_1 a b;
-        if v_shifted ∉ V' then v_shifted else v_1) v =
-        (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) from rfl] at heq
     rw [if_pos hc] at heq
-    -- w = shiftVertex v a b, so shiftVertex w a b = shiftVertex (shiftVertex v a b) a b = shiftVertex v a b = w
     use v
-    constructor
-    · exact hv
-    · show (fun v_1 => let v_shifted := shiftVertex v_1 a b;
-          if v_shifted ∉ V' then v_shifted else v_1) v = shiftVertex w a b
-      simp only
-      rw [if_pos hc]
-      rw [← heq, shiftVertex_idem]
+    refine ⟨hv, ?_⟩
+    change (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) = shiftVertex w a b
+    rw [if_pos hc, ← heq, shiftVertex_idem]
   · -- v was NOT shifted: w = v, and shiftVertex v a b ∈ V'
-    rw [show (fun v_1 => let v_shifted := shiftVertex v_1 a b;
-        if v_shifted ∉ V' then v_shifted else v_1) v =
-        (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) from rfl] at heq
     rw [if_neg hc] at heq
-    -- w = v, and shiftVertex v a b ∈ V'
     have h_in : shiftVertex v a b ∈ V' := by
       by_contra h_not; exact hc h_not
-    -- Use shiftVertex v a b as the preimage
     use shiftVertex v a b
-    constructor
-    · exact h_in
-    · show (fun v_1 => let v_shifted := shiftVertex v_1 a b;
-          if v_shifted ∉ V' then v_shifted else v_1) (shiftVertex v a b) = shiftVertex w a b
-      simp only
-      -- shiftVertex (shiftVertex v a b) a b = shiftVertex v a b by idem
-      rw [shiftVertex_idem]
-      -- Now: if shiftVertex v a b ∉ V' then ... else shiftVertex v a b
-      rw [if_neg hc]
-      rw [← heq]
+    refine ⟨h_in, ?_⟩
+    change (if shiftVertex (shiftVertex v a b) a b ∉ V'
+        then shiftVertex (shiftVertex v a b) a b else shiftVertex v a b) = shiftVertex w a b
+    rw [shiftVertex_idem, if_neg hc, ← heq]
 
 /-- Idempotence: compressing with the same symbols twice is a no-op.
     Since the compressed set is closed under shiftVertex (shift_mem_compress),
@@ -245,13 +223,10 @@ lemma compressSet_idempotent (V' : Finset (ArrVertex n k)) (a b : Fin n) :
     unfold compressSet at hw
     rw [Finset.mem_image] at hw
     rcases hw with ⟨v, hv, heq⟩
-    simp only at heq
-    -- The shift of v lands in the compressed set, so the guard is False
+    change (if shiftVertex v a b ∉ compressSet V' a b
+        then shiftVertex v a b else v) = w at heq
     have h_mem : shiftVertex v a b ∈ compressSet V' a b := shift_mem_compress hv
     have hc : ¬(shiftVertex v a b ∉ compressSet V' a b) := not_not.mpr h_mem
-    rw [show (fun v_1 => let v_shifted := shiftVertex v_1 a b;
-        if v_shifted ∉ compressSet V' a b then v_shifted else v_1) v =
-        (if shiftVertex v a b ∉ compressSet V' a b then shiftVertex v a b else v) from rfl] at heq
     rw [if_neg hc] at heq
     rw [← heq]; exact hv
   · -- Backward: w ∈ compress(V') → w ∈ compress(compress(V'))
@@ -259,14 +234,12 @@ lemma compressSet_idempotent (V' : Finset (ArrVertex n k)) (a b : Fin n) :
     unfold compressSet
     rw [Finset.mem_image]
     use w
-    constructor
-    · exact hw
-    · show (fun v_1 => let v_shifted := shiftVertex v_1 a b;
-          if v_shifted ∉ compressSet V' a b then v_shifted else v_1) w = w
-      simp only
-      have h_mem : shiftVertex w a b ∈ compressSet V' a b := shift_mem_compress hw
-      have hc : ¬(shiftVertex w a b ∉ compressSet V' a b) := not_not.mpr h_mem
-      rw [if_neg hc]
+    refine ⟨hw, ?_⟩
+    change (if shiftVertex w a b ∉ compressSet V' a b
+        then shiftVertex w a b else w) = w
+    have h_mem : shiftVertex w a b ∈ compressSet V' a b := shift_mem_compress hw
+    have hc : ¬(shiftVertex w a b ∉ compressSet V' a b) := not_not.mpr h_mem
+    rw [if_neg hc]
 
 -- ============================================================================
 -- Section 4: The Extremal Squeeze
