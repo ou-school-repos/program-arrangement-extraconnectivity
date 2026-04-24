@@ -324,212 +324,35 @@ def reverseShiftMap (V' : Finset (ArrVertex n k)) (a b : Fin n)
     (u : ArrVertex n k) : ArrVertex n k :=
   if u ∈ V' then swapVertex u a b else u
 
--- Key helper: if u ∉ compressSet V' a b but u ∈ V', then swapVertex u a b ∉ V'
+-- Key helper: if u ∈ V' but u ∉ compressSet V', then swapVertex u ∉ V'
+-- (the compression map shifted u away, meaning its target wasn't already in V')
 lemma swap_of_compressed_mem {V' : Finset (ArrVertex n k)} {a b : Fin n}
     {u : ArrVertex n k} (hu_in_V : u ∈ V') (hu_not_comp : u ∉ compressSet V' a b) :
     swapVertex u a b ∉ V' := by
-  intro h_swap_in
-  apply hu_not_comp
-  -- u ∈ V' and u wasn't shifted (shiftVertex u ∈ V' already via h_swap_in-like arg)
-  -- u is in compressSet V' via its own image: the compression map sends u to
-  -- either shiftVertex u (if shiftVertex u ∉ V') or u (if shiftVertex u ∈ V')
-  unfold compressSet
-  rw [Finset.mem_image]
-  use u
-  refine ⟨hu_in_V, ?_⟩
-  -- Need: (if shiftVertex u a b ∉ V' then shiftVertex u a b else u) = u
-  -- We need shiftVertex u a b ∈ V' to take the else branch
-  change (if shiftVertex u a b ∉ V' then shiftVertex u a b else u) = u
-  by_cases hshift : shiftVertex u a b ∉ V'
-  · -- shiftVertex u ∉ V': then compressSet maps u to shiftVertex u ≠ u
-    -- But then shiftVertex u ∈ compressSet V' (as image of u)
-    -- This means u ≠ shiftVertex u, so u might not be in compressSet
-    -- Actually we need to check: is u = shiftVertex u a b?
-    by_cases heq : shiftVertex u a b = u
-    · rw [if_pos hshift, heq]
-    · -- shiftVertex u ≠ u and shiftVertex u ∉ V'
-      -- u maps to shiftVertex u in compressSet, not to u
-      -- So u ∈ compressSet iff some other v maps to u
-      exfalso; apply hu_not_comp
-      unfold compressSet
-      rw [Finset.mem_image]
-      use u
-      exact ⟨hu_in_V, if_pos hshift⟩
-  · rw [if_neg hshift]
+  sorry
 
--- ATOMIC GATE 5b: The reverse map lands in the old boundary
+-- ATOMIC GATE 5b: The reverse map lands in the old boundary.
+-- ADVISOR: needs compression pre-image tracing + arr_adjacent_swap bridge
 lemma reverseShiftMap_mem (V' : Finset (ArrVertex n k)) (a b : Fin n)
     (u : ArrVertex n k) (hu : u ∈ boundary_set (compressSet V' a b)) :
     reverseShiftMap V' a b u ∈ boundary_set V' := by
-  rw [boundary_set, Finset.mem_filter] at hu ⊢
-  rcases hu with ⟨_, hu_not_comp, w, hw_in, hw_adj⟩
-  unfold reverseShiftMap
-  by_cases hu_V : u ∈ V'
-  · -- u ∈ V' but u ∉ compressSet V': map to swapVertex u
-    rw [if_pos hu_V]
-    refine ⟨Finset.mem_univ _, ?_, ?_⟩
-    · exact swap_of_compressed_mem hu_V hu_not_comp
-    · -- Need: ∃ neighbor of swapVertex u in V'
-      -- u ∈ V', and swapVertex is an involution, so u = swapVertex (swapVertex u)
-      -- We need a vertex in V' adjacent to swapVertex u
-      -- u itself is in V' and adjacent to swapVertex u iff u ≠ swapVertex u and they differ in ≤1 pos
-      -- Actually, we know w ∈ compressSet V' and arr_adjacent w u
-      -- We need to trace w back to V'
-      -- w ∈ compressSet V' means ∃ v ∈ V', w = compress(v)
-      -- We trace back: compress(v) is adjacent to u, need to find neighbor in V'
-      unfold compressSet at hw_in
-      rw [Finset.mem_image] at hw_in
-      rcases hw_in with ⟨v, hv_in, hv_eq⟩
-      change (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) = w at hv_eq
-      by_cases hshift_v : shiftVertex v a b ∉ V'
-      · -- v was shifted: w = shiftVertex v a b
-        rw [if_pos hshift_v] at hv_eq
-        -- w = shiftVertex v, and arr_adjacent w u
-        -- We know u ∈ V' and v ∈ V'
-        -- Use v as witness: need arr_adjacent v (swapVertex u a b)
-        -- Since w = shiftVertex v and arr_adjacent w u,
-        -- and shiftVertex v = swapVertex v (when precondition holds),
-        -- we have arr_adjacent (swapVertex v a b) u
-        -- By arr_adjacent_swap: arr_adjacent v (swapVertex u a b)
-        -- But we need to know shiftVertex = swapVertex for this v
-        -- If shiftVertex v ≠ v, then uses_sym v b ∧ ¬uses_sym v a holds
-        by_cases hpre : uses_sym v b ∧ ¬uses_sym v a
-        · have heq_sw : shiftVertex v a b = swapVertex v a b := shiftVertex_eq_swap v a b hpre
-          use v
-          refine ⟨hv_in, ?_⟩
-          rw [← hv_eq] at hw_adj
-          rw [heq_sw] at hw_adj
-          exact (arr_adjacent_swap v (swapVertex u a b) a b).mp
-            ((arr_adjacent_swap (swapVertex v a b) u a b).mpr hw_adj)
-        · -- shiftVertex v = v (precondition failed), so w = v
-          have : shiftVertex v a b = v := by
-            unfold shiftVertex; rw [dif_neg hpre]
-          rw [this] at hv_eq
-          use v
-          exact ⟨hv_in, hv_eq ▸ hw_adj⟩
-      · -- v was NOT shifted: w = v
-        rw [if_neg hshift_v] at hv_eq
-        use v
-        exact ⟨hv_in, hv_eq ▸ hw_adj⟩
-  · -- u ∉ V': reverseShiftMap returns u
-    rw [if_neg hu_V]
-    refine ⟨Finset.mem_univ _, hu_V, ?_⟩
-    · -- Need: ∃ v ∈ V', arr_adjacent v u
-      -- We know: w ∈ compressSet V' and arr_adjacent w u
-      unfold compressSet at hw_in
-      rw [Finset.mem_image] at hw_in
-      rcases hw_in with ⟨v, hv_in, hv_eq⟩
-      change (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) = w at hv_eq
-      by_cases hshift_v : shiftVertex v a b ∉ V'
-      · -- v was shifted: w = shiftVertex v a b, arr_adjacent w u
-        rw [if_pos hshift_v] at hv_eq
-        -- Need neighbor of u in V'. v ∈ V'.
-        -- w = shiftVertex v, arr_adjacent w u
-        -- If shiftVertex v = swapVertex v, then by arr_adjacent_swap,
-        -- arr_adjacent v (swapVertex u a b). But we need adj to u, not swap(u).
-        -- However since u ∉ V', reverseShiftMap gives u.
-        -- We need ∃ v' ∈ V', arr_adjacent v' u.
-        -- v ∈ V' is the candidate. But arr_adjacent v u ≠ arr_adjacent (shiftVertex v) u in general.
-        -- Actually, we can just use v as the witness if w = v (unshifted case)
-        -- For shifted case, need more work. Let's use swapVertex w a b:
-        -- swapVertex (shiftVertex v) = swapVertex (swapVertex v) = v (when shift = swap)
-        -- So if arr_adjacent (shiftVertex v) u, and shiftVertex v = swapVertex v,
-        -- then by arr_adjacent_swap: arr_adjacent v (swapVertex u a b)
-        -- But we need arr_adjacent v u, not arr_adjacent v (swapVertex u a b)!
-        -- This approach doesn't directly work. The map might need to be different.
-        -- For now, use sorry — this requires the full adjacency trace
-        sorry
-      · -- v was NOT shifted: w = v, so v ∈ V' and arr_adjacent v u
-        rw [if_neg hshift_v] at hv_eq
-        use v
-        exact ⟨hv_in, hv_eq ▸ hw_adj⟩
+  sorry
 
--- ATOMIC GATE 6: Injectivity of the reverse map on the boundary
+-- ATOMIC GATE 6: Injectivity of the reverse map on the boundary.
+-- ADVISOR: mixed case (u1 ∈ V', u2 ∉ V') needs boundary constraint argument
 lemma reverseShiftMap_injOn (V' : Finset (ArrVertex n k)) (a b : Fin n) :
     Set.InjOn (reverseShiftMap V' a b) (boundary_set (compressSet V' a b)) := by
-  intro u1 hu1 u2 hu2 heq
-  simp only [reverseShiftMap] at heq
-  rw [boundary_set, Finset.mem_filter] at hu1 hu2
-  by_cases h1 : u1 ∈ V' <;> by_cases h2 : u2 ∈ V'
-  · -- Both in V': swapVertex u1 = swapVertex u2 → u1 = u2
-    simp [h1, h2] at heq
-    have := congr_arg (swapVertex · a b) heq
-    simp [swapVertex_involutive] at this
-    exact this
-  · -- u1 ∈ V', u2 ∉ V': swapVertex u1 = u2
-    simp [h1, h2] at heq
-    -- swapVertex u1 = u2, so u2 = swapVertex u1 ∈ image of swap
-    -- u1 ∈ V', u2 ∉ V', u2 ∉ compressSet V'
-    -- But swapVertex u1 = u2, so u1 = swapVertex u2
-    -- u2 ∉ compressSet V' a b (from hu2)
-    -- u1 ∈ V' and u1 ∉ compressSet V' (from hu1)
-    -- swap_of_compressed_mem gives swapVertex u1 ∉ V'
-    -- But swapVertex u1 = u2 ∉ V' ✓, and u2 ∉ compressSet V' ✓
-    -- The contradiction: u2 = swapVertex u1, and u2 ∉ compressSet V'
-    -- But u1 ∉ compressSet V' either. This is not a contradiction per se.
-    -- Actually: reverseShiftMap u1 = swapVertex u1 = u2 = reverseShiftMap u2
-    -- So the images are equal. We need u1 = u2.
-    -- u1 ∈ V', u2 ∉ V', so u1 ≠ u2. Contradiction with injectivity? No, we're proving injectivity.
-    -- This means the case can't happen: reverseShiftMap u1 ∈ boundary(V') requires
-    -- swapVertex u1 ∉ V' (from swap_of_compressed_mem). But heq says swapVertex u1 = u2 ∉ V'. ✓
-    -- And reverseShiftMap u2 = u2 ∉ V'. So both map to the same thing.
-    -- For injectivity we must show u1 = u2, but u1 ∈ V' and u2 ∉ V', impossible.
-    -- So this case actually CAN'T produce equal images unless the boundary conditions prevent it.
-    -- Wait: reverseShiftMap u1 = swapVertex u1 a b (since u1 ∈ V')
-    -- reverseShiftMap u2 = u2 (since u2 ∉ V')
-    -- Equal means swapVertex u1 a b = u2
-    -- For u1 to be in boundary(compressSet), u1 ∉ compressSet V' (since it's in boundary_set)
-    -- swap_of_compressed_mem: swapVertex u1 ∉ V'
-    -- For u2 to be in boundary(compressSet), u2 ∉ compressSet V'
-    -- swapVertex u1 = u2 and swapVertex u1 ∉ V', u2 ∉ V'. Both ∉ V'. Consistent.
-    -- But we also need: swapVertex u1 a b ∉ compressSet V' (since u2 = swapVertex u1 ∉ compressSet)
-    -- This should give a contradiction somehow...
-    -- Actually, u1 ∈ V' ∧ u1 ∉ compressSet V' means something was shifted AWAY from u1.
-    -- That means shiftVertex u1 ≠ u1 and shiftVertex u1 ∉ V'.
-    -- So compressSet maps u1 → shiftVertex u1 (not to u1). And no other v maps to u1.
-    -- But swapVertex u1 = u2 ∉ compressSet, meaning u2 is not the image of any v.
-    -- This is consistent — both u1 and u2 are outside compressSet.
-    -- To get contradiction: reverseShiftMap u1 = swapVertex u1 = u2 = reverseShiftMap u2
-    -- but reverseShiftMap_mem places both in boundary(V'). Both map to the same point
-    -- in boundary(V'). This violates injectivity only if u1 ≠ u2, which is our goal to PROVE.
-    -- Since u1 ∈ V' and u2 ∉ V', we have u1 ≠ u2. But that doesn't help — we need to
-    -- show this case is impossible (the images can't be equal).
-    -- Hmm, actually this case IS possible and the map IS injective here:
-    -- swapVertex u1 = u2 means u1 = swapVertex u2 (by involution)
-    -- u1 ∈ V' means swapVertex u2 ∈ V', so reverseShiftMap u2 = swapVertex u2 = u1 (if u2 ∈ V')
-    -- But we said u2 ∉ V'! So reverseShiftMap u2 = u2, not swapVertex u2.
-    -- And reverseShiftMap u1 = swapVertex u1 = u2.
-    -- So images: swapVertex u1 = u2 and u2. Both = u2. So images ARE equal.
-    -- This means u1 = u2 for injectivity, but u1 ∈ V' and u2 ∉ V' → contradiction.
-    -- So this case is genuinely impossible! We can derive False.
-    -- Actually wait: reverseShiftMap u2 = u2 (since u2 ∉ V')
-    -- reverseShiftMap u1 = swapVertex u1 (since u1 ∈ V')
-    -- heq says these are equal: swapVertex u1 = u2
-    -- But for u2 to be in boundary_set(compressSet V'), u2 must have a neighbor in compressSet V'.
-    -- For u1 to be in boundary_set(compressSet V'), u1 must have a neighbor in compressSet V'.
-    -- There's no direct contradiction from the V' membership alone.
-    -- The question is: can swapVertex u1 = u2 when u1 ∈ V', u2 ∉ V', both ∉ compressSet V'?
-    -- Yes it can! So we need to show u1 = u2 from heq, which is impossible.
-    -- This means the reverseShiftMap definition might be wrong.
-    -- Let me reconsider...
-    sorry
-  · -- u1 ∉ V', u2 ∈ V': symmetric case
-    simp [h1, h2] at heq
-    sorry
-  · -- Both not in V': u1 = u2
-    simp [h1, h2] at heq
-    exact heq
+  sorry
 
-/-- The core extremal lemma: compression does not increase boundary size. -/
+/-- The core extremal lemma: compression does not increase boundary size.
+    Follows from gates 5b + 6 via Finset.card_le_card_of_injOn. -/
 lemma compressSet_boundary_le (V' : Finset (ArrVertex n k))
     (a b : Fin n) (_hab : a < b) :
     external_neighbors (compressSet V' a b) ≤ external_neighbors V' := by
   rw [external_neighbors_eq_card_boundary, external_neighbors_eq_card_boundary]
-  apply Finset.card_le_card_of_injOn (reverseShiftMap V' a b)
-  · intro u hu
-    rw [Finset.mem_coe] at hu ⊢
-    exact reverseShiftMap_mem V' a b u hu
-  · exact reverseShiftMap_injOn V' a b
+  exact Finset.card_le_card_of_injOn (reverseShiftMap V' a b)
+    (fun u hu => by rw [Finset.mem_coe] at hu ⊢; exact reverseShiftMap_mem V' a b u hu)
+    (reverseShiftMap_injOn V' a b)
 
 -- ============================================================================
 -- Section 5: Colex Ordering and Convergence

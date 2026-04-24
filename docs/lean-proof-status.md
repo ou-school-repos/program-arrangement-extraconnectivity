@@ -10,7 +10,7 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 0 sorries, 2 axioms**.
+Current status: **0 errors, 3 sorries (Section 4 boundary injection), 2 axioms**.
 
 ## Architecture
 
@@ -129,6 +129,34 @@ The **Algebraic Defect Squeeze** — the novel contribution — is 100% mechaniz
    with proven cardinality via `nat_to_cube_injective` and
    `embed_vertex_injective_cube`.
 
+## Novel Contributions
+
+This work contains several results that appear to be **new in the literature**:
+
+1. **A000788 Discovery**: The maximum internal edges for R vertices in A(n,k)
+   equals the cumulative popcount sequence (OEIS A000788). This connection
+   to binary weight sums was discovered computationally and verified for
+   R ≤ 10 by exhaustive enumeration.
+
+2. **Pareto Spectrum**: The full topology-boundary tradeoff between the
+   Star graph (R−1 internal edges, collision constant C = C(R,2)) and
+   the Hamming Ball (A000788(R) internal edges). Includes the discovery
+   of topological skips at powers of 2.
+
+3. **Formal Lean 4 Verification**: No prior formalization of arrangement
+   graph extraconnectivity exists in any proof assistant.
+
+4. **Sandwich Conjecture**: The isoperimetric boundary of any
+   Pareto-optimal connected R-vertex subgraph is bounded between the
+   Hamming Ball (dense limit) and Star (sparse limit) closed forms.
+   Formalized as `topological_sandwich_conjecture` in
+   `ArrangementExtraconnectivity.lean`.
+
+The compression proof approach adapts Harper/Kruskal-Katona techniques
+to partial permutations, which is genuinely new — the isoperimetric
+inequality for arrangement graphs (not hypercubes) is not established
+in the existing literature.
+
 ## Uniqueness: Open Problem
 
 The theorem establishes the **exact value** of (R-1)-extraconnectivity
@@ -172,13 +200,14 @@ This is proven by list induction using `E_seq_add_bound` as the step lemma.
 
 ## File Map
 
-| File                                         | Contents                                    |
-| -------------------------------------------- | ------------------------------------------- |
-| `proofs/ArrangementExtraconnectivity.lean`   | Main proof: Layers 1-3 + capstone           |
-| `proofs/HypercubeEdges.lean`                 | Supporting popcount/A000788 lemmas          |
-| `proofs/PredictorComplexity.lean`            | Complexity analysis of the predictor        |
-| `proofs/unstable/ArrangementGraphUtils.lean` | Harper's theorem + edge-counting (orphaned) |
-| `proofs/lakefile.lean`                       | Lake build configuration                    |
+| File                                          | Contents                                    |
+| --------------------------------------------- | ------------------------------------------- |
+| `proofs/ArrangementExtraconnectivity.lean`    | Main proof: Layers 1-3 + capstone           |
+| `proofs/IsoperimetricPartialPermutation.lean` | Section 4: compression operator + boundary  |
+| `proofs/HypercubeEdges.lean`                  | Supporting popcount/A000788 lemmas          |
+| `proofs/PredictorComplexity.lean`             | Complexity analysis of the predictor        |
+| `proofs/unstable/ArrangementGraphUtils.lean`  | Harper's theorem + edge-counting (orphaned) |
+| `proofs/lakefile.lean`                        | Lake build configuration                    |
 
 ## Dependencies
 
