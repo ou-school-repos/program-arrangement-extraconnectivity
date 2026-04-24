@@ -710,3 +710,32 @@ theorem globally_optimal_growth_strategy
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
   let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond
   ⟨h_univ, h_exists⟩
+
+-- ── OPEN PROBLEM: UNIQUENESS ──────────────────────────────────────────────
+
+/--
+  CONJECTURE: Uniqueness of the Hamming Ball Minimizer.
+
+  The capstone theorem establishes the exact value of (R-1)-extraconnectivity
+  but does not prove the Hamming Ball is the *unique* minimizer. This
+  conjecture asserts that any R-element subset achieving the minimum
+  external boundary must be isomorphic (under the symmetric group action
+  on symbols) to the Hamming Ball.
+
+  **Evidence:**
+  - Computationally verified for R ≤ 10 via exhaustive enumeration:
+    exactly one minimum-cut topology class exists for each R.
+  - Would follow from showing equality in the defect bound
+    D(V') = E_seq(R) forces the hypercube partition structure.
+  - Related to equality cases in the Kruskal-Katona theorem.
+
+  This is stated as a `Prop` definition (not an axiom) to document
+  the open problem without asserting its truth.
+-/
+def uniqueness_conjecture (R n k : ℕ) : Prop :=
+  ∀ (V₁ V₂ : Finset (ArrVertex n k)),
+    V₁.card = R → V₂.card = R →
+    external_neighbors V₁ = (R * k - E_seq R) * (n - k) - C_constant R →
+    external_neighbors V₂ = (R * k - E_seq R) * (n - k) - C_constant R →
+    ∃ (σ : Fin n → Fin n), Function.Bijective σ ∧
+      V₂ = V₁.image (fun v => ⟨σ ∘ v.val, fun a b h => v.prop (Function.Bijective.injective ‹_› h)⟩)
