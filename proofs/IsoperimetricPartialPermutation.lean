@@ -325,11 +325,29 @@ def reverseShiftMap (V' : Finset (ArrVertex n k)) (a b : Fin n)
   if u ∈ V' then swapVertex u a b else u
 
 -- Key helper: if u ∈ V' but u ∉ compressSet V', then swapVertex u ∉ V'
--- (the compression map shifted u away, meaning its target wasn't already in V')
+-- Proof: the shift precondition must hold (otherwise compress(u)=u),
+-- so shiftVertex u = swapVertex u, and shiftVertex u ∉ V'.
 lemma swap_of_compressed_mem {V' : Finset (ArrVertex n k)} {a b : Fin n}
     {u : ArrVertex n k} (hu_in_V : u ∈ V') (hu_not_comp : u ∉ compressSet V' a b) :
     swapVertex u a b ∉ V' := by
-  sorry
+  -- Helper: show u ∈ compressSet from a proof that compress(u) = u
+  have mem_comp : (∀ h : shiftVertex u a b ∉ V', False) → u ∈ compressSet V' a b := by
+    intro habs
+    unfold compressSet
+    rw [Finset.mem_image]
+    exact ⟨u, hu_in_V, if_neg habs⟩
+  -- Step 1: The shift precondition must hold
+  have hpre : uses_sym u b ∧ ¬uses_sym u a := by
+    by_contra hc
+    exact hu_not_comp (mem_comp (by
+      intro hshift_not
+      have hid : shiftVertex u a b = u := by unfold shiftVertex; exact dif_neg hc
+      rw [hid] at hshift_not; exact hshift_not hu_in_V))
+  -- Step 2: shiftVertex u ∉ V' (otherwise compress(u) = u ∈ compressSet)
+  have hshift_not : shiftVertex u a b ∉ V' := by
+    intro h; exact hu_not_comp (mem_comp (fun habs => absurd h habs))
+  -- Step 3: shiftVertex = swapVertex under precondition, so swapVertex u ∉ V'
+  rwa [← shiftVertex_eq_swap u a b hpre]
 
 -- ATOMIC GATE 5b: The reverse map lands in the old boundary.
 -- ADVISOR: needs compression pre-image tracing + arr_adjacent_swap bridge
