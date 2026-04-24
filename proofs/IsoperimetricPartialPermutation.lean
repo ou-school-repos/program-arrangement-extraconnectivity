@@ -151,12 +151,15 @@ lemma compressSet_card (V' : Finset (ArrVertex n k)) (a b : Fin n) :
 -- the dif_neg branch fires and the vertex is unchanged.
 lemma shiftVertex_idem (v : ArrVertex n k) (a b : Fin n) :
     shiftVertex (shiftVertex v a b) a b = shiftVertex v a b := by
+  -- Helper: shiftVertex is identity when precondition fails
+  have shift_id : ∀ w : ArrVertex n k, ¬(uses_sym w b ∧ ¬uses_sym w a) →
+      shiftVertex w a b = w := by
+    intro w hw; unfold shiftVertex; rw [dif_neg hw]
   by_cases h1 : uses_sym v b ∧ ¬uses_sym v a
   · -- v was shifted: shiftVertex v a b has b→a, so no b's remain
     have eq1 : shiftVertex v a b =
         ⟨fun p => if v.val p = b then a else v.val p, by
-          intro p1 p2 heq
-          simp only at heq
+          intro p1 p2 heq; simp only at heq
           split_ifs at heq with h1a h1b
           · exact v.prop (h1a.trans h1b.symm)
           · exact False.elim (h1.2 ⟨p2, heq.symm⟩)
@@ -170,16 +173,15 @@ lemma shiftVertex_idem (v : ArrVertex n k) (a b : Fin n) :
       dsimp only at hp
       by_cases h3 : v.val p = b
       · rw [if_pos h3] at hp
-        -- hp : a = b, but v uses b and not a — contradiction if a = b
-        exact h1.2 ⟨p, hp.symm⟩
+        -- hp : a = b, h3 : v.val p = b → v.val p = a
+        exact h1.2 ⟨p, h3.trans hp.symm⟩
       · rw [if_neg h3] at hp
         exact h3 hp
-    unfold shiftVertex
-    rw [dif_neg h2]
+    exact shift_id _ h2
   · -- v was not shifted: shiftVertex v a b = v, so second shift = first
     have eq1 : shiftVertex v a b = v := by
       unfold shiftVertex; rw [dif_neg h1]
-    rw [eq1]
+    rw [eq1]; exact eq1
 
 -- Helper 2: The compressed set is closed under shiftVertex.
 -- For any w ∈ compressSet V' a b, shiftVertex w a b ∈ compressSet V' a b.
