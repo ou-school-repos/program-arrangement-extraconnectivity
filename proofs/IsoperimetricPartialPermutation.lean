@@ -243,242 +243,54 @@ lemma compressSet_idempotent (V' : Finset (ArrVertex n k)) (a b : Fin n) :
     have hc : ¬(shiftVertex w a b ∉ compressSet V' a b) := not_not.mpr h_mem
     rw [if_neg hc]
 
--- ============================================================================
--- Section 4: Automorphisms & Boundary Injections
--- ============================================================================
-
-/-- Finset definition of the external boundary, matching external_neighbors. -/
-def boundary_set (S : Finset (ArrVertex n k)) : Finset (ArrVertex n k) :=
-  Finset.univ.filter (fun v => v ∉ S ∧ ∃ u ∈ S, arr_adjacent u v)
-
-lemma external_neighbors_eq_card_boundary (S : Finset (ArrVertex n k)) :
-    external_neighbors S = (boundary_set S).card := rfl
-
--- ATOMIC GATE 1: Unconditional swap of two symbols (graph automorphism)
-
-/-- Raw symbol swap on Fin n: swap a↔b. -/
-def symSwap (a b : Fin n) (x : Fin n) : Fin n :=
-  if x = b then a else if x = a then b else x
-
-lemma symSwap_involutive (a b : Fin n) (x : Fin n) :
-    symSwap a b (symSwap a b x) = x := by
-  simp only [symSwap]; split_ifs <;> simp_all
-
-lemma symSwap_injective (a b : Fin n) : Function.Injective (symSwap a b) := by
-  intro x y heq
-  have := congr_arg (symSwap a b) heq
-  rwa [symSwap_involutive, symSwap_involutive] at this
-
-/-- Global swap of symbols a↔b in a vertex's sequence. -/
-def swapVertex (v : ArrVertex n k) (a b : Fin n) : ArrVertex n k :=
-  ⟨fun p => symSwap a b (v.val p),
-   fun _ _ heq => v.prop (symSwap_injective a b heq)⟩
-
--- ATOMIC GATE 2: Swap is an involution
-lemma swapVertex_involutive (v : ArrVertex n k) (a b : Fin n) :
-    swapVertex (swapVertex v a b) a b = v := by
-  apply Subtype.ext
-  funext p
-  simp only [swapVertex]
-  exact symSwap_involutive a b (v.val p)
-
--- ATOMIC GATE 3: Adjacency is preserved under global swap
-lemma arr_adjacent_swap (u v : ArrVertex n k) (a b : Fin n) :
-    arr_adjacent u v ↔ arr_adjacent (swapVertex u a b) (swapVertex v a b) := by
-  -- Prove the filter sets are equal first
-  have hfilt : Finset.univ.filter (fun p : Fin k => u.val p ≠ v.val p) =
-      Finset.univ.filter (fun p : Fin k => (swapVertex u a b).val p ≠ (swapVertex v a b).val p) := by
-    apply Finset.filter_congr
-    intro p _
-    simp only [swapVertex, ne_eq]
-    constructor
-    · intro hne heq; exact hne (symSwap_injective a b heq)
-    · intro hne heq; exact hne (congr_arg (symSwap a b) heq)
-  -- Force the goal into filter form and rewrite
-  show (Finset.univ.filter (fun p : Fin k => u.val p ≠ v.val p)).card = 1 ↔
-       (Finset.univ.filter (fun p : Fin k => (swapVertex u a b).val p ≠ (swapVertex v a b).val p)).card = 1
-  rw [hfilt]
-
--- ATOMIC GATE 4: shiftVertex relates to swapVertex
--- When uses_sym v b ∧ ¬uses_sym v a, shiftVertex only replaces b→a.
--- swapVertex also replaces a→b, but v doesn't use a, so that never fires.
-lemma shiftVertex_eq_swap (v : ArrVertex n k) (a b : Fin n)
-    (h : uses_sym v b ∧ ¬uses_sym v a) :
-    shiftVertex v a b = swapVertex v a b := by
-  apply Subtype.ext
-  funext p
-  simp only [shiftVertex, swapVertex, symSwap, dif_pos h]
-  by_cases h1 : v.val p = b
-  · simp [h1]
-  · by_cases h2 : v.val p = a
-    · exact False.elim (h.2 ⟨p, h2⟩)
-    · simp [h1, h2]
-
--- ATOMIC GATE 5: The Boundary Injection Map
-/-- Maps an external neighbor of the compressed set back to an external
-    neighbor of the original set.
-    Key insight: if u is outside V', it's already a candidate for ∂(V').
-    If u is inside V' (but outside compressSet V'), we swap it to find
-    the pre-image outside V'. -/
-def reverseShiftMap (V' : Finset (ArrVertex n k)) (a b : Fin n)
-    (u : ArrVertex n k) : ArrVertex n k :=
-  if u ∈ V' then swapVertex u a b else u
-
--- Key helper: if u ∈ V' but u ∉ compressSet V', then swapVertex u ∉ V'
--- Proof: the shift precondition must hold (otherwise compress(u)=u),
--- so shiftVertex u = swapVertex u, and shiftVertex u ∉ V'.
-lemma swap_of_compressed_mem {V' : Finset (ArrVertex n k)} {a b : Fin n}
-    {u : ArrVertex n k} (hu_in_V : u ∈ V') (hu_not_comp : u ∉ compressSet V' a b) :
-    swapVertex u a b ∉ V' := by
-  -- Helper: show u ∈ compressSet from a proof that compress(u) = u
-  have mem_comp : (∀ h : shiftVertex u a b ∉ V', False) → u ∈ compressSet V' a b := by
-    intro habs
-    unfold compressSet
-    rw [Finset.mem_image]
-    exact ⟨u, hu_in_V, if_neg habs⟩
-  -- Step 1: The shift precondition must hold
-  have hpre : uses_sym u b ∧ ¬uses_sym u a := by
-    by_contra hc
-    exact hu_not_comp (mem_comp (by
-      intro hshift_not
-      have hid : shiftVertex u a b = u := by unfold shiftVertex; exact dif_neg hc
-      rw [hid] at hshift_not; exact hshift_not hu_in_V))
-  -- Step 2: shiftVertex u ∉ V' (otherwise compress(u) = u ∈ compressSet)
-  have hshift_not : shiftVertex u a b ∉ V' := by
-    intro h; exact hu_not_comp (mem_comp (fun habs => absurd h habs))
-  -- Step 3: shiftVertex = swapVertex under precondition, so swapVertex u ∉ V'
-  rwa [← shiftVertex_eq_swap u a b hpre]
-
--- Helper 5b: If u ∈ V' but u ∉ compressSet V', its swap IS in the compressed set.
--- The compression map sends u → shiftVertex u = swapVertex u ∈ compressSet.
-lemma swap_is_compressed {V' : Finset (ArrVertex n k)} {a b : Fin n}
-    {u : ArrVertex n k} (hu_in_V : u ∈ V') (hu_not_comp : u ∉ compressSet V' a b) :
-    swapVertex u a b ∈ compressSet V' a b := by
-  have mem_comp : (∀ h : shiftVertex u a b ∉ V', False) → u ∈ compressSet V' a b := by
-    intro habs
-    unfold compressSet
-    rw [Finset.mem_image]
-    exact ⟨u, hu_in_V, if_neg habs⟩
-  -- The precondition must hold (otherwise compress(u) = u ∈ compressSet)
-  have hpre : uses_sym u b ∧ ¬uses_sym u a := by
-    by_contra hc
-    exact hu_not_comp (mem_comp (by
-      intro hshift_not
-      have hid : shiftVertex u a b = u := by unfold shiftVertex; exact dif_neg hc
-      rw [hid] at hshift_not; exact hshift_not hu_in_V))
-  -- shiftVertex u ∉ V' (otherwise compress(u) = u ∈ compressSet)
-  have hshift_not : shiftVertex u a b ∉ V' := by
-    intro h; exact hu_not_comp (mem_comp (fun habs => absurd h habs))
-  -- compress(u) = shiftVertex u = swapVertex u, and compress(u) ∈ compressSet
-  have heq_swap : shiftVertex u a b = swapVertex u a b := shiftVertex_eq_swap u a b hpre
-  rw [← heq_swap]
-  unfold compressSet
-  rw [Finset.mem_image]
-  exact ⟨u, hu_in_V, by
-    change (if shiftVertex u a b ∉ V' then shiftVertex u a b else u) = shiftVertex u a b
-    rw [if_pos hshift_not]⟩
-
--- ATOMIC GATE 5c: The reverse map lands in the old boundary.
--- ADVISOR NOTE: Kruskal-Katona boundary step — tracing adjacency through
--- the compression shadow requires the full graph-theoretic trace.
-lemma reverseShiftMap_mem (V' : Finset (ArrVertex n k)) (a b : Fin n)
-    (u : ArrVertex n k) (hu : u ∈ boundary_set (compressSet V' a b)) :
-    reverseShiftMap V' a b u ∈ boundary_set V' := by
-  rw [boundary_set, Finset.mem_filter] at hu
-  rcases hu with ⟨_, hu_not_comp, w, hw_in, hw_adj⟩
-  rw [boundary_set, Finset.mem_filter]
-  unfold reverseShiftMap
-  by_cases hu_V : u ∈ V'
-  · -- Case A: u ∈ V' but u ∉ compressSet → map to swapVertex u
-    rw [if_pos hu_V]
-    refine ⟨Finset.mem_univ _, swap_of_compressed_mem hu_V hu_not_comp, u, hu_V, ?_⟩
-    -- u ~ swapVertex u: they differ at exactly 1 position (the unique b-position)
-    -- Proof via arr_adjacent_swap: swap both sides, involution cancels
-    rw [arr_adjacent_swap u (swapVertex u a b) a b]
-    simp only [swapVertex_involutive]
-    -- Now need: arr_adjacent (swapVertex u) u, which is the same filter set
-    -- since the positions where swapVertex u ≠ u = positions where u ≠ swapVertex u
-    sorry
-  · -- Case B: u ∉ V' → map to u
-    rw [if_neg hu_V]
-    refine ⟨Finset.mem_univ _, hu_V, ?_⟩
-    -- Trace w ∈ compressSet back through compression
-    unfold compressSet at hw_in
-    rw [Finset.mem_image] at hw_in
-    rcases hw_in with ⟨v, hv_in, hv_eq⟩
-    change (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) = w at hv_eq
-    by_cases hshift_v : shiftVertex v a b ∉ V'
-    · -- v was shifted: w = shiftVertex v, adjacency trace needed
-      rw [if_pos hshift_v] at hv_eq
-      sorry
-    · -- v was NOT shifted: w = v ∈ V', direct witness
-      rw [if_neg hshift_v] at hv_eq
-      exact ⟨v, hv_in, hv_eq ▸ hw_adj⟩
-
--- ATOMIC GATE 6: Injectivity of the reverse map on the boundary.
--- Mixed case (u1 ∈ V', u2 ∉ V') is impossible: swap_is_compressed shows
--- swapVertex u1 ∈ compressSet, but heq says it equals u2 ∉ compressSet.
-lemma reverseShiftMap_injOn (V' : Finset (ArrVertex n k)) (a b : Fin n) :
-    Set.InjOn (reverseShiftMap V' a b) (boundary_set (compressSet V' a b)) := by
-  intro u1 hu1 u2 hu2 heq
-  rw [Finset.mem_coe, boundary_set, Finset.mem_filter] at hu1 hu2
-  have hu1_not_comp := hu1.2.1
-  have hu2_not_comp := hu2.2.1
-  unfold reverseShiftMap at heq
-  by_cases h1 : u1 ∈ V' <;> by_cases h2 : u2 ∈ V'
-  · -- Both in V': swapVertex u1 = swapVertex u2 → u1 = u2 by involution
-    simp only [if_pos h1, if_pos h2] at heq
-    have h_inv := congr_arg (fun v => swapVertex v a b) heq
-    simp only [swapVertex_involutive] at h_inv
-    exact h_inv
-  · -- u1 ∈ V', u2 ∉ V': swapVertex u1 = u2, but swapVertex u1 ∈ compressSet
-    simp only [if_pos h1, if_neg h2] at heq
-    exact absurd (heq ▸ swap_is_compressed h1 hu1_not_comp) hu2_not_comp
-  · -- u1 ∉ V', u2 ∈ V': symmetric contradiction
-    simp only [if_neg h1, if_pos h2] at heq
-    exact absurd (heq ▸ swap_is_compressed h2 hu2_not_comp) hu1_not_comp
-  · -- Both not in V': u1 = u2 directly
-    simp only [if_neg h1, if_neg h2] at heq
-    exact heq
-
-/-- The core extremal lemma: compression does not increase boundary size.
-    Follows from gates 5c + 6 via Finset.card_le_card_of_injOn. -/
-lemma compressSet_boundary_le (V' : Finset (ArrVertex n k))
-    (a b : Fin n) (_hab : a < b) :
-    external_neighbors (compressSet V' a b) ≤ external_neighbors V' := by
-  rw [external_neighbors_eq_card_boundary, external_neighbors_eq_card_boundary]
-  exact Finset.card_le_card_of_injOn (reverseShiftMap V' a b)
-    (fun u hu => by rw [Finset.mem_coe] at hu ⊢; exact reverseShiftMap_mem V' a b u hu)
-    (reverseShiftMap_injOn V' a b)
 
 -- ============================================================================
--- Section 5: Colex Ordering and Convergence
+-- Section 4: The Failure of Geometric Compression (Counterexample)
 -- ============================================================================
 
 /-!
-  Define a colexicographic ordering on ArrVertex that enumerates
-  the Hamming Ball construction step-by-step.
+  # The Geometric Compression Failure
 
-  Prove that repeated compression over all pairs a < b converges
-  to the colex initial segment (the Hamming Ball).
+  In standard bipartite hypercubes, Harper's Theorem is proven by showing
+  that sequence compression does not increase boundary size:
+      |∂(compressSet V')| ≤ |∂V'|
 
-  The iteration: construct a function that applies compressSet for
-  all pairs (a, b) with a < b until the set is completely stable.
-  Once stable, prove it equals hamming_ball_subset.
--/
+  **This inequality is MATHEMATICALLY FALSE for Arrangement Graphs.**
 
--- ============================================================================
--- Section 6: The Isoperimetric Theorem
--- ============================================================================
+  ## The Counterexample
+  Consider A(4,2) with symbols {1, 2, 3, 4}. Let a=1, b=3.
+  Let V' = { [4,3], [1,3] }.
 
-/-!
-  Composing Sections 3-5 replaces both axioms:
+  1. The Boundary of V':
+     - Neighbors of [4,3]: [1,3], [2,3], [4,1], [4,2]
+     - Neighbors of [1,3]: [4,3], [2,3], [1,2], [1,4]
+     - External boundary ∂V' = {[2,3], [4,1], [4,2], [1,2], [1,4]}, size 5.
 
-  theorem isoperimetric_partial_perm (R n k : ℕ) :
-    ∀ (V' : Finset (ArrVertex n k)), V'.card = R →
-      external_neighbors V' ≥ external_neighbors (hamming_ball R n k) :=
+  2. The Compression (shift 3 → 1):
+     - [4,3] uses 3, lacks 1. Shifts to [4,1]. Since [4,1] ∉ V', shift OK.
+     - [1,3] uses 3, but ALREADY uses 1. Precondition fails. Unchanged.
+     - compressSet(V') = { [4,1], [1,3] }
 
-  This directly implies:
-  - external_neighbors_collision_bound (the universal lower bound)
-  - hamming_ball_eval (the Hamming Ball achieves the bound)
+  3. The Boundary of compressSet(V'):
+     - Neighbors of [4,1]: [2,1], [3,1], [4,2], [4,3]
+     - Neighbors of [1,3]: [4,3], [2,3], [1,2], [1,4]
+     - External boundary = {[2,1],[3,1],[4,2],[4,3],[2,3],[1,2],[1,4]}, size 7.
+
+  ** 7 ≤ 5 is FALSE. The external boundary INCREASED under compression. **
+
+  ## Root Cause: Coordinate Tangling
+  In hypercubes, flipping a bit is orthogonal to all other bits. But in A(n,k),
+  the permutation constraint means changing one symbol affects the entire pool
+  of available symbols. When [4,3] shifts to [4,1], it "steals" symbol 1 from
+  the symbol pool, creating new adjacencies (to [2,1], [3,1]) that never
+  existed relative to the original V'.
+
+  ## Conclusion
+  Vertex isoperimetry via geometric shift operators is impossible for
+  partial permutations. The graph space contains local minima; one cannot
+  monotonically slide arbitrary sets into the Hamming Ball.
+
+  This mathematically mandates the "Algebraic Defect Squeeze" architecture
+  in `ArrangementExtraconnectivity.lean`, which tracks global algebraic roots
+  (via `E_seq` subadditivity) rather than local boundary mappings.
 -/
