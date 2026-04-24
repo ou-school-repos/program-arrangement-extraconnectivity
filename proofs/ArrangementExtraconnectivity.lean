@@ -146,8 +146,7 @@ instance {n k : ℕ} : Fintype (ArrVertex n k) := by
 
 -- FORMULA COMPONENTS (needed early for embedding condition)
 
-def bit_length (x : ℕ) : ℕ :=
-  if x = 0 then 0 else Nat.log2 x + 1
+def bit_length (x : ℕ) : ℕ := Nat.size x
 
 -- The Embedding Condition: dual constraint on the hypercube dimension d.
 -- 1. k + d ≤ n: need d fresh symbols beyond the k base positions
@@ -688,19 +687,9 @@ def hamming_ball_subset (R n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
 
 /-- bit_length(R-1) dimensions suffice: R ≤ 2^bit_length(R-1) -/
 private lemma le_pow_bit_length (R : ℕ) : R ≤ 2 ^ bit_length (R - 1) := by
-  by_cases h0 : R = 0
-  · subst h0; simp [bit_length]
-  · by_cases h1 : R = 1
-    · subst h1; simp [bit_length]
-    · have hne : R - 1 ≠ 0 := by omega
-      -- bit_length(R-1) = Nat.size(R-1) for R-1 > 0
-      -- Nat.lt_size_self: ∀ n, n < 2^(Nat.size n)
-      -- So R-1 < 2^(Nat.size(R-1)), hence R ≤ 2^(Nat.size(R-1))
-      have h_size : bit_length (R - 1) = Nat.size (R - 1) := by
-        simp only [bit_length, if_neg hne, Nat.size_eq_succ_log2 hne]
-      rw [h_size]
-      have := Nat.lt_size_self (R - 1)
-      omega
+  unfold bit_length
+  have := Nat.lt_size_self (R - 1)
+  omega
 
 /-- embed_vertex is injective in the cube argument -/
 private lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
