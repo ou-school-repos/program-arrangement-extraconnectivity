@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,24 @@ static std::string vertex_to_string(const Vertex &v) {
                                   : static_cast<char>('a' + v.syms[i] - 26);
     }
     return str;
+}
+
+// ── 128-bit integer printing (for large R where coeff*R > 2^63) ──────
+static std::string i128_to_string(__int128 x) {
+    if (x == 0)
+        return "0";
+    bool neg = x < 0;
+    if (neg)
+        x = -x;
+    std::string s;
+    while (x > 0) {
+        s += static_cast<char>('0' + static_cast<int>(x % 10));
+        x /= 10;
+    }
+    if (neg)
+        s += '-';
+    std::reverse(s.begin(), s.end());
+    return s;
 }
 
 // ── A000788: cumulative popcount — O(log R) ──────────────────────────
@@ -205,10 +224,11 @@ int main(int argc, const char *argv[]) {
         for (int r = 2; r <= max_r; r++) {
             int64_t nk1 = A000788(r);
             int64_t c = constant_analytical(r);
-            int64_t coeff = static_cast<int64_t>(r) * r - nk1;
-            int64_t val = coeff * r - c;
-            std::cout << r << "," << nk1 << "," << c << "," << coeff << ","
-                      << val << "\n";
+            __int128 coeff = static_cast<__int128>(r) * r - nk1;
+            __int128 val = coeff * r - c;
+            std::cout << r << "," << nk1 << "," << c << ","
+                      << i128_to_string(coeff) << "," << i128_to_string(val)
+                      << "\n";
         }
         return 0;
     }
@@ -262,8 +282,8 @@ int main(int argc, const char *argv[]) {
         // ── Tier 3: Brute-force verification — O(R³ log R) ───────────
         const int ver_n = 2 * R;
         const int64_t brute_count = brute_force_neighbors(verts, ver_n, R);
-        const int64_t coeff = static_cast<int64_t>(R) * R - nk1;
-        const int64_t formula_val = coeff * R - constant;
+        const __int128 coeff = static_cast<__int128>(R) * R - nk1;
+        const __int128 formula_val = coeff * R - constant;
         std::cerr << "  [brute-force] |N(V')| = " << brute_count;
         if (brute_count == formula_val)
             std::cerr << " \xe2\x9c\x93\n";
@@ -277,8 +297,8 @@ int main(int argc, const char *argv[]) {
     }
 
     // ── Output ────────────────────────────────────────────────────────
-    const int64_t coeff = static_cast<int64_t>(R) * R - expected_nk1;
-    const int64_t formula_val = coeff * R - expected_const;
+    const __int128 coeff = static_cast<__int128>(R) * R - expected_nk1;
+    const __int128 formula_val = coeff * R - expected_const;
 
     std::cout << "(" << R << "nk-" << expected_nk1 << ") (n-k)-"
               << expected_const << ", EX:";
@@ -292,8 +312,9 @@ int main(int argc, const char *argv[]) {
     std::cout << "\n";
 
     std::cerr << "  formula(n=" << 2 * R << ",k=" << R
-              << "): |N(V')| = " << coeff << "\xc2\xb7" << R << " - "
-              << expected_const << " = " << formula_val << "\n";
+              << "): |N(V')| = " << i128_to_string(coeff) << "\xc2\xb7" << R
+              << " - " << expected_const << " = " << i128_to_string(formula_val)
+              << "\n";
 
     return 0;
 }
