@@ -793,10 +793,8 @@ theorem arrangement_extraconnectivity_minimum
 -/
 theorem globally_optimal_growth_strategy
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k) :
-    (∀ V' : Finset (ArrVertex n k), V'.card = R →
-      external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
-    (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
-      external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
+    (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
+    (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
   let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond
   ⟨h_univ, h_exists⟩
 
