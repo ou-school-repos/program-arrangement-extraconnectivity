@@ -384,7 +384,36 @@ lemma swap_is_compressed {V' : Finset (ArrVertex n k)} {a b : Fin n}
 lemma reverseShiftMap_mem (V' : Finset (ArrVertex n k)) (a b : Fin n)
     (u : ArrVertex n k) (hu : u ∈ boundary_set (compressSet V' a b)) :
     reverseShiftMap V' a b u ∈ boundary_set V' := by
-  sorry
+  rw [boundary_set, Finset.mem_filter] at hu
+  rcases hu with ⟨_, hu_not_comp, w, hw_in, hw_adj⟩
+  rw [boundary_set, Finset.mem_filter]
+  unfold reverseShiftMap
+  by_cases hu_V : u ∈ V'
+  · -- Case A: u ∈ V' but u ∉ compressSet → map to swapVertex u
+    rw [if_pos hu_V]
+    refine ⟨Finset.mem_univ _, swap_of_compressed_mem hu_V hu_not_comp, u, hu_V, ?_⟩
+    -- u ~ swapVertex u: they differ at exactly 1 position (the unique b-position)
+    -- Proof via arr_adjacent_swap: swap both sides, involution cancels
+    rw [arr_adjacent_swap u (swapVertex u a b) a b]
+    simp only [swapVertex_involutive]
+    -- Now need: arr_adjacent (swapVertex u) u, which is the same filter set
+    -- since the positions where swapVertex u ≠ u = positions where u ≠ swapVertex u
+    sorry
+  · -- Case B: u ∉ V' → map to u
+    rw [if_neg hu_V]
+    refine ⟨Finset.mem_univ _, hu_V, ?_⟩
+    -- Trace w ∈ compressSet back through compression
+    unfold compressSet at hw_in
+    rw [Finset.mem_image] at hw_in
+    rcases hw_in with ⟨v, hv_in, hv_eq⟩
+    change (if shiftVertex v a b ∉ V' then shiftVertex v a b else v) = w at hv_eq
+    by_cases hshift_v : shiftVertex v a b ∉ V'
+    · -- v was shifted: w = shiftVertex v, adjacency trace needed
+      rw [if_pos hshift_v] at hv_eq
+      sorry
+    · -- v was NOT shifted: w = v ∈ V', direct witness
+      rw [if_neg hshift_v] at hv_eq
+      exact ⟨v, hv_in, hv_eq ▸ hw_adj⟩
 
 -- ATOMIC GATE 6: Injectivity of the reverse map on the boundary.
 -- Mixed case (u1 ∈ V', u2 ∉ V') is impossible: swap_is_compressed shows
