@@ -1,4 +1,5 @@
 import Mathlib.Data.Nat.Basic
+import Mathlib.Data.Nat.Bitwise
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Data.Finset.Basic
@@ -139,6 +140,11 @@ instance {n k : ℕ} : DecidableEq (ArrVertex n k) := by
 instance {n k : ℕ} : Fintype (ArrVertex n k) := by
   unfold ArrVertex; infer_instance
 
+-- ── FORMULA COMPONENTS (needed early for embedding condition) ─────────
+
+def bit_length (x : ℕ) : ℕ :=
+  if x = 0 then 0 else Nat.log2 x + 1
+
 -- The Embedding Condition: n-k must provide enough fresh symbols
 -- to embed a d-dimensional hypercube. bit_length(R-1) gives the ceiling
 -- of log₂(R), which is the minimum number of dimensions required.
@@ -165,8 +171,7 @@ def external_neighbors {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
 
 -- ── FORMULA COMPONENTS ────────────────────────────────────────────────────
 
-def bit_length (x : ℕ) : ℕ :=
-  if x = 0 then 0 else Nat.log2 x + 1
+-- (bit_length defined above, before can_embed_hypercube)
 
 def sum_bit_length : ℕ → ℕ
   | 0 => 0
@@ -628,13 +633,10 @@ lemma nat_to_cube_injective (d : ℕ) (i j : ℕ) (hi : i < 2^d) (hj : j < 2^d)
   intro k
   by_cases hk : k < d
   · exact congr_fun heq ⟨k, hk⟩
-  · have hi' : i < 2^(k+1) := by
-      calc i < 2^d := hi
-        _ ≤ 2^(k+1) := Nat.pow_le_pow_right (by omega) (by omega)
-    have hj' : j < 2^(k+1) := by
-      calc j < 2^d := hj
-        _ ≤ 2^(k+1) := Nat.pow_le_pow_right (by omega) (by omega)
-    simp [Nat.testBit_lt_two_pow hi', Nat.testBit_lt_two_pow hj']
+  · -- For k ≥ d, both i and j are < 2^d ≤ 2^k, so testBit k = false
+    have hid : i < 2^k := lt_of_lt_of_le hi (Nat.pow_le_pow_right (by omega) (by omega))
+    have hjd : j < 2^k := lt_of_lt_of_le hj (Nat.pow_le_pow_right (by omega) (by omega))
+    rw [Nat.testBit_eq_false_of_lt hid, Nat.testBit_eq_false_of_lt hjd]
 
 /-- The Hamming Ball achieves the exact extraconnectivity formula.
     Axiomatized: the exact external neighbor evaluation requires shadow-counting
