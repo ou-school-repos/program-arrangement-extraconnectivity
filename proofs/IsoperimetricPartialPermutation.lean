@@ -1,6 +1,6 @@
 /-
-  IsoperimPartialPerm.lean
-  ========================
+  IsoperimetricPartialPermutation.lean
+  ====================================
   Isoperimetric Inequality for Partial Permutations (A(n,k))
 
   This module provides the sequence compression machinery needed to
