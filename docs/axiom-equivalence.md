@@ -75,7 +75,7 @@ Both axioms have been verified computationally at two independent levels:
 
 ### Level 1: Formula Oracle (`predict.cpp`)
 
-For each R ≤ 20, the predictor computes:
+The predictor computes (for any R):
 
 - `E_seq(R) = A000788(R)` — the coefficient (cumulative binary weight)
 - `C_constant(R) = (R-1) + Σ bit_length(x) - E_seq(R)` — the collision constant
@@ -86,7 +86,7 @@ small R, confirming exact agreement.
 
 ### Level 2: Exhaustive Topology Search (`arrangement.cpp`)
 
-For each R ≤ 10, the search engine:
+For small R, the search engine:
 
 1. Generates ALL R-vertex subsets of A(n,k) up to `nauty` automorphism
 2. Computes `external_neighbors(V')` for each canonical representative

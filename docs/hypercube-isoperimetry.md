@@ -15,14 +15,14 @@ and computer-asssted findings.
 6.  **Universal Defect Bound:** `sum_unique_roots_lower_bound` proves $D(V') \le E_{seq}(R)$ for ALL $R$-element subsets of $A(n,k)$, by strong induction.
 7.  **Formal Definition of $A(n,k)$:** `ArrVertex n k` defines vertices as injective $k$-sequences from $\{0..n-1\}$ with `Fintype` and `DecidableEq` instances. Adjacency (`arr_adjacent`) and external neighbors (`external_neighbors`) are computable.
 
-### ✓ Axiomatized (computationally verified R ≤ 20)
+### ✓ Axiomatized (computationally verified via `predict --verify R`)
 
 1.  **Collision Bound** (`external_neighbors_collision_bound`): Each unique root extends to $(n-k)$ distinct external neighbors, with $C_{constant}(R)$ bounding maximum overlaps. Justified by Kruskal-Katona; see [collision-axiom-roadmap.md](collision-axiom-roadmap.md).
 2.  **Hamming Ball Upper Bound** (`hamming_ball_achieves_bound`): The constructive Hamming Ball achieves the formula exactly. Partially formalized (`nat_to_cube`, `nat_to_cube_injective`); exact evaluation axiomatized.
 
 ### ✓ Proven by Computer-Assisted Search
 
-1.  **Local Optimality (R ≤ 10):** Through exhaustive enumeration of the $\Omega(R^{R-2})$ search space, the Hamming Ball is the unique topology maximizing internal edges for all $R \le 10$.
+1.  **Local Optimality:** Through exhaustive enumeration of the $\Omega(R^{R-2})$ search space, the Hamming Ball is the unique topology maximizing internal edges for small R.
 2.  **Coefficient/Constant Match:** The analytical formulas for $E(R)$ and $C(R)$ match every globally optimal vertex set discovered by the search.
 
 ---
@@ -67,4 +67,4 @@ This provides the **Full Isoperimetric Profile** for the graph:
 
 ## Conclusion
 
-The combination of **Lean 4 formalization** (0 sorry, 2 explicit axioms) and **exhaustive C++ search** (verified R ≤ 20) provides the strongest evidence to date for the Hamming Ball's optimality. The novel Algebraic Defect Squeeze is fully mechanized, while standard extremal combinatorics results are isolated as explicit, documented axioms.
+The combination of **Lean 4 formalization** (0 sorry, 4 explicit axioms) and **exhaustive C++ search** (verified via `predict --verify`) provides the strongest evidence to date for the Hamming Ball's optimality. The novel Algebraic Defect Squeeze is fully mechanized, while standard extremal combinatorics results are isolated as explicit, documented axioms.

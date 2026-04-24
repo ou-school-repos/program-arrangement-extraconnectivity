@@ -71,8 +71,8 @@ arrangement_extraconnectivity_minimum
 
 **Justification**:
 
-- Formula values verified for R ≤ 20 by predictor oracle (`predict.cpp`)
-- Exhaustive topology enumeration confirms uniqueness for R ≤ 10
+- Computationally verified via `predict --verify R` (predict.cpp)
+- Exhaustive topology enumeration confirms uniqueness for small R
   (`arrangement.cpp`)
 - Mathematically justified by the Kruskal-Katona theorem (counting
   collisions ≡ counting 4-cycles; Hamming Ball maximizes squares)
@@ -158,8 +158,8 @@ This work contains several results that appear to be **new in the literature**:
 
 1. **A000788 Discovery**: The maximum internal edges for R vertices in A(n,k)
    equals the cumulative popcount sequence (OEIS A000788). This connection
-   to binary weight sums was discovered computationally and verified for
-   R ≤ 10 by exhaustive enumeration.
+   to binary weight sums was discovered computationally and verified
+   by exhaustive enumeration (`arrangement.cpp`).
 
 2. **Pareto Spectrum**: The full topology-boundary tradeoff between the
    Star graph (R−1 internal edges, collision constant C = C(R,2)) and
@@ -198,8 +198,8 @@ using the full automorphism group S_n × S_k:
 
 Evidence:
 
-- Computationally confirmed uniqueness for R ≤ 10
-- Formula values and existence verified for R ≤ 20
+- Computationally confirmed uniqueness for small R (`arrangement.cpp`)
+- Formula values and existence verified via `predict --verify R`
 - Would require showing equality in the defect bound forces hypercube structure
 - Related to equality cases in the Kruskal-Katona theorem
 - See [collision-axiom-roadmap.md](collision-axiom-roadmap.md#uniqueness-open-problem)

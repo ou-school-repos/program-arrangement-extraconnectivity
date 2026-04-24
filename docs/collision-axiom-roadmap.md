@@ -12,8 +12,8 @@ This document describes what a complete mechanized proof would require.
 ## Current Status
 
 - **Axiomatized** in Lean 4 (zero `sorry` blocks)
-- **Formula values verified** for R ≤ 20 by predictor oracle (`predict.cpp`)
-- **Exhaustive topology search** confirms uniqueness for R ≤ 10
+- **Formula values verified** via `predict --verify R` (predict.cpp)
+- **Exhaustive topology search** confirms uniqueness for small R
 - **Mathematically justified** by the Kruskal-Katona theorem
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles
@@ -127,8 +127,8 @@ external boundary, but does not prove it is the **unique** minimizer.
   V' to be isomorphic to a Hamming Ball
 - This is equivalent to showing that E_seq is **strictly** subadditive
   for non-Hamming-Ball partitions
-- The computational search confirms uniqueness for R ≤ 10 (one minimum-cut
-  topology class per R); formula values verified for R ≤ 20
+- The computational search confirms uniqueness for small R (one minimum-cut
+  topology class per R); formula values verified via `predict --verify`
 - Formalized as `uniqueness_conjecture` using the full automorphism group
   S_n × S_k (symbol permutation σ + coordinate permutation τ)
 

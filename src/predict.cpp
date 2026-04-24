@@ -8,7 +8,8 @@
 // Usage: ./predict [R]       Single R prediction (R ≤ 64)
 //        ./predict --csv N   CSV output for R=2..N
 //
-// Vertex representation: stack-allocated uint8_t[64] with memcmp ordering.
+// Vertex representation: stack-allocated SymT[MaxK] with memcmp ordering.
+// SymT = uint8_t when R ≤ 127, uint16_t for R ≥ 128.
 // Zero heap allocation in the hot path enables instant verification.
 
 #include <algorithm>
@@ -26,30 +27,38 @@ static inline int128_t widen(int64_t x) { return x; }
 
 static int R = 10;
 
-// ── Vertex type: fixed-size stack struct ──────────────────────────────
+// ── Vertex type: fixed-size stack struct, templatized on symbol type ──
 
-struct Vertex {
-    uint8_t syms[256] = {};
+template <typename SymT> struct Vertex {
+    static constexpr SymT SENTINEL = static_cast<SymT>(~SymT{0}); // max value
+    SymT syms[256] = {};
     bool operator<(const Vertex &o) const {
-        return std::memcmp(syms, o.syms, R) < 0;
+        return std::memcmp(syms, o.syms, R * sizeof(SymT)) < 0;
     }
     bool operator==(const Vertex &o) const {
-        return std::memcmp(syms, o.syms, R) == 0;
+        return std::memcmp(syms, o.syms, R * sizeof(SymT)) == 0;
     }
 };
 
-static bool contains_sym(const Vertex &v, int sym) {
+template <typename SymT>
+static bool contains_sym(const Vertex<SymT> &v, int sym) {
     for (int i = 0; i < R; i++)
-        if (v.syms[i] == static_cast<uint8_t>(sym))
+        if (v.syms[i] == static_cast<SymT>(sym))
             return true;
     return false;
 }
 
-static std::string vertex_to_string(const Vertex &v) {
+template <typename SymT>
+static std::string vertex_to_string(const Vertex<SymT> &v) {
     std::string str(R, ' ');
     for (int i = 0; i < R; i++) {
-        str[i] = (v.syms[i] < 26) ? static_cast<char>('A' + v.syms[i])
-                                  : static_cast<char>('a' + v.syms[i] - 26);
+        int s = static_cast<int>(v.syms[i]);
+        if (s < 26)
+            str[i] = static_cast<char>('A' + s);
+        else if (s < 52)
+            str[i] = static_cast<char>('a' + s - 26);
+        else
+            str[i] = '?'; // for symbols beyond a-z range, use placeholder
     }
     return str;
 }
@@ -107,18 +116,18 @@ static int64_t constant_analytical(int64_t R_val) {
 
 // ── Hamming ball construction ────────────────────────────────────────
 
-static std::vector<Vertex> build_hamming_ball() {
+template <typename SymT> static std::vector<Vertex<SymT>> build_hamming_ball() {
     int dims = 0;
     while ((1 << dims) < R)
         dims++;
 
-    std::vector<Vertex> verts(R);
+    std::vector<Vertex<SymT>> verts(R);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++)
-            verts[i].syms[p] = static_cast<uint8_t>(p);
+            verts[i].syms[p] = static_cast<SymT>(p);
         for (int d = 0; d < dims; d++) {
             if (i & (1 << d))
-                verts[i].syms[d] = static_cast<uint8_t>(R + d);
+                verts[i].syms[d] = static_cast<SymT>(R + d);
         }
     }
     return verts;
@@ -131,14 +140,15 @@ struct FormulaResult {
     int64_t constant;
 };
 
-static FormulaResult compute_formula(const std::vector<Vertex> &verts) {
+template <typename SymT>
+static FormulaResult compute_formula(const std::vector<Vertex<SymT>> &verts) {
     // Collect used symbols
-    std::vector<uint8_t> used_syms;
+    std::vector<SymT> used_syms;
     for (const auto &v : verts) {
         for (int p = 0; p < R; p++) {
-            uint8_t s = v.syms[p];
+            SymT s = v.syms[p];
             if (!std::any_of(used_syms.begin(), used_syms.end(),
-                             [s](uint8_t u) { return u == s; }))
+                             [s](SymT u) { return u == s; }))
                 used_syms.push_back(s);
         }
     }
@@ -147,28 +157,29 @@ static FormulaResult compute_formula(const std::vector<Vertex> &verts) {
     // Anonymous coefficient: distinct groups per position
     int anon_coeff = 0;
     for (int p = 0; p < R; p++) {
-        std::vector<Vertex> group_keys;
+        std::vector<Vertex<SymT>> group_keys;
         for (int i = 0; i < R; i++) {
-            Vertex key = verts[i];
-            key.syms[p] = 255; // sentinel
-            if (!std::any_of(group_keys.begin(), group_keys.end(),
-                             [&key](const Vertex &g) { return g == key; }))
+            Vertex<SymT> key = verts[i];
+            key.syms[p] = Vertex<SymT>::SENTINEL;
+            if (!std::any_of(
+                    group_keys.begin(), group_keys.end(),
+                    [&key](const Vertex<SymT> &g) { return g == key; }))
                 group_keys.push_back(key);
         }
         anon_coeff += static_cast<int>(group_keys.size());
     }
 
     // Named neighbors (sort-based dedup, zero heap alloc in hot path)
-    std::vector<Vertex> sorted_verts = verts;
+    std::vector<Vertex<SymT>> sorted_verts = verts;
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
-    std::vector<Vertex> named_nbrs;
+    std::vector<Vertex<SymT>> named_nbrs;
     named_nbrs.reserve(R * R * M);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++) {
             for (auto s : used_syms) {
                 if (!contains_sym(verts[i], s)) {
-                    Vertex vtx = verts[i];
+                    Vertex<SymT> vtx = verts[i];
                     vtx.syms[p] = s;
                     if (!std::binary_search(sorted_verts.begin(),
                                             sorted_verts.end(), vtx))
@@ -191,20 +202,21 @@ static FormulaResult compute_formula(const std::vector<Vertex> &verts) {
 
 // ── Brute-force verification — O(R³ log R) ───────────────────────────
 
-static int64_t brute_force_neighbors(const std::vector<Vertex> &verts, int n,
-                                     int k) {
-    std::vector<Vertex> sorted_verts = verts;
+template <typename SymT>
+static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
+                                     int n, int k) {
+    std::vector<Vertex<SymT>> sorted_verts = verts;
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
-    std::vector<Vertex> nbrs;
+    std::vector<Vertex<SymT>> nbrs;
     nbrs.reserve(R * k * n);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < k; p++) {
             for (int s = 0; s < n; s++) {
                 if (contains_sym(verts[i], s))
                     continue;
-                Vertex nbr = verts[i];
-                nbr.syms[p] = static_cast<uint8_t>(s);
+                Vertex<SymT> nbr = verts[i];
+                nbr.syms[p] = static_cast<SymT>(s);
                 if (!std::binary_search(sorted_verts.begin(),
                                         sorted_verts.end(), nbr))
                     nbrs.push_back(nbr);
@@ -214,6 +226,55 @@ static int64_t brute_force_neighbors(const std::vector<Vertex> &verts, int n,
     std::sort(nbrs.begin(), nbrs.end());
     nbrs.erase(std::unique(nbrs.begin(), nbrs.end()), nbrs.end());
     return static_cast<int64_t>(nbrs.size());
+}
+
+// ── Verify runner — templated on symbol type ─────────────────────────
+
+template <typename SymT>
+static int run_verify(int64_t expected_nk1, int64_t expected_const,
+                      bool quiet = false) {
+    auto verts = build_hamming_ball<SymT>();
+
+    if (!quiet && R <= 12) {
+        std::cerr << "  vertex set:";
+        for (int i = 0; i < R; i++)
+            std::cerr << " " << vertex_to_string(verts[i]);
+        std::cerr << "\n";
+    }
+
+    auto [nk1, constant] = compute_formula(verts);
+
+    if (nk1 != expected_nk1) {
+        std::cerr << "nk1 MISMATCH: got " << nk1 << " expected " << expected_nk1
+                  << "\n";
+        return 1;
+    }
+    if (constant != expected_const) {
+        std::cerr << "constant MISMATCH: got " << constant << " expected "
+                  << expected_const << "\n";
+        return 1;
+    }
+
+    // ── Tier 3: Brute-force verification — O(R³ log R) ───────────
+    const int ver_n = 2 * R;
+    const int64_t brute_count = brute_force_neighbors(verts, ver_n, R);
+    const int128_t coeff = widen(R) * R - nk1;
+    const int128_t formula_val = coeff * R - constant;
+
+    if (brute_count != formula_val) {
+        std::cerr << "|N(V')| MISMATCH: brute=" << brute_count
+                  << " formula=" << i128_to_string(formula_val) << "\n";
+        return 1;
+    }
+
+    if (quiet) {
+        std::cerr << "✓\n";
+    } else {
+        std::cerr << "  [construction] nk1 = " << nk1 << " ✓\n";
+        std::cerr << "  [construction] constant = " << constant << " ✓\n";
+        std::cerr << "  [brute-force] |N(V')| = " << brute_count << " ✓\n";
+    }
+    return 0;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────
@@ -237,25 +298,89 @@ int main(int argc, const char *argv[]) {
         return 0;
     }
 
+    // --verify-range mode: sweep R=start..end with brute-force cross-check
+    // Outputs a deterministic FNV-1a digest as proof-of-work.
+    if (argc >= 3 && std::string(argv[1]) == "--verify-range") {
+        int start_r = 2, end_r = 0;
+        if (argc >= 4) {
+            start_r = static_cast<int>(std::strtol(argv[2], nullptr, 10));
+            end_r = static_cast<int>(std::strtol(argv[3], nullptr, 10));
+        } else {
+            end_r = static_cast<int>(std::strtol(argv[2], nullptr, 10));
+        }
+        if (start_r < 2 || end_r < start_r || end_r > 255) {
+            std::cerr
+                << "Error: --verify-range requires 2 <= start <= end <= 255\n";
+            return 1;
+        }
+
+        // FNV-1a 64-bit hash for deterministic digest
+        uint64_t hash = UINT64_C(14695981039346656037);
+        auto fnv_feed = [&hash](int64_t val) {
+            for (int i = 0; i < 8; i++) {
+                hash ^= static_cast<uint64_t>(val & 0xFF);
+                hash *= UINT64_C(1099511628211);
+                val >>= 8;
+            }
+        };
+
+        for (int r = start_r; r <= end_r; r++) {
+            R = r;
+            const int64_t nk1 = A000788(R);
+            const int64_t cst = constant_analytical(R);
+            // Feed verified values into running digest
+            fnv_feed(R);
+            fnv_feed(nk1);
+            fnv_feed(cst);
+            char hex[17];
+            std::snprintf(hex, sizeof(hex), "%016llx",
+                          static_cast<unsigned long long>(hash));
+            std::cerr << "R=" << R << " ... ";
+            int rc;
+            if (R <= 127)
+                rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true);
+            else
+                rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true);
+            if (rc != 0) {
+                std::cerr << "FAILED at R=" << R << "\n";
+                return 1;
+            }
+            std::cout << "R=" << R << " nk1=" << nk1 << " C=" << cst
+                      << " digest=" << hex << "\n";
+        }
+
+        // Output reproducible digest
+        char hex[17];
+        std::snprintf(hex, sizeof(hex), "%016llx",
+                      static_cast<unsigned long long>(hash));
+        std::cerr << "All R=" << start_r << ".." << end_r
+                  << " verified ✓  digest=" << hex << "\n";
+        std::cout << "VERIFIED R=" << start_r << ".." << end_r
+                  << " digest=" << hex << "\n";
+        return 0;
+    }
+
     // --verify mode: explicit brute-force O(R³) cross-check
     bool verify_mode = false;
     if (argc >= 3 && std::string(argv[1]) == "--verify") {
         verify_mode = true;
         R = static_cast<int>(std::strtol(argv[2], nullptr, 10));
-        if (R < 2 || R > 127) {
-            std::cerr << "Error: --verify requires 2 <= R <= 127 (uint8_t "
-                         "symbol limit)\n";
+        if (R < 2 || R > 255) {
+            std::cerr << "Error: --verify requires 2 <= R <= 255\n";
             return 1;
         }
     } else if (argc >= 2) {
         R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
         if (R < 2) {
-            std::cerr
-                << "Usage:\n"
-                << "  ./predict <R>            O(log R) analytical formula\n"
-                << "  ./predict --verify <R>   O(R³) brute-force cross-check "
-                   "(R ≤ 127)\n"
-                << "  ./predict --csv <max_R>  CSV table for R=2..max_R\n";
+            std::cerr << "Usage:\n"
+                      << "  ./predict <R>                     O(log R) "
+                         "analytical formula\n"
+                      << "  ./predict --verify <R>            O(R³) "
+                         "brute-force cross-check\n"
+                      << "  ./predict --verify-range [s] <e>  Sweep R=s..e "
+                         "(default s=2)\n"
+                      << "  ./predict --csv <max_R>           CSV table for "
+                         "R=2..max_R\n";
             return 1;
         }
     }
@@ -271,45 +396,18 @@ int main(int argc, const char *argv[]) {
 
     // ── Tier 2+3: Construction + Brute-force — O(R³) ──────────────────
     if (verify_mode) {
-        auto verts = build_hamming_ball();
-
-        if (R <= 12) {
-            std::cerr << "  vertex set:";
-            for (int i = 0; i < R; i++)
-                std::cerr << " " << vertex_to_string(verts[i]);
-            std::cerr << "\n";
+        int rc;
+        if (R <= 127) {
+            // uint8_t path: symbols fit in [0, R+dims) < 128+7 = 135 < 256
+            std::cerr << "  [type] uint8_t symbols\n";
+            rc = run_verify<uint8_t>(expected_nk1, expected_const);
+        } else {
+            // uint16_t path: symbols >= 128
+            std::cerr << "  [type] uint16_t symbols\n";
+            rc = run_verify<uint16_t>(expected_nk1, expected_const);
         }
-
-        auto [nk1, constant] = compute_formula(verts);
-
-        std::cerr << "  [construction] nk1 = " << nk1;
-        if (nk1 == expected_nk1)
-            std::cerr << " ✓\n";
-        else {
-            std::cerr << " ✗ MISMATCH\n";
-            return 1;
-        }
-        std::cerr << "  [construction] constant = " << constant;
-        if (constant == expected_const)
-            std::cerr << " ✓\n";
-        else {
-            std::cerr << " ✗ MISMATCH (expected " << expected_const << ")\n";
-            return 1;
-        }
-
-        // ── Tier 3: Brute-force verification — O(R³ log R) ───────────
-        const int ver_n = 2 * R;
-        const int64_t brute_count = brute_force_neighbors(verts, ver_n, R);
-        const int128_t coeff = widen(R) * R - nk1;
-        const int128_t formula_val = coeff * R - constant;
-        std::cerr << "  [brute-force] |N(V')| = " << brute_count;
-        if (brute_count == formula_val)
-            std::cerr << " ✓\n";
-        else {
-            std::cerr << " ✗ MISMATCH (formula gives "
-                      << i128_to_string(formula_val) << ")\n";
-            return 1;
-        }
+        if (rc != 0)
+            return rc;
     }
 
     // ── Output ────────────────────────────────────────────────────────
@@ -319,7 +417,7 @@ int main(int argc, const char *argv[]) {
     std::cout << "(" << R << "nk-" << expected_nk1 << ") (n-k)-"
               << expected_const << ", EX:";
     if (R <= 12) {
-        auto verts = build_hamming_ball();
+        auto verts = build_hamming_ball<uint8_t>();
         for (int i = 0; i < R; i++)
             std::cout << " " << vertex_to_string(verts[i]);
     } else {

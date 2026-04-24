@@ -11,8 +11,8 @@
 *.gch
 
 # Compiled binaries
-/arrangement
-/predict
+arrangement
+predict
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

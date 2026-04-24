@@ -44,11 +44,12 @@ achieved uniquely by the Hamming Ball embedding.
 
 | Axiom | Role | Verified |
 |-------|------|----------|
-| `max_collision_defect_bound` | KK shadow bound (universal half) | R ≤ 127 brute-force |
-| `hamming_ball_eval` | KK shadow bound (existential half) | R ≤ 127 brute-force |
+| `max_collision_defect_bound` | KK shadow bound (universal half) | `predict --verify` |
+| `hamming_ball_eval` | KK shadow bound (existential half) | `predict --verify` |
 | `root_fiber_card` | Fiber cardinality bijection | Mathematically immediate |
 
 All axioms are independent of (n, k) — purely functions of R.
+Run `predict --verify R` for brute-force cross-check at any R.
 See `docs/axiom-equivalence.md` for the full duality explanation.
 
 ## References
@@ -768,8 +769,8 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
 
   **Properties**:
   - Independent of n and k (purely a function of R and internal topology)
-  - Computationally verified for R ≤ 20 (predict.cpp)
-  - Exhaustive topology search confirms for R ≤ 10 (arrangement.cpp)
+  - Computationally verified via `predict --verify R` (predict.cpp)
+  - Exhaustive topology search confirms uniqueness for small R (arrangement.cpp)
   - See docs/axiom-equivalence.md for the full duality explanation
   - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/
@@ -1023,8 +1024,8 @@ private lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k 
   Together: min_{|V'|=R} |N(V')| = formula(R).
 
   **Verification**:
-  - Formula values verified for R ≤ 20 (predict.cpp)
-  - Exhaustive topology search confirms uniqueness for R ≤ 10 (arrangement.cpp)
+  - Formula values verified via `predict --verify R` (predict.cpp)
+  - Exhaustive topology search confirms uniqueness for small R (arrangement.cpp)
   - See docs/axiom-equivalence.md for the full duality explanation
 -/
 axiom hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
@@ -1106,7 +1107,7 @@ theorem globally_optimal_growth_strategy
   on symbols) to the Hamming Ball.
 
   **Evidence:**
-  - Computationally verified uniqueness for R ≤ 10 via exhaustive
+  - Computationally verified uniqueness for small R via exhaustive
     search that exactly one minimum-cut V' exists for each R.
   - Would follow from showing equality in the defect bound
     D(V') = E_seq(R) forces the hypercube partition structure.
