@@ -222,8 +222,15 @@ def main():
         transform=fig.transFigure,
     )
 
-    out = "docs/compression_counterexample.png"
-    fig.savefig(out, dpi=120, bbox_inches="tight", pad_inches=0.15, facecolor="white")
+    import io
+    from PIL import Image
+
+    out = "assets/out/compression_counterexample.gif"
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=120, bbox_inches="tight", pad_inches=0.15, facecolor="white")
+    buf.seek(0)
+    img = Image.open(buf)
+    img.save(out, format="GIF")
     plt.close(fig)
 
     import os

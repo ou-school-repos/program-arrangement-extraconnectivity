@@ -52,5 +52,5 @@ plot = LogPlot[{searchModel[r], predictorModel[r]}, {r, 2, 12},
   Filling -> {1 -> {2}}
 ];
 
-Export["docs/complexity-curves.png", plot];
-Print["\n[✓] Complexity graph exported to docs/complexity-curves.png"];
+Export["assets/out/complexity-curves.gif", plot];
+Print["\n[✓] Complexity graph exported to assets/out/complexity-curves.gif"];

@@ -72,8 +72,8 @@ def render_dots(asset_dir="assets", output_dir="assets/out"):
         input_path = os.path.join(asset_dir, f)
         output_path = os.path.join(output_dir, f.replace(".dot", ".gif"))
 
-        # Using GIF for lighter weight as requested
-        cmd = ["fdp", "-Tgif", input_path, "-o", output_path]
+        # Using GIF for lighter weight, and scale down DPI to prevent high-res
+        cmd = ["fdp", "-Tgif", "-Gdpi=60", input_path, "-o", output_path]
         try:
             subprocess.run(cmd, check=True)
             print(f"  ✓ Rendered: {output_path}")
