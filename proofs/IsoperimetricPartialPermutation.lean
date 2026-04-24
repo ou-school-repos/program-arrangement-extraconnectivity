@@ -94,57 +94,53 @@ lemma compressSet_card (V' : Finset (ArrVertex n k)) (a b : Fin n) :
   unfold compressSet
   apply Finset.card_image_of_injOn
   intro v1 hv1 v2 hv2 heq
+  rw [Finset.mem_coe] at hv1 hv2
   simp only at heq
-  split_ifs at heq with h1 h2 h3 h4
+  split_ifs at heq with h1 h2 h3
 
-  · -- Case 1: Neither shifted. h1 : ∈ V', h2 : ∈ V', heq : v1 = v2
+  · -- Neither shifted: heq : v1 = v2
     exact heq
 
-  · -- Case 2: v2 shifted, v1 didn't. h1 : ∈ V', heq : v1 = shiftVertex v2 a b
-    subst heq
-    exact absurd (Finset.mem_coe.mp hv1) h2
+  · -- v2 shifted, v1 didn't: heq : v1 = shiftVertex v2 a b
+    subst heq; exact absurd hv1 (by assumption)
 
-  · -- Case 3: v1 shifted, v2 didn't. heq : shiftVertex v1 a b = v2
-    subst heq
-    exact absurd (Finset.mem_coe.mp hv2) h3
+  · -- v1 shifted, v2 didn't: heq : shiftVertex v1 a b = v2
+    subst heq; exact absurd hv2 (by assumption)
 
-  · -- Case 4: Both shifted. heq : shiftVertex v1 a b = shiftVertex v2 a b
-    -- Extract that the shift precondition was satisfied
+  · -- Both shifted: heq : shiftVertex v1 a b = shiftVertex v2 a b
+    -- Extract ∉ facts from context by type, not by fragile name
+    have h_not1 : shiftVertex v1 a b ∉ V' := by assumption
+    have h_not2 : shiftVertex v2 a b ∉ V' := by assumption
+
     have h_shift_neq1 : shiftVertex v1 a b ≠ v1 := fun eq =>
-      h3 (eq ▸ (Finset.mem_coe.mp hv1))
+      h_not1 (by rw [eq]; exact hv1)
     have h_cond1 : uses_sym v1 b ∧ ¬uses_sym v1 a := by
       by_contra hc
       exact h_shift_neq1 (by unfold shiftVertex; rw [dif_neg hc])
 
     have h_shift_neq2 : shiftVertex v2 a b ≠ v2 := fun eq =>
-      h4 (eq ▸ (Finset.mem_coe.mp hv2))
+      h_not2 (by rw [eq]; exact hv2)
     have h_cond2 : uses_sym v2 b ∧ ¬uses_sym v2 a := by
       by_contra hc
       exact h_shift_neq2 (by unfold shiftVertex; rw [dif_neg hc])
 
-    -- Extract the underlying functions and evaluate
     have h_val_eq : (shiftVertex v1 a b).val = (shiftVertex v2 a b).val :=
       congr_arg Subtype.val heq
     unfold shiftVertex at h_val_eq
     rw [dif_pos h_cond1, dif_pos h_cond2] at h_val_eq
     dsimp only at h_val_eq
 
-    apply Subtype.ext
-    funext p
+    apply Subtype.ext; funext p
     have hp := congr_fun h_val_eq p
-
-    -- Evaluate the swap at each position
     by_cases h_p1 : v1.val p = b
     · rw [if_pos h_p1] at hp
       by_cases h_p2 : v2.val p = b
       · rw [h_p1, h_p2]
       · rw [if_neg h_p2] at hp
-        -- Contradiction: v2 would contain 'a' originally
         exact False.elim (h_cond2.2 ⟨p, hp.symm⟩)
     · rw [if_neg h_p1] at hp
       by_cases h_p2 : v2.val p = b
       · rw [if_pos h_p2] at hp
-        -- Contradiction: v1 would contain 'a' originally
         exact False.elim (h_cond1.2 ⟨p, hp⟩)
       · rw [if_neg h_p2] at hp
         exact hp
