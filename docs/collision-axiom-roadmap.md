@@ -141,3 +141,80 @@ because the permutation constraint may create additional minimizers
 in degenerate cases (small n-k).
 
 This remains an open question for future work.
+
+## Future Work: Custom Sequence Compressions
+
+### Why Mathlib's Kruskal-Katona Doesn't Apply Directly
+
+Mathlib provides `Finset.kruskal_katona` in
+`Mathlib.Combinatorics.SetFamily.KruskalKatona`, along with shadow
+operators, colex ordering, and UV-compression. However, these operate
+on **unordered subsets** (`Finset (Finset α)`), not injective sequences.
+
+The arrangement graph A(n,k) has vertices that are **ordered, injective
+sequences** (`Fin k → Fin n`). The key incompatibilities:
+
+- **Injectivity blindspot**: Mathlib's `uv.compress` has no concept of
+  the injectivity constraint and will "compress" into invalid states
+  where two positions share the same symbol.
+- **Different shadow definitions**: Mathlib's shadow removes an unordered
+  element; our `unique_roots` drops a specific coordinate position,
+  producing a (k-1)-sequence. This coordinate-aware projection does not
+  commute with unordered set compressions.
+- **Factorial trap**: Multiplying by k! to account for ordering destroys
+  the local topological nuance of asymmetric concentration that makes
+  the Hamming Ball extremal.
+
+### The Sequence Compression Operator
+
+To remove the axioms, define a custom compression for A(n,k):
+
+```
+compress(V', a, b) where a < b :
+  for each v ∈ V':
+    if v uses symbol b at some position p AND v doesn't use symbol a:
+      let v' = v with b replaced by a at position p
+      if v' ∉ V':        -- CRITICAL: set-wise injectivity guard
+        map v → v'
+      else:
+        leave v unchanged  (target space occupied)
+    else:
+      leave v unchanged
+```
+
+**Set-wise injectivity trap**: Without the `v' ∉ V'` guard, two distinct
+vertices can collapse to the same target:
+
+- v1 = (b, x) compresses to (a, x)
+- v2 = (a, x) stays as (a, x)
+- Both map to (a, x), destroying cardinality
+
+The conditional guard (matching Mathlib's `uv.compress` pattern) ensures
+the operator is a bijection on V'.
+
+### Proof Obligations (~500-800 lines)
+
+1. **Compression preserves injectivity** (~50 lines): Swapping one symbol
+   in an injective sequence produces another injective sequence.
+
+2. **Compression preserves cardinality** (~100 lines): The conditional
+   set-wise operator is a bijection on V' (the hard direction: showing
+   the guard never creates orphaned vertices).
+
+3. **Compression does not increase boundary** (~200 lines): The core
+   extremal lemma. Compressing two vertices toward shared symbols
+   increases root collisions, which can only decrease external neighbors.
+
+4. **Colex ordering for sequences** (~50 lines): Define a total order on
+   `ArrVertex n k` matching the Hamming Ball construction step-by-step.
+
+5. **Convergence** (~100 lines): Repeated compression terminates at the
+   Hamming Ball initial segment (the colex minimum).
+
+### Architectural Recommendation
+
+While the theorems cannot be imported from Mathlib, the **design patterns**
+can be copied: study `Mathlib.Combinatorics.SetFamily.Compression.UV` for
+the conditional compression architecture, and
+`Mathlib.Combinatorics.Colex` for the ordering machinery. Adapting these
+patterns to injective sequences is the most efficient path.
