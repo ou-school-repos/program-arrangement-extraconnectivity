@@ -16,9 +16,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
+
+// __int128 is a GCC/Clang extension, not ISO C++17.
+// __extension__ suppresses -Wpedantic for this type.
+__extension__ typedef __int128 int128_t;
+static inline int128_t widen(int64_t x) { return x; }
 
 static int R = 10;
 
@@ -51,7 +55,7 @@ static std::string vertex_to_string(const Vertex &v) {
 }
 
 // ── 128-bit integer printing (for large R where coeff*R > 2^63) ──────
-static std::string i128_to_string(__int128 x) {
+static std::string i128_to_string(int128_t x) {
     if (x == 0)
         return "0";
     bool neg = x < 0;
@@ -224,8 +228,8 @@ int main(int argc, const char *argv[]) {
         for (int r = 2; r <= max_r; r++) {
             int64_t nk1 = A000788(r);
             int64_t c = constant_analytical(r);
-            __int128 coeff = static_cast<__int128>(r) * r - nk1;
-            __int128 val = coeff * r - c;
+            int128_t coeff = widen(r) * r - nk1;
+            int128_t val = coeff * r - c;
             std::cout << r << "," << nk1 << "," << c << ","
                       << i128_to_string(coeff) << "," << i128_to_string(val)
                       << "\n";
@@ -282,14 +286,14 @@ int main(int argc, const char *argv[]) {
         // ── Tier 3: Brute-force verification — O(R³ log R) ───────────
         const int ver_n = 2 * R;
         const int64_t brute_count = brute_force_neighbors(verts, ver_n, R);
-        const __int128 coeff = static_cast<__int128>(R) * R - nk1;
-        const __int128 formula_val = coeff * R - constant;
+        const int128_t coeff = widen(R) * R - nk1;
+        const int128_t formula_val = coeff * R - constant;
         std::cerr << "  [brute-force] |N(V')| = " << brute_count;
         if (brute_count == formula_val)
             std::cerr << " \xe2\x9c\x93\n";
         else {
-            std::cerr << " \xe2\x9c\x97 MISMATCH (formula gives " << formula_val
-                      << ")\n";
+            std::cerr << " \xe2\x9c\x97 MISMATCH (formula gives "
+                      << i128_to_string(formula_val) << ")\n";
             return 1;
         }
     } else {
@@ -297,8 +301,8 @@ int main(int argc, const char *argv[]) {
     }
 
     // ── Output ────────────────────────────────────────────────────────
-    const __int128 coeff = static_cast<__int128>(R) * R - expected_nk1;
-    const __int128 formula_val = coeff * R - expected_const;
+    const int128_t coeff = widen(R) * R - expected_nk1;
+    const int128_t formula_val = coeff * R - expected_const;
 
     std::cout << "(" << R << "nk-" << expected_nk1 << ") (n-k)-"
               << expected_const << ", EX:";
