@@ -118,20 +118,14 @@ benchmark: build	##H @Run Benchmark search for R=2..$(R)
 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
-.PHONY: benchmark/full
-benchmark/full: build	##H @Run Search + verify for R=2..$(R)
-	@for i in $$(seq 2 $(R)); do \
-		./$(BIN_OPT) $$i; \
-		echo ""; \
-	done
-
 .PHONY: run/predict
 run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
 	./$(BIN_PRED) $(R)
 
 .PHONY: benchmark/predict
-benchmark/predict: build	##H @Run Predict for R=2..$(R)
-	@for i in $$(seq 2 $(R)); do ./$(BIN_PRED) $$i 2>&1; echo ""; done
+benchmark/predict: build	##H @Run Predict for R=0..$(R)
+	@$(call print_info,Predicting for R=0..$(R))
+	@for i in $$(seq 0 $(R)); do ./$(BIN_PRED) $$i; echo ""; done
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test

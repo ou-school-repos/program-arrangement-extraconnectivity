@@ -566,7 +566,6 @@ int main(int argc, const char *argv[]) {
     for (const auto &[nk1, res] : results) {
         std::cout << "(" << R << "nk-" << std::setw(max_nk1_w) << nk1
                   << ") (n-k)-" << std::setw(max_nk_w) << (nk1 + res.cons)
-                  << ", iedges=" << res.internal_edges
                   << ", EX: " << res.example << "\n";
         best_nk1 = nk1;
     }

@@ -90,6 +90,7 @@ Searching R=2 (nauty limit: 3)
 (2nk-1) (n-k)-1, iedges=1, EX: AB CB
 Done: 0.000s | Gen: 1 | Eval: 1
 Pruned | Iso: 0 | Exact: 0 | Local: 0
+Prune Rate |
   [brute-force] |N(V')| = 5 ✓
   formula(n=4,k=2): |N(V')| = 3·2 - 1 = 5
 
@@ -98,6 +99,7 @@ Searching R=3 (nauty limit: 3)
 (3nk-2) (n-k)-3, iedges=2, EX: ABC DBC AEC
 Done: 0.000s | Gen: 6 | Eval: 5
 Pruned | Iso: 0 | Exact: 0 | Local: 1
+Prune Rate | [2-n] 0.0%
   [brute-force] |N(V')| = 18 ✓
   formula(n=6,k=3): |N(V')| = 7·3 - 3 = 18
 
@@ -107,6 +109,7 @@ Searching R=4 (nauty limit: 3)
 (4nk-4) (n-k)-4, iedges=4, EX: ABCD EBCD AFCD EFCD
 Done: 0.000s | Gen: 46 | Eval: 40
 Pruned | Iso: 2 | Exact: 0 | Local: 10
+Prune Rate | [2-n] 0.0% / [3-n] 50.0%
   [brute-force] |N(V')| = 44 ✓
   formula(n=8,k=4): |N(V')| = 12·4 - 4 = 44
 
@@ -116,6 +119,7 @@ Searching R=5 (nauty limit: 3)
 (5nk-5) (n-k)- 7, iedges=5, EX: ABCDE FBCDE AGCDE ABHDE FGCDE
 Done: 0.000s | Gen: 1102 | Eval: 1056
 Pruned | Iso: 2 | Exact: 3 | Local: 268
+Prune Rate | [2-n] 0.0% / [3-n] 50.0% / [4] 24.5%
   [brute-force] |N(V')| = 93 ✓
   formula(n=10,k=5): |N(V')| = 20·5 - 7 = 93
 
@@ -126,6 +130,7 @@ Searching R=6 (nauty limit: 4)
 (6nk-7) (n-k)- 9, iedges=7, EX: ABCDEF GBCDEF AHCDEF ABIDEF GHCDEF GBIDEF
 Done: 0.004s | Gen: 19507 | Eval: 19059
 Pruned | Iso: 28 | Exact: 36 | Local: 4676
+Prune Rate | [2-n] 0.0% / [3-n] 50.0% / [4-n] 71.4% / [5] 26.8%
   [brute-force] |N(V')| = 165 ✓
   formula(n=12,k=6): |N(V')| = 29·6 - 9 = 165
 
@@ -135,8 +140,9 @@ Searching R=7 (nauty limit: 5)
 (7nk-7) (n-k)-16, iedges=7, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG ABCDLFG HICDEFG
 (7nk-8) (n-k)-13, iedges=8, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG HICDEFG HBJDEFG
 (7nk-9) (n-k)-11, iedges=9, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG HICDEFG HBJDEFG AIJDEFG
-Done: 0.072s | Gen: 394905 | Eval: 389021
+Done: 0.064s | Gen: 394905 | Eval: 389021
 Pruned | Iso: 323 | Exact: 729 | Local: 88799
+Prune Rate | [2-n] 0.0% / [3-n] 50.0% / [4-n] 71.4% / [5-n] 78.6% / [6] 30.0%
   [brute-force] |N(V')| = 269 ✓
   formula(n=14,k=7): |N(V')| = 40·7 - 11 = 269
 
@@ -147,8 +153,9 @@ Searching R=8 (nauty limit: 6)
 (8nk- 9) (n-k)-18, iedges=9, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH ABCDMFGH IJCDEFGH IBKDEFGH
 (8nk-10) (n-k)-16, iedges=10, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH IJCDEFGH IBKDEFGH IBCLEFGH
 (8nk-12) (n-k)-12, iedges=12, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH IJCDEFGH IBKDEFGH AJKDEFGH IJKDEFGH
-Done: 1.782s | Gen: 12053012 | Eval: 11926956
+Done: 1.648s | Gen: 12053012 | Eval: 11926956
 Pruned | Iso: 4264 | Exact: 21554 | Local: 2544542
+Prune Rate | [2-n] 0.0% / [3-n] 50.0% / [4-n] 71.4% / [5-n] 78.6% / [6-n] 77.8% / [7] 33.0%
   [brute-force] |N(V')| = 404 ✓
   formula(n=16,k=8): |N(V')| = 52·8 - 12 = 404
 
@@ -160,10 +167,12 @@ Searching R=9 (nauty limit: 7)
 (9nk-11) (n-k)-21, iedges=11, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI ABCDNFGHI JKCDEFGHI JBLDEFGHI JBCMEFGHI
 (9nk-12) (n-k)-18, iedges=12, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI JKCDEFGHI JBLDEFGHI JBCMEFGHI AKLDEFGHI
 (9nk-13) (n-k)-16, iedges=13, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI JKCDEFGHI JBLDEFGHI AKLDEFGHI JKLDEFGHI
-Done: 74.553s | Gen: 502684606 | Eval: 498731225
+Done: 66.770s | Gen: 502684606 | Eval: 498731225
 Pruned | Iso: 91823 | Exact: 846078 | Local: 99682702
+Prune Rate | [2-n] 0.0% / [3-n] 50.0% / [4-n] 71.4% / [5-n] 78.6% / [6-n] 77.8% / [7-n] 77.8% / [8] 35.7%
   [brute-force] |N(V')| = 596 ✓
   formula(n=18,k=9): |N(V')| = 68·9 - 16 = 596
+
 
 Searching R=10 (nauty limit: 8)
   ver[0]=ABCDEFGHIJ  ver[1]=KBCDEFGHIJ

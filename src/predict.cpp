@@ -108,6 +108,8 @@ static int64_t A000788(int64_t n) {
 // Equivalently: (R-1) + Σ zero-bits in binary(1..R-1)
 
 static int64_t constant_analytical(int64_t R_val) {
+    if (R_val <= 0)
+        return 0;
     int64_t nk1 = A000788(R_val);
     int64_t L = 0;
     for (int64_t x = 1; x < R_val; x++)
@@ -381,8 +383,8 @@ int main(int argc, const char *argv[]) {
     }
 
     // ── Single R mode ─────────────────────────────────────────────────
-    if (R < 2) {
-        std::cerr << "Error: R must be >= 2\n";
+    if (R < 0) {
+        std::cerr << "Error: R must be >= 0\n";
         return 1;
     }
 
