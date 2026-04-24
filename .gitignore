@@ -12,8 +12,6 @@
 
 # Compiled binaries
 /arrangement
-/arrangementv5
-/arrangementoptimized
 /predict
 
 # ── Java build artifacts ─────────────────────────────────────

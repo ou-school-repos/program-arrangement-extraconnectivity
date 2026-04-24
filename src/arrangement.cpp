@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "arrangement_utils.h"
+
 extern "C" {
 #include <nauty/nauty.h>
 }
@@ -301,23 +303,9 @@ static inline std::pair<int, int> calc_step(int count) {
 }
 
 // ── Internal edge count ────────────────────────────────────────────────────
-// Count edges within the subset: pairs differing in exactly 1 position.
+// Delegates to shared utility (see arrangement_utils.h)
 static int count_internal_edges(const uint64_t *verts, int n) {
-    int edges = 0;
-    for (int i = 0; i < n; i++) {
-        for (int j = i + 1; j < n; j++) {
-            uint64_t xv = verts[i] ^ verts[j];
-            int diffs = 0;
-            while (xv && diffs <= 1) {
-                int chunk = chunk_idx[__builtin_ctzll(xv)];
-                xv &= ~(0x1FULL << (chunk * 5));
-                diffs++;
-            }
-            if (diffs == 1)
-                edges++;
-        }
-    }
-    return edges;
+    return arrangement::count_internal_edges(verts, n);
 }
 
 // ── Recursive search ───────────────────────────────────────────────────────

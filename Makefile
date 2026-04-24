@@ -9,8 +9,8 @@ CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic
 LDFLAGS  ?=
 
-SRC_OPT   = src/arrangementoptimized.cpp
-BIN_OPT   = arrangementoptimized
+SRC_OPT   = src/arrangement.cpp
+BIN_OPT   = arrangement
 R         ?= 8
 DOCS_SRC  = README.md
 DOCS_OUT  = README.pdf
