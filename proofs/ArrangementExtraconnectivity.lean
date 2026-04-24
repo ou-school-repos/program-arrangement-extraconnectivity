@@ -685,6 +685,33 @@ def hamming_ball_subset (R n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
     Finset (ArrVertex n k) :=
   (Finset.range R).image (fun i => embed_vertex n k d (nat_to_cube d i) hk hnk)
 
+/-- bit_length(R-1) dimensions suffice: R ≤ 2^bit_length(R-1) -/
+private lemma le_pow_bit_length (R : ℕ) : R ≤ 2 ^ bit_length (R - 1) := by
+  by_cases h0 : R = 0
+  · subst h0; simp [bit_length]
+  · by_cases h1 : R = 1
+    · subst h1; simp [bit_length]
+    · have hne : R - 1 ≠ 0 := by omega
+      simp only [bit_length, if_neg hne]
+      -- Nat.log2 satisfies: n < 2^(Nat.log2 n + 1) for n > 0
+      -- This is Nat.lt_pow_two_log2 or derivable from Nat.log2_lt
+      have h_lt : R - 1 < 2 ^ (Nat.log2 (R - 1) + 1) := by
+        have := @Nat.log2_lt (R - 1) hne
+        omega
+      omega
+
+/-- embed_vertex is injective in the cube argument -/
+private lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
+    Function.Injective (fun v => embed_vertex n k d v hk hnk) := by
+  intro v1 v2 heq
+  have hval : embed_cube n k d hk hnk v1 = embed_cube n k d hk hnk v2 :=
+    congr_arg Subtype.val heq
+  funext ⟨p, hp⟩
+  have hpf := congr_fun hval ⟨p, by omega⟩
+  simp only [embed_cube, hp, dite_true] at hpf
+  by_cases hv1 : v1 ⟨p, hp⟩ <;> by_cases hv2 : v2 ⟨p, hp⟩ <;>
+    simp_all <;> omega
+
 /-- Axiom: The explicit Hamming Ball construction achieves the exact boundary.
     The construction is fully defined (hamming_ball_subset) and its cardinality
     is provable via nat_to_cube_injective. Only the exact external neighbor
@@ -707,10 +734,18 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
   have hk : d ≤ k := h_k
   have hnk : k + d ≤ n := by omega
   refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl⟩
-  -- Cardinality: need |hamming_ball_subset| = R
-  -- This follows from injectivity of embed_vertex ∘ nat_to_cube on [0, R)
-  -- when R ≤ 2^d (guaranteed by d = bit_length(R-1))
-  sorry
+  -- Cardinality: |hamming_ball_subset| = R
+  unfold hamming_ball_subset
+  have hR_le := le_pow_bit_length R
+  have hinj := embed_vertex_injective_cube n k d hk hnk
+  have : Set.InjOn (fun i => embed_vertex n k d (nat_to_cube d i) hk hnk)
+      ↑(Finset.range R) := by
+    intro i hi j hj heq
+    simp only [Finset.mem_coe, Finset.mem_range] at hi hj
+    have hi' : i < 2^d := lt_of_lt_of_le hi hR_le
+    have hj' : j < 2^d := lt_of_lt_of_le hj hR_le
+    exact nat_to_cube_injective d i j hi' hj' (hinj heq)
+  rw [Finset.card_image_of_injOn this, Finset.card_range]
 
 -- Part 2: Universal Lower Bound (Squeezing via Bridge Lemmas)
 lemma lower_bound_all_embeddings (R n k : ℕ)
