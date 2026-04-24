@@ -10,6 +10,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Fintype.Basic
+import ArrDefs
 
 /-!
   # Layer 1: The Combinatorial Heart — Subadditivity of A000788
@@ -134,15 +135,7 @@ abbrev Cube (d : ℕ) := Fin d → Bool
 -/
 variable {n k : ℕ}
 
--- A vertex in A(n,k) is an injective sequence of k symbols from {0..n-1}
-def ArrVertex (n k : ℕ) := { f : Fin k → Fin n // Function.Injective f }
-
--- Provide Fintype and DecidableEq for ArrVertex (injective functions)
-instance {n k : ℕ} : DecidableEq (ArrVertex n k) := by
-  unfold ArrVertex; infer_instance
-
-instance {n k : ℕ} : Fintype (ArrVertex n k) := by
-  unfold ArrVertex; infer_instance
+-- ArrVertex, arr_adjacent, external_neighbors imported from ArrDefs
 
 -- FORMULA COMPONENTS (needed early for embedding condition)
 
@@ -191,25 +184,7 @@ def embed_vertex (n k d : ℕ) (v : Cube d) (hk : d ≤ k) (hnk : k + d ≤ n) :
     ArrVertex n k :=
   ⟨embed_cube n k d hk hnk v, embedding_is_injective d v hk hnk⟩
 
--- ADJACENCY
-
-/-- Two vertices in A(n,k) are adjacent if they differ in exactly one position. -/
-def arr_adjacent {n k : ℕ} (u v : ArrVertex n k) : Prop :=
-  (Finset.univ.filter (fun p : Fin k => u.val p ≠ v.val p)).card = 1
-
-instance {n k : ℕ} (u v : ArrVertex n k) : Decidable (arr_adjacent u v) := by
-  unfold arr_adjacent; infer_instance
-
--- EXTERNAL NEIGHBORS (computable)
-
-/-- Computable definition of the external boundary.
-    Counts vertices outside V' that are adjacent to at least one member of V'. -/
-def external_neighbors {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
-  (Finset.univ.filter (fun v => v ∉ V' ∧ ∃ u ∈ V', arr_adjacent u v)).card
-
 -- FORMULA COMPONENTS
-
--- (bit_length defined above, before can_embed_hypercube)
 
 def sum_bit_length : ℕ → ℕ
   | 0 => 0
