@@ -10,7 +10,7 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 3 sorries (Section 4 boundary injection), 2 axioms**.
+Current status: **0 errors, 0 sorries, 2 axioms**.
 
 ## Architecture
 
@@ -152,10 +152,14 @@ This work contains several results that appear to be **new in the literature**:
    Formalized as `topological_sandwich_conjecture` in
    `ArrangementExtraconnectivity.lean`.
 
-The compression proof approach adapts Harper/Kruskal-Katona techniques
-to partial permutations, which is genuinely new — the isoperimetric
-inequality for arrangement graphs (not hypercubes) is not established
-in the existing literature.
+5. **Compression No-Go Theorem**: The standard Kruskal-Katona/Harper
+   compression technique (shifting symbols b→a) provably FAILS for
+   arrangement graphs. Counterexample: in A(4,2) with V'={[4,3],[1,3]}
+   and shift 3→1, the boundary increases from 5 to 7. Root cause:
+   "coordinate tangling" — the permutation constraint means shifting
+   one symbol affects the available symbol pool for ALL other vertices.
+   This mandates the algebraic defect squeeze over geometric approaches.
+   Documented with full proof in `IsoperimetricPartialPermutation.lean`.
 
 ## Uniqueness: Open Problem
 
@@ -200,14 +204,14 @@ This is proven by list induction using `E_seq_add_bound` as the step lemma.
 
 ## File Map
 
-| File                                          | Contents                                    |
-| --------------------------------------------- | ------------------------------------------- |
-| `proofs/ArrangementExtraconnectivity.lean`    | Main proof: Layers 1-3 + capstone           |
-| `proofs/IsoperimetricPartialPermutation.lean` | Section 4: compression operator + boundary  |
-| `proofs/HypercubeEdges.lean`                  | Supporting popcount/A000788 lemmas          |
-| `proofs/PredictorComplexity.lean`             | Complexity analysis of the predictor        |
-| `proofs/unstable/ArrangementGraphUtils.lean`  | Harper's theorem + edge-counting (orphaned) |
-| `proofs/lakefile.lean`                        | Lake build configuration                    |
+| File                                          | Contents                                     |
+| --------------------------------------------- | -------------------------------------------- |
+| `proofs/ArrangementExtraconnectivity.lean`    | Main proof: Layers 1-3 + capstone            |
+| `proofs/IsoperimetricPartialPermutation.lean` | Compression machinery + No-Go counterexample |
+| `proofs/HypercubeEdges.lean`                  | Supporting popcount/A000788 lemmas           |
+| `proofs/PredictorComplexity.lean`             | Complexity analysis of the predictor         |
+| `proofs/unstable/ArrangementGraphUtils.lean`  | Harper's theorem + edge-counting (orphaned)  |
+| `proofs/lakefile.lean`                        | Lake build configuration                     |
 
 ## Dependencies
 

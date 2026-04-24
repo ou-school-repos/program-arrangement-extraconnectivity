@@ -257,26 +257,50 @@ lemma compressSet_idempotent (V' : Finset (ArrVertex n k)) (a b : Fin n) :
 
   **This inequality is MATHEMATICALLY FALSE for Arrangement Graphs.**
 
+  ## Background
+  In the Arrangement Graph A(n,k), each vertex is an injective sequence
+  of k symbols drawn from {1, ..., n} (a partial permutation). Two vertices
+  are adjacent iff they differ at exactly one position. The external boundary
+  ∂S of a vertex set S is the set of vertices NOT in S that are adjacent to
+  at least one vertex in S.
+
+  The compression operator `compressSet V' a b` tries to shift symbol b → a
+  in each vertex of V', subject to injectivity: if a vertex already uses
+  symbol a, it cannot shift (it would create a duplicate symbol). In hypercubes
+  this always preserves or shrinks the boundary. The counterexample below
+  shows this fails for partial permutations.
+
   ## The Counterexample
   Consider A(4,2) with symbols {1, 2, 3, 4}. Let a=1, b=3.
   Let V' = { [4,3], [1,3] }.
 
   1. The Boundary of V':
-     - Neighbors of [4,3]: [1,3], [2,3], [4,1], [4,2]
-     - Neighbors of [1,3]: [4,3], [2,3], [1,2], [1,4]
+     [4,3] and [1,3] share position 2 = symbol 3.
+     - Neighbors of [4,3]: [1,3]*, [2,3], [4,1], [4,2]   (* internal)
+     - Neighbors of [1,3]: [4,3]*, [2,3], [1,2], [1,4]   (* internal)
      - External boundary ∂V' = {[2,3], [4,1], [4,2], [1,2], [1,4]}, size 5.
 
   2. The Compression (shift 3 → 1):
-     - [4,3] uses 3, lacks 1. Shifts to [4,1]. Since [4,1] ∉ V', shift OK.
-     - [1,3] uses 3, but ALREADY uses 1. Precondition fails. Unchanged.
-     - compressSet(V') = { [4,1], [1,3] }
+     - [4,3]: uses 3 ✓, lacks 1 ✓ → shifts to [4,1]. Since [4,1] ∉ V', OK.
+     - [1,3]: uses 3 ✓, but ALREADY uses 1 ✗ → cannot shift (would create
+       [1,1] which violates injectivity). Vertex unchanged.
+     - compressSet(V') = { [4,1], [1,3] }.
+     Note: [4,3] and [1,3] were adjacent (shared symbol 3 at position 2).
+     After compression, [4,1] and [1,3] differ at BOTH positions — they are
+     no longer adjacent! The internal edge was destroyed.
 
   3. The Boundary of compressSet(V'):
      - Neighbors of [4,1]: [2,1], [3,1], [4,2], [4,3]
      - Neighbors of [1,3]: [4,3], [2,3], [1,2], [1,4]
+     - Only [4,3] is shared. All others are distinct.
      - External boundary = {[2,1],[3,1],[4,2],[4,3],[2,3],[1,2],[1,4]}, size 7.
 
   ** 7 ≤ 5 is FALSE. The external boundary INCREASED under compression. **
+
+  The new boundary vertices [2,1] and [3,1] appeared because [4,1] "stole"
+  symbol 1, creating adjacencies to vertices containing symbol 1 that had
+  no connection to the original V'.
+  See `docs/compression_counterexample.gif` for a visual.
 
   ## Root Cause: Coordinate Tangling
   In hypercubes, flipping a bit is orthogonal to all other bits. But in A(n,k),
