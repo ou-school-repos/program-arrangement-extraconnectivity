@@ -12,7 +12,7 @@ LDFLAGS  =
 SRC_OPT   = src/arrangement.cpp
 BIN_OPT   = arrangement
 R         ?= 8
-I         ?= 1
+I         ?= 2
 K         ?= 127
 DOCS_SRC  = README.md
 DOCS_OUT  = README.pdf
@@ -162,13 +162,19 @@ csv: build	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_success,docs/predictions.csv written.)
 
 .PHONY: csv/full
-csv/full: build	##H @General Verified CSV R=I..K → docs/verified.csv (I=$(I) K=$(K))
-	@if [ ! -f docs/verified.csv ]; then \
-		./$(BIN_PRED) --csv --verify-range $(I) $(K) > docs/verified.csv; \
+csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
+	@if [ ! -f docs/verifications.csv ]; then \
+		./$(BIN_PRED) --csv --verify-range $(I) $(K) | tee docs/verifications.csv; \
 	else \
-		./$(BIN_PRED) --csv --verify-range $(I) $(K) | tail -n +2 >> docs/verified.csv; \
+		last=$$(tail -1 docs/verifications.csv | cut -d, -f1); \
+		next=$$((last + 1)); \
+		if [ $$next -le $(K) ]; then \
+			./$(BIN_PRED) --csv --verify-range --no-header $$next $(K) | tee -a docs/verifications.csv; \
+		else \
+			echo "Already complete up to R=$$last"; \
+		fi; \
 	fi
-	@$(call print_success,docs/verified.csv — $$(wc -l < docs/verified.csv) rows.)
+	@$(call print_success,docs/verifications.csv — $$(wc -l < docs/verifications.csv) rows.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lint & Format

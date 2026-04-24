@@ -300,6 +300,7 @@ int main(int argc, const char *argv[]) {
     bool csv_mode = false;
     bool verify_mode = false;
     bool range_mode = false;
+    bool no_header = false;
     int start_r = 2, end_r = 0;
 
     std::vector<std::string> positional;
@@ -311,6 +312,8 @@ int main(int argc, const char *argv[]) {
             verify_mode = true;
         else if (arg == "--verify-range")
             range_mode = true;
+        else if (arg == "--no-header")
+            no_header = true;
         else
             positional.push_back(arg);
     }
@@ -357,10 +360,12 @@ int main(int argc, const char *argv[]) {
         if (csv_mode && !range_mode)
             start_r = 2;
 
-        std::cout << "R,nk1,constant,coeff,formula_at_2R";
-        if (range_mode)
-            std::cout << ",iedges";
-        std::cout << "\n";
+        if (!no_header) {
+            std::cout << "R,nk1,constant,coeff,formula_at_2R";
+            if (range_mode)
+                std::cout << ",iedges";
+            std::cout << "\n" << std::flush;
+        }
 
         for (int r = start_r; r <= end_r; r++) {
             R = r;
@@ -388,7 +393,7 @@ int main(int argc, const char *argv[]) {
                       << i128_to_string(coeff) << "," << i128_to_string(val);
             if (range_mode)
                 std::cout << "," << iedges;
-            std::cout << "\n";
+            std::cout << "\n" << std::flush;
         }
 
         if (range_mode)
