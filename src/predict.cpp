@@ -18,6 +18,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 // __int128 is a GCC/Clang extension, not ISO C++17.
@@ -31,7 +32,7 @@ static int R = 10;
 
 template <typename SymT> struct Vertex {
     static constexpr SymT SENTINEL = static_cast<SymT>(~SymT{0}); // max value
-    SymT syms[256] = {};
+    SymT syms[512] = {};
     bool operator<(const Vertex &o) const {
         return std::memcmp(syms, o.syms, R * sizeof(SymT)) < 0;
     }
@@ -209,13 +210,13 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
     std::vector<Vertex<SymT>> nbrs;
-    nbrs.reserve(R * k * n);
+    Vertex<SymT> nbr;
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < k; p++) {
             for (int s = 0; s < n; s++) {
                 if (contains_sym(verts[i], s))
                     continue;
-                Vertex<SymT> nbr = verts[i];
+                std::memcpy(nbr.syms, verts[i].syms, k * sizeof(SymT));
                 nbr.syms[p] = static_cast<SymT>(s);
                 if (!std::binary_search(sorted_verts.begin(),
                                         sorted_verts.end(), nbr))
@@ -313,9 +314,9 @@ int main(int argc, const char *argv[]) {
             end_r = static_cast<int>(
                 std::strtol(positional[1].c_str(), nullptr, 10));
         }
-        if (start_r < 2 || end_r < start_r || end_r > 255) {
+        if (start_r < 2 || end_r < start_r || end_r > 512) {
             std::cerr
-                << "Error: --verify-range requires 2 <= start <= end <= 255\n";
+                << "Error: --verify-range requires 2 <= start <= end <= 512\n";
             return 1;
         }
     } else if (csv_mode && !positional.empty()) {
@@ -394,8 +395,8 @@ int main(int argc, const char *argv[]) {
     std::cerr << "  [analytical] constant = " << expected_const << "\n";
 
     if (verify_mode) {
-        if (R > 255) {
-            std::cerr << "Error: --verify requires R <= 255\n";
+        if (R > 512) {
+            std::cerr << "Error: --verify requires R <= 512\n";
             return 1;
         }
         int rc;
