@@ -10,4 +10,4 @@ require mathlib from git
 @[default_target]
 lean_lib «Proofs» where
   srcDir := "."
-  roots := #[`HypercubeEdges, `PredictorComplexity, `ArrangementExtraconnectivity, `unstable.ArrangementGraphUtils]
+  roots := #[`HypercubeEdges, `PredictorComplexity, `ArrangementExtraconnectivity, `IsoperimPartialPerm, `unstable.ArrangementGraphUtils]
