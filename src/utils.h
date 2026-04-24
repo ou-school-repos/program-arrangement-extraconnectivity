@@ -10,6 +10,8 @@
 #include <string>
 
 // ── Formatting helpers ─────────────────────────────────────────────────────
+inline constexpr const char* PRUNE_SEP = "   ";
+
 inline std::string fcom(uint64_t n) {
     std::string s = std::to_string(n);
     for (int i = (int)s.length() - 3; i > 0; i -= 3)

@@ -605,8 +605,7 @@ int main(int argc, const char *argv[]) {
         best_nk1 = nk1;
     }
 
-    std::cout << "\nSearch Summary:\n"
-              << "  Done       | " << std::fixed << std::setprecision(3)
+    std::cout << "  Done       | " << std::fixed << std::setprecision(3)
               << elapsed << "s\n"
               << "  Gen / Eval | " << fcom(nodes_generated) << " / "
               << fcom(nodes_evaluated) << " (" << fcom(volume_pruned_iso, 3)
@@ -635,7 +634,7 @@ int main(int argc, const char *argv[]) {
         }
         std::cout << " [" << i << (i <= global_nauty_limit ? "-n" : "") << "] "
                   << std::fixed << std::setprecision(1) << rate << "%"
-                  << (i == R - 1 ? "" : "   ");
+                  << (i == R - 1 ? "" : PRUNE_SEP);
     }
     std::cout << "\n\n";
 
