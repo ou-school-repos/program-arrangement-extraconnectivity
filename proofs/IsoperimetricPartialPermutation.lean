@@ -255,23 +255,24 @@ lemma external_neighbors_eq_card_boundary (S : Finset (ArrVertex n k)) :
     external_neighbors S = (boundary_set S).card := rfl
 
 -- ATOMIC GATE 1: Unconditional swap of two symbols (graph automorphism)
+
+/-- Raw symbol swap on Fin n: swap a↔b. -/
+def symSwap (a b : Fin n) (x : Fin n) : Fin n :=
+  if x = b then a else if x = a then b else x
+
+lemma symSwap_involutive (a b : Fin n) (x : Fin n) :
+    symSwap a b (symSwap a b x) = x := by
+  simp only [symSwap]; split_ifs <;> simp_all
+
+lemma symSwap_injective (a b : Fin n) : Function.Injective (symSwap a b) := by
+  intro x y heq
+  have := congr_arg (symSwap a b) heq
+  rwa [symSwap_involutive, symSwap_involutive] at this
+
 /-- Global swap of symbols a↔b in a vertex's sequence. -/
 def swapVertex (v : ArrVertex n k) (a b : Fin n) : ArrVertex n k :=
-  ⟨fun p => if v.val p = b then a else if v.val p = a then b else v.val p, by
-    intro p1 p2 heq
-    simp only at heq
-    split_ifs at heq with h1 h2 h3 h4 h5 h6
-    -- 16 cases from 4 binary conditions on p1 and p2
-    · exact v.prop (h1.trans h2.symm)          -- both = b
-    · exact v.prop (h1.trans h4.symm)          -- p1=b→a, p2=a→b, so a=b
-    · rw [h1] at heq; exact False.elim (h5 heq.symm)  -- p1=b, p2=other, a=other
-    · exact v.prop (h3.trans h2.symm)          -- p1=a→b, p2=b→a, so b=a
-    · exact v.prop (h3.trans h4.symm)          -- both = a
-    · rw [h3] at heq; exact False.elim (h6 heq) -- p1=a, p2=other, b=other
-    · rw [h2] at heq; exact False.elim (h1 heq) -- p1=other, p2=b, other=a
-    · rw [h4] at heq; exact False.elim (h3 heq.symm) -- p1=other, p2=a, other=b
-    · exact v.prop heq                          -- both other
-  ⟩
+  ⟨fun p => symSwap a b (v.val p),
+   fun p1 p2 heq => v.prop (symSwap_injective a b heq)⟩
 
 -- ATOMIC GATE 2: Swap is an involution
 lemma swapVertex_involutive (v : ArrVertex n k) (a b : Fin n) :
@@ -279,109 +280,37 @@ lemma swapVertex_involutive (v : ArrVertex n k) (a b : Fin n) :
   apply Subtype.ext
   funext p
   simp only [swapVertex]
-  split_ifs with h1 h2 h3 h4 h5
-  · -- inner was b→a, outer sees a→b: result = v.val p via h1
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h1; exact hvb
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h1
-      · simp [hvb, hva] at h1
-  · -- inner was b→a, outer sees a but not b: contradiction
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h1 h2
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h1
-      · simp [hvb, hva] at h1
-  · -- inner was b→a, outer sees neither: contradiction with h1
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h1 h2 h3; exact hvb
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h1
-      · simp [hvb, hva] at h1
-  · -- inner was a→b, outer sees b→a
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h4
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h4 h5; exact hva
-      · simp [hvb, hva] at h4
-  · -- inner was a→b, outer sees a: contradiction
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h4
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h4 h5 h6
-      · simp [hvb, hva] at h4
-  · -- inner was other, outer sees b→a: contradiction
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h4 h6; exact h6
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h4 h6
-      · simp [hvb, hva] at h6
-  · -- inner was other, outer sees a→b: contradiction
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h4 h6
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h4 h6 h7
-      · simp [hvb, hva] at h6 h7
-  · -- inner was other, outer sees neither: identity
-    by_cases hvb : v.val p = b
-    · simp [hvb] at h4 h6
-    · by_cases hva : v.val p = a
-      · simp [hvb, hva] at h4 h6 h7 h8
-      · simp [hvb, hva] at h6 h8
+  exact symSwap_involutive a b (v.val p)
 
 -- ATOMIC GATE 3: Adjacency is preserved under global swap
 lemma arr_adjacent_swap (u v : ArrVertex n k) (a b : Fin n) :
     arr_adjacent u v ↔ arr_adjacent (swapVertex u a b) (swapVertex v a b) := by
   unfold arr_adjacent
-  -- The diff positions are identical: position p has u.val p ≠ v.val p
-  -- iff swapVertex u has swapped(u.val p) ≠ swapped(v.val p),
-  -- because the swap is injective on Fin n.
-  congr 1
-  congr 1
-  apply Finset.filter_congr
-  intro p _
-  simp only [swapVertex, ne_eq]
-  constructor
-  · intro h
-    split_ifs with h1 h2 h3 h4
-    · exact h (h1.symm.trans h2)
-    · exact fun heq => h4 (h1.symm.trans heq)
-    · exact fun heq => h (h1.symm.trans h3.symm)
-    · exact fun heq => h (h1.symm.trans heq)
-    · exact fun heq => h2 (h3.symm.trans heq)
-    · exact h (h3.symm.trans h4)
-    · exact fun heq => h (h3.symm.trans heq)
-    · exact fun heq => h2 heq.symm
-    · exact fun heq => h (heq.symm)
-  · intro h
-    split_ifs at h with h1 h2 h3 h4
-    · intro heq; rw [heq] at h1; exact h (h1.symm.trans h2)
-    · intro heq; rw [heq] at h1; exact h4 h1.symm
-    · intro heq; rw [heq] at h1; exact h (rfl)
-    · intro heq; rw [heq] at h1; exact h rfl
-    · intro heq; rw [heq] at h3; exact h (h3.symm.trans h2)
-    · intro heq; rw [heq] at h3; exact h (h3.symm.trans h4)
-    · intro heq; rw [heq] at h3; exact h rfl
-    · intro heq; exact h2 heq
-    · intro heq; exact h heq
+  -- Prove the filter sets are equal, then the iff is trivial
+  have hfilt : Finset.univ.filter (fun p : Fin k => u.val p ≠ v.val p) =
+      Finset.univ.filter (fun p : Fin k => (swapVertex u a b).val p ≠ (swapVertex v a b).val p) := by
+    apply Finset.filter_congr
+    intro p _
+    simp only [swapVertex, ne_eq]
+    constructor
+    · intro hne heq; exact hne (symSwap_injective a b heq)
+    · intro hne heq; exact hne (congr_arg (symSwap a b) heq)
+  rw [hfilt]
 
 -- ATOMIC GATE 4: shiftVertex relates to swapVertex
--- When uses_sym v b ∧ ¬uses_sym v a, shiftVertex only replaces b→a (never sees a).
--- swapVertex replaces b→a AND a→b, but since v doesn't use a, the a→b case never fires.
--- So they agree on v's positions.
+-- When uses_sym v b ∧ ¬uses_sym v a, shiftVertex only replaces b→a.
+-- swapVertex also replaces a→b, but v doesn't use a, so that never fires.
 lemma shiftVertex_eq_swap (v : ArrVertex n k) (a b : Fin n)
     (h : uses_sym v b ∧ ¬uses_sym v a) :
     shiftVertex v a b = swapVertex v a b := by
   apply Subtype.ext
   funext p
-  simp only [shiftVertex, swapVertex, dif_pos h]
-  split_ifs with h1 h2
-  · rfl  -- v.val p = b: both give a
-  · -- v.val p = b and v.val p = a: contradicts h.2
-    exact False.elim (h.2 ⟨p, h2⟩)
-  · -- v.val p ≠ b, v.val p = a: contradicts h.2
-    exact False.elim (h.2 ⟨p, h3⟩)
-  · rfl  -- v.val p ≠ b, v.val p ≠ a: both give v.val p
+  simp only [shiftVertex, swapVertex, symSwap, dif_pos h]
+  by_cases h1 : v.val p = b
+  · simp [h1]
+  · by_cases h2 : v.val p = a
+    · exact False.elim (h.2 ⟨p, h2⟩)
+    · simp [h1, h2]
 
 -- ATOMIC GATE 5: The Boundary Injection Map
 /-- Maps an external neighbor of the compressed set back to an external

@@ -805,3 +805,30 @@ def uniqueness_conjecture (R n k : ℕ) : Prop :=
       (τ : Fin k → Fin k) (hτ : Function.Bijective τ),
       V₂ = V₁.image (fun v =>
         ⟨σ ∘ v.val ∘ τ, (hσ.injective.comp v.prop).comp hτ.injective⟩)
+
+-- OPEN PROBLEM: THE PARETO SPECTRUM & SANDWICH THEOREM
+
+/--
+  CONJECTURE: The Connected Isoperimetric Sandwich Theorem.
+
+  Computational enumeration of the Pareto frontier reveals that the external
+  boundary of any Pareto-optimal connected R-vertex subgraph in A(n,k) is
+  perfectly sandwiched between two closed-form topologies:
+
+  1. The Dense Limit: The Hamming Ball (Minimum overall boundary)
+  2. The Sparse Limit: The Star Graph K_{1, R-1} (Maximum boundary for an optimal tree)
+
+  For the Star Graph, the Defect is R-1, and Inclusion-Exclusion on
+  the overlapping 2-paths yields a collision constant exactly equal
+  to the triangular numbers (R choose 2).
+-/
+def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
+  sorry -- Standard graph connectivity definition
+
+def topological_sandwich_conjecture (R n k : ℕ) : Prop :=
+  ∀ V' : Finset (ArrVertex n k),
+    V'.card = R → is_connected_subgraph V' →
+    -- Lower Bound: The Hamming Ball (Dense Limit)
+    ((R * k - E_seq R) * (n - k) - C_constant R ≤ external_neighbors V') ∧
+    -- Upper Bound for Pareto-optimal sparse graphs: The Star Graph
+    (external_neighbors V' ≤ (R * k - (R - 1)) * (n - k) - (R * (R - 1)) / 2)
