@@ -193,6 +193,8 @@ static uint64_t nodes_generated = 0, nodes_evaluated = 0;
 static uint64_t nodes_pruned_iso = 0, nodes_pruned_exact = 0,
                 nodes_pruned_local = 0;
 static double volume_pruned_iso = 0;
+static double est_saved_iso = 0, est_saved_exact = 0, est_saved_local = 0;
+static uint64_t sum_evals_d[MAX_R] = {0}, count_evals_d[MAX_R] = {0};
 static std::chrono::high_resolution_clock::time_point t0_global, t_last_print;
 
 // ── chunk_idx SWAR lookup ──────────────────────────────────────────────────
@@ -316,8 +318,9 @@ static int count_internal_edges(const uint64_t *verts, int n) {
 }
 
 // ── Recursive search ───────────────────────────────────────────────────────
-static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
-                  int current_nk1, int current_cons) {
+static uint64_t solve(int point, int nodl, int largchg,
+                      uint32_t overall_sym_mask, int current_nk1,
+                      int current_cons) {
     nodes_generated++;
     if (point < MAX_R)
         nodes_gen_d[point]++;
@@ -351,7 +354,7 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
             results[current_nk1] = {current_cons, count_internal_edges(ver, R),
                                     exa};
         }
-        return;
+        return 1;
     }
 
     // Deduplication
@@ -414,9 +417,13 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
         Hash128 h = hash_nauty_graph(cg_nauty, m_aux, n_aux);
         if (!seen_nauty[point].insert(h)) {
             nodes_pruned_iso++;
-            if (point < MAX_R)
+            if (point < MAX_R) {
                 nodes_iso_d[point]++;
-            return;
+                if (count_evals_d[point] > 0)
+                    est_saved_iso +=
+                        (double)sum_evals_d[point] / count_evals_d[point];
+            }
+            return 0;
         }
     } else if (point < R) {
         uint64_t key_buf[16];
@@ -427,14 +434,19 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
         Hash128 h = hash_sorted_vertices(key_buf, point);
         if (!seen_sorted[point].insert(h)) {
             nodes_pruned_exact++;
-            if (point < MAX_R)
+            if (point < MAX_R) {
                 nodes_exact_d[point]++;
-            return;
+                if (count_evals_d[point] > 0)
+                    est_saved_exact +=
+                        (double)sum_evals_d[point] / count_evals_d[point];
+            }
+            return 0;
         }
     }
 
     // Generate candidates
     uint64_t local_seen[2048];
+    uint64_t total_evals = 0;
     std::memset(local_seen, 0xFF, sizeof(local_seen));
 
     for (int i = 0; i < point; i++) {
@@ -459,8 +471,12 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
                 }
                 if (duplicate) {
                     nodes_pruned_local++;
-                    if (point < MAX_R)
+                    if (point < MAX_R) {
                         nodes_local_d[point]++;
+                        if (point + 1 < MAX_R && count_evals_d[point + 1] > 0)
+                            est_saved_local += (double)sum_evals_d[point + 1] /
+                                               count_evals_d[point + 1];
+                    }
                     continue;
                 }
                 local_seen[h] = temp;
@@ -469,12 +485,19 @@ static void solve(int point, int nodl, int largchg, uint32_t overall_sym_mask,
                 ver_sym_mask[point] = sym_mask(temp);
 
                 auto [step_nk1, step_cons] = calc_step(point + 1);
-                solve(point + 1, std::max(nodl, j + 1), std::max(largchg, k),
-                      overall_sym_mask | ver_sym_mask[point],
-                      current_nk1 + step_nk1, current_cons + step_cons);
+                total_evals += solve(
+                    point + 1, std::max(nodl, j + 1), std::max(largchg, k),
+                    overall_sym_mask | ver_sym_mask[point],
+                    current_nk1 + step_nk1, current_cons + step_cons);
             }
         }
     }
+
+    if (point < MAX_R) {
+        sum_evals_d[point] += total_evals;
+        count_evals_d[point]++;
+    }
+    return total_evals;
 }
 
 // ── A000788: cumulative popcount — O(log R) ──────────────────────────
@@ -591,10 +614,10 @@ int main(int argc, const char *argv[]) {
               << (volume_pruned_iso > 0
                       ? (double)nodes_pruned_iso / volume_pruned_iso
                       : 0.0)
-              << " avg aut / Coverage: " << volume_pruned_iso << " orbits\n"
-              << "Savings | Iso: " << est_saved_iso
-              << " / Exact: " << est_saved_exact
-              << " / Local: " << est_saved_local << " evals\n"
+              << " avg aut | Coverage: " << volume_pruned_iso << " orbits\n"
+              << "Savings | Iso: " << std::fixed << std::setprecision(1)
+              << est_saved_iso << " | Exact: " << est_saved_exact
+              << " | Local: " << est_saved_local << " evals\n"
               << "Prune Rate |";
     for (int i = 2; i < R; i++) {
         double rate = 0;
