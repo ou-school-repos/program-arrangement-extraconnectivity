@@ -33,6 +33,9 @@ NAUTY_LIBS   = -lnauty
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.PHONY: all
+all: format build lean docs lint bundle	##H @Build Run all targets
+
 .PHONY: _help help
 help: _help
 _help:
