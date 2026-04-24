@@ -604,21 +604,24 @@ int main(int argc, const char *argv[]) {
         best_nk1 = nk1;
     }
 
-    std::cout << "Done: " << std::fixed << std::setprecision(3) << elapsed
-              << "s | Gen: " << nodes_generated
-              << " | Eval: " << nodes_evaluated
-              << "\nPruned | Iso: " << nodes_pruned_iso
-              << " | Exact: " << nodes_pruned_exact
-              << " | Local: " << nodes_pruned_local << "\n"
-              << "Symmetry | Power: "
+    std::cout << "\nSearch Summary:\n"
+              << "  Done       | " << std::fixed << std::setprecision(3)
+              << elapsed << "s\n"
+              << "  Gen / Eval | " << nodes_generated << " / "
+              << nodes_evaluated << "\n"
+              << "  Pruned     | Iso: " << std::left << std::setw(12)
+              << nodes_pruned_iso << " Exact: " << std::setw(12)
+              << nodes_pruned_exact << " Local: " << nodes_pruned_local << "\n"
+              << "  Symmetry   | Power: " << std::setw(10)
+              << std::setprecision(3)
               << (volume_pruned_iso > 0
                       ? (double)nodes_pruned_iso / volume_pruned_iso
                       : 0.0)
-              << " avg aut | Coverage: " << volume_pruned_iso << " orbits\n"
-              << "Savings | Iso: " << std::fixed << std::setprecision(1)
-              << est_saved_iso << " | Exact: " << est_saved_exact
-              << " | Local: " << est_saved_local << " evals\n"
-              << "Prune Rate |";
+              << " Coverage: " << volume_pruned_iso << " orbits\n"
+              << "  Savings    | Iso: " << std::setw(14) << std::setprecision(1)
+              << est_saved_iso << " Exact: " << std::setw(14) << est_saved_exact
+              << " Local: " << est_saved_local << " evals\n"
+              << "  Prune Rate |";
     for (int i = 2; i < R; i++) {
         double rate = 0;
         uint64_t loc = nodes_local_d[i - 1];
@@ -632,7 +635,7 @@ int main(int argc, const char *argv[]) {
                   << std::fixed << std::setprecision(1) << rate << "%"
                   << (i == R - 1 ? "" : " /");
     }
-    std::cout << "\n";
+    std::cout << "\n\n";
 
     if (best_nk1 != -1) {
         // Parse example back into array
