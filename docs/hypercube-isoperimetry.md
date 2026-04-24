@@ -12,7 +12,7 @@ While the exhaustive search conclusively identifies the Hamming Ball as the mini
 
 ### ✓ Proven by Computer-Assisted Search
 
-1.  **Local Optimality (R ≤ 9):** Through exhaustive enumeration of the $\Omega(R^{R-2})$ search space, we have proven that the Hamming Ball is the unique topology maximizing internal edges for all $R \le 9$. This conclusively disproves the linear $E=2R-5$ conjecture in this range.
+1.  **Local Optimality (R ≤ 10):** Through exhaustive enumeration of the $\Omega(R^{R-2})$ search space, we have proven that the Hamming Ball is the unique topology maximizing internal edges for all $R \le 10$.
 2.  **Coefficient/Constant Match:** The analytical formulas for $E(R)$ and $C(R)$ match every globally optimal vertex set discovered by the search.
 
 ---
