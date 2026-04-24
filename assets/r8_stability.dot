@@ -1,11 +1,18 @@
 graph Comparison_3 {
-  graph [label="Stability Analysis (R=8)
-Optimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankdir=LR];
-  node [fontname="Helvetica", style=filled];
+  graph [label="Stability Analysis (R=8)\nOptimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20];
+  node [fontname="Helvetica", style=filled, shape=circle, width=0.6];
+  edge [penwidth=1.2];
   subgraph cluster_opt {
     label="Optimal 3-Cube (E=12)";
     color=blue; fontcolor=blue; style=dashed;
-    node [fillcolor=lightblue];
+    o0 [fillcolor=lightblue, label="000"];
+    o1 [fillcolor=lightblue, label="001"];
+    o2 [fillcolor=lightblue, label="010"];
+    o3 [fillcolor=lightblue, label="011"];
+    o4 [fillcolor=lightblue, label="100"];
+    o5 [fillcolor=lightblue, label="101"];
+    o6 [fillcolor=lightblue, label="110"];
+    o7 [fillcolor=lightblue, label="111"];
     o0 -- o1;
     o0 -- o2;
     o0 -- o4;
@@ -22,7 +29,13 @@ Optimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankd
   subgraph cluster_frac {
     label="Fractured 3-Cube (E=10)";
     color=red; fontcolor=red; style=dashed;
-    node [fillcolor=lightpink];
+    f0 [fillcolor=lightpink, label="000"];
+    f1 [fillcolor=lightpink, label="001"];
+    f2 [fillcolor=lightpink, label="010"];
+    f3 [fillcolor=lightpink, label="011"];
+    f4 [fillcolor=lightpink, label="100"];
+    f5 [fillcolor=lightpink, label="101"];
+    f6 [fillcolor=lightpink, label="110"];
     f0 -- f1;
     f0 -- f2;
     f0 -- f4;
@@ -32,8 +45,9 @@ Optimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankd
     f2 -- f6;
     f4 -- f5;
     f4 -- f6;
-    f7 [fillcolor=orange, label="N7
+    f7 [fillcolor=orange, label="111
 (Splintered)"];
-    f0 -- f7 [color=red, penwidth=2.0];
+    f0 -- f7 [color=red, penwidth=3.0, label="Rigidity
+Break"];
   }
 }

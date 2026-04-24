@@ -1,11 +1,26 @@
 graph Comparison_4 {
-  graph [label="Stability Analysis (R=16)
-Optimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankdir=LR];
-  node [fontname="Helvetica", style=filled];
+  graph [label="Stability Analysis (R=16)\nOptimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20];
+  node [fontname="Helvetica", style=filled, shape=circle, width=0.6];
+  edge [penwidth=1.2];
   subgraph cluster_opt {
     label="Optimal 4-Cube (E=32)";
     color=blue; fontcolor=blue; style=dashed;
-    node [fillcolor=lightblue];
+    o0 [fillcolor=lightblue, label="0000"];
+    o1 [fillcolor=lightblue, label="0001"];
+    o2 [fillcolor=lightblue, label="0010"];
+    o3 [fillcolor=lightblue, label="0011"];
+    o4 [fillcolor=lightblue, label="0100"];
+    o5 [fillcolor=lightblue, label="0101"];
+    o6 [fillcolor=lightblue, label="0110"];
+    o7 [fillcolor=lightblue, label="0111"];
+    o8 [fillcolor=lightblue, label="1000"];
+    o9 [fillcolor=lightblue, label="1001"];
+    o10 [fillcolor=lightblue, label="1010"];
+    o11 [fillcolor=lightblue, label="1011"];
+    o12 [fillcolor=lightblue, label="1100"];
+    o13 [fillcolor=lightblue, label="1101"];
+    o14 [fillcolor=lightblue, label="1110"];
+    o15 [fillcolor=lightblue, label="1111"];
     o0 -- o1;
     o0 -- o2;
     o0 -- o4;
@@ -42,7 +57,21 @@ Optimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankd
   subgraph cluster_frac {
     label="Fractured 4-Cube (E=29)";
     color=red; fontcolor=red; style=dashed;
-    node [fillcolor=lightpink];
+    f0 [fillcolor=lightpink, label="0000"];
+    f1 [fillcolor=lightpink, label="0001"];
+    f2 [fillcolor=lightpink, label="0010"];
+    f3 [fillcolor=lightpink, label="0011"];
+    f4 [fillcolor=lightpink, label="0100"];
+    f5 [fillcolor=lightpink, label="0101"];
+    f6 [fillcolor=lightpink, label="0110"];
+    f7 [fillcolor=lightpink, label="0111"];
+    f8 [fillcolor=lightpink, label="1000"];
+    f9 [fillcolor=lightpink, label="1001"];
+    f10 [fillcolor=lightpink, label="1010"];
+    f11 [fillcolor=lightpink, label="1011"];
+    f12 [fillcolor=lightpink, label="1100"];
+    f13 [fillcolor=lightpink, label="1101"];
+    f14 [fillcolor=lightpink, label="1110"];
     f0 -- f1;
     f0 -- f2;
     f0 -- f4;
@@ -71,8 +100,9 @@ Optimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20, rankd
     f10 -- f14;
     f12 -- f13;
     f12 -- f14;
-    f15 [fillcolor=orange, label="N15
+    f15 [fillcolor=orange, label="1111
 (Splintered)"];
-    f0 -- f15 [color=red, penwidth=2.0];
+    f0 -- f15 [color=red, penwidth=3.0, label="Rigidity
+Break"];
   }
 }
