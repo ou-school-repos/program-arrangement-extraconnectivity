@@ -61,7 +61,7 @@ lemma E_seq_odd (m : ℕ) : E_seq (2 * m + 1) = E_seq m + E_seq (m + 1) + m := b
     _ = E_seq m + (E_seq m + popcount m) + m := by omega
     _ = E_seq m + E_seq (m + 1) + m := rfl
 
--- ── THE CORE ISOPERIMETRIC INEQUALITY ────────────────────────────────────────
+-- THE CORE ISOPERIMETRIC INEQUALITY
 theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y) := by
   induction h : x + y using Nat.strong_induction_on generalizing x y
   case h n ih =>
@@ -120,13 +120,13 @@ theorem E_add_min_le (x y : ℕ) : E_seq x + E_seq y + min x y ≤ E_seq (x + y)
 
 
 /-!
-  # Layer 2: Harper's Theorem (moved to unstable/ArrangementGraphUtils.lean)
+  # Layer 1.5: Harper's Theorem (moved to unstable/ArrangementGraphUtils.lean)
   # The defect-based proof bypasses Harper entirely via algebraic
   # subadditivity of E_seq, so Layer 2 is not in the dependency chain.
 -/
 
 /-!
-  # Layer 3: The Arrangement Graph
+  # Layer 2: The Arrangement Graph
 -/
 variable {n k : ℕ}
 
@@ -140,7 +140,7 @@ instance {n k : ℕ} : DecidableEq (ArrVertex n k) := by
 instance {n k : ℕ} : Fintype (ArrVertex n k) := by
   unfold ArrVertex; infer_instance
 
--- ── FORMULA COMPONENTS (needed early for embedding condition) ─────────
+-- FORMULA COMPONENTS (needed early for embedding condition)
 
 def bit_length (x : ℕ) : ℕ :=
   if x = 0 then 0 else Nat.log2 x + 1
@@ -153,7 +153,7 @@ def bit_length (x : ℕ) : ℕ :=
 def can_embed_hypercube (R n k : ℕ) : Prop :=
   n - k ≥ bit_length (R - 1)
 
--- ── ADJACENCY ─────────────────────────────────────────────────────────────
+-- ADJACENCY
 
 /-- Two vertices in A(n,k) are adjacent if they differ in exactly one position. -/
 def arr_adjacent {n k : ℕ} (u v : ArrVertex n k) : Prop :=
@@ -162,14 +162,14 @@ def arr_adjacent {n k : ℕ} (u v : ArrVertex n k) : Prop :=
 instance {n k : ℕ} (u v : ArrVertex n k) : Decidable (arr_adjacent u v) := by
   unfold arr_adjacent; infer_instance
 
--- ── EXTERNAL NEIGHBORS (computable) ───────────────────────────────────────
+-- EXTERNAL NEIGHBORS (computable)
 
 /-- Computable definition of the external boundary.
     Counts vertices outside V' that are adjacent to at least one member of V'. -/
 def external_neighbors {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
   (Finset.univ.filter (fun v => v ∉ V' ∧ ∃ u ∈ V', arr_adjacent u v)).card
 
--- ── FORMULA COMPONENTS ────────────────────────────────────────────────────
+-- FORMULA COMPONENTS
 
 -- (bit_length defined above, before can_embed_hypercube)
 
@@ -180,7 +180,7 @@ def sum_bit_length : ℕ → ℕ
 def C_constant (R : ℕ) : ℕ :=
   (R - 1) + sum_bit_length R - E_seq R
 
--- ── THE DEGREE & COLLISION BRIDGE (LAYER 3.5) ─────────────────────────────
+-- THE DEGREE & COLLISION BRIDGE (LAYER 3)
 
 /-- Drop coordinate `p` from an arrangement vertex to get a (k-1)-sequence root -/
 def drop_pos {n k : ℕ} (v : ArrVertex n k) (p : Fin k) : {x : Fin k // x ≠ p} → Fin n :=
@@ -195,7 +195,7 @@ def unique_roots {n k : ℕ} (p : Fin k) (V' : Finset (ArrVertex n k)) : ℕ :=
 def sum_unique_roots {n k : ℕ} (V' : Finset (ArrVertex n k)) : ℕ :=
   (Finset.univ : Finset (Fin k)).val.map (fun p => unique_roots p V') |>.sum
 
--- ── THE GENERIC ALGEBRAIC SQUEEZE ─────────────────────────────────────────
+-- THE GENERIC ALGEBRAIC SQUEEZE
 -- Generalizes E_add_min_le from binary splits to arbitrary partitions.
 -- This is the algebraic engine that powers the Defect-based proof of Bridge 2.
 --
@@ -247,7 +247,7 @@ lemma E_seq_list_sum_le (l : List ℕ) (y : ℕ) (hy : l.foldr max 0 ≤ y) :
     have h4 : Mt ≤ t.sum := foldr_max_le_sum t
     exact E_seq_add_bound a (t.map E_seq).sum t.sum Mt y h1 h2 h3 h4
 
--- ── FIBER PARTITION INFRASTRUCTURE ─────────────────────────────────────────
+-- FIBER PARTITION INFRASTRUCTURE
 
 /-- Fiber: vertices in V' with symbol s at position p -/
 private def fiber {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) (s : Fin n) :
@@ -484,7 +484,7 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
               unique_roots q (fiber V' p s) from
           Finset.sum_congr rfl h_q_eq, Finset.sum_comm]
 
-      -- ── THE INDUCTIVE ALGEBRAIC SQUEEZE ──────────────────────────────────
+      --  THE INDUCTIVE ALGEBRAIC SQUEEZE
       -- omega combines the fiber splits and disjointness identities to
       -- prove the overall bound for V' from its fibers.
       omega
@@ -530,7 +530,7 @@ private lemma defect_fiber_bound {n k : ℕ} (V' : Finset (ArrVertex n k))
     rw [h_map_eq]
     omega
 
--- ── BRIDGE LEMMA 2: The Defect Bound (proven by strong induction) ─────────
+-- BRIDGE LEMMA 2: The Defect Bound (proven by strong induction)
 
 lemma sum_unique_roots_lower_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
@@ -595,7 +595,9 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
   overlaps from reused active symbols.
 
   **Justification for axiomatization:**
-  - Computationally verified for all R ≤ 20 by brute-force oracle
+  - Formula values verified for R ≤ 20 by predictor oracle (predict.cpp)
+  - Exhaustive topology enumeration confirms uniqueness for R ≤ 10
+    (arrangementoptimized.cpp)
   - The underlying mathematics (Kruskal-Katona theorem) establishes that
     counting collisions ≡ counting 4-cycles (squares), and the Hamming Ball
     maximizes squares among all R-element subsets
@@ -609,7 +611,7 @@ axiom external_neighbors_collision_bound {n k : ℕ}
     external_neighbors V' ≥
       sum_unique_roots V' * (n - k) - C_constant R
 
--- ── THE CROWNING THEOREM DECOMPOSED ────────────────────────────────────────
+-- THE CROWNING THEOREM DECOMPOSED
 
 -- Part 1: Existence of the Optimal Cut (Constructive Upper Bound)
 --
@@ -641,7 +643,9 @@ lemma nat_to_cube_injective (d : ℕ) (i j : ℕ) (hi : i < 2^d) (hj : j < 2^d)
 /-- The Hamming Ball achieves the exact extraconnectivity formula.
     Axiomatized: the exact external neighbor evaluation requires shadow-counting
     machinery equivalent to the collision bound (Bridge Lemma 3).
-    Computationally verified for R ≤ 20 by brute-force oracle. -/
+    Formula values verified for R ≤ 20 (predict.cpp);
+    exhaustive topology search confirms uniqueness for R ≤ 10
+    (arrangementoptimized.cpp). -/
 axiom hamming_ball_achieves_bound (R n k : ℕ)
     (h_cond : can_embed_hypercube R n k) :
     ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
@@ -656,7 +660,7 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
 lemma lower_bound_all_embeddings (R n k : ℕ)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
-  -- ── THE MULTI-HYPOTHESIS SQUEEZE ──────────────────────────────────────────
+  --  THE MULTI-HYPOTHESIS SQUEEZE
   -- Step 1: Get the lower bound for unique roots (from BRIDGE LEMMA 1)
   -- h1: (R*k - E_seq R) ≤ sum_unique_roots V'
   have h1 := sum_unique_roots_lower_bound R V' hR
@@ -711,7 +715,7 @@ theorem globally_optimal_growth_strategy
   let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond
   ⟨h_univ, h_exists⟩
 
--- ── OPEN PROBLEM: UNIQUENESS ──────────────────────────────────────────────
+-- OPEN PROBLEM: UNIQUENESS
 
 /--
   CONJECTURE: Uniqueness of the Hamming Ball Minimizer.
@@ -723,8 +727,8 @@ theorem globally_optimal_growth_strategy
   on symbols) to the Hamming Ball.
 
   **Evidence:**
-  - Computationally verified for R ≤ 10 via exhaustive enumeration:
-    exactly one minimum-cut topology class exists for each R.
+  - Computationally verified uniqueness for R ≤ 10 via exhaustive
+    search that exactly one minimum-cut V' exists for each R.
   - Would follow from showing equality in the defect bound
     D(V') = E_seq(R) forces the hypercube partition structure.
   - Related to equality cases in the Kruskal-Katona theorem.
@@ -737,5 +741,5 @@ def uniqueness_conjecture (R n k : ℕ) : Prop :=
     V₁.card = R → V₂.card = R →
     external_neighbors V₁ = (R * k - E_seq R) * (n - k) - C_constant R →
     external_neighbors V₂ = (R * k - E_seq R) * (n - k) - C_constant R →
-    ∃ (σ : Fin n → Fin n), Function.Bijective σ ∧
-      V₂ = V₁.image (fun v => ⟨σ ∘ v.val, fun a b h => v.prop (Function.Bijective.injective ‹_› h)⟩)
+    ∃ (σ : Fin n → Fin n) (hσ : Function.Bijective σ),
+      V₂ = V₁.image (fun v => ⟨σ ∘ v.val, fun _ _ h => v.prop (hσ.injective h)⟩)

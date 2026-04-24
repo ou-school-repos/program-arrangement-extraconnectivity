@@ -18,7 +18,9 @@ repos:
       - id: check-json
       - id: check-toml
       - id: end-of-file-fixer
+        exclude: \.lake/
       - id: trailing-whitespace
+        exclude: \.lake/
       - id: mixed-line-ending
       - id: check-merge-conflict
       - id: check-added-large-files
