@@ -15,6 +15,6 @@ lean_lib «Proofs» where
     `HypercubeEdges,
     `PredictorComplexity,
     `ArrangementExtraconnectivity,
-    `IsoperimetricPartialPermutation,
+    `unstable.IsoperimetricPartialPermutation,
     `unstable.ArrangementGraphUtils
   ]

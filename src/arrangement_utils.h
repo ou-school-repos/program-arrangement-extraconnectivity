@@ -59,11 +59,11 @@ inline int count_internal_edges(const uint64_t *verts, int n) {
 inline int64_t count_external_neighbors(const uint64_t *verts, int n, int R) {
     // k is derived from the encoding: number of 5-bit chunks used
     // This is a simplified version; for production use the SWAR-accelerated
-    // version in arrangementoptimized.cpp
+    // version in arrangement.cpp
     (void)verts;
     (void)n;
     (void)R;
-    return -1; // TODO: extract from arrangementoptimized.cpp if needed
+    return -1; // TODO: extract from arrangement.cpp if needed
 }
 
 } // namespace arrangementangement

@@ -14,7 +14,6 @@ This document describes what a complete mechanized proof would require.
 - **Axiomatized** in Lean 4 (zero `sorry` blocks)
 - **Formula values verified** for R ≤ 20 by predictor oracle (`predict.cpp`)
 - **Exhaustive topology search** confirms uniqueness for R ≤ 10
-  (`arrangementoptimized.cpp`)
 - **Mathematically justified** by the Kruskal-Katona theorem
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles

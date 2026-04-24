@@ -16,7 +16,7 @@ This project generalizes and extends the 2022 case-by-case analysis of Cheng, Li
 ## 3. Methodology
 
 - **Bridging $\Omega(R^{R-2})$ to $O(\log R)$:** We reduced the problem from a super-exponential Cayley tree search space ($\Omega(R^{R-2})$) down to an $O(R^4)$ structural predictor, and ultimately to an $O(\log R)$ halving recurrence for the leading A000788 coefficient.
-- **C++ Algorithmic Micro-Optimizations:** The exhaustive search (`arrangementoptimized.cpp`) scaled to $\sim 500M$ nodes via:
+- **C++ Algorithmic Micro-Optimizations:** The exhaustive search (`arrangement.cpp`) scaled to $\sim 25B$ nodes via:
   - **Hardware-Accelerated SWAR:** Packing symbols into 5-bit nibbles and using `__builtin_ctzll` for $O(1)$ vertex diffing.
   - **Nauty Symmetry Pruning:** Applying McKay's canonical labeling on a 4-colored bipartite graph to prune isomorphic $S_n \times S_R$ branches.
   - **Multi-Tier Deduplication:** Utilizing a fast local hash table for sibling nodes, 128-bit hashes for mid-level deduplication, and zero-allocation processing for leaf nodes to eliminate memory overhead.

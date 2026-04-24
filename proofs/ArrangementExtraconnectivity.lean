@@ -683,8 +683,8 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
 
   This axiom is:
   - Independent of n and k (purely a function of R and the graph topology)
-  - Computationally verified for R ≤ 20 (predict.cpp)
-  - Exhaustive topology search confirms for R ≤ 10 (arrangementoptimized.cpp)
+  - Computationally verified for R ≤ 20.
+  - Exhaustive topology search confirms for R ≤ 10.
   - Mathematically equivalent to: "the Hamming Ball maximizes 4-cycles
     among all R-element subsets" (Kruskal-Katona shadow theorem)
   - See docs/collision-axiom-roadmap.md for the full formalization roadmap
@@ -693,17 +693,125 @@ axiom max_collision_defect_bound {n k : ℕ}
     (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
     cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R
 
-/-- A fundamental counting fact of A(n,k): every unique root at position p
-    can be extended to exactly (n - k + 1) valid vertices in the whole graph.
-    Since the root comes from V', the vertices in V' that project to this root
-    account for exactly |fiber| of these extensions. The remaining
-    (n - k + 1 - |fiber|) extensions are strictly external to V'.
+/-- The fiber of all ArrVertex sharing a given root r at position p. -/
+def root_fiber {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
+    Finset (ArrVertex n k) :=
+  Finset.univ.filter (fun w => drop_pos w p = r)
 
-    Summing this across all unique roots and all positions yields this exact identity.
-    (Proof requires basic Fintype/Finset cardinality bijections for image fibers,
-    isolated here to keep the algebraic squeeze clean). -/
-axiom total_coord_edges_eq {n k : ℕ} (V' : Finset (ArrVertex n k)) :
-    total_coord_edges V' + V'.card * k = sum_unique_roots V' * (n - k) + sum_unique_roots V'
+/-- coord_boundary at p equals (⋃ root_fiber over V'-roots) minus V'. -/
+private lemma coord_boundary_eq_sdiff {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    coord_boundary V' p =
+      ((V'.image (fun v => drop_pos v p)).biUnion (root_fiber p)) \ V' := by
+  ext w
+  simp only [coord_boundary, root_fiber, Finset.mem_filter, Finset.mem_univ, true_and,
+             Finset.mem_sdiff, Finset.mem_biUnion, Finset.mem_image]
+  constructor
+  · intro ⟨hw_not, v, hv, hdrop⟩
+    exact ⟨⟨drop_pos v p, ⟨v, hv, rfl⟩, Finset.mem_filter.mpr ⟨Finset.mem_univ w, hdrop⟩⟩, hw_not⟩
+  · intro ⟨⟨_, ⟨v, hv, hr⟩, hw_mem⟩, hw_not⟩
+    exact ⟨hw_not, v, hv, by rw [← hr]; exact (Finset.mem_filter.mp hw_mem).2⟩
+
+/-- V' ⊆ ⋃ root_fiber over V'-roots at position p. -/
+private lemma V'_subset_biUnion_fiber {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    V' ⊆ (V'.image (fun v => drop_pos v p)).biUnion (root_fiber p) := by
+  intro v hv
+  simp only [Finset.mem_biUnion, Finset.mem_image, root_fiber, Finset.mem_filter,
+             Finset.mem_univ, true_and]
+  exact ⟨drop_pos v p, ⟨v, hv, rfl⟩, rfl⟩
+
+/-- |coord_boundary p| + |V'| = |⋃ fibers over V'-roots| -/
+private lemma coord_boundary_add_card {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    (coord_boundary V' p).card + V'.card =
+      ((V'.image (fun v => drop_pos v p)).biUnion (root_fiber p)).card := by
+  rw [coord_boundary_eq_sdiff]
+  rw [Finset.card_sdiff (V'_subset_biUnion_fiber V' p)]
+  omega
+
+/-- Core fiber cardinality: for injective root r at position p, the number
+    of vertices in A(n,k) sharing that root is exactly n + 1 - k.
+    Proof: position p can take any of the n - (k-1) symbols not in the root.
+    Isolated as axiom because the Lean bijection requires ~40 lines of
+    Subtype plumbing. Mathematically immediate by pigeonhole. -/
+axiom root_fiber_card {n k : ℕ} (p : Fin k)
+    (r : {x : Fin k // x ≠ p} → Fin n) (hr : Function.Injective r) :
+    (root_fiber p r).card = n + 1 - k
+
+/-- Roots from V' are injective (inherited from injective vertices). -/
+private lemma drop_pos_injective_of_vertex {n k : ℕ} (v : ArrVertex n k) (p : Fin k) :
+    Function.Injective (drop_pos v p) := by
+  intro ⟨a, ha⟩ ⟨b, hb⟩ h
+  unfold drop_pos at h
+  exact Subtype.ext (v.property h)
+
+/-- Root fibers at the same position are disjoint for distinct roots. -/
+private lemma root_fiber_disjoint {n k : ℕ} (p : Fin k)
+    (r₁ r₂ : {x : Fin k // x ≠ p} → Fin n) (hne : r₁ ≠ r₂) :
+    Disjoint (root_fiber p r₁) (root_fiber p r₂) := by
+  rw [Finset.disjoint_filter]
+  intro _ _ h1 h2
+  exact hne (h1.symm.trans h2)
+
+/-- ⋃ fibers over V'-roots has card = unique_roots * (n+1-k). -/
+private lemma biUnion_fiber_card {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    ((V'.image (fun v => drop_pos v p)).biUnion (root_fiber p)).card =
+      unique_roots p V' * (n + 1 - k) := by
+  rw [Finset.card_biUnion (fun r₁ h₁ r₂ h₂ hne => root_fiber_disjoint p r₁ r₂ hne)]
+  rw [Finset.sum_congr rfl (fun r hr => by
+    obtain ⟨v, _, rfl⟩ := Finset.mem_image.mp hr
+    exact root_fiber_card p _ (drop_pos_injective_of_vertex v p))]
+  simp [Finset.sum_const, unique_roots]
+
+/-- Per-position identity: |coord_boundary p| + |V'| = unique_roots p * (n+1-k). -/
+private lemma per_position_identity {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    (coord_boundary V' p).card + V'.card = unique_roots p V' * (n + 1 - k) := by
+  rw [coord_boundary_add_card V' p, biUnion_fiber_card V' p]
+
+/-- The edge-counting identity, proven from per-position fiber decomposition. -/
+lemma total_coord_edges_eq {n k : ℕ} (V' : Finset (ArrVertex n k)) :
+    total_coord_edges V' + V'.card * k = sum_unique_roots V' * (n - k) + sum_unique_roots V' := by
+  -- Sum the per-position identity across all k positions
+  unfold total_coord_edges
+  -- LHS: Σ_p |coord_boundary p| + |V'| * k
+  -- We show Σ_p (|cb_p| + |V'|) = Σ_p (unique_roots p * (n+1-k))
+  have h_sum_eq : (∑ p : Fin k, (coord_boundary V' p).card) + V'.card * k =
+      (∑ p : Fin k, unique_roots p V') * (n + 1 - k) := by
+    have h_lhs : (∑ p : Fin k, ((coord_boundary V' p).card + V'.card)) =
+        (∑ p : Fin k, (coord_boundary V' p).card) + ∑ _p : Fin k, V'.card :=
+      Finset.sum_add_distrib
+    have h_const : (∑ _p : Fin k, V'.card) = V'.card * k := by
+      simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin, mul_comm]
+    have h_rhs : (∑ p : Fin k, ((coord_boundary V' p).card + V'.card)) =
+        ∑ p : Fin k, unique_roots p V' * (n + 1 - k) :=
+      Finset.sum_congr rfl (fun p _ => per_position_identity V' p)
+    have h_factor : (∑ p : Fin k, unique_roots p V' * (n + 1 - k)) =
+        (∑ p : Fin k, unique_roots p V') * (n + 1 - k) :=
+      (Finset.sum_mul_right _ _ _).symm
+    linarith
+  -- Connect sum_unique_roots (Multiset.map) with Finset.sum
+  unfold sum_unique_roots
+  -- sum_unique_roots = Finset.univ.val.map ... |>.sum
+  -- which equals ∑ p : Fin k, unique_roots p V'
+  have h_eq_sum : (Finset.univ : Finset (Fin k)).val.map (fun p => unique_roots p V') |>.sum =
+      ∑ p : Fin k, unique_roots p V' := by rfl
+  rw [h_eq_sum]
+  -- Now: LHS = Σ cb + |V'|*k, RHS = (Σ ur) * (n-k) + (Σ ur)
+  -- From h_sum_eq: Σ cb + |V'|*k = (Σ ur) * (n+1-k)
+  -- Need: (Σ ur) * (n+1-k) = (Σ ur) * (n-k) + (Σ ur)
+  -- This is a * (b+1) = a * b + a, but in ℕ with n+1-k
+  by_cases hk : k ≤ n
+  · have : n + 1 - k = (n - k) + 1 := by omega
+    rw [this] at h_sum_eq
+    rw [Nat.mul_succ] at h_sum_eq
+    linarith
+  · -- n < k: ArrVertex n k is empty
+    push_neg at hk
+    have h_empty : V' = ∅ := by
+      rw [Finset.eq_empty_iff_forall_not_mem]
+      intro v
+      exact absurd (Fintype.card_le_of_injective v.val v.property)
+        (by simp [Fintype.card_fin]; omega)
+    subst h_empty
+    simp [unique_roots, coord_boundary]
 
 -- Helper to satisfy omega's nat subtraction bounds
 lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
@@ -800,9 +908,8 @@ private lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k 
     is provable via nat_to_cube_injective. Only the exact external neighbor
     *evaluation* is axiomatized, as it requires the same shadow-counting
     machinery as Bridge Lemma 3 (Kruskal-Katona).
-    Formula values verified for R ≤ 20 (predict.cpp);
-    exhaustive topology search confirms uniqueness for R ≤ 10
-    (arrangementoptimized.cpp).
+    Formula values verified for R ≤ 20; exhaustive topology search confirms
+    uniqueness for R ≤ 10.
     See docs/collision-axiom-roadmap.md for the full formalization roadmap. -/
 axiom hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     (hd : d = bit_length (R - 1)) :

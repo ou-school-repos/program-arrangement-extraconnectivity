@@ -13,27 +13,6 @@ breaks at R=8, where the optimal vertex cut locks into a 3-dimensional hypercube
 with 12 internal edges instead of the predicted 7. This discovery is formalized
 in a machine-verified Lean 4 proof.
 
-## Repository Structure
-
-```
-.
-├── arrangementoptimized.cpp    # Main search engine (C++17 + nauty)
-├── cheng/arrangement.cpp       # Original reference implementation
-├── Makefile                    # Build system (see below)
-├── README.md                   # Results and summary table
-├── docs/
-│   ├── architecture.md         # This file
-│   ├── hypercube-isoperimetry.md  # Mathematical analysis of the pattern break
-│   ├── nauty-vs-local-cand-dedup.md  # Deduplication strategy details
-│   └── profiling.md            # Performance profiling analysis
-└── proofs/
-    ├── HypercubeEdges.lean     # Lean 4 proof: E(d) = d · 2^{d-1}
-    ├── lakefile.lean           # Lake project configuration
-    ├── lean-toolchain           # Lean 4.30.0-rc2
-    └── docbuild/               # Nested project for doc-gen4 HTML output
-        └── lakefile.toml
-```
-
 ## Search Algorithm
 
 ### Vertex Representation

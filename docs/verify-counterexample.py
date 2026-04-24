@@ -2,7 +2,7 @@
 """
 Independent verification of R=2..9 minimum-cut vertex sets.
 
-These vertex sets were discovered by exhaustive search (arrangementoptimized.cpp).
+These vertex sets were discovered by exhaustive search in (arrangement.cpp).
 This script verifies |N(V')| by brute-force neighbor counting — no external
 dependencies, no trust in the search engine required.
 

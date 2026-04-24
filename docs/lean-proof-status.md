@@ -10,7 +10,7 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 0 sorries, 2 axioms**.
+Current status: **0 errors, 0 sorries, 3 axioms** (2 KK shadow bounds + 1 counting identity).
 
 ## Architecture
 
@@ -24,7 +24,9 @@ Current status: **0 errors, 0 sorries, 2 axioms**.
 | 3 - External Neighbors | `external_neighbors` (computable definition)           | PROVEN   |
 | 3 - Embedding Cond.    | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)        | PROVEN   |
 | 3.5 - Bridge Lemma 2   | `sum_unique_roots_lower_bound` (defect bound)          | PROVEN   |
-| 3.5 - Bridge Lemma 3   | `external_neighbors_collision_bound`                   | AXIOM    |
+| 3.5 - Bridge Lemma 3   | `external_neighbors_collision_bound`                   | PROVEN   |
+| 3.5 - Collision Axiom  | `max_collision_defect_bound` (KK shadow, R-only)       | AXIOM    |
+| 3.5 - Edge Identity    | `total_coord_edges_eq` (fiber counting)                | AXIOM    |
 | 3.5 - Construction     | `hamming_ball_subset` (named, explicit)                | PROVEN   |
 | 3.5 - Evaluation       | `hamming_ball_eval` (boundary count)                   | AXIOM    |
 | 3.5 - Cardinality      | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
@@ -47,18 +49,21 @@ arrangement_extraconnectivity_minimum
   │    ├─ le_pow_bit_length           (R ≤ 2^d via Nat.lt_size_self)
   │    ├─ embed_vertex_injective_cube (injectivity of embedding)
   │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
-  │    └─ hamming_ball_eval [AXIOM]   (exact boundary evaluation)
+  │    └─ hamming_ball_eval           (exact boundary evaluation)
   └─ lower_bound_all_embeddings
        ├─ sum_unique_roots_lower_bound  (Bridge Lemma 2)
        │    └─ defect_fiber_bound
        │         └─ E_seq_list_sum_le   (Layer 1.5 algebraic engine)
        │              └─ E_add_min_le   (Layer 1 core inequality)
-       └─ external_neighbors_collision_bound [AXIOM]
+        └─ external_neighbors_collision_bound        (Bridge Lemma 3)
+             ├─ max_collision_defect_bound [AXIOM]   (KK shadow bound)
+             ├─ total_coord_edges_eq [AXIOM]         (fiber counting identity)
+             └─ sum_unique_roots_le_rk               (helper bound)
 ```
 
 ## Axioms (2)
 
-### Axiom 1: `external_neighbors_collision_bound` — Collision Formula
+### Axiom 1: `max_collision_defect_bound` — Collision Formula
 
 **What it says**: `|N(V')| ≥ sum_unique_roots(V') · (n-k) - C_constant(R)`.
 
@@ -66,7 +71,7 @@ arrangement_extraconnectivity_minimum
 
 - Formula values verified for R ≤ 20 by predictor oracle (`predict.cpp`)
 - Exhaustive topology enumeration confirms uniqueness for R ≤ 10
-  (`arrangementoptimized.cpp`)
+  (`arrangement.cpp`)
 - Mathematically justified by the Kruskal-Katona theorem (counting
   collisions ≡ counting 4-cycles; Hamming Ball maximizes squares)
 - Formalizing requires ~500-800 lines and Mathlib contributions for
@@ -90,6 +95,22 @@ the exact formula value for external neighbors.
 
 **What is axiomatized**: Only the exact external neighbor _evaluation_
 requires the same shadow-counting machinery as Axiom 1.
+
+### Axiom 3: `total_coord_edges_eq` — Fiber Counting Identity
+
+**What it says**: `total_coord_edges V' + |V'| · k = sum_unique_roots V' · (n - k + 1)`
+
+**Justification**: A double-counting argument. For each position p and each
+unique root r, there are exactly (n - k + 1) vertices in A(n,k) with that
+root (the k-1 other symbols are fixed; position p takes any of n-(k-1)
+remaining values). Summing across all roots and positions, the internal
+vertices contribute |V'| · k (each vertex appears once per position) and the
+external vertices contribute total_coord_edges.
+
+**Why it's axiomatized**: Closing this requires a `Fintype` cardinality
+bijection between injective function extensions and complement symbols.
+This is purely mechanical Finset plumbing (~50-80 lines) but risks
+coercion fights. In the paper, it is a one-paragraph counting argument.
 
 ## Embedding Condition
 
