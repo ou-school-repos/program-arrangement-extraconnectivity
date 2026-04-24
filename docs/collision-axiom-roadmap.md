@@ -12,7 +12,9 @@ This document describes what a complete mechanized proof would require.
 ## Current Status
 
 - **Axiomatized** in Lean 4 (zero `sorry` blocks)
-- **Computationally verified** for all R ≤ 20 by brute-force oracle
+- **Formula values verified** for R ≤ 20 by predictor oracle (`predict.cpp`)
+- **Exhaustive topology search** confirms uniqueness for R ≤ 10
+  (`arrangementoptimized.cpp`)
 - **Mathematically justified** by the Kruskal-Katona theorem
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles
@@ -127,7 +129,9 @@ external boundary, but does not prove it is the **unique** minimizer.
 - This is equivalent to showing that E_seq is **strictly** subadditive
   for non-Hamming-Ball partitions
 - The computational search confirms uniqueness for R ≤ 10 (one minimum-cut
-  topology class per R)
+  topology class per R); formula values verified for R ≤ 20
+- Formalized as `uniqueness_conjecture` using the full automorphism group
+  S_n × S_k (symbol permutation σ + coordinate permutation τ)
 
 ### Why this is hard
 

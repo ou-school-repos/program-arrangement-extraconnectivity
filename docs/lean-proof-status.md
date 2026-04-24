@@ -18,13 +18,16 @@ Current status: **0 errors, 0 sorries, 2 axioms**.
 | ---------------------- | ------------------------------------------------------ | -------- |
 | 1 - Combinatorics      | `E_add_min_le`: E(x)+E(y)+min(x,y) <= E(x+y)           | PROVEN   |
 | 1.5 - Algebraic Engine | `E_seq_list_sum_le`: generalized partition subaddivity | PROVEN   |
+| 2 - Hypercube          | `Cube`, `embed_cube`, `embedding_is_injective`         | PROVEN   |
 | 2 - Harper's Theorem   | `harpers_edge_isoperimetry`: cubeEdges(S) <= E(\|S\|)  | PROVEN\* |
 | 3 - Graph Definition   | `ArrVertex`, `Fintype`, `DecidableEq`, `arr_adjacent`  | PROVEN   |
 | 3 - External Neighbors | `external_neighbors` (computable definition)           | PROVEN   |
-| 3 - Embedding Cond.    | `can_embed_hypercube` (uses `bit_length(R-1)` ceiling) | PROVEN   |
+| 3 - Embedding Cond.    | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)        | PROVEN   |
 | 3.5 - Bridge Lemma 2   | `sum_unique_roots_lower_bound` (defect bound)          | PROVEN   |
 | 3.5 - Bridge Lemma 3   | `external_neighbors_collision_bound`                   | AXIOM    |
-| 3.5 - Upper Bound      | `hamming_ball_achieves_bound`                          | AXIOM    |
+| 3.5 - Construction     | `hamming_ball_subset` (named, explicit)                | PROVEN   |
+| 3.5 - Evaluation       | `hamming_ball_eval` (boundary count)                   | AXIOM    |
+| 3.5 - Cardinality      | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
 | 3.5 - Lower Bound      | `lower_bound_all_embeddings` (arithmetic composition)  | PROVEN   |
 | Capstone               | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN   |
 
@@ -37,7 +40,14 @@ subadditivity of E_seq. Moved to `unstable/ArrangementGraphUtils.lean`.
 ```
 arrangement_extraconnectivity_minimum
   ├─ exists_optimal_embedding
-  │    └─ hamming_ball_achieves_bound [AXIOM]
+  │    ├─ hamming_ball_subset         (explicit construction)
+  │    │    ├─ embed_vertex           (Cube d → ArrVertex n k)
+  │    │    │    └─ embed_cube        (bit → fresh/base symbol)
+  │    │    └─ nat_to_cube            (ℕ → Cube d via testBit)
+  │    ├─ le_pow_bit_length           (R ≤ 2^d via Nat.lt_size_self)
+  │    ├─ embed_vertex_injective_cube (injectivity of embedding)
+  │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
+  │    └─ hamming_ball_eval [AXIOM]   (exact boundary evaluation)
   └─ lower_bound_all_embeddings
        ├─ sum_unique_roots_lower_bound  (Bridge Lemma 2)
        │    └─ defect_fiber_bound
@@ -54,7 +64,9 @@ arrangement_extraconnectivity_minimum
 
 **Justification**:
 
-- Computationally verified for all R ≤ 20 by brute-force oracle
+- Formula values verified for R ≤ 20 by predictor oracle (`predict.cpp`)
+- Exhaustive topology enumeration confirms uniqueness for R ≤ 10
+  (`arrangementoptimized.cpp`)
 - Mathematically justified by the Kruskal-Katona theorem (counting
   collisions ≡ counting 4-cycles; Hamming Ball maximizes squares)
 - Formalizing requires ~500-800 lines and Mathlib contributions for
@@ -63,17 +75,35 @@ arrangement_extraconnectivity_minimum
 See [collision-axiom-roadmap.md](collision-axiom-roadmap.md) for the full
 formalization roadmap.
 
-### Axiom 2: `hamming_ball_achieves_bound` — Constructive Upper Bound
+### Axiom 2: `hamming_ball_eval` — Boundary Evaluation
 
-**What it says**: ∃ V' with |V'| = R achieving the formula exactly.
+**What it says**: The explicitly constructed `hamming_ball_subset` achieves
+the exact formula value for external neighbors.
 
-**Justification**:
+**What IS proven constructively** (not axiomatized):
 
-- The Hamming Ball construction via `Nat.testBit` is partially formalized
-  (`nat_to_cube`, `nat_to_cube_injective`)
-- The exact external neighbor evaluation requires the same shadow-counting
-  machinery as Axiom 1
-- Computationally verified for all R ≤ 20
+- The Hamming Ball `hamming_ball_subset` is explicitly constructed via
+  `nat_to_cube` (testBit encoding) and `embed_vertex` (fresh symbol embedding)
+- Its cardinality `|hamming_ball_subset| = R` is proven via
+  `nat_to_cube_injective` and `embed_vertex_injective_cube`
+- The dual embedding condition (`k + d ≤ n ∧ d ≤ k`) is verified
+
+**What is axiomatized**: Only the exact external neighbor _evaluation_
+requires the same shadow-counting machinery as Axiom 1.
+
+## Embedding Condition
+
+```
+can_embed_hypercube (R n k : ℕ) : Prop :=
+  k + bit_length (R - 1) ≤ n ∧ bit_length (R - 1) ≤ k
+```
+
+Dual constraint on the hypercube dimension `d = bit_length(R-1) = Nat.size(R-1)`:
+
+1. **`k + d ≤ n`**: need d fresh symbols beyond the k base positions
+2. **`d ≤ k`**: can only flip coordinates that exist in the k-length sequence
+
+Uses `Nat.size` (equivalent to ⌈log₂(R)⌉) to avoid ℕ saturating subtraction.
 
 ## What IS Fully Proven (No Axioms)
 
@@ -95,13 +125,26 @@ The **Algebraic Defect Squeeze** — the novel contribution — is 100% mechaniz
 5. **Arithmetic squeeze** (`lower_bound_all_embeddings`): Composing Bridge
    Lemmas 2 and 3 to pin the exact extraconnectivity.
 
+6. **Hamming Ball construction** (`hamming_ball_subset`): Explicit construction
+   with proven cardinality via `nat_to_cube_injective` and
+   `embed_vertex_injective_cube`.
+
 ## Uniqueness: Open Problem
 
 The theorem establishes the **exact value** of (R-1)-extraconnectivity
 (∃ + ∀ squeeze) but does **not** prove the Hamming Ball is the unique
 minimizer.
 
-- Computationally confirmed unique for R ≤ 10
+Formalized as `uniqueness_conjecture` (a `Prop` definition, not an axiom),
+using the full automorphism group S_n × S_k:
+
+- **σ : Fin n → Fin n** (symbol permutation)
+- **τ : Fin k → Fin k** (coordinate permutation)
+
+Evidence:
+
+- Computationally confirmed uniqueness for R ≤ 10
+- Formula values and existence verified for R ≤ 20
 - Would require showing equality in the defect bound forces hypercube structure
 - Related to equality cases in the Kruskal-Katona theorem
 - See [collision-axiom-roadmap.md](collision-axiom-roadmap.md#uniqueness-open-problem)
@@ -129,17 +172,18 @@ This is proven by list induction using `E_seq_add_bound` as the step lemma.
 
 ## File Map
 
-| File                                         | Contents                                     |
-| -------------------------------------------- | -------------------------------------------- |
-| `proofs/ArrangementExtraconnectivity.lean`   | Main proof: Layers 1, 3 + capstone           |
-| `proofs/HypercubeEdges.lean`                 | Supporting popcount/A000788 lemmas           |
-| `proofs/PredictorComplexity.lean`            | Complexity analysis of the predictor         |
-| `proofs/unstable/ArrangementGraphUtils.lean` | Harper's theorem + Cube embedding (orphaned) |
-| `proofs/lakefile.lean`                       | Lake build configuration                     |
+| File                                         | Contents                                    |
+| -------------------------------------------- | ------------------------------------------- |
+| `proofs/ArrangementExtraconnectivity.lean`   | Main proof: Layers 1-3 + capstone           |
+| `proofs/HypercubeEdges.lean`                 | Supporting popcount/A000788 lemmas          |
+| `proofs/PredictorComplexity.lean`            | Complexity analysis of the predictor        |
+| `proofs/unstable/ArrangementGraphUtils.lean` | Harper's theorem + edge-counting (orphaned) |
+| `proofs/lakefile.lean`                       | Lake build configuration                    |
 
 ## Dependencies
 
 - **Lean**: v4.30.0-rc2
 - **Mathlib**: Current master (pinned in `lake-manifest.json`)
-- Key imports: `Mathlib.Data.Fintype.Pi`, `Mathlib.Data.Fintype.Basic`,
-  `Mathlib.Data.Finset.Card`, `Mathlib.Algebra.BigOperators.Group.Finset.Basic`
+- Key imports: `Mathlib.Data.Nat.Size`, `Mathlib.Data.Nat.Bitwise`,
+  `Mathlib.Data.Fintype.Pi`, `Mathlib.Data.Finset.Card`,
+  `Mathlib.Algebra.BigOperators.Group.Finset.Basic`
