@@ -232,7 +232,7 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
 
 template <typename SymT>
 static int run_verify(int64_t expected_nk1, int64_t expected_const,
-                      bool quiet = false) {
+                      bool quiet = false, int64_t *brute_out = nullptr) {
     auto verts = build_hamming_ball<SymT>();
 
     if (!quiet && R <= 12) {
@@ -267,6 +267,9 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
         return 1;
     }
 
+    if (brute_out)
+        *brute_out = brute_count;
+
     if (quiet) {
         std::cerr << "✓\n";
     } else {
@@ -279,7 +282,8 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
 
 // ── FNV-1a 64-bit: per-R deterministic digest ───────────────────────
 
-static uint64_t fnv_digest(int64_t r, int64_t nk1, int64_t c) {
+static uint64_t fnv_digest(int64_t r, int64_t nk1, int64_t c,
+                           int64_t brute_count) {
     uint64_t h = UINT64_C(14695981039346656037);
     auto feed = [&h](int64_t val) {
         for (int i = 0; i < 8; i++) {
@@ -291,6 +295,7 @@ static uint64_t fnv_digest(int64_t r, int64_t nk1, int64_t c) {
     feed(r);
     feed(nk1);
     feed(c);
+    feed(brute_count);  // only obtainable via O(R³) computation
     return h;
 }
 
@@ -358,9 +363,9 @@ int main(int argc, const char *argv[]) {
         if (csv_mode && !range_mode)
             start_r = 2;
 
-        std::cout << "R,nk1,constant,coeff,formula_at_2R,digest";
+        std::cout << "R,nk1,constant,coeff,formula_at_2R";
         if (range_mode)
-            std::cout << ",verified";
+            std::cout << ",digest";
         std::cout << "\n";
 
         for (int r = start_r; r <= end_r; r++) {
@@ -369,18 +374,15 @@ int main(int argc, const char *argv[]) {
             const int64_t cst = constant_analytical(R);
             const int128_t coeff = widen(R) * R - nk1;
             const int128_t val = coeff * R - cst;
-            char hex[17];
-            std::snprintf(
-                hex, sizeof(hex), "%016llx",
-                static_cast<unsigned long long>(fnv_digest(R, nk1, cst)));
 
+            int64_t brute_count = 0;
             if (range_mode) {
                 std::cerr << "R=" << R << " ... ";
                 int rc;
                 if (R <= 127)
-                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true);
+                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true, &brute_count);
                 else
-                    rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true);
+                    rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true, &brute_count);
                 if (rc != 0) {
                     std::cerr << "FAILED at R=" << R << "\n";
                     return 1;
@@ -388,10 +390,13 @@ int main(int argc, const char *argv[]) {
             }
 
             std::cout << R << "," << nk1 << "," << cst << ","
-                      << i128_to_string(coeff) << "," << i128_to_string(val)
-                      << "," << hex;
-            if (range_mode)
-                std::cout << ",true";
+                      << i128_to_string(coeff) << "," << i128_to_string(val);
+            if (range_mode) {
+                char hex[17];
+                std::snprintf(hex, sizeof(hex), "%016llx",
+                    static_cast<unsigned long long>(fnv_digest(R, nk1, cst, brute_count)));
+                std::cout << "," << hex;
+            }
             std::cout << "\n";
         }
 

@@ -12,6 +12,8 @@ LDFLAGS  =
 SRC_OPT   = src/arrangement.cpp
 BIN_OPT   = arrangement
 R         ?= 8
+I         ?= 1
+K         ?= 127
 DOCS_SRC  = README.md
 DOCS_OUT  = README.pdf
 BUNDLE_OUT = bundle.zip
@@ -158,6 +160,15 @@ csv: build	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_info,Generating predictions CSV)
 	./$(BIN_PRED) --csv 1024 | tee docs/predictions.csv
 	@$(call print_success,docs/predictions.csv written.)
+
+.PHONY: csv/full
+csv/full: build	##H @General Verified CSV R=I..K → docs/verified.csv (I=$(I) K=$(K))
+	@if [ ! -f docs/verified.csv ]; then \
+		./$(BIN_PRED) --csv --verify-range $(I) $(K) > docs/verified.csv; \
+	else \
+		./$(BIN_PRED) --csv --verify-range $(I) $(K) | tail -n +2 >> docs/verified.csv; \
+	fi
+	@$(call print_success,docs/verified.csv — $$(wc -l < docs/verified.csv) rows.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lint & Format
