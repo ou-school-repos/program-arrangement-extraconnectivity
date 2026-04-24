@@ -349,21 +349,71 @@ lemma swap_of_compressed_mem {V' : Finset (ArrVertex n k)} {a b : Fin n}
   -- Step 3: shiftVertex = swapVertex under precondition, so swapVertex u ∉ V'
   rwa [← shiftVertex_eq_swap u a b hpre]
 
--- ATOMIC GATE 5b: The reverse map lands in the old boundary.
--- ADVISOR: needs compression pre-image tracing + arr_adjacent_swap bridge
+-- Helper 5b: If u ∈ V' but u ∉ compressSet V', its swap IS in the compressed set.
+-- The compression map sends u → shiftVertex u = swapVertex u ∈ compressSet.
+lemma swap_is_compressed {V' : Finset (ArrVertex n k)} {a b : Fin n}
+    {u : ArrVertex n k} (hu_in_V : u ∈ V') (hu_not_comp : u ∉ compressSet V' a b) :
+    swapVertex u a b ∈ compressSet V' a b := by
+  have mem_comp : (∀ h : shiftVertex u a b ∉ V', False) → u ∈ compressSet V' a b := by
+    intro habs
+    unfold compressSet
+    rw [Finset.mem_image]
+    exact ⟨u, hu_in_V, if_neg habs⟩
+  -- The precondition must hold (otherwise compress(u) = u ∈ compressSet)
+  have hpre : uses_sym u b ∧ ¬uses_sym u a := by
+    by_contra hc
+    exact hu_not_comp (mem_comp (by
+      intro hshift_not
+      have hid : shiftVertex u a b = u := by unfold shiftVertex; exact dif_neg hc
+      rw [hid] at hshift_not; exact hshift_not hu_in_V))
+  -- shiftVertex u ∉ V' (otherwise compress(u) = u ∈ compressSet)
+  have hshift_not : shiftVertex u a b ∉ V' := by
+    intro h; exact hu_not_comp (mem_comp (fun habs => absurd h habs))
+  -- compress(u) = shiftVertex u = swapVertex u, and compress(u) ∈ compressSet
+  have heq_swap : shiftVertex u a b = swapVertex u a b := shiftVertex_eq_swap u a b hpre
+  rw [← heq_swap]
+  unfold compressSet
+  rw [Finset.mem_image]
+  exact ⟨u, hu_in_V, by
+    change (if shiftVertex u a b ∉ V' then shiftVertex u a b else u) = shiftVertex u a b
+    rw [if_pos hshift_not]⟩
+
+-- ATOMIC GATE 5c: The reverse map lands in the old boundary.
+-- ADVISOR NOTE: Kruskal-Katona boundary step — tracing adjacency through
+-- the compression shadow requires the full graph-theoretic trace.
 lemma reverseShiftMap_mem (V' : Finset (ArrVertex n k)) (a b : Fin n)
     (u : ArrVertex n k) (hu : u ∈ boundary_set (compressSet V' a b)) :
     reverseShiftMap V' a b u ∈ boundary_set V' := by
   sorry
 
 -- ATOMIC GATE 6: Injectivity of the reverse map on the boundary.
--- ADVISOR: mixed case (u1 ∈ V', u2 ∉ V') needs boundary constraint argument
+-- Mixed case (u1 ∈ V', u2 ∉ V') is impossible: swap_is_compressed shows
+-- swapVertex u1 ∈ compressSet, but heq says it equals u2 ∉ compressSet.
 lemma reverseShiftMap_injOn (V' : Finset (ArrVertex n k)) (a b : Fin n) :
     Set.InjOn (reverseShiftMap V' a b) (boundary_set (compressSet V' a b)) := by
-  sorry
+  intro u1 hu1 u2 hu2 heq
+  rw [Finset.mem_coe, boundary_set, Finset.mem_filter] at hu1 hu2
+  have hu1_not_comp := hu1.2.1
+  have hu2_not_comp := hu2.2.1
+  unfold reverseShiftMap at heq
+  by_cases h1 : u1 ∈ V' <;> by_cases h2 : u2 ∈ V'
+  · -- Both in V': swapVertex u1 = swapVertex u2 → u1 = u2 by involution
+    simp only [if_pos h1, if_pos h2] at heq
+    have h_inv := congr_arg (fun v => swapVertex v a b) heq
+    simp only [swapVertex_involutive] at h_inv
+    exact h_inv
+  · -- u1 ∈ V', u2 ∉ V': swapVertex u1 = u2, but swapVertex u1 ∈ compressSet
+    simp only [if_pos h1, if_neg h2] at heq
+    exact absurd (heq ▸ swap_is_compressed h1 hu1_not_comp) hu2_not_comp
+  · -- u1 ∉ V', u2 ∈ V': symmetric contradiction
+    simp only [if_neg h1, if_pos h2] at heq
+    exact absurd (heq ▸ swap_is_compressed h2 hu2_not_comp) hu1_not_comp
+  · -- Both not in V': u1 = u2 directly
+    simp only [if_neg h1, if_neg h2] at heq
+    exact heq
 
 /-- The core extremal lemma: compression does not increase boundary size.
-    Follows from gates 5b + 6 via Finset.card_le_card_of_injOn. -/
+    Follows from gates 5c + 6 via Finset.card_le_card_of_injOn. -/
 lemma compressSet_boundary_le (V' : Finset (ArrVertex n k))
     (a b : Fin n) (_hab : a < b) :
     external_neighbors (compressSet V' a b) ≤ external_neighbors V' := by
