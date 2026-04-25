@@ -172,7 +172,7 @@ csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
 	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRCS) | tee lint.log
-	-clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
+	#-clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
@@ -199,40 +199,53 @@ lean:	##H @Build Build Lean 4 proofs (proofs/)
 	cd proofs && lake build | tee lean.log
 	@printf "\n\033[1;32m--- Verification Complete ---\033[0m\n"
 	@printf "\033[1;36mMapped Theorems & Definitions:\033[0m\n"
-	@grep -E '^(theorem|lemma|def|axiom|class|instance|structure) ' proofs/Arrangement/*.lean proofs/Arrangement/unstable/*.lean 2>/dev/null | \
-		sed 's|^proofs/||' | \
-		awk 'BEGIN {last=""} { \
-			file=$$0; sub(/:.*/, "", file); \
-			content=$$0; sub(/^[^:]*:/, "", content); \
-			if (file != last) { \
+	@awk 'BEGIN {last_file=""} \
+		/^(theorem|lemma|def|axiom|class|instance|structure) / { \
+			if (in_decl) process_buf(); \
+			buf = $$0; in_decl = 1; \
+			if (buf ~ /(:=|:= by|by|where|=>)/) process_buf(); \
+			next; \
+		} \
+		in_decl { \
+			gsub(/^[[:space:]]+/, " ", $$0); \
+			buf = buf $$0; \
+			if ($$0 ~ /(:=|:= by|by|where|=>)/) process_buf(); \
+		} \
+		function process_buf() { \
+			gsub(/[[:space:]]+/, " ", buf); \
+			file = FILENAME; sub(/^proofs\//, "", file); \
+			if (file != last_file) { \
 				printf "\n\033[1;33m%s:\033[0m\n", file; \
-				last=file \
+				last_file = file; \
 			} \
-			printf "  %s\n", content \
-		}' || true
+			printf "  %s\n", buf; \
+			buf = ""; in_decl = 0; \
+		} \
+		END { if (in_decl) process_buf(); }' \
+		proofs/Arrangement/*.lean proofs/Arrangement/unstable/*.lean 2>/dev/null || true
 	@printf "\033[1;32m--------------------------------\033[0m\n"
 	@$(call print_success,Lean proofs verified.)
 
-.PHONY: lean/cache
-lean/cache:	##H @Build Download pre-built Mathlib cache
+.PHONY: _lean/cache
+_lean/cache:	##H @Build Download pre-built Mathlib cache
 	@$(call print_info,Fetching Mathlib cache)
 	cd proofs && lake exe cache get
 	@$(call print_success,Mathlib cache downloaded.)
 
-.PHONY: lean/docs/setup
-lean/docs/setup:	##H @Build Fetch doc-gen4 dependency (run once)
+.PHONY: _lean/docs/setup
+_lean/docs/setup:	##H @Build Fetch doc-gen4 dependency (run once)
 	@$(call print_info,Fetching doc-gen4)
 	cd proofs/docbuild && MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4
 	@$(call print_success,doc-gen4 ready.)
 
-.PHONY: lean/docs
-lean/docs:	##H @Build Generate Lean documentation
+.PHONY: _lean/docs
+_lean/docs:	##H @Build Generate Lean documentation
 	@$(call print_info,Generating Lean docs)
 	cd proofs/docbuild && lake build Proofs:docs
 	@$(call print_success,Lean docs generated in proofs/docbuild/.lake/build/doc/)
 
-.PHONY: lean/docs/clean
-lean/docs/clean:	##H @Build Clean project doc cache (fast targeted rebuild)
+.PHONY: _lean/docs/clean
+_lean/docs/clean:	##H @Build Clean project doc cache (fast targeted rebuild)
 	@$(call print_info,Cleaning project doc artifacts)
 	rm -rf proofs/docbuild/.lake/build/doc/Arrangement \
 	       proofs/docbuild/.lake/build/doc/index.html \

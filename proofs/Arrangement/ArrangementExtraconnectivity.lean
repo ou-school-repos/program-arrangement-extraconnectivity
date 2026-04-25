@@ -821,96 +821,251 @@ private lemma coord_boundary_add_card {n k : ℕ} (V' : Finset (ArrVertex n k)) 
   rw [h2] at h1
   linarith
 
-/-- Core fiber cardinality: for injective root r at position p, the number
-    of vertices in A(n,k) sharing that root is exactly n + 1 - k.
-    Proof: position p can take any of the n - (k-1) symbols not in the root.
-    Isolated as axiom because the Lean bijection requires ~40 lines of
-    Subtype plumbing. Mathematically immediate by pigeonhole. -/
-axiom root_fiber_card {n k : ℕ} (p : Fin k)
-    (r : {x : Fin k // x ≠ p} → Fin n) (hr : Function.Injective r) :
-    (root_fiber p r).card = n + 1 - k
+-- ============================================================================
+-- The Finset Bijection Layer (Formally replaces total_coord_edges_eq axiom)
+-- ============================================================================
 
-/-- Roots from V' are injective (inherited from injective vertices). -/
-private lemma drop_pos_injective_of_vertex {n k : ℕ} (v : ArrVertex n k) (p : Fin k) :
+-- We need to prove that if `v : ArrVertex n k`, its `drop_pos v p` is injective.
+private lemma drop_pos_inj {n k : ℕ} (v : ArrVertex n k) (p : Fin k) :
     Function.Injective (drop_pos v p) := by
-  intro ⟨a, ha⟩ ⟨b, hb⟩ h
-  unfold drop_pos at h
-  exact Subtype.ext (v.property h)
+  intro x y hxy
+  unfold drop_pos at hxy
+  have : v.val x.val = v.val y.val := hxy
+  have : x.val = y.val := v.property this
+  exact Subtype.ext this
 
-/-- Root fibers at the same position are disjoint for distinct roots. -/
-private lemma root_fiber_disjoint {n k : ℕ} (p : Fin k)
-    (r₁ r₂ : {x : Fin k // x ≠ p} → Fin n) (hne : r₁ ≠ r₂) :
-    Disjoint (root_fiber p r₁) (root_fiber p r₂) := by
-  simp only [Finset.disjoint_left, root_fiber, Finset.mem_filter]
-  intro w ⟨_, h1⟩ ⟨_, h2⟩
-  exact hne (h1 ▸ h2)
+private def root_used_syms {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
+    Finset (Fin n) :=
+  (Finset.univ : Finset {x : Fin k // x ≠ p}).image r
 
-/-- ⋃ fibers over V'-roots has card = unique_roots * (n+1-k). -/
-private lemma biUnion_fiber_card {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
-    ((V'.image (fun v => drop_pos v p)).biUnion (root_fiber p)).card =
-      unique_roots p V' * (n + 1 - k) := by
-  have h_disj : ∀ r₁ ∈ V'.image (fun v => drop_pos v p),
-      ∀ r₂ ∈ V'.image (fun v => drop_pos v p),
-      r₁ ≠ r₂ → Disjoint (root_fiber p r₁) (root_fiber p r₂) :=
-    fun r₁ _ r₂ _ hne => root_fiber_disjoint p r₁ r₂ hne
-  rw [Finset.card_biUnion h_disj]
-  have h_const : ∀ r ∈ V'.image (fun v => drop_pos v p),
-      (root_fiber p r).card = n + 1 - k := by
-    intro r hr
-    obtain ⟨v, _, rfl⟩ := Finset.mem_image.mp hr
-    exact root_fiber_card p _ (drop_pos_injective_of_vertex v p)
-  rw [Finset.sum_congr rfl h_const]
-  simp [Finset.sum_const, unique_roots]
+private lemma root_used_syms_card {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) : (root_used_syms p r).card = k - 1 := by
+  unfold root_used_syms
+  rw [Finset.card_image_of_injective _ hinj, Finset.card_univ, Fintype.card_subtype_compl]
+  simp
 
-/-- Per-position identity: |coord_boundary p| + |V'| = unique_roots p * (n+1-k). -/
-private lemma per_position_identity {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
-    (coord_boundary V' p).card + V'.card = unique_roots p V' * (n + 1 - k) := by
-  rw [coord_boundary_add_card V' p, biUnion_fiber_card V' p]
+private def root_unused_syms {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
+    Finset (Fin n) :=
+  (Finset.univ : Finset (Fin n)) \ root_used_syms p r
 
-/-- The edge-counting identity, proven from per-position fiber decomposition. -/
-lemma total_coord_edges_eq {n k : ℕ} (V' : Finset (ArrVertex n k)) :
+private lemma root_unused_syms_card {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) (hnk : k ≤ n) : (root_unused_syms p r).card = n - k + 1 := by
+  unfold root_unused_syms
+  rw [Finset.card_sdiff, Finset.inter_eq_left.mpr (Finset.subset_univ _)]
+  rw [root_used_syms_card p r hinj]
+  simp only [Finset.card_univ, Fintype.card_fin]
+  have : 1 ≤ k := by
+    have h := Fintype.card_pos_iff.mpr (Nonempty.intro p)
+    rw [Fintype.card_fin] at h; exact h
+  omega
+
+private def root_fiber_all {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
+    Finset (ArrVertex n k) :=
+  Finset.univ.filter (fun w => drop_pos w p = r)
+
+private def sym_to_vertex {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) (s : Fin n) (hs : s ∈ root_unused_syms p r) :
+    ArrVertex n k :=
+  ⟨fun x => if h : x = p then s else r ⟨x, h⟩, by
+    intro x y hxy
+    dsimp only at hxy
+    split_ifs at hxy with hx hy
+    · exact hx.trans hy.symm
+    · rename_i hx hy
+      unfold root_unused_syms at hs
+      rw [Finset.mem_sdiff] at hs
+      have hs2 := hs.2
+      unfold root_used_syms at hs2
+      have h_in : r ⟨y, hy⟩ ∈ (Finset.univ : Finset {x : Fin k // x ≠ p}).image r := by
+        rw [Finset.mem_image]; exact ⟨⟨y, hy⟩, Finset.mem_univ _, rfl⟩
+      rw [← hxy] at h_in
+      exact False.elim (hs2 h_in)
+    · rename_i hx hy
+      unfold root_unused_syms at hs
+      rw [Finset.mem_sdiff] at hs
+      have hs2 := hs.2
+      unfold root_used_syms at hs2
+      have h_in : r ⟨x, hx⟩ ∈ (Finset.univ : Finset {x : Fin k // x ≠ p}).image r := by
+        rw [Finset.mem_image]; exact ⟨⟨x, hx⟩, Finset.mem_univ _, rfl⟩
+      rw [hxy] at h_in
+      exact False.elim (hs2 h_in)
+    · rename_i hx hy
+      have : (⟨x, hx⟩ : {x : Fin k // x ≠ p}) = ⟨y, hy⟩ := hinj hxy
+      exact congr_arg Subtype.val this⟩
+
+private lemma sym_to_vertex_mem {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) (s : Fin n) (hs : s ∈ root_unused_syms p r) :
+    sym_to_vertex p r hinj s hs ∈ root_fiber_all p r := by
+  rw [root_fiber_all, Finset.mem_filter]
+  refine ⟨Finset.mem_univ _, ?_⟩
+  unfold drop_pos
+  ext ⟨x, hx⟩
+  dsimp [sym_to_vertex]
+  rw [dif_neg hx]
+
+private lemma root_fiber_surj {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) (w : ArrVertex n k) (hw : w ∈ root_fiber_all p r) :
+    ∃ hs : w.val p ∈ root_unused_syms p r, sym_to_vertex p r hinj (w.val p) hs = w := by
+  rw [root_fiber_all, Finset.mem_filter] at hw
+  have hdrop : drop_pos w p = r := hw.2
+  have hs : w.val p ∈ root_unused_syms p r := by
+    unfold root_unused_syms root_used_syms
+    rw [Finset.mem_sdiff]
+    refine ⟨Finset.mem_univ _, ?_⟩
+    intro hc
+    rw [Finset.mem_image] at hc
+    rcases hc with ⟨⟨x, hx⟩, _, heq⟩
+    have h_eval : r ⟨x, hx⟩ = w.val x := by
+      have : drop_pos w p ⟨x, hx⟩ = w.val x := rfl
+      rw [← this, hdrop]
+    rw [h_eval] at heq
+    have : x = p := w.property heq
+    exact hx this
+  use hs
+  apply Subtype.ext; funext x
+  dsimp [sym_to_vertex]
+  split_ifs with h
+  · rw [h]
+  · have h_eval : r ⟨x, h⟩ = w.val x := by
+      have : drop_pos w p ⟨x, h⟩ = w.val x := rfl
+      rw [← this, hdrop]
+    exact h_eval
+
+private lemma root_fiber_all_eq_image {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) :
+    root_fiber_all p r = (root_unused_syms p r).attach.image
+      (fun ⟨s, hs⟩ => sym_to_vertex p r hinj s hs) := by
+  ext w
+  rw [Finset.mem_image]
+  constructor
+  · intro hw
+    obtain ⟨hs, heq⟩ := root_fiber_surj p r hinj w hw
+    use ⟨w.val p, hs⟩
+    exact ⟨Finset.mem_attach _ _, heq⟩
+  · rintro ⟨⟨s, hs⟩, _, rfl⟩
+    exact sym_to_vertex_mem p r hinj s hs
+
+private lemma sym_to_vertex_inj {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) :
+    ∀ s1 hs1 s2 hs2, sym_to_vertex p r hinj s1 hs1 = sym_to_vertex p r hinj s2 hs2 → s1 = s2 := by
+  intro s1 hs1 s2 hs2 h
+  have hval := congr_arg Subtype.val h
+  have h_at_p := congr_fun hval p
+  dsimp [sym_to_vertex] at h_at_p
+  rw [dif_pos rfl, dif_pos rfl] at h_at_p
+  exact h_at_p
+
+lemma root_fiber_card_eq {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n)
+    (hinj : Function.Injective r) (hnk : k ≤ n) : (root_fiber_all p r).card = n - k + 1 := by
+  rw [root_fiber_all_eq_image p r hinj]
+  rw [Finset.card_image_of_injOn]
+  · rw [Finset.card_attach, root_unused_syms_card p r hinj hnk]
+  · intro ⟨s1, hs1⟩ _ ⟨s2, hs2⟩ _ heq
+    exact Subtype.ext (sym_to_vertex_inj p r hinj s1 hs1 s2 hs2 heq)
+
+private def unique_roots_set {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    Finset ({x : Fin k // x ≠ p} → Fin n) :=
+  V'.image (fun v => drop_pos v p)
+
+private lemma unique_roots_card {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    (unique_roots_set V' p).card = unique_roots p V' := rfl
+
+private lemma root_fiber_all_disjoint {n k : ℕ} (p : Fin k)
+    (r1 r2 : {x : Fin k // x ≠ p} → Fin n) (hne : r1 ≠ r2) :
+    Disjoint (root_fiber_all p r1) (root_fiber_all p r2) := by
+  rw [Finset.disjoint_left]
+  intro w hw1 hw2
+  rw [root_fiber_all, Finset.mem_filter] at hw1 hw2
+  exact hne (hw1.2.symm.trans hw2.2)
+
+private lemma W_p_eq_biUnion {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    Finset.univ.filter (fun w => ∃ v ∈ V', drop_pos w p = drop_pos v p) =
+    Finset.biUnion (unique_roots_set V' p) (fun r => root_fiber_all p r) := by
+  ext w
+  rw [Finset.mem_filter, Finset.mem_biUnion]
+  constructor
+  · intro ⟨_, v, hv, heq⟩
+    use drop_pos v p
+    refine ⟨Finset.mem_image_of_mem _ hv, ?_⟩
+    rw [root_fiber_all, Finset.mem_filter]
+    exact ⟨Finset.mem_univ _, heq⟩
+  · intro ⟨r, hr, hw_fib⟩
+    unfold unique_roots_set at hr
+    rw [Finset.mem_image] at hr
+    obtain ⟨v, hv, hr_eq⟩ := hr
+    rw [root_fiber_all, Finset.mem_filter] at hw_fib
+    refine ⟨Finset.mem_univ _, v, hv, hw_fib.2.trans hr_eq.symm⟩
+
+private lemma W_p_card {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) (hnk : k ≤ n) :
+    (Finset.univ.filter (fun w => ∃ v ∈ V', drop_pos w p = drop_pos v p)).card =
+    unique_roots p V' * (n - k + 1) := by
+  rw [W_p_eq_biUnion V' p]
+  rw [Finset.card_biUnion]
+  · have h_sum : ∑ r ∈ unique_roots_set V' p, (root_fiber_all p r).card =
+        ∑ r ∈ unique_roots_set V' p, (n - k + 1) := by
+      apply Finset.sum_congr rfl
+      intro r hr
+      unfold unique_roots_set at hr
+      rw [Finset.mem_image] at hr
+      obtain ⟨v, _, rfl⟩ := hr
+      exact root_fiber_card_eq p (drop_pos v p) (drop_pos_inj v p) hnk
+    rw [h_sum]
+    simp only [Finset.sum_const, nsmul_eq_mul]
+    unfold unique_roots
+    rfl
+  · intro r1 _ r2 _ hne
+    exact root_fiber_all_disjoint p r1 r2 hne
+
+private lemma V_subset_W_p {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k) :
+    V' ⊆ Finset.univ.filter (fun w => ∃ v ∈ V', drop_pos w p = drop_pos v p) := by
+  intro v hv
+  rw [Finset.mem_filter]
+  exact ⟨Finset.mem_univ _, v, hv, rfl⟩
+
+private lemma coord_boundary_card_eq {n k : ℕ} (V' : Finset (ArrVertex n k)) (p : Fin k)
+    (hnk : k ≤ n) :
+    (coord_boundary V' p).card + V'.card = unique_roots p V' * (n - k + 1) := by
+  have h_eq : coord_boundary V' p =
+      Finset.univ.filter (fun w => ∃ v ∈ V', drop_pos w p = drop_pos v p) \ V' := by
+    apply Finset.ext; intro w
+    unfold coord_boundary
+    rw [Finset.mem_sdiff, Finset.mem_filter, Finset.mem_filter]
+    tauto
+  rw [h_eq]
+  have h_sub := V_subset_W_p V' p
+  rw [Finset.card_sdiff, Finset.inter_eq_left.mpr h_sub]
+  have h_W_card := W_p_card V' p hnk
+  rw [h_W_card]
+  have h_v_le := Finset.card_le_card h_sub
+  rw [h_W_card] at h_v_le
+  omega
+
+/-- PROVED: The exact fiber double-counting identity replacing the axiom! -/
+lemma total_coord_edges_eq {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
     total_coord_edges V' + V'.card * k = sum_unique_roots V' * (n - k) + sum_unique_roots V' := by
-  -- Sum the per-position identity across all k positions
-  unfold total_coord_edges
-  -- LHS: Σ_p |coord_boundary p| + |V'| * k
-  -- We show Σ_p (|cb_p| + |V'|) = Σ_p (unique_roots p * (n+1-k))
-  have h_sum_eq : (∑ p : Fin k, (coord_boundary V' p).card) + V'.card * k =
-      (∑ p : Fin k, unique_roots p V') * (n + 1 - k) := by
-    have h_per : ∀ p : Fin k, (coord_boundary V' p).card + V'.card =
-        unique_roots p V' * (n + 1 - k) :=
-      fun p => per_position_identity V' p
-    have h_sum_both : (∑ p : Fin k, ((coord_boundary V' p).card + V'.card)) =
-        ∑ p : Fin k, unique_roots p V' * (n + 1 - k) :=
-      Finset.sum_congr rfl (fun p _ => h_per p)
-    rw [Finset.sum_add_distrib] at h_sum_both
-    have h_const : (∑ _p : Fin k, V'.card) = V'.card * k := by
-      simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin, mul_comm]
-    rw [h_const] at h_sum_both
-    rw [← Finset.sum_mul] at h_sum_both
-    linarith
-  -- Connect sum_unique_roots (Multiset.map) with Finset.sum
-  unfold sum_unique_roots
-  have h_eq_sum :
-      ((Finset.univ : Finset (Fin k)).val.map (fun p => unique_roots p V')).sum =
-      ∑ p : Fin k, unique_roots p V' := by rfl
-  rw [h_eq_sum]
-  -- Now: LHS = Σ cb + |V'|*k, RHS = (Σ ur) * (n-k) + (Σ ur)
-  -- From h_sum_eq: Σ cb + |V'|*k = (Σ ur) * (n+1-k)
-  -- Need: (Σ ur) * (n+1-k) = (Σ ur) * (n-k) + (Σ ur)
-  -- This is a * (b+1) = a * b + a, but in ℕ with n+1-k
-  by_cases hk : k ≤ n
-  · have : n + 1 - k = (n - k) + 1 := by omega
-    rw [this] at h_sum_eq
-    rw [Nat.mul_succ] at h_sum_eq
-    linarith
-  · push Not at hk
-    have h_empty : V' = ∅ := by
-      by_contra h
-      obtain ⟨v, hv⟩ := Finset.nonempty_of_ne_empty h
-      exact absurd (Fintype.card_le_of_injective v.val v.property)
-        (by simp [Fintype.card_fin]; omega)
-    subst h_empty
-    simp [unique_roots, coord_boundary]
+  unfold total_coord_edges sum_unique_roots
+  have h_sum : (∑ p : Fin k, ((coord_boundary V' p).card + V'.card)) =
+      ∑ p : Fin k, (unique_roots p V' * (n - k + 1)) := by
+    apply Finset.sum_congr rfl
+    intro p _
+    exact coord_boundary_card_eq V' p hnk
+  rw [Finset.sum_add_distrib] at h_sum
+  have h_vk : (∑ p : Fin k, V'.card) = V'.card * k := by
+    simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin, mul_comm]
+  rw [h_vk] at h_sum
+  have h_rhs : (∑ p : Fin k, unique_roots p V' * (n - k + 1)) =
+      (∑ p : Fin k, unique_roots p V') * (n - k) + ∑ p : Fin k, unique_roots p V' := by
+    calc (∑ p : Fin k, unique_roots p V' * (n - k + 1))
+      _ = ∑ p : Fin k, (unique_roots p V' * (n - k) + unique_roots p V') := by
+        apply Finset.sum_congr rfl; intro p _
+        have h_add : n - k + 1 = (n - k) + 1 := by omega
+        rw [h_add, mul_add, mul_one]
+      _ = (∑ p : Fin k, unique_roots p V' * (n - k)) + ∑ p : Fin k, unique_roots p V' :=
+        Finset.sum_add_distrib
+      _ = (∑ p : Fin k, unique_roots p V') * (n - k) + ∑ p : Fin k, unique_roots p V' := by
+        rw [← Finset.sum_mul]
+  rw [h_rhs] at h_sum
+  exact h_sum
 
 /-- sum_unique_roots ≤ R·k (each unique_roots ≤ R, summed over k positions). -/
 lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
@@ -927,33 +1082,26 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   rw [h_rhs] at h_sum
   exact h_sum
 
-/-- **The Collision-Adjusted Bound**: combines the KK shadow axiom with the
-    fiber edge-counting identity to produce the final lower bound on |N(V')|. -/
-lemma external_neighbors_collision_bound {n k : ℕ}
-    (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
-    external_neighbors V' ≥
-      sum_unique_roots V' * (n - k) - C_constant R := by
-
+-- Derive the old Bridge Lemma 3 from the refined axiom + edge-counting identity
+lemma external_neighbors_collision_bound {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) : -- <-- ADDED hnk
+    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R := by
   have h_bound := max_collision_defect_bound R V' hR
   have h_le := external_neighbors_le_total_coord V'
   have h_decomp := external_neighbors_decomp V' h_le
-  have h_edges := total_coord_edges_eq V'
+  have h_edges := total_coord_edges_eq V' hnk -- <-- PASS hnk
   rw [hR] at h_edges
   have h_U_le := sum_unique_roots_le_rk R V' hR
   omega
 
-/-- **Universal Lower Bound**: for ALL R-element subsets V' of A(n,k),
-    |N(V')| ≥ (R·k − E(R))·(n−k) − C(R). Proven by squeezing the Defect
-    Bound through the Collision-Adjusted Bound. -/
-lemma lower_bound_all_embeddings (R n k : ℕ)
-    (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
+-- Part 2: Universal Lower Bound (Squeezing via Bridge Lemmas)
+lemma lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) : -- <-- ADDED hnk
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
   --  THE MULTI-HYPOTHESIS SQUEEZE
   -- Step 1: Get the lower bound for unique roots (from BRIDGE LEMMA 2)
   have h1 := sum_unique_roots_lower_bound R V' hR
 
   -- Step 2: Get the collision-adjusted neighbor bound (from BRIDGE LEMMA 3)
-  have h2 := external_neighbors_collision_bound R V' hR
+  have h2 := external_neighbors_collision_bound R V' hR hnk -- <-- PASS hnk
 
   -- Step 3: Scale the root bound by the (n-k) dimension factor
   have h3 := Nat.mul_le_mul_right (n - k) h1
@@ -1065,14 +1213,9 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
   of a constructive witness (the Hamming ball), we establish the
   **Full Isoperimetric Profile** of A(n,k) for all natural numbers R.
 -/
-theorem arrangement_extraconnectivity_minimum
-    (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
-  (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
-    external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
-  (∀ V' : Finset (ArrVertex n k), V'.card = R →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) :=
-  ⟨exists_optimal_embedding R n k h_cond,
-   fun V' hR => lower_bound_all_embeddings R n k V' hR⟩
+theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k) : (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧ (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
+  have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
+  exact ⟨exists_optimal_embedding R n k h_cond, fun V' hR => lower_bound_all_embeddings R n k V' hR hnk⟩
 
 /--
   COROLLARY: Globally Optimal Growth Strategy.
