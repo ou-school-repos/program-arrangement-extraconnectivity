@@ -196,7 +196,7 @@ export LAKE_HOME
 .PHONY: lean
 lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
-	cd proofs && lake build | tee lean.log
+	set -o pipefail; cd proofs && lake build | tee lean.log
 	@printf "\n\033[1;32m--- Verification Complete ---\033[0m\n"
 	@printf "\033[1;36mMapped Theorems & Definitions:\033[0m\n"
 	@awk 'BEGIN {last_file=""} \
