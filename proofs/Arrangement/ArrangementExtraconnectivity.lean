@@ -1220,39 +1220,48 @@ lemma hamming_ball_succ {n k d : ℕ} (R : ℕ) (hk : d ≤ k) (hnk : k + d ≤ 
 -- PURE BITWISE HELPERS (Isolating the Nat arithmetic from the Graph Theory)
 -- ============================================================================
 
+-- 1. XOR strictly decreases a number if the flipped bit was 1.
+private lemma xor_two_pow_lt (R p_val : ℕ) (hbit : R.testBit p_val = true) :
+    R ^^^ (1 <<< p_val) < R := by
+  sorry
+
+-- 2. XORing by 1 shifted by p_val flips ONLY the p_val bit.
+private lemma testBit_xor_two_pow (R p_val q : ℕ) :
+    (R ^^^ (1 <<< p_val)).testBit q = if q = p_val then !(R.testBit q) else R.testBit q := by
+  sorry
+
+-- 3. If i matches R on all bits < d except p, but i < R, R cannot have a 0 at p.
+private lemma lt_implies_testBit_true {i R d p : ℕ} (hi : i < R) (hR : R < 2^d) (hp : p < d)
+    (hmatch : ∀ q < d, q ≠ p → i.testBit q = R.testBit q) : R.testBit p = true := by
+  sorry
+
+-- 4. If p >= d, i and R match on all bits < d. Since both < 2^d, they must be equal.
+private lemma eq_of_match_except_out_of_bounds {i R d p : ℕ} (hi : i < 2^d) (hR : R < 2^d) (hp : d ≤ p)
+    (hmatch : ∀ q < d, q ≠ p → i.testBit q = R.testBit q) : i = R := by
+  sorry
+
+/-- PROVEN: Witness construction using XOR -/
 private lemma nat_exists_lt_eq_except_bit (R d p_val : ℕ) (hR : R < 2^d) :
     (∃ i < R, ∀ q < d, q ≠ p_val → i.testBit q = R.testBit q) ↔
     (p_val < d ∧ R.testBit p_val = true) := by
   constructor
   · rintro ⟨i, hi, hmatch⟩
+    have hi_pow : i < 2^d := by omega
     by_cases hp : p_val < d
-    · refine ⟨hp, ?_⟩
-      by_contra hc
-      have hf : R.testBit p_val = false := by exact eq_false_of_ne_true hc
-      have heq : i = R := by
-        apply Nat.eq_of_testBit_eq
-        intro k
-        by_cases hk : k < d
-        · by_cases hkp : k = p_val
-          · subst hkp
-            have hk2 : i < 2^d := by omega
-            have hk3 : R < 2^d := by omega
-            -- since i < R and R.testBit p_val = false, i must have false here too to be < R if all others match
-            -- actually we can just show i = R directly
-            sorry
-          · exact (hmatch k hk hkp).trans rfl
-        · sorry
+    · refine ⟨hp, lt_implies_testBit_true hi hR hp hmatch⟩
+    · have hp2 : d ≤ p_val := by omega
+      have h_eq : i = R := eq_of_match_except_out_of_bounds hi_pow hR hp2 hmatch
       omega
-    · sorry
   · rintro ⟨hp, hbit⟩
-    use R - 2^p_val
-    refine ⟨?_, ?_⟩
-    · exact sub_two_pow_lt R p_val hbit
-    · intro q hq hq_ne
-      exact testBit_sub_two_pow_eq R p_val q hbit hq_ne
+    use R ^^^ (1 <<< p_val)
+    refine ⟨xor_two_pow_lt R p_val hbit, ?_⟩
+    intro q _ hq_ne
+    rw [testBit_xor_two_pow R p_val q, if_neg hq_ne]
 
+/-- Pure Nat bitwise property: the number of 1-bits below d is exactly the popcount. -/
 private lemma nat_popcount_eq_card_filter (R d k : ℕ) (hR : R < 2^d) (hk : d ≤ k) :
-    (Finset.univ.filter (fun p : Fin k => p.val < d ∧ R.testBit p.val = true)).card = popcount R := sorry
+    (Finset.univ.filter (fun p : Fin k => p.val < d ∧ R.testBit p.val = true)).card = popcount R := by
+  sorry
 
 -- ============================================================================
 -- THE GRAPH THEORY TO BIT-VECTOR BIJECTION
@@ -1270,9 +1279,13 @@ private lemma embed_cube_val_eq {n k d : ℕ} (i j : ℕ) (hk : d ≤ k) (hnk : 
     · simp [hi, hj]
     · simp [hi, hj]
       intro hc
+      have hc_val := congr_arg Subtype.val hc
+      dsimp only at hc_val
       omega
     · simp [hi, hj]
       intro hc
+      have hc_val := congr_arg Subtype.val hc
+      dsimp only at hc_val
       omega
     · simp [hi, hj]
   · simp [hq]
@@ -1307,7 +1320,7 @@ lemma root_collision_iff_testBit_true {n k d : ℕ} (R : ℕ) (hR : R < 2^d) (p 
     rw [Finset.mem_image] at hv
     rcases hv with ⟨i, hi, rfl⟩
     rw [Finset.mem_range] at hi
-    have h_drop := (drop_pos_eq_iff_testBit i R p hk hnk).mp heq.symm
+    have h_drop := (drop_pos_eq_iff_testBit i R p hk hnk).mp heq
     have h_exists : ∃ i < R, ∀ q < d, q ≠ p.val → i.testBit q = R.testBit q := by
       use i, hi
       intro q_val hq_lt hq_ne
@@ -1325,7 +1338,7 @@ lemma root_collision_iff_testBit_true {n k d : ℕ} (R : ℕ) (hR : R < 2^d) (p 
     · apply (drop_pos_eq_iff_testBit i R p hk hnk).mpr
       intro q hq_ne hq_lt
       have hq_ne_val : q.val ≠ p.val := fun hc => hq_ne (Fin.ext hc)
-      exact h_match q.val hq_lt hq_ne_val
+      exact (h_match q.val hq_lt hq_ne_val).symm
 
 /-- PROVEN: The total number of root collisions equals the popcount of R! -/
 lemma sum_root_collisions_eq_popcount {n k d : ℕ} (R : ℕ) (hR : R < 2^d) (hk : d ≤ k) (hnk : k + d ≤ n) :
