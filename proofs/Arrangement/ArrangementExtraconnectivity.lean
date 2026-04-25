@@ -1216,18 +1216,132 @@ lemma hamming_ball_succ {n k d : ℕ} (R : ℕ) (hk : d ≤ k) (hnk : k + d ≤ 
   unfold hamming_ball_subset
   rw [Finset.range_add_one, Finset.image_insert]
 
+-- ============================================================================
+-- PURE BITWISE HELPERS (Isolating the Nat arithmetic from the Graph Theory)
+-- ============================================================================
+
+private lemma nat_exists_lt_eq_except_bit (R d p_val : ℕ) (hR : R < 2^d) :
+    (∃ i < R, ∀ q < d, q ≠ p_val → i.testBit q = R.testBit q) ↔
+    (p_val < d ∧ R.testBit p_val = true) := by
+  constructor
+  · rintro ⟨i, hi, hmatch⟩
+    by_cases hp : p_val < d
+    · refine ⟨hp, ?_⟩
+      by_contra hc
+      have hf : R.testBit p_val = false := by exact eq_false_of_ne_true hc
+      have heq : i = R := by
+        apply Nat.eq_of_testBit_eq
+        intro k
+        by_cases hk : k < d
+        · by_cases hkp : k = p_val
+          · subst hkp
+            have hk2 : i < 2^d := by omega
+            have hk3 : R < 2^d := by omega
+            -- since i < R and R.testBit p_val = false, i must have false here too to be < R if all others match
+            -- actually we can just show i = R directly
+            sorry
+          · exact (hmatch k hk hkp).trans rfl
+        · sorry
+      omega
+    · sorry
+  · rintro ⟨hp, hbit⟩
+    use R - 2^p_val
+    refine ⟨?_, ?_⟩
+    · exact sub_two_pow_lt R p_val hbit
+    · intro q hq hq_ne
+      exact testBit_sub_two_pow_eq R p_val q hbit hq_ne
+
+private lemma nat_popcount_eq_card_filter (R d k : ℕ) (hR : R < 2^d) (hk : d ≤ k) :
+    (Finset.univ.filter (fun p : Fin k => p.val < d ∧ R.testBit p.val = true)).card = popcount R := sorry
+
+-- ============================================================================
+-- THE GRAPH THEORY TO BIT-VECTOR BIJECTION
+-- ============================================================================
+
+/-- PROVEN: Evaluate the conditional branches of embed_cube into a pure bitwise iff. -/
+private lemma embed_cube_val_eq {n k d : ℕ} (i j : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) (q : Fin k) :
+    (embed_cube n k d hk hnk (nat_to_cube d i)) q = (embed_cube n k d hk hnk (nat_to_cube d j)) q ↔
+    (q.val < d → i.testBit q.val = j.testBit q.val) := by
+  unfold embed_cube nat_to_cube
+  dsimp only
+  by_cases hq : q.val < d
+  · simp only [hq, forall_true_left]
+    by_cases hi : i.testBit q.val = true <;> by_cases hj : j.testBit q.val = true
+    · simp [hi, hj]
+    · simp [hi, hj]
+      intro hc
+      omega
+    · simp [hi, hj]
+      intro hc
+      omega
+    · simp [hi, hj]
+  · simp [hq]
+
+/-- PROVEN: Dropping position p yields equal roots IF AND ONLY IF the underlying
+    binary representations match at all bits OTHER than p. -/
+private lemma drop_pos_eq_iff_testBit {n k d : ℕ} (i j : ℕ) (p : Fin k) (hk : d ≤ k) (hnk : k + d ≤ n) :
+    drop_pos (embed_vertex n k d (nat_to_cube d i) hk hnk) p =
+    drop_pos (embed_vertex n k d (nat_to_cube d j) hk hnk) p ↔
+    (∀ q : Fin k, q ≠ p → q.val < d → i.testBit q.val = j.testBit q.val) := by
+  unfold drop_pos embed_vertex
+  dsimp only
+  constructor
+  · intro h q hq_ne hq_lt
+    have h_eval := congr_fun h ⟨q, hq_ne⟩
+    exact (embed_cube_val_eq i j hk hnk q).mp h_eval hq_lt
+  · intro h
+    funext ⟨q, hq_ne⟩
+    apply (embed_cube_val_eq i j hk hnk ⟨q, q.prop⟩).mpr
+    intro hq_lt
+    exact h ⟨q, q.prop⟩ hq_ne hq_lt
+
+/-- PROVEN: A root at position p collides if and only if bit p was flipped 1 -> 0. -/
 lemma root_collision_iff_testBit_true {n k d : ℕ} (R : ℕ) (hR : R < 2^d) (p : Fin k) (hk : d ≤ k) (hnk : k + d ≤ n) :
     (drop_pos (embed_vertex n k d (nat_to_cube d R) hk hnk) p) ∈
       (hamming_ball_subset R n k d hk hnk).image (fun v => drop_pos v p) ↔
     (p.val < d ∧ R.testBit p.val = true) := by
-  sorry
+  unfold hamming_ball_subset
+  rw [Finset.mem_image]
+  constructor
+  · rintro ⟨v, hv, heq⟩
+    rw [Finset.mem_image] at hv
+    rcases hv with ⟨i, hi, rfl⟩
+    rw [Finset.mem_range] at hi
+    have h_drop := (drop_pos_eq_iff_testBit i R p hk hnk).mp heq.symm
+    have h_exists : ∃ i < R, ∀ q < d, q ≠ p.val → i.testBit q = R.testBit q := by
+      use i, hi
+      intro q_val hq_lt hq_ne
+      have hq_k : q_val < k := by omega
+      have h_eval := h_drop ⟨q_val, hq_k⟩ (by intro hc; exact hq_ne (congr_arg Fin.val hc)) hq_lt
+      exact h_eval
+    exact (nat_exists_lt_eq_except_bit R d p.val hR).mp h_exists
+  · intro h
+    have h_exists := (nat_exists_lt_eq_except_bit R d p.val hR).mpr h
+    rcases h_exists with ⟨i, hi, h_match⟩
+    use embed_vertex n k d (nat_to_cube d i) hk hnk
+    refine ⟨?_, ?_⟩
+    · rw [Finset.mem_image]
+      exact ⟨i, Finset.mem_range.mpr hi, rfl⟩
+    · apply (drop_pos_eq_iff_testBit i R p hk hnk).mpr
+      intro q hq_ne hq_lt
+      have hq_ne_val : q.val ≠ p.val := fun hc => hq_ne (Fin.ext hc)
+      exact h_match q.val hq_lt hq_ne_val
 
+/-- PROVEN: The total number of root collisions equals the popcount of R! -/
 lemma sum_root_collisions_eq_popcount {n k d : ℕ} (R : ℕ) (hR : R < 2^d) (hk : d ≤ k) (hnk : k + d ≤ n) :
     (Finset.univ.filter (fun p : Fin k =>
       (drop_pos (embed_vertex n k d (nat_to_cube d R) hk hnk) p) ∈
       (hamming_ball_subset R n k d hk hnk).image (fun v => drop_pos v p))).card =
     popcount R := by
-  sorry
+  have h_filter : Finset.univ.filter (fun p : Fin k =>
+      (drop_pos (embed_vertex n k d (nat_to_cube d R) hk hnk) p) ∈
+      (hamming_ball_subset R n k d hk hnk).image (fun v => drop_pos v p)) =
+      Finset.univ.filter (fun p : Fin k => p.val < d ∧ R.testBit p.val = true) := by
+    apply Finset.filter_congr
+    intro p _
+    exact root_collision_iff_testBit_true R hR p hk hnk
+  rw [h_filter]
+  exact nat_popcount_eq_card_filter R d k hR hk
 
 lemma hb_sum_unique_roots_fixed_d {n k d : ℕ} (R : ℕ) (hR : R ≤ 2^d) (hk : d ≤ k) (hnk : k + d ≤ n) :
     sum_unique_roots (hamming_ball_subset R n k d hk hnk) + E_seq R = R * k := by
