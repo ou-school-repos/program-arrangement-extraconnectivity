@@ -197,6 +197,20 @@ export LAKE_HOME
 lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
 	cd proofs && lake build | tee lean.log
+	@printf "\n\033[1;32m--- Verification Complete ---\033[0m\n"
+	@printf "\033[1;36mMapped Theorems & Definitions:\033[0m\n"
+	@grep -E '^(theorem|lemma|def|axiom|class|instance|structure) ' proofs/Arrangement/*.lean proofs/Arrangement/unstable/*.lean 2>/dev/null | \
+		sed 's|^proofs/||' | \
+		awk 'BEGIN {last=""} { \
+			file=$$0; sub(/:.*/, "", file); \
+			content=$$0; sub(/^[^:]*:/, "", content); \
+			if (file != last) { \
+				printf "\n\033[1;33m%s:\033[0m\n", file; \
+				last=file \
+			} \
+			printf "  %s\n", content \
+		}' || true
+	@printf "\033[1;32m--------------------------------\033[0m\n"
 	@$(call print_success,Lean proofs verified.)
 
 .PHONY: lean/cache
