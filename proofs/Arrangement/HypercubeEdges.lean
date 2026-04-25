@@ -93,7 +93,6 @@ topology (E=10) is 2, making E=11 mathematically impossible.
 This is verified computationally for small d but remains a formal verification target.
 -/
 def hypercube_fracture_gap (d : ℕ) : Prop :=
-  let R := 2^d
   let E_opt := d * 2^(d-1)
   -- The second best topology must have at most E_opt - d + 1 edges
   ∀ (E_sub : ℕ), E_sub < E_opt ∧ E_sub > 0 → E_sub ≤ d * 2^(d-1) - d + 1
