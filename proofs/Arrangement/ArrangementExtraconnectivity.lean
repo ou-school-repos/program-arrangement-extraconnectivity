@@ -1279,13 +1279,9 @@ private lemma embed_cube_val_eq {n k d : ℕ} (i j : ℕ) (hk : d ≤ k) (hnk : 
     · simp [hi, hj]
     · simp [hi, hj]
       intro hc
-      have hc_val := congr_arg Subtype.val hc
-      dsimp only at hc_val
       omega
     · simp [hi, hj]
       intro hc
-      have hc_val := congr_arg Subtype.val hc
-      dsimp only at hc_val
       omega
     · simp [hi, hj]
   · simp [hq]
@@ -1338,7 +1334,7 @@ lemma root_collision_iff_testBit_true {n k d : ℕ} (R : ℕ) (hR : R < 2^d) (p 
     · apply (drop_pos_eq_iff_testBit i R p hk hnk).mpr
       intro q hq_ne hq_lt
       have hq_ne_val : q.val ≠ p.val := fun hc => hq_ne (Fin.ext hc)
-      exact (h_match q.val hq_lt hq_ne_val).symm
+      exact (h_match q.val hq_lt hq_ne_val)
 
 /-- PROVEN: The total number of root collisions equals the popcount of R! -/
 lemma sum_root_collisions_eq_popcount {n k d : ℕ} (R : ℕ) (hR : R < 2^d) (hk : d ≤ k) (hnk : k + d ≤ n) :
