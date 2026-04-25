@@ -82,17 +82,3 @@ theorem A000788_eq_E (d : ℕ) : A000788 (2^d) = E d := by
   have h1 := A000788_power2 d
   have h2 := hypercube_edges_form d
   omega
-
-/--
-Conjecture (The Hypercube Fracture Gap):
-For any connected subgraph of size R=2^d in the arrangement graph (modeled as hypercube subsets),
-the maximum internal edges for a non-optimal topology is strictly less than E_opt - (d-2).
-Specifically for R=8 (d=3), the gap between optimal (E=12) and the next connected
-topology (E=10) is 2, making E=11 mathematically impossible.
-
-This is verified computationally for small d but remains a formal verification target.
--/
-def hypercube_fracture_gap (d : ℕ) : Prop :=
-  let E_opt := d * 2^(d-1)
-  -- The second best topology must have at most E_opt - d + 1 edges
-  ∀ (E_sub : ℕ), E_sub < E_opt ∧ E_sub > 0 → E_sub ≤ d * 2^(d-1) - d + 1
