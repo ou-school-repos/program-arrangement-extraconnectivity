@@ -263,11 +263,11 @@ explains all cases and predicts arbitrarily large R.
 
 **R=9 and R=10 minimum-cut subgraphs** (generated empirically by the C++ oracle) showing the topological expansion beyond the perfect 3-cube:
 
-![R=9 minimum-cut subgraph](docs/R9_graph.svg)
+![R=9 minimum-cut subgraph](assets/out/R9_graph.gif)
 
-![R=10 minimum-cut subgraph](docs/R10_graph.svg)
+![R=10 minimum-cut subgraph](assets/out/R10_graph.gif)
 
-Verify independently: `python3 docs/verify-counterexample.py`
+Verify independently: `python3 scripts/verify-counterexample.py`
 
 \newpage
 
