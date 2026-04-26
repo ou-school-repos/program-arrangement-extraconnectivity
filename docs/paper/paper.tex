@@ -304,33 +304,6 @@ in fault isolation. As $n \to \infty$, the penalty for sub-optimality
 asymptotically dwarfs any secondary savings from cross-collisions.
 
 % ════════════════════════════════════════════════════════════════════════
-\section*{Lean 4 Formal Verification}
-
-The structural hierarchy is 100\% mechanically verified. We isolate
-pure set theory to three axioms:
-\begin{itemize}
-  \item \texttt{max\_collision\_defect\_bound}: Universal KK shadow bound.
-  \item \texttt{hb\_cross\_collisions}: Shadow overlaps for the Hamming Ball.
-  \item \texttt{nat\_popcount\_eq\_card\_filter}: Mapping \texttt{Nat.testBit} to popcount.
-\end{itemize}
-
-\begin{table}[ht]
-\centering
-\caption{Verified status of the theoretical pillars.}
-\label{tab:axioms}
-\begin{tabular}{@{}ll@{}}
-\toprule
-Pillar & Status \\
-\midrule
-Algebraic Defect Double-Counting & PROVEN \\
-Dimensional Scaling $(n-k)$ & PROVEN \\
-Hamming Ball Evaluation & PROVEN \\
-Asymptotic Penalty Bound & PROVEN \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-% ════════════════════════════════════════════════════════════════════════
 \section*{Conclusion}
 
 The Algebraic Defect Squeeze establishes the $(R{-}1)$-extraconnectivity
