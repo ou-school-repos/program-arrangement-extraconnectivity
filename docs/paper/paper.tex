@@ -390,7 +390,9 @@ Remarkably, our explicit bounds perfectly collapse into a single topological man
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a topology fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
 \end{theorem}
-This result ensures that network scaling $(n-k)$ strictly stratifies the Pareto spectrum. As $n \to \infty$, the penalty for sub-optimality asymptotically dwarfs any secondary savings from cross-collisions.
+To understand this mechanism physically, recall the Algebraic Defect Squeeze: each missing internal edge (a shortfall in defect) implies the topology must project onto an additional unique root to maintain connectivity. Because each root acts as a fixed backbone that expands into a 1D-clique of available alphabet symbols, exposing a new root strictly forces the inclusion of $n-k$ new external vertices.
+
+Crucially, while cross-collision overlaps ($X$) can fluctuate between different graph embeddings, these overlaps are bounded purely by the finite cluster size $R$ and are strictly independent of the global network size $n$. Therefore, as the network scales ($n \to \infty$), the linear $(n-k)$ dimensional penalty grows unboundedly. This mathematical divergence strictly stratifies the Pareto spectrum: the massive dimensional penalty for topological sub-optimality asymptotically dwarfs any theoretical secondary savings derived from finite cross-collisions.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Formal Verification in Lean 4}
