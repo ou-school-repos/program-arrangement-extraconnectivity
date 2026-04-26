@@ -33,12 +33,12 @@
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
-  The Isoperimetric Profile of Arrangement Graphs: \\
+  The Isoperimetric Profile of Arrangement Graphs: \
   Hamming Ball Optimality and the Algebraic Defect Squeeze%
 }
 \author{
-  Shane Jaroch \\
-  \small Oakland University \\
+  Shane Jaroch \
+  \small Oakland University \
   \small \texttt{sjjaroch@oakland.edu}
 }
 \date{\today}
@@ -83,9 +83,9 @@ In this paper we break through this barrier by proving:
 \begin{theorem}[Main Result]\label{them:main}
 For all $R \geq 2$ and all $n, k$ satisfying $n \geq 2k$,
 the $(R{-}1)$-extraconnectivity of $\ank$ is exactly
-\[
-  \kappa_{R-1}(\ank) = (R \cdot k - \Eseq(R)) \cdot (n - k) - \Cconst(R),
-\]
+\begin{center}
+  $\kappa_{R-1}(\ank) = (R \cdot k - \Eseq(R)) \cdot (n - k) - \Cconst(R),$
+\end{center}
 where $\Eseq(R) = A000788(R)$ (cumulative binary weight) and
 $\Cconst(R)$ is a collision constant derived from the Kruskal--Katona
 shadow theorem.
@@ -107,7 +107,7 @@ The proof proceeds via four main acts:
 \section*{Preliminaries}
 
 \begin{definition}[Notation]
-We denote the set $\{1, 2, \dots, m\}$ by $[m]$. For a vertex $v$,
+We denote the set {1, 2, \dots, m} by $[m]$. For a vertex $v$,
 the expression $v|_{[k]\setminus\{p\}}$ denotes the sequence of length $k-1$
 obtained by removing the symbol at position $p$ (the restriction of the function $v$
 to all indices except $p$).
@@ -178,7 +178,7 @@ bound remains a formalized conjecture (\texttt{sandwich\_upper\_bound\_conjectur
 % ════════════════════════════════════════════════════════════════════════
 \section*{The Compression No-Go Theorem}
 
-In $\{0,1\}^d$, shifting a vertex to use symbol $a < b$ provably reduces the
+In {0,1}$^d$, shifting a vertex to use symbol $a < b$ provably reduces the
 boundary. In arrangement graphs, this fails.
 
 \begin{theorem}[Compression No-Go]
@@ -241,38 +241,38 @@ because they are reachable via multiple coordinate flips.
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
   % Draw 3D-like axes
-  \draw[->, thick] (0,0) -- (4.0,0) node[right] {Dim $p$};
-  \draw[->, thick] (0,0) -- (0,4.0) node[above] {Dim $q$};
-  \draw[->, thick] (0,0) -- (-1.5,-1.5) node[below left] {Dim $l$};
+  \draw[->, thick] (0,0) -- (5,0) node[anchor=north] {Dim $p$};
+  \draw[->, thick] (0,0) -- (0,5) node[anchor=east] {Dim $q$};
+  \draw[->, thick] (0,0) -- (-1.5,-1.5) node[anchor=north east] {Dim $l$};
 
   % Draw "Fibers" as lines
-  \draw[blue!60, ultra thick] (0,1) -- (3.5,1);
-  \node[blue!70!black, anchor=west] at (3.6,1) {Fiber $r_1$};
+  \draw[blue!60, ultra thick] (0,2) -- (5,2);
+  \node[blue!70!black, anchor=west] at (5.1,2) {Fiber $r_1$};
 
-  \draw[blue!60, ultra thick] (1,0) -- (1,3.5);
-  \node[blue!70!black, anchor=south] at (1,3.6) {Fiber $r_2$};
+  \draw[blue!60, ultra thick] (2,0) -- (2,5);
+  \node[blue!70!black, anchor=south] at (2,5.1) {Fiber $r_2$};
 
   % Draw set V' as circles on the fibers
-  \fill[blue] (1,1) circle (0.15) node[above right] {$v \in V'$};
+  \fill[blue] (2,2) circle (0.18) node[above left=0.1cm] {$v \in V'$};
+  \fill[blue] (4.5,2) circle (0.12) node[above right=0.1cm] {$u \in V'$};
 
   % Draw internal edges (Defect)
-  \fill[blue] (2,1) circle (0.1) node[below] {$u \in V'$};
-  \draw[blue, line width=3pt] (1.15,1) -- (1.85,1);
-  \node[blue!70!black, font=\footnotesize] at (1.5,1.4) {Defect Edge};
+  \draw[blue, line width=3.5pt] (2.2,2) -- (4.3,2);
+  \node[blue!70!black, font=\footnotesize, anchor=north] at (3.25,1.8) {Defect Edge};
 
   % Draw boundary vertices
-  \draw[gray, dashed] (1,2.5) circle (0.1) node[left] {$\extbd$};
-  \draw (1,1.15) -- (1,2.35);
+  \draw[gray, dashed] (2,4) circle (0.12) node[left=0.1cm] {$\extbd$};
+  \draw (2,2.2) -- (2,3.8);
 
   % Draw Cross-Collision
-  \fill[red!20, draw=red, thick] (3,3) circle (0.15);
-  \node[red!70!black, anchor=west] at (3.2,3) {\textbf{Cross-Collision!}};
-  \node[red!70!black, font=\footnotesize] at (3.2,2.6) {(Shared by 2 fibers)};
+  \fill[red!20, draw=red, thick] (4.5,4.5) circle (0.18);
+  \node[red!70!black, anchor=west] at (4.7,4.5) {\textbf{Cross-Collision!}};
+  \node[red!70!black, font=\footnotesize, anchor=north west] at (4.7,4.3) {(Shared by 2 fibers)};
 
-  \draw[red, dotted, thick] (1.15,3) -- (2.85,3);
-  \draw[red, dotted, thick] (3,1.15) -- (3,2.85);
+  \draw[red, dotted, thick] (2.2,4.5) -- (4.3,4.5);
+  \draw[red, dotted, thick] (4.5,2.2) -- (4.5,4.3);
 
-  \node[align=center, font=\footnotesize] at (1.5, -3.2) {
+  \node[align=center, font=\footnotesize] at (2.5, -2.8) {
     \textbf{Figure 2: Global Topological Structure.} Arrangement graphs act as high-dimensional\\
     lattices where unique roots trace 1D-cliques. The "Squeeze" accounts for \\
     internal edges ($D$) and overlapping boundary projections ($X$).
