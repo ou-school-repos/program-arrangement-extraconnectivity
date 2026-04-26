@@ -278,7 +278,7 @@ Because external neighbors may be hit by multiple dimensions, we subtract the \e
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation*}
 
-By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously minimizes unique roots (maximizing the defect $D$) and maximizes the shadow overlap term $(X+D)$, squeezing the boundary to its absolute minimum.
+By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously minimizes unique roots (maximizing the defect $D$\footnote{As established in Definition 2.3, for dense configurations such as $K_3$ triangles, $D(V')$ functions as an algebraic proxy rather than a literal edge count, naturally penalizing root duplications to prevent geometric over-counting within the squeeze mechanics.}) and maximizes the shadow overlap term $(X+D)$, squeezing the boundary to its absolute minimum.
 
 \begin{figure}[H]
 \centering
@@ -390,10 +390,20 @@ Remarkably, our explicit bounds perfectly collapse into a single topological man
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a topology fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
 \end{theorem}
-To understand this mechanism physically, recall the Algebraic Defect Squeeze: each missing internal edge (a shortfall in defect) implies the topology must project onto an additional unique root to maintain connectivity. Because each root acts as a fixed backbone that expands into a 1D-clique of available alphabet symbols, exposing a new root strictly forces the inclusion of $n-k$ new external vertices.
+To understand this mechanism mathematically, we return to the exact boundary equation derived via the Algebraic Defect Squeeze:
+\begin{equation*}
+\left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big)
+\end{equation*}
 
-Crucially, while cross-collision overlaps ($X$) can fluctuate between different graph embeddings, these overlaps are bounded purely by the finite cluster size $R$ and are strictly independent of the global network size $n$. Therefore, as the network scales ($n \to \infty$), the linear $(n-k)$ dimensional penalty grows unboundedly. This mathematical divergence strictly stratifies the Pareto spectrum: the massive dimensional penalty for topological sub-optimality asymptotically dwarfs any theoretical secondary savings derived from finite cross-collisions.
+Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a sub-optimal topology falls short of the optimal Hamming Ball defect by $\Delta E$, it must inherently project onto $\Delta E$ \emph{additional} unique roots to maintain its vertex count ($U_{sub} = U_{opt} + \Delta E$).
 
+Substituting this into the boundary equation yields the comparative boundary size:
+\begin{align*}
+\left| \partial_{\mathrm{ext}}(V'_{sub}) \right| &= (U_{opt} + \Delta E) \cdot (n - k) - (X_{sub} + D_{sub}) \\
+&= \left| \partial_{\mathrm{ext}}(V'_{opt}) \right| + \Delta E \cdot (n - k) + (X_{opt} + D_{opt}) - (X_{sub} + D_{sub})
+\end{align*}
+
+This formulation isolates the asymptotic behavior. The fluctuation in internal edges and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). In stark contrast, the penalty term $\Delta E \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single internal edge ($\Delta E = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
 % ════════════════════════════════════════════════════════════════════════
 \section{Formal Verification in Lean 4}
 
