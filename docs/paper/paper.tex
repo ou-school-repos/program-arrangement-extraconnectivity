@@ -423,11 +423,11 @@ which verifies the absolute lower bound mapping to the sequence bounds establish
 \begin{quote}
 \small \ttfamily
 theorem arrangement\_extraconnectivity\_minimum \\
-\hspace*{1em}(R, n, k : $\mathbb{N}$) (h\_cond : can\_embed\_hypercube R n k) : \\
-\hspace*{1em}($\exists$ V' : Finset (ArrVertex n k), V'.card = R $\land$ \\
-\hspace*{2em}external\_neighbors V' = (R * k - E\_seq R) * (n - k) - C\_constant R) $\land$ \\
-\hspace*{1em}($\forall$ V' : Finset (ArrVertex n k), V'.card = R $\to$ \\
-\hspace*{2em}external\_neighbors V' $\ge$ (R * k - E\_seq R) * (n - k) - C\_constant R)
+(R n k : $\mathbb{N}$) (h\_cond : can\_embed\_hypercube R n k) : \\
+($\exists$ V' : A(n,k), V'.card = R $\land$ \\
+external\_neighbors V' = (R * k - E\_seq R) * (n - k) - C\_constant R) $\land$ \\
+($\forall$ V' : A(n,k), V'.card = R $\to$ \\
+external\_neighbors V' $\ge$ (R * k - E\_seq R) * (n - k) - C\_constant R)
 \end{quote}
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Conjectures}
