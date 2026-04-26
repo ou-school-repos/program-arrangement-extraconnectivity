@@ -32,13 +32,13 @@
 \newcommand{\Eseq}{E_{\mathrm{seq}}}
 \newcommand{\Hamball}{\mathcal{H}}
 
-\title{%
-  The Isoperimetric Profile of Arrangement Graphs: \
+\title{% 
+  The Isoperimetric Profile of Arrangement Graphs: \\
   Hamming Ball Optimality and the Algebraic Defect Squeeze%
 }
-\author{
-  Shane Jaroch \
-  \small Oakland University \
+\author{ 
+  Shane Jaroch \\
+  \small Oakland University \\
   \small \texttt{sjjaroch@oakland.edu}
 }
 \date{\today}
@@ -47,18 +47,18 @@
 \maketitle
 
 % ════════════════════════════════════════════════════════════════════════
-\begin{abstract}
+\begin{abstract} 
 We establish the $(R{-}1)$-extraconnectivity of arrangement graphs
-$\ank$ for all $R \leq n!/(n{-}k)!$. We prove that the optimal
-fault-isolation topologies are embedded lexicographic Hamming Balls,
-which achieve maximum internal shielding matching the cumulative
-binary weight sequence (OEIS A000788). To establish this, we introduce
-the \emph{algebraic defect squeeze}, a novel framework that replaces
-the standard compression approach used in hypercube isoperimetry,
-which we prove is mathematically invalid for partial permutation
-spaces. We further establish the \emph{Asymptotic Penalty Theorem},
-proving that sub-optimal topologies incur a linear penalty of
-$\Delta E(n-k)$ boundary nodes, ensuring the Hamming Ball's
+$\ank$ for all $R \leq n!/(n{-}k)!$. We prove that the optimal 
+fault-isolation topologies are embedded lexicographic Hamming Balls, 
+which achieve maximum internal shielding matching the cumulative 
+binary weight sequence (OEIS A000788). To establish this, we introduce 
+the \emph{algebraic defect squeeze}, a novel framework that replaces 
+the standard compression approach used in hypercube isoperimetry, 
+which we prove is mathematically invalid for partial permutation 
+spaces. We further establish the \emph{Asymptotic Penalty Theorem}, 
+proving that sub-optimal topologies incur a linear penalty of 
+$\Delta E(n-k)$ boundary nodes, ensuring the Hamming Ball's 
 asymptotic dominance as the network scales.
 \end{abstract}
 
@@ -66,26 +66,26 @@ asymptotic dominance as the network scales.
 \section*{Introduction}
 
 The \emph{arrangement graph} $\ank$, introduced by Day and
-Tripathi~\cite{day1992arrangement}, models interconnection networks for
-multiprocessor systems.  A vertex of $\ank$ is an injective sequence of $k$
+Tripathi~\cite{day1992arrangement}, models interconnection networks for 
+multiprocessor systems.  A vertex of $\ank$ is an injective sequence of $k$ 
 symbols drawn from an alphabet of size $n$, and two vertices are adjacent if
 and only if they differ in exactly one coordinate.
 
 The \emph{$h$-extraconnectivity} $\kappa_h(G)$ of a graph $G$ is the
 minimum number of vertices whose removal disconnects $G$
-into components each containing more than $h$ vertices.
+into components each containing more than $h$ vertices. 
 Cheng et al.~\cite{cheng2022extraconnectivity} established the
-$h$-extraconnectivity of $\ank$ for small values of $h$, but progress
+$h$-extraconnectivity of $\ank$ for small values of $h$, but progress 
 was limited by the combinatorial explosion of case analysis.
 
 In this paper we break through this barrier by proving:
 
 \begin{theorem}[Main Result]\label{them:main}
-For all $R \geq 2$ and all $n, k$ satisfying $n \geq 2k$,
+For all $R \geq 2$ and all $n, k$ satisfying $n \geq 2k$, 
 the $(R{-}1)$-extraconnectivity of $\ank$ is exactly
-\begin{center}
-  $\kappa_{R-1}(\ank) = (R \cdot k - \Eseq(R)) \cdot (n - k) - \Cconst(R),$
-\end{center}
+\[
+  \kappa_{R-1}(\ank) = (R \cdot k - \Eseq(R)) \cdot (n - k) - \Cconst(R),
+\]
 where $\Eseq(R) = A000788(R)$ (cumulative binary weight) and
 $\Cconst(R)$ is a collision constant derived from the Kruskal--Katona
 shadow theorem.
@@ -93,13 +93,13 @@ shadow theorem.
 
 The proof proceeds via four main acts:
 \begin{itemize}
-  \item \textbf{Compression No-Go Theorem:} proving that standard shift
+  \item \textbf{Compression No-Go Theorem:} proving that standard shift 
     operators \emph{fail} due to coordinate tangling.
-  \item \textbf{Algebraic Defect Squeeze:} decomposing the boundary into
+  \item \textbf{Algebraic Defect Squeeze:} decomposing the boundary into 
     coordinate-wise roots to mechanize dimension scaling.
-  \item \textbf{Asymptotic Penalty Theorem:} proving sub-optimal topologies
+  \item \textbf{Asymptotic Penalty Theorem:} proving sub-optimal topologies 
     are penalized by at least $\Delta E \cdot (n - k)$ vertices.
-  \item \textbf{Lean 4 Verification:} 100\% mechanical verification of the
+  \item \textbf{Lean 4 Verification:} 100\% mechanical verification of the 
     graph theory and dimensional scaling.
 \end{itemize}
 
@@ -107,9 +107,9 @@ The proof proceeds via four main acts:
 \section*{Preliminaries}
 
 \begin{definition}[Notation]
-We denote the set {1, 2, \dots, m} by $[m]$. For a vertex $v$,
-the expression $v|_{[k]\setminus\{p	egral}$ denotes the sequence of length $k-1$
-obtained by removing the symbol at position $p$ (the restriction of the function $v$
+We denote the set $\{1, 2, \dots, m\}$ by $[m]$. For a vertex $v$, 
+the expression $v|_{[k]\setminus\{p\}}$ denotes the sequence of length $k-1$ 
+obtained by removing the symbol at position $p$ (the restriction of the function $v$ 
 to all indices except $p$).
 \end{definition}
 
@@ -120,29 +120,29 @@ and edge set $E = \{ \{u, v\} : |\{p : u(p) \neq v(p)\}| = 1 \}$.
 \end{definition}
 
 \begin{definition}[Unique Roots and Defect]
-For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$
-distinct symbols. In $\ank$, each root defines a 1-dimensional clique (a
-line) of size $n-k+1$ obtained by filling the missing coordinate with
-any available symbol.
-The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct
+For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ 
+distinct symbols. In $\ank$, each root defines a 1-dimensional clique (a 
+line) of size $n-k+1$ obtained by filling the missing coordinate with 
+any available symbol. 
+The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 
 1D-cliques that intersect the set $V'$ at coordinate $p$:
-\begin{center}
-  $U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}$.
-\end{center}
-The \emph{sum of unique roots} $U(V') = \sum_{p=1}^{k} |U_p(V')|$ counts
-the total number of these coordinate-aligned lines our set touches.
-The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal
+\[
+  U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}.
+\]
+The \emph{sum of unique roots} $U(V') = \sum_{p=1}^{k} |U_p(V')|$ counts 
+the total number of these coordinate-aligned lines our set touches. 
+The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal 
 "shielding": it is the number of edges $(u,v)$ where both $u,v \in V'$.
 \end{definition}
 
 % ════════════════════════════════════════════════════════════════════════
 \section*{The Computational Engine}
 
-We scaled exhaustive topological search to $R=20$ using a symmetry-aware
-search engine (utilizing McKay's \texttt{nauty} library for canonical pruning).
-This search confirms that the minimum boundary for connected subgraphs
-follows OEIS A000788, identifying the optimal topologies as embedded
-lexicographic Hamming Balls. These insights allowed us to develop an
+We scaled exhaustive topological search to $R=20$ using a symmetry-aware 
+search engine (utilizing McKay's \texttt{nauty} library for canonical pruning). 
+This search confirms that the minimum boundary for connected subgraphs 
+follows OEIS A000788, identifying the optimal topologies as embedded 
+lexicographic Hamming Balls. These insights allowed us to develop an 
 $O(R^4)$ characterization engine for arbitrary dimensions.
 
 \begin{table}[ht]
@@ -151,12 +151,12 @@ $O(R^4)$ characterization engine for arbitrary dimensions.
 \label{tab:engine}
 \begin{tabular}{@{}rrrrl@{}}
 \toprule
-$R$ & $\Eseq(R)$ & $\Cconst(R)$ & Formula & Verified \
+$R$ & $\Eseq(R)$ & $\Cconst(R)$ & Formula & Verified \\
 \midrule
-2 & 1 & 0 & $(2k{-}1)(n{-}k)$ & \checkmark \
-4 & 4 & 1 & $(4k{-}4)(n{-}k){-}1$ & \checkmark \
-8 & 12 & 4 & $(8k{-}12)(n{-}k){-}4$ & \checkmark \
-16 & 32 & 12 & $(16k{-}32)(n{-}k){-}12$ & \checkmark \
+2 & 1 & 0 & $(2k{-}1)(n{-}k)$ & \checkmark \\
+4 & 4 & 1 & $(4k{-}4)(n{-}k){-}1$ & \checkmark \\
+8 & 12 & 4 & $(8k{-}12)(n{-}k){-}4$ & \checkmark \\
+16 & 32 & 12 & $(16k{-}32)(n{-}k){-}12$ & \checkmark \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -164,30 +164,30 @@ $R$ & $\Eseq(R)$ & $\Cconst(R)$ & Formula & Verified \
 % ════════════════════════════════════════════════════════════════════════
 \section*{The Isoperimetric Sandwich}
 
-Computational enumeration reveals that the boundary of any connected
+Computational enumeration reveals that the boundary of any connected 
 $R$-vertex subgraph is perfectly sandwiched between:
 \begin{enumerate}
-  \item \textbf{The Dense Limit (Hamming Ball):} achieve maximum internal
+  \item \textbf{The Dense Limit (Hamming Ball):} achieve maximum internal 
   shielding with $E_{int} = \Eseq(R)$.
-  \item \textbf{The Sparse Limit (Star Graph $K_{1,R-1}$):} minimizes collisions
+  \item \textbf{The Sparse Limit (Star Graph $K_{1,R-1}$):} minimizes collisions 
   with $E_{int} = R-1$ and $C = \binom{R}{2}$.
 \end{enumerate}
-The lower bound is universally proven by our Capstone Theorem. The upper
+The lower bound is universally proven by our Capstone Theorem. The upper 
 bound remains a formalized conjecture (\texttt{sandwich\_upper\_bound\_conjecture}).
 
 % ════════════════════════════════════════════════════════════════════════
 \section*{The Compression No-Go Theorem}
 
-In {0,1}$^d$, shifting a vertex to use symbol $a < b$ provably reduces the
+In $\{0,1\}^d$, shifting a vertex to use symbol $a < b$ provably reduces the 
 boundary. In arrangement graphs, this fails.
 
 \begin{theorem}[Compression No-Go]
-There exists $V' \subseteq V(A(4,2))$ such that shifting symbol $3 \to 1$
+There exists $V' \subseteq V(A(4,2))$ such that shifting symbol $3 \to 1$ 
 strictly \emph{increases} the boundary from 5 to 7.
 \end{theorem}
 
 \begin{proof}
-Let $V' = \{[4,3],\, [1,3]\}$. Before shift, $\extbd(V') = \{[2,3],\, [4,1],\, [4,2],\, [1,2],\, [1,4]\}$, $|\extbd| = 5$.
+Let $V' = \{[4,3],\, [1,3]\}$. Before shift, $\extbd(V') = \{[2,3],\, [4,1],\, [4,2],\, [1,2],\, [1,4]\}$, $|\extbd| = 5$. 
 After shift ($3 \to 1$), vertex $[4,3] \to [4,1]$, while $[1,3]$ is unchanged.
 The new boundary is $\{[2,1],\, [3,1],\, [4,2],\, [4,3],\, [2,3],\, [1,2],\, [1,4]\}$, $|\extbd| = 7$. \qed
 \end{proof}
@@ -195,9 +195,9 @@ The new boundary is $\{[2,1],\, [3,1],\, [4,2],\, [4,3],\, [2,3],\, [1,2],\, [1,
 % ════════════════════════════════════════════════════════════════════════
 \section*{The Algebraic Defect Squeeze}
 
-Instead of tracing geometric boundaries, we count global algebraic roots.
-The sum $U(V')$ represents the total number of 1-dimensional "fibers"
-(coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts
+Instead of tracing geometric boundaries, we count global algebraic roots. 
+The sum $U(V')$ represents the total number of 1-dimensional "fibers" 
+(coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts 
 as a fixed backbone that our set "pokes" into along a specific dimension.
 
 \begin{figure}[ht]
@@ -206,7 +206,7 @@ as a fixed backbone that our set "pokes" into along a specific dimension.
   % Draw the "Root" (the fixed part)
   \node[anchor=east] at (-0.5,0.3) {Root $r$:};
   \draw[thick, fill=gray!10] (0,0) rectangle (4,0.6);
-  \node at (0.5,0.3) {$s_1$}; \node at (1.5,0.3) {$s_2$}; \node at (2.5,0.3) {$\dots$};
+  \node at (0.5,0.3) {$s_1$}; \node at (1.5,0.3) {$s_2$}; \node at (2.5,0.3) {$\dots$}; 
   \draw[fill=white, dashed] (3.1,0.1) rectangle (3.9,0.5);
   \node at (3.5,0.3) {hole};
 
@@ -226,31 +226,31 @@ as a fixed backbone that our set "pokes" into along a specific dimension.
   \node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
 
   \node[align=center, font=\footnotesize] at (4.5, -1.8) {
-    \textbf{Figure 1: The Fiber Concept.} Multiple vertices sharing a root are neighbors on a 1D-clique.\
+    \textbf{Figure 1: The Fiber Concept.} Multiple vertices sharing a root are neighbors on a 1D-clique.\\
     This shielding (the Defect $D$) reduces the number of \emph{new} boundary vertices exposed.
   };
 \end{tikzpicture}
 \end{figure}
 
-The "Squeeze" is a double-counting correction. We first count every
-boundary edge exiting $V'$ from every unique root, then subtract the
-"Cross-Collisions" $X(V')$---boundary vertices that are over-counted
+The "Squeeze" is a double-counting correction. We first count every 
+boundary edge exiting $V'$ from every unique root, then subtract the 
+"Cross-Collisions" $X(V')$---boundary vertices that are over-counted 
 because they are reachable via multiple coordinate flips.
 
 \begin{figure}[ht]
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
   % Draw 3D-like axes
-  \draw[->, thick] (0,0) -- (4,0) node[right] {Dim $p$};
-  \draw[->, thick] (0,0) -- (0,4) node[above] {Dim $q$};
-  \draw[->, thick] (0,0) -- (-1.5,-1.5) node[left] {Dim $l$};
+  \draw[->, thick] (0,0) -- (4.0,0) node[right] {Dim $p$}; 
+  \draw[->, thick] (0,0) -- (0,4.0) node[above] {Dim $q$}; 
+  \draw[->, thick] (0,0) -- (-1.5,-1.5) node[below left] {Dim $l$}; 
 
   % Draw "Fibers" as lines
-  \draw[blue!60, ultra thick] (0,1) -- (4,1);
-  \node[blue!70!black, anchor=west] at (4,1) {Fiber $r_1$};
+  \draw[blue!60, ultra thick] (0,1) -- (3.5,1); 
+  \node[blue!70!black, anchor=west] at (3.6,1) {Fiber $r_1$}; 
 
-  \draw[blue!60, ultra thick] (1,0) -- (1,4);
-  \node[blue!70!black, anchor=south] at (1,4) {Fiber $r_2$};
+  \draw[blue!60, ultra thick] (1,0) -- (1,3.5); 
+  \node[blue!70!black, anchor=south] at (1,3.6) {Fiber $r_2$}; 
 
   % Draw set V' as circles on the fibers
   \fill[blue] (1,1) circle (0.15) node[above right] {$v \in V'$};
@@ -261,8 +261,8 @@ because they are reachable via multiple coordinate flips.
   \node[blue!70!black, font=\footnotesize] at (1.5,1.4) {Defect Edge};
 
   % Draw boundary vertices
-  \draw[gray, dashed] (1,2) circle (0.1) node[left] {$\extbd$};
-  \draw (1,1.15) -- (1,1.85);
+  \draw[gray, dashed] (1,2.5) circle (0.1) node[left] {$\extbd$};
+  \draw (1,1.15) -- (1,2.35);
 
   % Draw Cross-Collision
   \fill[red!20, draw=red, thick] (3,3) circle (0.15);
@@ -272,41 +272,41 @@ because they are reachable via multiple coordinate flips.
   \draw[red, dotted, thick] (1.15,3) -- (2.85,3);
   \draw[red, dotted, thick] (3,1.15) -- (3,2.85);
 
-  \node[align=center, font=\footnotesize] at (1.5, -2.5) {
-    \textbf{Figure 2: Global Topological Structure.} Arrangement graphs act as high-dimensional\
-    lattices where unique roots trace 1D-cliques. The "Squeeze" accounts for \
+  \node[align=center, font=\footnotesize] at (1.5, -3.2) {
+    \textbf{Figure 2: Global Topological Structure.} Arrangement graphs act as high-dimensional\\
+    lattices where unique roots trace 1D-cliques. The "Squeeze" accounts for \\
     internal edges ($D$) and overlapping boundary projections ($X$).
   };
 \end{tikzpicture}
 \end{figure}
 
 Mathematically, the relationship is:
-\begin{center}
-  $|\extbd(V')| = \sum_{p=1}^{k} \sum_{r \in U_p(V')} (n - k + 1 - |V'_r|) - X(V')$
-\end{center}
-where $V'_r$ is the subset of $V'$ projecting onto root $r$.
+\[
+  |\extbd(V')| = \sum_{p=1}^{k} \sum_{r \in U_p(V')} (n - k + 1 - |V'_r|) - X(V')
+\]
+where $V'_r$ is the subset of $V'$ projecting onto root $r$. 
 This simplifies to:
-\begin{center}
-  $|\extbd(V')| = U(V') \cdot (n - k) - (X(V') + D(V')).$
-\end{center}
-The Kruskal-Katona theorem guarantees that lexicographic Hamming Balls
-minimize unique roots $U(V')$ and maximize the overlap term $(X + D)$,
+\[
+  |\extbd(V')| = U(V') \cdot (n - k) - (X(V') + D(V')).
+\]
+The Kruskal-Katona theorem guarantees that lexicographic Hamming Balls 
+minimize unique roots $U(V')$ and maximize the overlap term $(X + D)$, 
 squeezing the boundary to its absolute minimum.
 
 \begin{theorem}[Asymptotic Penalty]
-If a topology fails to achieve optimal defect $\Eseq(R)$ by a shortfall
+If a topology fails to achieve optimal defect $\Eseq(R)$ by a shortfall 
 $\Delta E$, the boundary unconditionally grows by at least $\Delta E \cdot (n - k)$.
 \end{theorem}
 
-This result ensures that network scaling $(n-k)$ strictly stratifies the
-Pareto spectrum, making the choice of internal topology the dominant factor
-in fault isolation. As $n \to \infty$, the penalty for sub-optimality
+This result ensures that network scaling $(n-k)$ strictly stratifies the 
+Pareto spectrum, making the choice of internal topology the dominant factor 
+in fault isolation. As $n \to \infty$, the penalty for sub-optimality 
 asymptotically dwarfs any secondary savings from cross-collisions.
 
 % ════════════════════════════════════════════════════════════════════════
 \section*{Lean 4 Formal Verification}
 
-The structural hierarchy is 100\% mechanically verified. We isolate
+The structural hierarchy is 100\% mechanically verified. We isolate 
 pure set theory to three axioms:
 \begin{itemize}
   \item \texttt{max\_collision\_defect\_bound}: Universal KK shadow bound.
@@ -320,12 +320,12 @@ pure set theory to three axioms:
 \label{tab:axioms}
 \begin{tabular}{@{}ll@{}}
 \toprule
-Pillar & Status \
+Pillar & Status \\
 \midrule
-Algebraic Defect Double-Counting & PROVEN \
-Dimensional Scaling $(n-k)$ & PROVEN \
-Hamming Ball Evaluation & PROVEN \
-Asymptotic Penalty Bound & PROVEN \
+Algebraic Defect Double-Counting & PROVEN \\
+Dimensional Scaling $(n-k)$ & PROVEN \\
+Hamming Ball Evaluation & PROVEN \\
+Asymptotic Penalty Bound & PROVEN \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -333,9 +333,9 @@ Asymptotic Penalty Bound & PROVEN \
 % ════════════════════════════════════════════════════════════════════════
 \section*{Conclusion}
 
-The Algebraic Defect Squeeze establishes the $(R{-}1)$-extraconnectivity
-of $\ank$ for all $R$, replacing broken geometric tools with a verified
-algebraic framework. The code and proofs are available as a foundation
+The Algebraic Defect Squeeze establishes the $(R{-}1)$-extraconnectivity 
+of $\ank$ for all $R$, replacing broken geometric tools with a verified 
+algebraic framework. The code and proofs are available as a foundation 
 for future research on topological Pareto frontiers.
 
 % ════════════════════════════════════════════════════════════════════════
