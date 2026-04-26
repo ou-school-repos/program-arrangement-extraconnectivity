@@ -10,7 +10,7 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 0 sorries, 4 axioms** (2 KK shadow bounds + 1 counting identity + 1 fiber cardinality).
+Current status: **0 errors, 0 sorries, 3 axioms** (2 KK shadow bounds + 1 arithmetic identity).
 
 ## Architecture
 
@@ -26,21 +26,23 @@ Current status: **0 errors, 0 sorries, 4 axioms** (2 KK shadow bounds + 1 counti
 | Defect Bound             | `sum_unique_roots_lower_bound`                         | PROVEN   |
 | Collision-Adjusted Bound | `external_neighbors_collision_bound`                   | PROVEN   |
 | Collision Axiom          | `max_collision_defect_bound` (KK shadow, R-only)       | AXIOM    |
-| Fiber Identity           | `total_coord_edges_eq` (fiber counting)                | AXIOM    |
-| Fiber Cardinality        | `root_fiber_card` (n-k+1 extensions per root)          | AXIOM    |
+| Fiber Identity           | `total_coord_edges_eq` (fiber counting)                | PROVEN   |
+| Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                          | AXIOM    |
 | Construction             | `hamming_ball_subset` (named, explicit)                | PROVEN   |
-| Evaluation               | `hamming_ball_eval` (boundary count)                   | AXIOM    |
+| Evaluation               | `hamming_ball_eval` (boundary count)                   | PROVEN   |
+| Evaluation Axiom         | `hb_cross_collisions` (KK shadow, existential)         | AXIOM    |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
 | Lower Bound              | `lower_bound_all_embeddings` (arithmetic composition)  | PROVEN   |
+| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)     | PROVEN   |
 | Capstone                 | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN   |
 
 \*Harper's Theorem is proven but **not in the dependency chain** of the
 capstone theorem. The defect-based proof bypasses it entirely via algebraic
-subadditivity of E_seq. Moved to `unstable/ArrangementGraphUtils.lean`.
+subadditivity of E_seq.
 
 ## Dependency Graph
 
-```
+```text
 arrangement_extraconnectivity_minimum
   ├─ exists_optimal_embedding
   │    ├─ hamming_ball_subset         (explicit construction)
@@ -50,7 +52,9 @@ arrangement_extraconnectivity_minimum
   │    ├─ le_pow_bit_length           (R ≤ 2^d via Nat.lt_size_self)
   │    ├─ embed_vertex_injective_cube (injectivity of embedding)
   │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
-  │    └─ hamming_ball_eval [AXIOM]   (exact boundary evaluation)
+  │    └─ hamming_ball_eval           (exact boundary evaluation)
+  │         ├─ hb_total_coord_edges   (from total_coord_edges_eq)
+  │         └─ hb_cross_collisions [AXIOM]
   └─ lower_bound_all_embeddings
        ├─ sum_unique_roots_lower_bound  (defect bound)
        │    └─ defect_fiber_bound
@@ -58,188 +62,77 @@ arrangement_extraconnectivity_minimum
        │              └─ E_add_min_le   (A000788 core inequality)
        └─ external_neighbors_collision_bound  (collision-adjusted bound)
             ├─ max_collision_defect_bound [AXIOM]   (KK shadow bound)
-            ├─ total_coord_edges_eq [AXIOM]         (fiber counting identity)
-            │    └─ root_fiber_card [AXIOM]          (n-k+1 fiber cardinality)
+            ├─ total_coord_edges_eq                 (fiber counting identity)
             └─ sum_unique_roots_le_rk               (helper bound)
 ```
 
-## Axioms (4)
+## Axioms
 
-### Axiom 1: `max_collision_defect_bound` — Collision Formula
+### Universal Shadow Bound (`max_collision_defect_bound`)
 
-**What it says**: `|N(V')| ≥ sum_unique_roots(V') · (n-k) - C_constant(R)`.
+**What it says**: `cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`.
 
 **Justification**:
 
-- Computationally verified via `predict --verify R` (predict.cpp)
-- Exhaustive topology enumeration confirms uniqueness for small R
-  (`arrangement.cpp`)
-- Mathematically justified by the Kruskal-Katona theorem (counting
-  collisions ≡ counting 4-cycles; Hamming Ball maximizes squares)
-- Formalizing requires ~500-800 lines and Mathlib contributions for
-  shadow operators not yet available
+- Computationally verified via `predict --verify R` (predict.cpp).
+- Exhaustive topology enumeration confirms uniqueness for small R (`arrangement.cpp`).
+- Mathematically justified by the Kruskal-Katona theorem (the Hamming Ball maximizes 4-cycles).
+- Formalizing requires ~500-800 lines and Mathlib contributions for shadow operators.
 
-See [collision-axiom-roadmap.md](collision-axiom-roadmap.md) for the full
-formalization roadmap.
+### Existential Shadow Bound (`hb_cross_collisions`)
 
-### Axiom 2: `hamming_ball_eval` — Boundary Evaluation
+**What it says**: The cross collisions of the Hamming Ball is exactly `C_constant R - E_seq R`.
 
-**What it says**: The explicitly constructed `hamming_ball_subset` achieves
-the exact formula value for external neighbors.
+**Justification**:
 
-**What IS proven constructively** (not axiomatized):
+- Computationally verified alongside Axiom 1.
+- Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
 
-- The Hamming Ball `hamming_ball_subset` is explicitly constructed via
-  `nat_to_cube` (testBit encoding) and `embed_vertex` (fresh symbol embedding)
-- Its cardinality `|hamming_ball_subset| = R` is proven via
-  `nat_to_cube_injective` and `embed_vertex_injective_cube`
-- The dual embedding condition (`k + d ≤ n ∧ d ≤ k`) is verified
+### Bitwise Arithmetic Identity (`nat_popcount_eq_card_filter`)
 
-**What is axiomatized**: Only the exact external neighbor _evaluation_
-requires the same shadow-counting machinery as Axiom 1.
+**What it says**: The number of 1-bits in the binary representation of $R$ up to bit $d$ is exactly `popcount R`.
 
-### Axiom 3: `total_coord_edges_eq` — Fiber Counting Identity
+**Justification**:
 
-**What it says**: `total_coord_edges V' + |V'| · k = sum_unique_roots V' · (n - k + 1)`
-
-**Justification**: A double-counting argument. For each position p and each
-unique root r, there are exactly (n - k + 1) vertices in A(n,k) with that
-root (the k-1 other symbols are fixed; position p takes any of n-(k-1)
-remaining values). Summing across all roots and positions, the internal
-vertices contribute |V'| · k (each vertex appears once per position) and the
-external vertices contribute total_coord_edges.
-
-**Why it's axiomatized**: Closing this requires a `Fintype` cardinality
-bijection between injective function extensions and complement symbols.
-This is purely mechanical Finset plumbing (~50-80 lines) but risks
-coercion fights. In the paper, it is a one-paragraph counting argument.
+- Pure arithmetic logic over `Nat.testBit` and `popcount`. We axiomatized it to avoid deep recursive integer proofs that have no bearing on the graph topology itself.
 
 ## Embedding Condition
 
-```
+```lean
 can_embed_hypercube (R n k : ℕ) : Prop :=
   k + bit_length (R - 1) ≤ n ∧ bit_length (R - 1) ≤ k
 ```
 
 Dual constraint on the hypercube dimension `d = bit_length(R-1) = Nat.size(R-1)`:
 
-1. **`k + d ≤ n`**: need d fresh symbols beyond the k base positions
-2. **`d ≤ k`**: can only flip coordinates that exist in the k-length sequence
-
-Uses `Nat.size` (equivalent to ⌈log₂(R)⌉) to avoid ℕ saturating subtraction.
+- **`k + d ≤ n`**: need d fresh symbols beyond the k base positions.
+- **`d ≤ k`**: can only flip coordinates that exist in the k-length sequence.
 
 ## What IS Fully Proven (No Axioms)
 
-The **Algebraic Defect Squeeze** — the novel contribution — is 100% mechanized:
+The **Algebraic Defect Squeeze** and **Asymptotic Penalty Theorem** — the novel contributions — are 100% mechanized:
 
-1. **E_seq subadditivity** (`E_add_min_le`): The core isoperimetric inequality
-   on A000788, proven by strong induction with even/odd case splitting.
-
-2. **Generalized partition bound** (`E_seq_list_sum_le`): Extension from
-   binary splits to arbitrary partitions, proven by list induction.
-
-3. **Defect fiber bound** (`defect_fiber_bound`): The topological decomposition
-   showing D(V') ≤ Σ D(Fₛ) + R - y via 7-step root disjointness proof.
-
-4. **Universal lower bound** (`sum_unique_roots_lower_bound`): The defect
-   bound D(V') ≤ E_seq(R) for ALL R-element subsets of A(n,k), proven by
-   strong induction composing (2) and (3).
-
-5. **Arithmetic squeeze** (`lower_bound_all_embeddings`): Composing Bridge
-   Lemmas 2 and 3 to pin the exact extraconnectivity.
-
-6. **Hamming Ball construction** (`hamming_ball_subset`): Explicit construction
-   with proven cardinality via `nat_to_cube_injective` and
-   `embed_vertex_injective_cube`.
+- **E_seq subadditivity** (`E_add_min_le`): The core isoperimetric inequality on A000788.
+- **Generalized partition bound** (`E_seq_list_sum_le`): Extension from binary splits to arbitrary partitions.
+- **Defect fiber bound** (`defect_fiber_bound`): The topological decomposition showing D(V') ≤ Σ D(Fₛ) + R - y.
+- **Universal lower bound** (`sum_unique_roots_lower_bound`): The defect bound D(V') ≤ E_seq(R) for ALL R-element subsets.
+- **Total Coordinate Edges** (`total_coord_edges_eq`): Mechanically double-counting the available $(n-k+1)$ extensions for each unique root via pure Finset bijections.
+- **Arithmetic squeeze** (`lower_bound_all_embeddings`): Composing the lemmas to pin the exact extraconnectivity.
+- **Asymptotic Penalty** (`sub_optimal_penalty`): Proving that topologies with a defect shortfall $\Delta E$ are unconditionally penalized by at least $\Delta E(n-k)$ boundary nodes.
+- **Hamming Ball construction** (`hamming_ball_subset`): Explicit construction with proven cardinality.
 
 ## Novel Contributions
 
-This work contains several results that appear to be **new in the literature**:
+- **A000788 Discovery**: The maximum internal edges for R vertices in A(n,k) equals the cumulative popcount sequence (OEIS A000788).
+- **Pareto Spectrum**: The full topology-boundary tradeoff between the Star graph and the Hamming Ball.
+- **Compression No-Go Theorem**: The standard Kruskal-Katona/Harper compression technique provably FAILS for arrangement graphs due to "coordinate tangling". Documented in `IsoperimetricPartialPermutation.lean`.
+- **Asymptotic Penalty Theorem**: Sub-optimal subgraphs suffer a linear $(n-k)$ penalty per missing internal edge.
+- **Sandwich Conjecture & Hypercube Fracture Gap**: Formalized topological phase transitions and bounds.
 
-1. **A000788 Discovery**: The maximum internal edges for R vertices in A(n,k)
-   equals the cumulative popcount sequence (OEIS A000788). This connection
-   to binary weight sums was discovered computationally and verified
-   by exhaustive enumeration (`arrangement.cpp`).
+## Open Conjectures
 
-2. **Pareto Spectrum**: The full topology-boundary tradeoff between the
-   Star graph (R−1 internal edges, collision constant C = C(R,2)) and
-   the Hamming Ball (A000788(R) internal edges). Includes the discovery
-   of topological skips at powers of 2.
+We have formally stated the remaining extremal bounds as `Prop`s to establish a rigorous bounty board for future Lean 4 contributors:
 
-3. **Formal Lean 4 Verification**: No prior formalization of arrangement
-   graph extraconnectivity exists in any proof assistant.
-
-4. **Sandwich Conjecture**: The isoperimetric boundary of any
-   Pareto-optimal connected R-vertex subgraph is bounded between the
-   Hamming Ball (dense limit) and Star (sparse limit) closed forms.
-   Formalized as `topological_sandwich_conjecture` in
-   `ArrangementExtraconnectivity.lean`.
-
-5. **Compression No-Go Theorem**: The standard Kruskal-Katona/Harper
-   compression technique (shifting symbols b→a) provably FAILS for
-   arrangement graphs. Counterexample: in A(4,2) with V'={[4,3],[1,3]}
-   and shift 3→1, the boundary increases from 5 to 7. Root cause:
-   "coordinate tangling" — the permutation constraint means shifting
-   one symbol affects the available symbol pool for ALL other vertices.
-   This mandates the algebraic defect squeeze over geometric approaches.
-   Documented with full proof in `IsoperimetricPartialPermutation.lean`.
-
-## Uniqueness: Open Problem
-
-The theorem establishes the **exact value** of (R-1)-extraconnectivity
-(∃ + ∀ squeeze) but does **not** prove the Hamming Ball is the unique
-minimizer.
-
-Formalized as `uniqueness_conjecture` (a `Prop` definition, not an axiom),
-using the full automorphism group S_n × S_k:
-
-- **σ : Fin n → Fin n** (symbol permutation)
-- **τ : Fin k → Fin k** (coordinate permutation)
-
-Evidence:
-
-- Computationally confirmed uniqueness for small R (`arrangement.cpp`)
-- Formula values and existence verified via `predict --verify R`
-- Would require showing equality in the defect bound forces hypercube structure
-- Related to equality cases in the Kruskal-Katona theorem
-- See [collision-axiom-roadmap.md](collision-axiom-roadmap.md#uniqueness-open-problem)
-
-## Key Proven Infrastructure
-
-### The Triangle Anomaly (Why edges_at was removed)
-
-Harper's theorem bounds edges in _hypercubes_, not arrangement graph cliques.
-Example: R=3 in A(n,1), the triangle K_3 has 3 internal edges, but
-E_seq(3) = 2. So the naive "sum edges, apply Harper" path is mathematically
-wrong.
-
-The correct invariant is the **Defect**: D(V') = |V'| * k - sum_unique_roots(V').
-The Defect bounds hold even for cliques (triangle: D = 3*1 - 1 = 2 <= E_seq(3) = 2).
-
-### The Algebraic Engine (`E_seq_list_sum_le`)
-
-Generalizes `E_add_min_le` from binary splits to arbitrary partitions:
-for any list of sizes `l` with `y >= max(l)`:
-
-    (l.map E_seq).sum + l.sum - y <= E_seq(l.sum)
-
-This is proven by list induction using `E_seq_add_bound` as the step lemma.
-
-## File Map
-
-| File                                          | Contents                                     |
-| --------------------------------------------- | -------------------------------------------- |
-| `proofs/ArrangementExtraconnectivity.lean`    | Main proof: Layers 1-3 + capstone            |
-| `proofs/IsoperimetricPartialPermutation.lean` | Compression machinery + No-Go counterexample |
-| `proofs/HypercubeEdges.lean`                  | Supporting popcount/A000788 lemmas           |
-| `proofs/PredictorComplexity.lean`             | Complexity analysis of the predictor         |
-| `proofs/unstable/ArrangementGraphUtils.lean`  | Harper's theorem + edge-counting (orphaned)  |
-| `proofs/lakefile.lean`                        | Lake build configuration                     |
-
-## Dependencies
-
-- **Lean**: v4.30.0-rc2
-- **Mathlib**: Current master (pinned in `lake-manifest.json`)
-- Key imports: `Mathlib.Data.Nat.Size`, `Mathlib.Data.Nat.Bitwise`,
-  `Mathlib.Data.Fintype.Pi`, `Mathlib.Data.Finset.Card`,
-  `Mathlib.Algebra.BigOperators.Group.Finset.Basic`
+- `uniqueness_conjecture`
+- `sandwich_upper_bound_conjecture`
+- `hypercube_fracture_gap_conjecture`
