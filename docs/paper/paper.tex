@@ -34,7 +34,7 @@
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
-  \textbf{The Isoperimetric Profile of Arrangement Graphs:}\
+  \textbf{[PREPRINT] The Isoperimetric Profile of Arrangement Graphs:}\\
   Hamming Ball Optimality and the Algebraic Defect Squeeze\\[0.5em]
   \large \textit{Bachelor's thesis}
 }
@@ -101,6 +101,39 @@ For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct
 U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}
 \end{equation*} The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of these coordinate-aligned lines our set touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal ``shielding''. For topologies that embed isometrically into hypercubes, $D(V')$ exactly equals the number of internal edges. For dense cliques, it acts as a robust algebraic proxy for root duplications that naturally prevents geometric over-counting.
 \end{definition}
+
+\begin{example}
+To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)$ where $4$ symbols are fixed (e.g., \texttt{B,C,D,E}). The missing coordinate can be filled by any of the remaining $10 - 5 + 1 = 6$ available symbols. This single root physically expands into a 1D-clique (a line) of 6 vertices:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.9, font=\small, node distance=0.15cm]
+  % Root definition
+  \node[anchor=east, font=\bfseries] at (-0.5, 0.3) {Root $r$:};
+  \draw[thick, fill=gray!20] (0,0) rectangle (1,0.6);
+  \node at (0.5,0.3) {?};
+  \draw[thick, fill=gray!10] (1,0) rectangle (5,0.6);
+  \node at (1.5,0.3) {\texttt{B}};
+  \node at (2.5,0.3) {\texttt{C}};
+  \node at (3.5,0.3) {\texttt{D}};
+  \node at (4.5,0.3) {\texttt{E}};
+
+  % Expansion arrow
+  \draw[->, >=Stealth, ultra thick] (5.2, 0.3) -- (6.3, 0.3) node[midway, above] {Fill};
+
+  % Stack of vertices
+  \node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v1) at (8, 1.8) {\texttt{[A,B,C,D,E]} $\in V'$};
+  \node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v2) at (8, 1.1) {\texttt{[F,B,C,D,E]} $\in V'$};
+
+  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v3) at (8, 0.4) {\texttt{[G,B,C,D,E]} $\notin V'$};
+  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v4) at (8, -0.3) {\texttt{[H,B,C,D,E]} $\notin V'$};
+  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v5) at (8, -1.0) {\texttt{[I,B,C,D,E]} $\notin V'$};
+  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v6) at (8, -1.7) {\texttt{[J,B,C,D,E]} $\notin V'$};
+\end{tikzpicture}
+\caption{A single root expanding into a 1D-clique in $A(10,5)$. Vertices already in $V'$ form internal edges, while the remaining empty slots generate the external boundary.}
+\label{fig:fill_example}
+\end{figure}
+\end{example}
 
 \begin{figure}[H]
 \centering
