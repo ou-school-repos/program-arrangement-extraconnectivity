@@ -5,11 +5,12 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage[hidelinks]{hyperref}
 \usepackage{xcolor}
 \usepackage{microtype}
 \usepackage{tikz}
 \usepackage{float}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
 \usetikzlibrary{positioning, arrows.meta, shapes.geometric}
 
 % ── Theorem environments ────────────────────────────────────────────────
@@ -285,7 +286,7 @@ By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously min
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
   % Title
-  \node[font=\bfseries] at (3.5, 5) {The Topological Void at $R=8$};
+  \node[font=\bfseries] at (4.75, 5.5) {The Topological Void at $R=8$};
 
   % Left side: Optimal Topology (Hamming Ball)
   \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {Optimal \\ (Hamming Ball)};
@@ -302,6 +303,7 @@ By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously min
   \fill[blue!80!black] (2,2) circle (0.1);
 
   % Right side: Second Best Topology
+  \begin{scope}[xshift=1.5cm]
   \node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {2nd Best \\ Connected};
   \node at (6.5, 3.5) {$E = 10$};
 
@@ -316,10 +318,11 @@ By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously min
   \draw[red!80!black, dashed] (7,1) -- (7,3);
   \node[text=red, font=\bfseries] at (7, 2.5) {X};
   \node[text=red, font=\bfseries] at (7, 1.5) {X};
+  \end{scope}
 
   % Connecting arrow with "Fracture Gap"
-  \draw[->, ultra thick, red] (3.5, 2) -- (4.5, 2);
-  \node[align=center, font=\bfseries, text=red!80!black] at (4, 1.2) {Fracture\\Gap:\\$E=11$\\Impossible};
+  \draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
+  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Fracture\\Gap:\\$E=11$\\Impossible};
 \end{tikzpicture}
 \caption{Visualization of Isometric Rigidity. At $R=8$, the optimal embedded hypercube achieves 12 internal edges. Modifying the topology immediately breaks at least two edges, creating a "topological void" at $E=11$.}
 \label{fig:fracture}
@@ -363,14 +366,17 @@ We established a strict epistemic boundary: the entire graph theory of $A(n,k)$ 
     \item \texttt{hb\_cross\_collisions}: The exact 4-cycle overlap evaluation of the explicitly constructed Hamming Ball.
 \end{enumerate}
 
-The crowning formal achievement of this work is the machine-checked \texttt{arrangement\_extraconnectivity\_minimum} theorem, verifying the absolute lower bound mapping to the sequence bounds established by our C++ engine:
+The crowning formal achievement of this work is the machine-checked theorem, \texttt{arrangement\_}\allowbreak\texttt{extraconnectivity\_}\allowbreak\texttt{minimum}, which verifies the absolute lower bound mapping to the sequence bounds established by our C++ engine:
 
-\begin{verbatim}
-theorem arrangement_extraconnectivity_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k) :
-  (exists V' : Finset (ArrVertex n k), V'.card = R /\ external_neighbors V' = (R*k - E_seq R)*(n-k) - C_constant R) /\
-  (forall V' : Finset (ArrVertex n k), V'.card = R -> external_neighbors V' >= (R*k - E_seq R)*(n-k) - C_constant R)
-\end{verbatim}
-
+\begin{quote}
+\small \ttfamily
+theorem arrangement\_extraconnectivity\_minimum (R n k : $\mathbb{N}$) \\
+\hspace*{2em}(h\_cond : can\_embed\_hypercube R n k) : \\
+\hspace*{2em}($\exists$ V' : Finset (ArrVertex n k), V'.card = R $\land{}$ \\
+\hspace*{4em}external\_neighbors V' = (R * k - E\_seq R) * (n - k) - C\_constant R) $\land{}$ \\
+\hspace*{2em}($\forall$ V' : Finset (ArrVertex n k), V'.card = R $\to$ \\
+\hspace*{4em}external\_neighbors V' $\ge$ (R * k - E\_seq R) * (n - k) - C\_constant R)
+\end{quote}
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Conjectures}
 
