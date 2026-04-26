@@ -95,6 +95,37 @@ For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct
 The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of these coordinate-aligned lines our set touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal ``shielding'': the number of internal edges contained within $V'$.
 \end{definition}
 
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.0, font=\small]
+  % Draw the "Root" (the fixed part)
+  \node[anchor=east] at (-0.5,0.3) {Root $r$:};
+  \draw[thick, fill=gray!10] (0,0) rectangle (4,0.6);
+  \node at (0.5,0.3) {$s_1$}; \node at (1.5,0.3) {$s_2$}; \node at (2.5,0.3) {$\dots$};
+  \draw[fill=white, dashed] (3.1,0.1) rectangle (3.9,0.5);
+  \node at (3.5,0.3) {hole};
+
+  % Dimension label
+  \draw[<->, >=Stealth] (0,-0.4) -- (4,-0.4) node[midway, below] {$k-1$ fixed symbols};
+
+  % Draw the "Fiber" (the extensions)
+  \node (v1) at (7,1.2) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{A}]$};
+  \node (v2) at (7,0.3) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{B}]$};
+  \node (v3) at (7,-0.6) [draw, rounded corners, fill=white] {$[s_1, s_2, \dots, \mathbf{C}]$};
+
+  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v1.west);
+  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v2.west);
+  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v3.west);
+
+  \draw[blue, ultra thick] (v1.west) -- (v2.west) node[midway, left=0.4cm, align=center] {Internal\\Edge};
+
+  \node[anchor=west, text=blue!70!black] at (9, 0.75) {Vertices in $V'$};
+  \node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
+\end{tikzpicture}
+\caption{The Fiber Concept. Multiple vertices sharing a root are neighbors on a 1D-clique. This shielding (the Defect $D$) reduces the number of new boundary vertices exposed.}
+\label{fig:fiber}
+\end{figure}
+
 % ════════════════════════════════════════════════════════════════════════
 \section{The Computational Engine}
 
@@ -146,7 +177,7 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
   \node at (0,3.2) {\textbf{Initial Set} $V'$};
   \node (v1) at (0,1.2) [draw, circle, fill=blue!20, thick] {$[4,3]$};
   \node (v2) at (0,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
-  \draw[blue, ultra thick] (v1) -- (v2) node[midway, left=0.2cm, align=center] {Internal\\Edge};
+  \draw[blue, ultra thick] (v1) -- (v2) node[midway, left=0.3cm, align=center] {Internal\\Edge};
 
   \node (n1) at (-2.5,0) [draw, circle, dashed] {$[2,3]$};
   \node (n2) at (2.2,1.2) [draw, circle, dashed] {$[4,1]$};
@@ -191,36 +222,7 @@ The failure arises from \emph{coordinate tangling}: the injectivity constraint m
 % ════════════════════════════════════════════════════════════════════════
 \section{The Algebraic Defect Squeeze}
 
-Instead of tracing geometric boundaries, we count global algebraic roots. The sum $U(V')$ represents the total number of 1-dimensional ``fibers'' that intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set projects onto along a specific dimension.
-
-\begin{figure}[ht]
-\centering
-\begin{tikzpicture}[scale=1.0, font=\small]
-  % Draw the "Root" (the fixed part)
-  \node[anchor=east] at (-0.5,0.3) {Root $r$:};
-  \draw[thick, fill=gray!10] (0,0) rectangle (4,0.6);
-  \node at (0.5,0.3) {$s_1$}; \node at (1.5,0.3) {$s_2$}; \node at (2.5,0.3) {$\dots$};
-  \draw[fill=white, dashed] (3.1,0.1) rectangle (3.9,0.5);
-  \node at (3.5,0.3) {hole};
-
-  % Dimension label
-  \draw[<->, >=Stealth] (0,-0.4) -- (4,-0.4) node[midway, below] {$k-1$ fixed symbols};
-
-  % Draw the "Fiber" (the extensions)
-  \node (v1) at (7,1.2) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{A}]$};
-  \node (v2) at (7,0.3) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{B}]$};
-  \node (v3) at (7,-0.6) [draw, rounded corners, fill=white] {$[s_1, s_2, \dots, \mathbf{C}]$};
-
-  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v1.west);
-  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v2.west);
-  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v3.west);
-
-  \node[anchor=west, text=blue!70!black] at (9, 0.75) {Vertices in $V'$};
-  \node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
-\end{tikzpicture}
-\caption{The Fiber Concept. Multiple vertices sharing a root are neighbors on a 1D-clique. This shielding (the Defect $D$) reduces the number of new boundary vertices exposed.}
-\label{fig:fiber}
-\end{figure}
+Instead of tracing geometric boundaries, we count global algebraic roots. The sum $U(V')$ represents the total number of 1-dimensional ``fibers'' (coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set projects onto along a specific dimension.
 
 The ``Squeeze'' is a double-counting correction. By double-counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
 \begin{align}
@@ -278,11 +280,15 @@ By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously min
 % ════════════════════════════════════════════════════════════════════════
 \section{The Isoperimetric Sandwich \& Asymptotic Penalty}
 
-Computational enumeration reveals that the boundary of any connected $R$-vertex subgraph is perfectly sandwiched between:
+We propose the following conjecture regarding the Pareto-optimal frontier of connected subgraphs, supported by exhaustive computational search up to $R=20$:
+
+\begin{conjecture}[Connected Isoperimetric Sandwich]
+The external boundary of any connected $R$-vertex subgraph $V'$ in $A(n,k)$ is bounded by the following topological limits:
 \begin{enumerate}
-    \item \textbf{The Dense Limit (Hamming Ball):} Achieves maximum internal shielding, $E_{int} = E_{seq}(R)$.
-    \item \textbf{The Sparse Limit (Star Graph $K_{1, R-1}$):} Minimizes collisions, $E_{int} = R-1$ and $C = \binom{R}{2}$.
+    \item \textbf{The Dense Limit (Hamming Ball):} Achieves maximum internal shielding with $E_{int} = E_{seq}(R)$. This lower bound is a theorem of the Capstone Result.
+    \item \textbf{The Sparse Limit (Star Graph $K_{1, R-1}$):} Minimizes collisions with $E_{int} = R-1$ and $C = \binom{R}{2}$.
 \end{enumerate}
+\end{conjecture}
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a topology fails to achieve optimal defect $E_{seq}(R)$ by a shortfall $\Delta E$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
@@ -297,8 +303,8 @@ To ensure absolute rigor, the Algebraic Defect Squeeze, the dimensional scaling 
 
 We established a strict epistemic boundary: the entire graph theory of $A(n,k)$ is formalized from first principles, while the pure extremal set theory bounding the maximum 4-cycles is isolated to two explicit, $n$-independent axioms (both computationally verified for $R \le 20$):
 \begin{enumerate}
-    \item \texttt{max\_collision\_defect\_bound}: Universal Kruskal-Katona shadow bound of $R$-element subsets.
-    \item \texttt{hb\_cross\_collisions}: Exact 4-cycle overlap of explicitly constructed Hamming Ball.
+    \item \texttt{max\_collision\_defect\_bound}: The universal Kruskal-Katona shadow bound for all $R$-element subsets.
+    \item \texttt{hb\_cross\_collisions}: The exact 4-cycle overlap evaluation of the explicitly constructed Hamming Ball.
 \end{enumerate}
 
 % ════════════════════════════════════════════════════════════════════════
