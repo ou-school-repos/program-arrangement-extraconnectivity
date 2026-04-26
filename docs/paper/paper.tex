@@ -142,9 +142,9 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
   \node at (0,3.2) {\textbf{Initial Set} $V'$};
   \node (v1) at (0,1.2) [draw, circle, fill=blue!20, thick] {$[4,3]$};
   \node (v2) at (0,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
-  \draw[blue, ultra thick] (v1) -- (v2) node[midway, left=0.6cm, align=center] {Internal\\Edge};
+  \draw[blue, ultra thick] (v1) -- (v2) node[midway, left=0.3cm, align=center] {Internal\\Edge};
 
-  \node (n1) at (-2.8,0) [draw, circle, dashed] {$[2,3]$};
+  \node (n1) at (-2.5,0) [draw, circle, dashed] {$[2,3]$};
   \node (n2) at (2.2,1.2) [draw, circle, dashed] {$[4,1]$};
   \node (n3) at (2.2,0.4) [draw, circle, dashed] {$[4,2]$};
   \node (n4) at (2.2,-0.4) [draw, circle, dashed] {$[1,2]$};
@@ -155,28 +155,28 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
   \draw (v2) -- (n4); \draw (v2) -- (n5);
   \node at (0,-2.2) {$|\partial_{ext}| = 5$};
 
-  % Arrow
-  \draw[->, arrows={-Stealth[scale=1.5]}, ultra thick] (3.0,0) -- (4.5,0) node[midway, above=0.3cm] {Shift $3 \to 1$};
+  % Transformation Arrow - CENTERED
+  \draw[->, arrows={-Stealth[scale=1.5]}, ultra thick] (3.25,0) -- (5.25,0) node[midway, above=0.35cm] {Shift $3 \to 1$};
 
   % Compressed Set C(V')
-  \node at (7.8,3.2) {\textbf{Compressed Set} $C(V')$};
-  \node (u1) at (7.8,1.2) [draw, circle, fill=blue!20, thick] {$[4,1]$};
-  \node (u2) at (7.8,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
+  \node at (8.5,3.2) {\textbf{Compressed Set} $C(V')$};
+  \node (u1) at (8.5,1.2) [draw, circle, fill=blue!20, thick] {$[4,1]$};
+  \node (u2) at (8.5,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
   % Edge is broken!
   \draw[red, dashed, thick] (u1) -- (u2);
-  \node[red!70!black, font=\bfseries, fill=white, inner sep=1pt] at (7.8,0) {BROKEN};
+  \node[red!70!black, font=\bfseries, fill=white, inner sep=1pt] at (8.5,0) {BROKEN};
 
-  \node (m1) at (5.8,1.8) [draw, circle, dashed] {$[2,1]$};
-  \node (m2) at (5.8,0.8) [draw, circle, dashed] {$[3,1]$};
-  \node (m3) at (5.8,-0.2) [draw, circle, dashed] {$[4,2]$};
-  \node (m4) at (5.8,-1.2) [draw, circle, dashed] {$[4,3]$};
-  \node (m5) at (9.8,0.6) [draw, circle, dashed] {$[2,3]$};
-  \node (m6) at (9.8,-0.3) [draw, circle, dashed] {$[1,2]$};
-  \node (m7) at (9.8,-1.2) [draw, circle, dashed] {$[1,4]$};
+  \node (m1) at (6.3,1.8) [draw, circle, dashed] {$[2,1]$};
+  \node (m2) at (6.3,0.8) [draw, circle, dashed] {$[3,1]$};
+  \node (m3) at (6.3,-0.2) [draw, circle, dashed] {$[4,2]$};
+  \node (m4) at (6.3,-1.2) [draw, circle, dashed] {$[4,3]$};
+  \node (m5) at (10.3,0.6) [draw, circle, dashed] {$[2,3]$};
+  \node (m6) at (10.3,-0.3) [draw, circle, dashed] {$[1,2]$};
+  \node (m7) at (10.3,-1.2) [draw, circle, dashed] {$[1,4]$};
 
   \draw (u1) -- (m1); \draw (u1) -- (m2); \draw (u1) -- (m3); \draw (u1) -- (m4);
   \draw (u2) -- (m5); \draw (u2) -- (m6); \draw (u2) -- (m7);
-  \node at (7.8,-2.2) {$|\partial_{ext}| = 7$};
+  \node at (8.5,-2.2) {$|\partial_{ext}| = 7$};
 \end{tikzpicture}
 \caption{Visualization of the Compression No-Go Theorem. Shifting symbol 3 to 1 in $A(4,2)$ severs an internal edge because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
 \label{fig:nogo}
@@ -211,8 +211,6 @@ Instead of tracing geometric boundaries, we count global algebraic roots. The su
   \draw[->, >=Stealth, thick] (4.1,0.3) -- (v2.west);
   \draw[->, >=Stealth, thick] (4.1,0.3) -- (v3.west);
 
-  \draw[blue, ultra thick] (v1.west) -- (v2.west) node[midway, left=0.6cm, align=center] {Internal\\Edge};
-
   \node[anchor=west, text=blue!70!black] at (9, 0.75) {Vertices in $V'$};
   \node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
 \end{tikzpicture}
@@ -220,9 +218,9 @@ Instead of tracing geometric boundaries, we count global algebraic roots. The su
 \label{fig:fiber}
 \end{figure}
 
-The ``Squeeze'' is a double-counting correction. By double-counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{cand}$:
+The ``Squeeze'' is a double-counting correction. By double-counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
 \begin{align}
-  E_{cand} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \nonumber \\
+  E_{\mathrm{cand}} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \nonumber \\
            &= \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \nonumber \\
            &= U(V') \cdot (n-k) - D(V').
 \end{align}
