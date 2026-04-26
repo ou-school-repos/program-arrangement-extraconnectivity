@@ -1,4 +1,4 @@
-% Compile: pdatex paper.tex && bibtex paper && pdflatex paper.tex && pdflatex paper.tex
+% Compile: pdflatex paper.tex && bibtex paper && pdflatex paper.tex && pdflatex paper.tex
 \documentclass[11pt, letterpaper]{article}
 
 \usepackage[margin=1in]{geometry}
@@ -34,15 +34,15 @@
 
 \title{%
   \textbf{The Isoperimetric Profile of Arrangement Graphs:}\
-  Hamming Ball Optimality and the Algebraic Defect Squeeze\[0.5em]
+  Hamming Ball Optimality and the Algebraic Defect Squeeze\\[0.5em]
   \large \textit{Bachelor's thesis}
 }
 \author{
   \begin{tabular}{c c}
-    Shane Jaroch & L\'aszl\'o Lipt\'ak \\
+    Shane Jaroch & L\'{a}szl\'{o} Lipt\'{a}k \\
     \small \textit{Bachelor's Candidate} & \small \textit{Advisor} \\
     \small \href{mailto:sjjaroch@oakland.edu}{\texttt{sjjaroch@oakland.edu}} &
-  \end{tabular} \\
+  \end{tabular} \\ [1ex]
   \small \textit{Department of Mathematics and Statistics} \\
   \small Oakland University
 }
@@ -92,7 +92,8 @@ The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow [n
 
 \begin{definition}[Unique Roots and Defect]
 For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size $n-k+1$ obtained by filling the missing coordinate with any available symbol. The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques that intersect the set $V'$ at coordinate $p$:
-\begin{equation*} U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}
+\begin{equation*}
+U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}
 \end{equation*} The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of these coordinate-aligned lines our set touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal ``shielding''. For topologies that embed isometrically into hypercubes, $D(V')$ exactly equals the number of internal edges. For dense cliques, it acts as a robust algebraic proxy for root duplications that naturally prevents geometric over-counting.
 \end{definition}
 
@@ -182,7 +183,7 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
   \node at (0,3.2) {\textbf{Initial Set} $V'$};
   \node (v1) at (0,1.2) [draw, circle, fill=blue!20, thick] {$[4,3]$};
   \node (v2) at (0,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
-  \draw[blue, ultra thick] (v1) -- (v2) node[midway, right=0.2cm, align=center] {Internal\Edge};
+  \draw[blue, ultra thick] (v1) -- (v2) node[midway, right=0.2cm, align=center] {Internal\\Edge};
 
   \node (n1) at (-2.5,0) [draw, circle, dashed] {$[2,3]$};
   \node (n2) at (2.2,1.2) [draw, circle, dashed] {$[4,1]$};
@@ -229,7 +230,9 @@ Instead of tracing geometric boundaries, we count global algebraic roots. The su
 
 The ``Squeeze'' is a double-counting correction. By double-counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
 \begin{align*}
-  E_{\mathrm{cand}} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \\           &= \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \\           &= U(V') \cdot (n-k) - D(V').
+  E_{\mathrm{cand}} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \\
+           &= \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \\
+           &= U(V') \cdot (n-k) - D(V').
 \end{align*}
 
 Because external neighbors may be hit by multiple dimensions, we subtract the \emph{Cross-Collisions} $X(V')$ (the boundary vertices over-counted via multiple coordinate flips) to retrieve the exact boundary of unique vertices:
@@ -278,8 +281,52 @@ By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously min
 \label{fig:structure}
 \end{figure}
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.9, font=\small]
+  % Title
+  \node[font=\bfseries] at (3.5, 5) {The Topological Void at $R=8$};
+
+  % Left side: Optimal Topology (Hamming Ball)
+  \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {Optimal \\ (Hamming Ball)};
+  \node at (1.5, 3.5) {$E = 12$};
+
+  \draw[thick, blue!80!black] (0,1) rectangle (3,3);
+  \fill[blue!20] (0,1) rectangle (3,3);
+  \foreach \x in {0,1,2,3} \foreach \y in {1,3} \fill[blue!80!black] (\x,\y) circle (0.1);
+  \foreach \y in {1,2,3} \foreach \x in {0,3} \fill[blue!80!black] (\x,\y) circle (0.1);
+  \draw[blue!80!black, thick] (0,2) -- (3,2);
+  \draw[blue!80!black, thick] (1,1) -- (1,3);
+  \draw[blue!80!black, thick] (2,1) -- (2,3);
+  \fill[blue!80!black] (1,2) circle (0.1);
+  \fill[blue!80!black] (2,2) circle (0.1);
+
+  % Right side: Second Best Topology
+  \node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {2nd Best \\ Connected};
+  \node at (6.5, 3.5) {$E = 10$};
+
+  \draw[thick, red!80!black] (5,1) rectangle (8,3);
+  \fill[red!10] (5,1) rectangle (8,3);
+  \foreach \x in {5,6,8} \foreach \y in {1,3} \fill[red!80!black] (\x,\y) circle (0.1);
+  \foreach \y in {1,2,3} \foreach \x in {5,8} \fill[red!80!black] (\x,\y) circle (0.1);
+  \draw[red!80!black, thick] (5,2) -- (8,2);
+  \draw[red!80!black, thick] (6,1) -- (6,3);
+  \fill[red!80!black] (6,2) circle (0.1);
+  \fill[red!80!black] (7,2) circle (0.1);
+  \draw[red!80!black, dashed] (7,1) -- (7,3);
+  \node[text=red, font=\bfseries] at (7, 2.5) {X};
+  \node[text=red, font=\bfseries] at (7, 1.5) {X};
+
+  % Connecting arrow with "Fracture Gap"
+  \draw[->, ultra thick, red] (3.5, 2) -- (4.5, 2);
+  \node[align=center, font=\bfseries, text=red!80!black] at (4, 1.2) {Fracture\\Gap:\\$E=11$\\Impossible};
+\end{tikzpicture}
+\caption{Visualization of Isometric Rigidity. At $R=8$, the optimal embedded hypercube achieves 12 internal edges. Modifying the topology immediately breaks at least two edges, creating a "topological void" at $E=11$.}
+\label{fig:fracture}
+\end{figure}
+
 % ════════════════════════════════════════════════════════════════════════
-\section{The Isoperimetric Sandwich & Asymptotic Penalty}
+\section{The Isoperimetric Sandwich \& Asymptotic Penalty}
 
 We propose the following bounds regarding the Pareto-optimal frontier of connected subgraphs, supported by exhaustive computational search up to $R=20$:
 
@@ -287,8 +334,7 @@ We propose the following bounds regarding the Pareto-optimal frontier of connect
 The external boundary of any connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded below by the Hamming Ball, which achieves maximum internal shielding with $E_{int} = E_{seq}(R)$:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| \ge \big(R \cdot k - E_{seq}(R)\big)(n-k) - C_{const}(R)
-\end{equation*}
-This lower bound is rigorously proven by our Capstone Theorem in Lean 4.
+\end{equation*} This lower bound is rigorously proven by our Capstone Theorem in Lean 4.
 \end{theorem}
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
@@ -320,12 +366,9 @@ We established a strict epistemic boundary: the entire graph theory of $A(n,k)$ 
 The crowning formal achievement of this work is the machine-checked \texttt{arrangement\_extraconnectivity\_minimum} theorem, verifying the absolute lower bound mapping to the sequence bounds established by our C++ engine:
 
 \begin{verbatim}
-theorem arrangement_extraconnectivity_minimum (R n k : ℕ)
-  (h_cond : can_embed_hypercube R n k) :
-  (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
-    external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
-  (∀ V' : Finset (ArrVertex n k), V'.card = R →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
+theorem arrangement_extraconnectivity_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k) :
+  (exists V' : Finset (ArrVertex n k), V'.card = R /\ external_neighbors V' = (R*k - E_seq R)*(n-k) - C_constant R) /\
+  (forall V' : Finset (ArrVertex n k), V'.card = R -> external_neighbors V' >= (R*k - E_seq R)*(n-k) - C_constant R)
 \end{verbatim}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -350,7 +393,7 @@ The Algebraic Defect Squeeze establishes the $(R-1)$-extraconnectivity of $A(n,k
 \appendix
 \section{Computational Bounds and Topological Visualizations}
 
-The sheer magnitude of the combinatorial explosion makes exhaustive topological search computationally intractable beyond $R=7$. Figure \ref{fig:complexity} illustrates the profound gap between traditional state-space search (growing as $\Omega(R^{R-2})$) and our symmetry-aware $O(R^4)$ characterization engine, which rapidly computes exact boundary limits scaling effortlessly to arbitrary $R$.
+The sheer magnitude of the combinatorial explosion makes exhaustive topological search computationally intractable beyond $R=7$. Figure~\ref{fig:complexity} illustrates the profound gap between traditional state-space search (growing as $\Omega(R^{R-2})$) and our symmetry-aware $O(R^4)$ characterization engine, which rapidly computes exact boundary limits scaling effortlessly to arbitrary $R$.
 
 \begin{figure}[H]
 \centering
