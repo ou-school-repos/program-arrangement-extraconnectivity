@@ -1,12 +1,12 @@
 # The Extraconnectivity of Arrangement Graphs: An Algebraic Defect Squeeze
 
-This repository contains the high-performance C++ oracle, data assets, and complete Lean 4 formalization solving the $(R-1)$-extraconnectivity problem for Arrangement Graphs $A(n,k)$ for all $R$. This work generalizes and formally verifies the foundational case-by-case results established by Cheng, Lipták, and Tian (2022).
+This repository contains the high-performance C++ engine, data assets, and complete Lean 4 formalization solving the $(R-1)$-extraconnectivity problem for Arrangement Graphs $A(n,k)$ for all $R$. This work generalizes and formally verifies the foundational case-by-case results established by Cheng, Lipták, and Tian (2022).
 
 ## The Core Theoretical Breakthroughs
 
 ### The Discovery: OEIS A000788 & The Hamming Ball
 
-Using an $O(R^4)$ C++ SIMD/Nauty oracle, we scaled exhaustive topological search to $R=20$. We discovered that the maximum number of internal edges $E(R)$ for connected subgraphs perfectly matches the cumulative popcount sequence (OEIS A000788), implying the optimal fault-isolation topologies are embedded lexicographic Hamming Balls.
+Using an exhaustive topological search (powered by **McKay's Nauty** for canonical pruning), we discovered that the maximum number of internal edges $E(R)$ for connected subgraphs perfectly matches the cumulative popcount sequence (OEIS A000788). This identifies the optimal fault-isolation topologies as embedded lexicographic Hamming Balls.
 
 ### The Compression "No-Go" Theorem
 
@@ -14,7 +14,7 @@ Classical hypercube isoperimetry relies on geometric sequence compression (Harpe
 
 ### The Algebraic Defect Squeeze
 
-To bypass the No-Go Theorem, we developed a novel algebraic invariant. Instead of tracing geometric boundaries, we count global algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$ (where $U_p$ are unique roots at coordinate $p$), we established an exact double-counting equivalence that mechanically isolates the $(n-k)$ dimensional scaling factor from the finite network topology.
+To bypass the No-Go Theorem, we developed a novel algebraic invariant. Instead of tracing geometric boundaries, we count global algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$ (where $U_p$ are unique roots at coordinate $p$), we established an exact double-counting equivalence that mechanically isolates the $(n-k)$ dimensional scaling factor from the finite network topology. This allows our $O(R^4)$ engine to characterize the Pareto frontier for any $R$ in polynomial time.
 
 ### The Asymptotic Penalty Theorem
 
@@ -45,7 +45,7 @@ We have established a pristine epistemic boundary: Lean 4 verifies the entirety 
 - `hb_cross_collisions`: The exact 4-cycle shadow overlap count of the Hamming Ball.
 - `nat_popcount_eq_card_filter`: A basic arithmetic identity linking `Nat.testBit` to `popcount`.
 
-_(Both topological axioms are purely functions of $R$, independent of network dimensions $n$ and $k$, and are computationally verified for $R \le 20$ via our C++ oracle)._
+_(Both topological axioms are purely functions of $R$, independent of network dimensions $n$ and $k$, and are computationally verified for $R \le 20$ via our C++ engine)._
 
 ### Open Conjectures (Mechanized as `Prop`s)
 
@@ -61,7 +61,7 @@ To provide a foundation for future combinatorics research, we have formally defi
 ├── Makefile                                 # Unified build system (C++, Lean 4, Python, Docs)
 ├── src/
 │   ├── arrangement.cpp                      # Optimized SWAR/Nauty exhaustive search
-│   └── predict.cpp                          # O(R^4) Extraconnectivity Oracle and Pareto Analyzer
+│   └── predict.cpp                          # O(R^4) Extraconnectivity Engine and Pareto Analyzer
 ├── proofs/
 │   ├── Arrangement/
 │   │   ├── ArrangementExtraconnectivity.lean # Main theorem: Algebraic Defect Squeeze & Asymptotic Penalty
@@ -75,7 +75,7 @@ To provide a foundation for future combinatorics research, we have formally defi
 
 ## Quickstart & Verification
 
-**Run the Extraconnectivity Oracle:**
+**Run the Extraconnectivity Engine:**
 
 ```bash
 make run/predict R=10
@@ -91,6 +91,14 @@ make lean
 ## Reference
 
 _Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." (2022).
+
+```
+
+## Reference
+
+_Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." (2022).
+
+```
 
 ```
 

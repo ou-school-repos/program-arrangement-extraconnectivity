@@ -73,7 +73,7 @@ Kruskal-Katona Shadow Theorem
 
 Both axioms have been verified computationally at two independent levels:
 
-### Level 1: Formula Oracle (`predict.cpp`)
+### Level 1: Formula Engine (`predict.cpp`)
 
 The predictor computes (for any R):
 

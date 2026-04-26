@@ -264,6 +264,16 @@ render: ##H Render all visual assets (.dot to .png)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.PHONY: paper
+paper:	##H @General Build the LaTeX paper (docs/paper/paper.tex)
+	@$(call print_info,Building LaTeX paper)
+	set -o pipefail; cd docs/paper && \
+		pdflatex -interaction=nonstopmode paper.tex && \
+		bibtex paper && \
+		pdflatex -interaction=nonstopmode paper.tex && \
+		pdflatex -interaction=nonstopmode paper.tex
+	@$(call print_success,Paper built: docs/paper/paper.pdf)
+
 .PHONY: docs
 docs:	##H @General Generate PDF documentation from README
 	@$(call print_info,Generating $(DOCS_OUT) from $(DOCS_SRC))
