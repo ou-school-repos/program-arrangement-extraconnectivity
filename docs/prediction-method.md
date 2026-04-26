@@ -37,7 +37,7 @@ This matches all searched values for $R=2..9$ exactly.
 
 ## Why the Hamming Ball?
 
-By **Harper's Edge Isoperimetric Theorem**, the subset of vertices that maximizes internal edges in a hypercube space is the **Hamming ball** — vertices chosen in binary lexicographic order.
+By **Harper's Edge Isoperimetric Theorem**, minimizing the external boundary is asymptotically equivalent to maximizing internal edges, with local 4-cycle overlaps acting as the final geometric tie-breaker. This leads uniquely to the **Hamming ball** — vertices chosen in binary lexicographic order.
 
 Example for R=8 (perfect 3-cube, d=3):
 

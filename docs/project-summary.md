@@ -6,7 +6,7 @@ This project generalizes and extends the 2022 case-by-case analysis of Cheng, Li
 
 ## 2. Theory
 
-- **Edge Isoperimetry & Harper's Theorem:** Applying Harper's Edge Isoperimetric Theorem to the arrangement graph, we identify that the optimal vertex subsets maximizing internal edges (and thus minimizing the external boundary) are Hamming balls (initial segments of the binary-reflected Gray code). Cheng et al.'s constructions for R=5,6,7 are Hamming balls — they independently found the optimal structures without recognizing the pattern.
+- **Edge Isoperimetry & Harper's Theorem:** Applying Harper's Edge Isoperimetric Theorem to the arrangement graph, we identify that minimizing the external vertex boundary is asymptotically equivalent to maximizing internal edges, with local 4-cycle overlaps acting as the final geometric tie-breaker. This leads uniquely to Hamming balls (initial segments of the binary-reflected Gray code). Cheng et al.'s constructions for R=5,6,7 are Hamming balls — they independently found the optimal structures without recognizing the pattern.
 - **The OEIS A000788 Sequence:** The maximum number of internal edges $E(R)$ exactly matches the cumulative popcount sequence (OEIS A000788). At powers of two ($R=2^d$), this yields the perfect hypercube closed-form edge count $E(2^d) = d \cdot 2^{d-1}$.
 - **Neighbor-Set Closed-Form Expression:** The exact extraconnectivity function $\kappa_R$ is evaluated as:
   $$ \kappa*R = (R \cdot k - \text{A000788}(R))(n-k) - C(R) $$
