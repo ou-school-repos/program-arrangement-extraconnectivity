@@ -10,7 +10,7 @@
 \usepackage{tikz}
 \usepackage{float}
 \usepackage{caption}
-\usepackage[hidelinks]{hyperref}
+\usepackage[hidelinks,hypertexnames=false]{hyperref}
 \usetikzlibrary{positioning, arrows.meta, shapes.geometric}
 
 % ── Theorem environments ────────────────────────────────────────────────
@@ -366,7 +366,11 @@ We established a strict epistemic boundary: the entire graph theory of $A(n,k)$ 
     \item \texttt{hb\_cross\_collisions}: The exact 4-cycle overlap evaluation of the explicitly constructed Hamming Ball.
 \end{enumerate}
 
-The crowning formal achievement of this work is the machine-checked theorem, \texttt{arrangement\_}\allowbreak\texttt{extraconnectivity\_}\allowbreak\texttt{minimum}, which verifies the absolute lower bound mapping to the sequence bounds established by our C++ engine:
+The crowning formal achievement of this work is the machine-checked theorem:
+\begin{center}
+  \texttt{arrangement\_extraconnectivity\_minimum}
+\end{center}
+which verifies the absolute lower bound mapping to the sequence bounds established by our C++ engine:
 
 \begin{quote}
 \small \ttfamily
