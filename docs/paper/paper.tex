@@ -34,7 +34,7 @@
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
-  \textbf{[PREPRINT] The Isoperimetric Profile of Arrangement Graphs:}\\
+  \textbf{The Isoperimetric Profile of Arrangement Graphs:}\\
   Hamming Ball Optimality and the Algebraic Defect Squeeze\\[0.5em]
   \large \textit{Bachelor's thesis}
 }
@@ -191,7 +191,7 @@ $R$ & $E_{seq}(R)$ & $C_{const}(R)$ & Exact Boundary Formula & Verification \\
 % ════════════════════════════════════════════════════════════════════════
 \section{The Compression No-Go Theorem}
 
-In the Boolean hypercube {0,1}$^d$, shifting a vertex to use a smaller symbol $a < b$ provably reduces (or preserves) the boundary. In arrangement graphs, this geometric tool fundamentally fails.
+In the Boolean hypercube $\{0,1\}^d$, shifting a vertex to use a smaller symbol $a < b$ provably reduces (or preserves) the boundary. In arrangement graphs, this geometric tool fundamentally fails.
 
 \begin{theorem}[Compression No-Go]\label{them:nogo}
 There exists a subset $V' \subseteq V(A(4,2))$ such that shifting symbol $3 \to 1$ strictly \emph{increases} the external boundary from 5 to 7.
@@ -387,7 +387,7 @@ The external boundary of any Pareto-optimal connected $R$-vertex subgraph $V'$ i
 Remarkably, our explicit bounds perfectly collapse into a single topological manifold at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. This perfect alignment emerges physically because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
-If a topology fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
+If a topology fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E = E_{seq}(R) - E_{int}(V')$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
 \end{theorem}
 To understand this mechanism mathematically, we return to the exact boundary equation derived via the Algebraic Defect Squeeze:
 \begin{equation*}
@@ -422,12 +422,12 @@ which verifies the absolute lower bound mapping to the sequence bounds establish
 
 \begin{quote}
 \small \ttfamily
-theorem arrangement\_extraconnectivity\_minimum (R n k : $\mathbb{N}$) \\
-\hspace*{2em}(h\_cond : can\_embed\_hypercube R n k) : \\
-\hspace*{2em}($\exists$ V' : Finset (ArrVertex n k), V'.card = R $\land{}$ \\
-\hspace*{4em}external\_neighbors V' = (R * k - E\_seq R) * (n - k) - C\_constant R) $\land{}$ \\
-\hspace*{2em}($\forall$ V' : Finset (ArrVertex n k), V'.card = R $\to$ \\
-\hspace*{4em}external\_neighbors V' $\ge$ (R * k - E\_seq R) * (n - k) - C\_constant R)
+theorem arrangement\_extraconnectivity\_minimum \\
+\hspace*{1em}(R, n, k : $\mathbb{N}$) (h\_cond : can\_embed\_hypercube R n k) : \\
+\hspace*{1em}($\exists$ V' : Finset (ArrVertex n k), V'.card = R $\land$ \\
+\hspace*{2em}external\_neighbors V' = (R * k - E\_seq R) * (n - k) - C\_constant R) $\land$ \\
+\hspace*{1em}($\forall$ V' : Finset (ArrVertex n k), V'.card = R $\to$ \\
+\hspace*{2em}external\_neighbors V' $\ge$ (R * k - E\_seq R) * (n - k) - C\_constant R)
 \end{quote}
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Conjectures}
@@ -536,3 +536,5 @@ $R$ & $E_{seq}$ & $C_{const}$ & $R$ & $E_{seq}$ & $C_{const}$ & $R$ & $E_{seq}$ 
 \bibliography{references}
 
 \end{document}
+}
+}
