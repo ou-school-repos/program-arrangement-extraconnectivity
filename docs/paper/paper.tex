@@ -35,7 +35,7 @@
 
 \title{%
   \textbf{[PREPRINT] Isoperimetry of Arrangement Graphs:}\\
-  Hamming Ball Optimality and the Algebraic Defect Squeeze\\[0.5em]
+  Hamming Ball Optimality and the Algebraic Defect Framework\\[0.5em]
   \large \textit{Bachelor's thesis}
 }
 \author{
@@ -57,7 +57,7 @@
 \maketitle
 
 \begin{abstract}
-We establish the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R$ satisfying standard dimensional embedding conditions. We prove that the optimal fault-isolation topologies are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To establish this, we introduce the \emph{algebraic defect squeeze}, a novel framework that replaces the standard geometric compression approach used in hypercube isoperimetry, which we prove is mathematically invalid for partial permutation spaces. We further establish the Asymptotic Penalty Theorem, proving that sub-optimal topologies incur a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball's asymptotic dominance as the network scales. The core structural graph theory and dimensional scaling limits are 100\% mechanically verified in the Lean 4 interactive theorem prover.
+We establish the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R$ satisfying standard dimensional embedding conditions. We prove that the optimal fault-isolation topologies are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To establish this, we introduce the \emph{algebraic defect framework}, a method that replaces the standard geometric compression approach used in hypercube isoperimetry, which we prove is inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, proving that sub-optimal topologies incur a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball's asymptotic dominance as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric axioms which were computationally verified up to $R=20$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -65,21 +65,21 @@ We establish the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for al
 
 The arrangement graph $A(n,k)$, introduced by Day and Tripathi \cite{day1992arrangement}, models interconnection networks for multiprocessor systems. A vertex of $A(n,k)$ is an injective sequence of $k$ symbols drawn from an alphabet of size $n$, and two vertices are adjacent if and only if they differ in exactly one coordinate.
 
-The $h$-extraconnectivity $\kappa_h(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $h$ vertices. Cheng et al. \cite{cheng2022extraconnectivity} established the $h$-extraconnectivity of $A(n,k)$ for small values of $h$, but progress was fundamentally limited by the combinatorial explosion of topological case analysis.
+The $h$-extraconnectivity $\kappa_h(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $h$ vertices. Cheng et al. \cite{cheng2022extraconnectivity} established the $h$-extraconnectivity of $A(n,k)$ for small values of $h$. This vertex-fault metric serves as a natural dual to the edge-fault matching preclusion metrics recently explored for regular interconnection networks in \cite{cheng2025higher}.
 
-In this paper, we break through this barrier by proving the general closed-form formula for arbitrary subset sizes:
+In this paper, we provide a general closed-form formula for arbitrary subset sizes:
 
 \begin{theorem}[Main Result]\label{them:main}
 For all $R \ge 2$, and all parameters $n, k$ satisfying the dual hypercube embedding conditions $n-k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, the $(R-1)$-extraconnectivity of $A(n,k)$ is exactly:
 \begin{equation*}
 \kappa_{R-1}(A(n,k)) = \big(R \cdot k - E_{seq}(R)\big) \cdot (n - k) - C_{const}(R)
-\end{equation*} where $E_{seq}(R) = \text{A000788}(R)$ (the cumulative binary weight) and $C_{const}(R)$ is a collision constant derived from the Kruskal-Katona shadow theorem.
+\end{equation*} where $E_{seq}(R) = \text{A000788}(R)$ (the cumulative binary weight) and $C_{const}(R)$ is a collision constant derived from Harper's Edge-Isoperimetric Theorem \cite{harper1966optimal}.
 \end{theorem}
 
-The proof proceeds via the main acts:
+The proof is structured as follows:
 \begin{itemize}
-    \item \textbf{Compression No-Go Theorem:} Proving that standard geometric shift operators fail on partial permutations due to coordinate tangling.
-    \item \textbf{Algebraic Defect Squeeze:} Decomposing the boundary into coordinate-wise roots to mechanize asymptotic dimension scaling.
+    \item \textbf{Failure of Geometric Compression:} Proving that standard geometric shift operators fail on partial permutations due to coordinate tangling.
+    \item \textbf{Algebraic Defect Framework:} Decomposing the boundary into coordinate-wise roots to mechanize asymptotic dimension scaling.
     \item \textbf{Asymptotic Penalty Theorem:} Proving sub-optimal topologies are strictly penalized by at least $\Delta E \cdot (n-k)$ vertices.
 \end{itemize}
 
@@ -164,11 +164,11 @@ To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
-\section{The Computational Engine}
+\section{Algorithmic Verification}
 
 To escape the $\Omega(R^{R-2})$ explosion of labeled trees, we scaled exhaustive topological search up to $R=20$ using a symmetry-aware evaluation engine (utilizing McKay's \texttt{nauty} library for canonical pruning).
 
-This computational engine confirms that the maximum internal edges for connected subgraphs perfectly track OEIS A000788 \cite{oeis_A000788}, identifying the optimal topologies as embedded lexicographic Hamming Balls. These insights allowed us to develop an $O(R^4)$ characterization engine for arbitrary dimensions.
+This algorithmic verification confirms that the maximum internal edges for connected subgraphs perfectly track OEIS A000788 \cite{oeis_A000788}, identifying the optimal topologies as embedded lexicographic Hamming Balls. These insights allowed us to develop an $O(R^4)$ characterization engine for arbitrary dimensions.
 
 \begin{table}[ht]
 \centering
@@ -189,11 +189,11 @@ $R$ & $E_{seq}(R)$ & $C_{const}(R)$ & Exact Boundary Formula & Verification \\
 \noindent \small \textit{Remarkably, our closed-form evaluation reveals a deep geometric symmetry for perfect hypercubes ($R=2^d$): the internal edge defect perfectly mirrors the external shadow collision constant, yielding $E_{seq}(2^d) = C_{const}(2^d) = d 2^{d-1}$.}
 
 % ════════════════════════════════════════════════════════════════════════
-\section{The Compression No-Go Theorem}
+\section{Failure of Geometric Compression}
 
 In the Boolean hypercube $\{0,1\}^d$, shifting a vertex to use a smaller symbol $a < b$ provably reduces (or preserves) the boundary. In arrangement graphs, this geometric tool fundamentally fails.
 
-\begin{theorem}[Compression No-Go]\label{them:nogo}
+\begin{theorem}[Failure of Geometric Compression]\label{them:nogo}
 There exists a subset $V' \subseteq V(A(4,2))$ such that shifting symbol $3 \to 1$ strictly \emph{increases} the external boundary from 5 to 7.
 \end{theorem}
 
@@ -256,28 +256,33 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
   \draw (u2) -- (m5); \draw (u2) -- (m6); \draw (u2) -- (m7);
   \node at (8.5,-2.2) {$|\partial_{ext}| = 7$};
 \end{tikzpicture}
-\caption{Visualization of the Compression No-Go Theorem. Shifting symbol $3 \to 1$ in $A(4,2)$ severs an internal edge because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
+\caption{Visualization of the Failure of Geometric Compression. Shifting symbol $3 \to 1$ in $A(4,2)$ severs an internal edge because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
 \label{fig:nogo}
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
-\section{The Algebraic Defect Squeeze}
+\section{The Algebraic Defect Framework}
 
 Instead of tracing geometric boundaries, we count global algebraic roots. The sum $U(V')$ represents the total number of 1-dimensional ``fibers'' (coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set projects onto along a specific dimension.
 
-The ``Squeeze'' is a double-counting correction. By double-counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
+The framework utilizes a double-counting correction. By counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
 \begin{align*}
   E_{\mathrm{cand}} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \\
            &= \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \\
            &= U(V') \cdot (n-k) - D(V').
 \end{align*}
 
-Because external neighbors may be hit by multiple dimensions, we subtract the \emph{Cross-Collisions} $X(V')$ (the boundary vertices over-counted via multiple coordinate flips) to retrieve the exact boundary of unique vertices:
+Because external neighbors may be hit by multiple dimensions, we subtract the \emph{Cross-Collisions} $X(V')$ to retrieve the exact boundary of unique vertices. We formally define $X(V')$ as the sum of over-counted boundary adjacencies:
+\begin{equation*}
+X(V') = \sum_{v \in \partial_{ext}(V')} (\text{deg}_{V'}(v) - 1).
+\end{equation*}
+
+The exact boundary size is then:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation*}
 
-By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously minimizes unique roots (maximizing the defect $D$\footnote{As established in Definition 2.3, for dense configurations such as $K_3$ triangles, $D(V')$ functions as an algebraic proxy rather than a literal edge count, naturally penalizing root duplications to prevent geometric over-counting within the squeeze mechanics.}) and maximizes the shadow overlap term $(X+D)$, squeezing the boundary to its absolute minimum.
+By Harper's Edge-Isoperimetric Theorem \cite{harper1966optimal}, the lexicographic Hamming Ball simultaneously minimizes unique roots (maximizing the defect $D$\footnote{As established in Definition 2.3, for dense configurations such as $K_3$ triangles, $D(V')$ functions as an algebraic proxy rather than a literal edge count, naturally penalizing root duplications to prevent geometric over-counting within the framework mechanics.}) and maximizes the shadow overlap term $(X+D)$, reducing the boundary to its absolute minimum.
 
 \begin{figure}[H]
 \centering
@@ -322,7 +327,7 @@ By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously min
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
   % Title
-  \node[font=\bfseries] at (4.75, 5.5) {The Topological Void at $R=8$};
+  \node[font=\bfseries] at (4.75, 5.5) {Forbidden Edge Densities at $R=8$};
 
   % Left side: Optimal Topology (Hamming Ball)
   \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {Optimal \\ (Hamming Ball)};
@@ -356,18 +361,18 @@ By the Kruskal-Katona theorem, the lexicographic Hamming Ball simultaneously min
   \node[text=red, font=\bfseries] at (7, 1.5) {X};
   \end{scope}
 
-  % Connecting arrow with "Fracture Gap"
+  % Connecting arrow with "Isoperimetric Gap"
   \draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
-  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Fracture\\Gap:\\$E=11$\\Impossible};
+  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Isoperimetric\\Gap:\\$E=11$\\Impossible};
 \end{tikzpicture}
-\caption{Visualization of Isometric Rigidity. At $R=8$, the optimal embedded hypercube achieves 12 internal edges. Modifying the topology immediately breaks at least two edges, creating a "topological void" at $E=11$.}
+\caption{Visualization of Isometric Rigidity. At $R=8$, the optimal embedded hypercube achieves 12 internal edges. Modifying the topology immediately breaks at least two edges, creating an "isoperimetric gap" at $E=11$.}
 \label{fig:fracture}
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{The Isoperimetric Sandwich \& Asymptotic Penalty}
 
-We propose the following bounds regarding the Pareto-optimal frontier of connected subgraphs, supported by exhaustive computational search up to $R=20$:
+We propose the following bounds regarding the isoperimetrically optimal frontier of connected subgraphs, supported by exhaustive computational search up to $R=20$:
 
 \begin{theorem}[The Dense Limit Lower Bound]
 The external boundary of any connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded below by the Hamming Ball, which achieves maximum internal shielding with $E_{int} = E_{seq}(R)$:
@@ -377,19 +382,19 @@ The external boundary of any connected $R$-vertex subgraph $V'$ in $A(n,k)$ is s
 \end{theorem}
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
-The external boundary of any Pareto-optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which minimizes collisions with $E_{int} = R-1$ and $C = \binom{R}{2}$:
+The external boundary of any isoperimetrically optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which minimizes collisions with $E_{int} = R-1$ and $C = \binom{R}{2}$:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
 \end{equation*}
 \end{conjecture}
 
-\paragraph{A Mathematical Gift: The $R=3$ Collapse.}
-Remarkably, our explicit bounds perfectly collapse into a single topological manifold at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. This perfect alignment emerges physically because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
+\paragraph{Remark: Structural Convergence at $R=3$.}
+Remarkably, our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a topology fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E = E_{seq}(R) - E_{int}(V')$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
 \end{theorem}
-To understand this mechanism mathematically, we return to the exact boundary equation derived via the Algebraic Defect Squeeze:
+To understand this mechanism mathematically, we return to the exact boundary equation derived via the Algebraic Defect Framework:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big)
 \end{equation*}
@@ -406,15 +411,15 @@ This formulation isolates the asymptotic behavior. The fluctuation in internal e
 % ════════════════════════════════════════════════════════════════════════
 \section{Formal Verification in Lean 4}
 
-To ensure absolute rigor, the Algebraic Defect Squeeze, the dimensional scaling bijections, and the Asymptotic Penalty Theorem are 100\% mechanically verified in the Lean 4 proof assistant \cite{leanprover}.
+To ensure absolute rigor, the Algebraic Defect Framework, the dimensional scaling bijections, and the Asymptotic Penalty Theorem are mechanically verified in the Lean 4 proof assistant \cite{leanprover}.
 
-We established a strict epistemic boundary: the entire graph theory of $A(n,k)$ is formalized from first principles, while the pure extremal set theory bounding the maximum 4-cycles is isolated to two explicit, $n$-independent axioms (both computationally verified for $R \le 20$):
+We established a strict logical separation: the entire graph theory of $A(n,k)$ is formalized from first principles, while the pure extremal set theory bounding the maximum 4-cycles is isolated to two explicit, $n$-independent axioms (both computationally verified for $R \le 20$):
 \begin{enumerate}
     \item \texttt{max\_collision\_defect\_bound}: The universal Kruskal-Katona shadow bound for all $R$-element subsets.
     \item \texttt{hb\_cross\_collisions}: The exact 4-cycle overlap evaluation of the explicitly constructed Hamming Ball.
 \end{enumerate}
 
-The crowning formal achievement of this work is the machine-checked theorem:
+Our primary formal verification result is the machine-checked theorem:
 \begin{center}
   \texttt{arrangement\_extraconnectivity\_minimum}
 \end{center}
@@ -438,29 +443,29 @@ To provide a mathematically unambiguous foundation for future research, the rema
 While generic hypercubes contain degenerate isomorphisms for internal edge counts, the collision constant $C_{const}(R)$ acts as a geometric tie-breaker. Because the Hamming Ball strictly maximizes 4-cycle overlaps, any set achieving the minimum boundary must be isomorphic to the Hamming Ball.
 \end{conjecture}
 
-\begin{conjecture}[The Hypercube Fracture Gap]
+\begin{conjecture}[The Isoperimetric Gap]
 For perfect hypercubes ($R=2^d$), intermediate edge counts are geometrically impossible. The gap in internal edges between the optimal Hamming Ball and the second-best connected topology is exactly $d-1$. (e.g., at $R=8$, achieving exactly 11 internal edges is impossible; the topology fractures directly from 12 down to 10).
 \end{conjecture}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
 
-The Algebraic Defect Squeeze establishes the $(R-1)$-extraconnectivity of $A(n,k)$ for all $R$, replacing broken geometric tools with a verified algebraic framework. The formalization provides a definitive foundation for future research on topological Pareto frontiers in large-scale interconnection networks.
+The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n,k)$ for all $R$, replacing previously used geometric tools with a verified algebraic framework. The formalization provides a definitive foundation for future research on topological isoperimetrically optimal frontiers in large-scale interconnection networks.
 
 % ════════════════════════════════════════════════════════════════════════
 \appendix
 \section{Computational Bounds and Topological Visualizations}
 
-The sheer magnitude of the combinatorial explosion makes exhaustive topological search computationally intractable beyond $R=7$. Figure~\ref{fig:complexity} illustrates the profound gap between traditional state-space search (growing as $\Omega(R^{R-2})$) and our symmetry-aware $O(R^4)$ characterization engine, which rapidly computes exact boundary limits scaling effortlessly to arbitrary $R$.
+The combinatorial complexity of exhaustive topological search makes it computationally intractable beyond $R=7$. Figure~\ref{fig:complexity} illustrates the efficiency of our symmetry-aware $O(R^4)$ characterization engine compared to traditional state-space search (which grows as $\Omega(R^{R-2})$), allowing for the rapid computation of exact boundary limits across arbitrary $R$.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth]{../complexity-curves.png}
-\caption{The combinatorial explosion of state-space search versus our $O(R^4)$ engine mapping limits instantaneously up to and beyond $R=128$.}
+\caption{The combinatorial growth of state-space search versus our $O(R^4)$ engine mapping limits up to and beyond $R=128$.}
 \label{fig:complexity}
 \end{figure}
 
-Figures \ref{fig:r9} and \ref{fig:r10} visualize the exact optimal subset graph structures (the ``Hamming Balls'') mechanically discovered by the prediction engine at non-perfect hypercube counts. Because $R=9$ and $R=10$ sit immediately above the perfect $R=8$ hypercube, the optimal embedding fractures into multiple isolated, sub-optimal appendages to satisfy the injective boundary limits.
+Figures \ref{fig:r9} and \ref{fig:r10} visualize the exact optimal subset graph structures (the ``Hamming Balls'') identified by the verification engine at non-perfect hypercube counts. Because $R=9$ and $R=10$ exceed the perfect $R=8$ hypercube, the optimal embedding incorporates additional nodes while maintaining the injective boundary constraints.
 
 \begin{figure}[H]
 \centering

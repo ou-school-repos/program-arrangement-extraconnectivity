@@ -1,4 +1,4 @@
-# The Extraconnectivity of Arrangement Graphs: An Algebraic Defect Squeeze
+# The Extraconnectivity of Arrangement Graphs: An Algebraic Defect Framework
 
 This repository contains the high-performance C++ engine, data assets, and complete Lean 4 formalization solving the $(R-1)$-extraconnectivity problem for Arrangement Graphs $A(n,k)$ for all $R$. This work generalizes and formally verifies the foundational case-by-case results established by Cheng, Lipták, and Tian (2022).
 
@@ -6,44 +6,44 @@ This repository contains the high-performance C++ engine, data assets, and compl
 
 ### The Discovery: OEIS A000788 & The Hamming Ball
 
-Using an exhaustive topological search (powered by **McKay's Nauty** for canonical pruning), we discovered that the maximum number of internal edges $E(R)$ for connected subgraphs perfectly matches the cumulative popcount sequence (OEIS A000788). This identifies the optimal fault-isolation topologies as embedded lexicographic Hamming Balls.
+Using an exhaustive topological search (powered by **McKay's Nauty** for canonical pruning), we verified that the maximum number of internal edges $E(R)$ for connected subgraphs matches the cumulative binary weight sequence (OEIS A000788). This identifies the optimal fault-isolation topologies as embedded lexicographic Hamming Balls.
 
-### The Compression "No-Go" Theorem
+### The Failure of Geometric Compression
 
-Classical hypercube isoperimetry relies on geometric sequence compression (Harper's Theorem). We formally prove that **geometric compression is mathematically invalid for partial permutations**. Due to "Coordinate Tangling" (vertices possessing mutually exclusive symbol pools), shifting a symbol to compress a set can destroy internal edges and strictly _increase_ the external boundary. We formalize a concrete $A(4,2)$ counterexample where the boundary increases from 5 to 7.
+Classical hypercube isoperimetry relies on geometric sequence compression (Harper's Theorem). We formally prove that **geometric compression is inapplicable to partial permutations**. Due to coordinate constraints (vertices possessing mutually exclusive symbol pools), shifting a symbol to compress a set can destroy internal edges and increase the external boundary. We formalize a concrete $A(4,2)$ counterexample where the boundary increases from 5 to 7.
 
-### The Algebraic Defect Squeeze
+### The Algebraic Defect Framework
 
-To bypass the No-Go Theorem, we developed a novel algebraic invariant. Instead of tracing geometric boundaries, we count global algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$ (where $U_p$ are unique roots at coordinate $p$), we established an exact double-counting equivalence that mechanically isolates the $(n-k)$ dimensional scaling factor from the finite network topology. This allows our $O(R^4)$ engine to characterize the Pareto frontier for any $R$ in polynomial time.
+To address the limitations of geometric compression, we developed a novel algebraic invariant. Instead of tracing geometric boundaries, we count global algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$ (where $U_p$ are unique roots at coordinate $p$), we established an exact double-counting equivalence that isolates the $(n-k)$ dimensional scaling factor from the finite network topology. This allows our $O(R^4)$ engine to characterize the isoperimetrically optimal frontier for any $R$ in polynomial time.
 
 ### The Asymptotic Penalty Theorem
 
-We formally proved that any topology failing to achieve the optimal defect $\Eseq(R)$ is unconditionally penalized by at least $\Delta E \cdot (n-k)$ boundary nodes. This proves that the choice of topology strictly dominates any secondary shadow-overlap savings as the network scales.
+We formally proved that any topology failing to achieve the optimal defect $E_{seq}(R)$ is penalized by at least $\Delta E \cdot (n-k)$ boundary nodes. This demonstrates that the choice of topology dominates any potential secondary shadow-overlap savings as the network scales.
 
-## The Topological Pareto Spectrum
+## The Topological Spectrum
 
-The boundary of any connected subgraph is strictly sandwiched between two topological limits:
+The boundary of any connected subgraph is bounded between two topological limits:
 
-- **The Sparse Limit (Star Graph):** Maximizes fault isolation. $E_{int} = R-1$, Collision Factor $C = \binom{R}{2}$.
-- **The Dense Limit (Hamming Ball):** The minimum cut. $E_{int} = \text{A000788}(R)$, Collision Factor matches Kruskal-Katona shadow overlaps.
+- **The Sparse Limit (Star Graph):** $E_{int} = R-1$, Collision Factor $C = \binom{R}{2}$.
+- **The Dense Limit (Hamming Ball):** The minimum cut. $E_{int} = \text{A000788}(R)$, Collision Factor matches Harper's Edge-Isoperimetric Theorem.
 
-### A Mathematical Gift: The $R=3$ Collapse
+### Remark: Structural Convergence at $R=3$
 
-Remarkably, these explicit bounds perfectly collapse into a single topological manifold at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. This perfect alignment emerges physically because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
+Remarkably, these explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
-### Dimensional Splintering & The Fracture Gap
+### Isoperimetric Gap and Rigidity
 
-Sub-optimal graphs degrade via **Dimensional Splintering**—boundary vertices migrate into higher, orthogonal dimensions. Furthermore, perfect hypercubes ($R=2^d$) exhibit **Isometric Rigidity**, creating mathematically provable "topological voids." (e.g., at $R=8$, achieving 11 internal edges is geometrically impossible; the topology fractures directly from 12 edges down to 10).
+Perfect hypercubes ($R=2^d$) exhibit structural rigidity, creating mathematically provable "isoperimetric gaps." (e.g., at $R=8$, achieving 11 internal edges is geometrically impossible; the topology transitions directly from 12 edges down to 10).
 
 ### The Uniqueness Tie-Breaker
 
-While hypercubes feature degenerate isomorphisms for internal edge counts, the Arrangement Graph boundary formula relies on a subtractive collision constant $C$ that tracks 4-cycles. Because the lexicographic Hamming Ball uniquely maximizes 4-cycle density by the Kruskal-Katona theorem, $C$ acts as a geometric tie-breaker, isolating the Hamming Ball as the strictly unique minimum cut.
+While hypercubes feature degenerate isomorphisms for internal edge counts, the Arrangement Graph boundary formula relies on a subtractive collision constant $C$ that tracks 4-cycles. Because the lexicographic Hamming Ball uniquely maximizes 4-cycle density, $C$ acts as a geometric tie-breaker, isolating the Hamming Ball as the strictly unique minimum cut.
 
 ## Lean 4 Formal Verification
 
-The Algebraic Defect Squeeze and the Asymptotic Penalty Theorem are 100% mechanically verified in **Lean 4**.
+The Algebraic Defect Framework and the Asymptotic Penalty Theorem are mechanically verified in **Lean 4**.
 
-We have established a pristine epistemic boundary: Lean 4 verifies the entirety of the graph theory, dimensional scaling, and boundary projections. We isolate classical extremal bounds to explicit axioms:
+We have established a strict logical separation: Lean 4 verifies the entirety of the graph theory, dimensional scaling, and boundary projections. We isolate classical extremal bounds to explicit axioms:
 
 - `max_collision_defect_bound`: The Kruskal-Katona shadow bound for $R$-element subsets.
 - `hb_cross_collisions`: The exact 4-cycle shadow overlap count of the Hamming Ball.
@@ -57,7 +57,7 @@ To provide a foundation for future combinatorics research, we have formally defi
 
 - `uniqueness_conjecture`
 - `sandwich_upper_bound_conjecture`
-- `hypercube_fracture_gap_conjecture`
+- `isoperimetric_gap_conjecture`
 
 ## Repository Architecture
 
@@ -68,8 +68,8 @@ To provide a foundation for future combinatorics research, we have formally defi
 │   └── predict.cpp                          # O(R^4) Extraconnectivity Engine and Pareto Analyzer
 ├── proofs/
 │   ├── Arrangement/
-│   │   ├── ArrangementExtraconnectivity.lean # Main theorem: Algebraic Defect Squeeze & Asymptotic Penalty
-│   │   ├── IsoperimetricPartialPermutation.lean # The Compression No-Go Theorem
+│   │   ├── ArrangementExtraconnectivity.lean # Main theorem: Algebraic Defect Framework & Asymptotic Penalty
+│   │   ├── IsoperimetricPartialPermutation.lean # The Failure of Geometric Compression
 │   │   ├── HypercubeEdges.lean               # OEIS A000788 combinatorics
 │   │   └── ArrDefs.lean                      # Core Definitions
 │   └── PredictorComplexity.lean             # Complexity analysis
@@ -95,6 +95,7 @@ make lean
 ## Reference
 
 _Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." (2022).
+_Dual Theory:_ E. Cheng, L. Lipták, L. Mazza. "Higher order matching preclusion for regular interconnection networks." (2025).
 
 ```
 
