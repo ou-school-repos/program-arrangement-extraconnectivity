@@ -408,6 +408,56 @@ Substituting this into the boundary equation yields the comparative boundary siz
 \end{align*}
 
 This formulation isolates the asymptotic behavior. The fluctuation in internal edges and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). In stark contrast, the penalty term $\Delta E \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single internal edge ($\Delta E = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
+
+\subsection{Numerical Illustration}
+
+To visualize the Asymptotic Penalty, we compare the Hamming Ball and the Star Graph for a cluster of size $R=8$ with $k=4$. The total number of coordinate positions for the set is $|V'| \cdot k = 8 \cdot 4 = 32$.
+
+\paragraph{Hamming Ball (Optimal):}
+The Hamming Ball of size 8 is a perfect 3-dimensional cube embedding.
+\begin{itemize}
+    \item \textbf{Defect ($D$):} 12 (matching the 12 internal edges of a 3D-cube).
+    \item \textbf{Unique Roots ($U$):} $32 - 12 = 20$.
+    \item \textbf{Collision constant ($X+D$):} 12.
+    \item \textbf{Boundary Formula:} $20(n-4) - 12$.
+\end{itemize}
+
+\paragraph{Star Graph (Sparse Limit):}
+The Star Graph $K_{1,7}$ represents the sparse connectivity limit.
+\begin{itemize}
+    \item \textbf{Defect ($D$):} 7 (matching the 7 edges of an 8-vertex tree).
+    \item \textbf{Unique Roots ($U$):} $32 - 7 = 25$.
+    \item \textbf{Collision constant ($X+D$):} $\binom{8}{2} = 28$.
+    \item \textbf{Boundary Formula:} $25(n-4) - 28$.
+\end{itemize}
+
+\paragraph{Deriving the Asymptotic Penalty:}
+By subtracting the two boundary formulas, we can isolate the linear penalty $\Delta \partial$ that the sub-optimal topology pays as the dimension $n$ scales:
+\begin{align*}
+\Delta \partial &= [25(n-4) - 28] - [20(n-4) - 12] \\
+&= (25-20)(n-4) - (28-12) \\
+&= 5(n-4) - 16.
+\end{align*}
+
+As shown in Table~\ref{tab:comparison}, while the Star Graph initially benefits from its high collision "discount" of 16 vertices, the Hamming Ball's superior internal shielding ($\Delta E = 5$) results in a dominant gap as $n$ increases.
+
+\begin{table}[ht]
+\centering
+\caption{Boundary sizes for $R=8, k=4$ as the dimension $n$ scales.}
+\label{tab:comparison}
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+Dimension $n$ & Hamming Ball Boundary & Star Graph Boundary & Difference (Penalty) \\
+\midrule
+11 & $20(7) - 12 = 128$ & $25(7) - 28 = 147$ & 19 \\
+16 & $20(12) - 12 = 228$ & $25(12) - 28 = 272$ & 44 \\
+100 & $20(96) - 12 = 1908$ & $25(96) - 28 = 2372$ & 464 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The numerical results confirm that the topological configuration dominates the boundary size. For every unit increase in $n$, the Star Graph is forced to project 5 additional unique roots into the network, incurring a linear penalty that rapidly outpaces its initial collision savings.
+
 % ════════════════════════════════════════════════════════════════════════
 \section{Formal Verification in Lean 4}
 
