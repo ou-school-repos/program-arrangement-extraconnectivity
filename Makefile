@@ -265,9 +265,9 @@ render: ##H Render all visual assets (.dot to .png)
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .PHONY: paper
-paper:	##H @General Build the LaTeX paper (docs/paper/paper.tex)
+paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 	@$(call print_info,Building LaTeX paper)
-	set -o pipefail; cd docs/paper && \
+	set -o pipefail; cd paper && \
 		pdflatex -interaction=nonstopmode paper.tex && \
 		bibtex paper && \
 		pdflatex -interaction=nonstopmode paper.tex && \
