@@ -79,13 +79,13 @@ The arrangement graph $A(n,k)$, introduced by Day and Tripathi \cite{day1992arra
 
 The $h$-extraconnectivity $\kappa_h(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $h$ vertices. Cheng et al. \cite{cheng2022extraconnectivity} established the $h$-extraconnectivity of $A(n,k)$ for small values of $h$. This vertex-fault metric serves as a natural dual to the edge-fault matching preclusion metrics recently explored for regular interconnection networks in \cite{cheng2025higher}.
 
-In this paper, we provide a general closed-form formula for arbitrary subset sizes $R$. We prove that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external boundary of any $R$-element subset is bounded below by an explicit function of $R$, $k$, and $(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball whenever the graph is large enough. The full statement appears as Theorem~\ref{them:main} after the necessary definitions.
+In this paper, we provide a general closed-form formula for arbitrary subset sizes $R$. We prove that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external boundary of any $R$-element subset is bounded below by an explicit function of $R$, $k$, and $(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball when $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. The full statement appears as Theorem~\ref{them:main}.
 
 Our approach proceeds in three steps:
 \begin{itemize}
-    \item \textbf{The Compression No-Go (Section~\ref{sec:nogo}):} We prove that standard geometric shifting fails on arrangement graphs due to the injectivity constraint.
+    \item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In $A(n,k)$, the target symbol may already appear at another coordinate of the same vertex, so the shift can either violate injectivity or sever internal edges.
     \item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} We bypass the geometry entirely by counting algebraic roots, mechanically isolating the $(n-k)$ dimension scaling factor.
-    \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} We prove that every missing internal edge costs at least $(n-k)$ boundary nodes, confirming the Hamming Ball's dominance at scale.
+    \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing internal edge costs at least $(n-k)$ boundary nodes, confirming the Hamming Ball's dominance at scale.
 \end{itemize}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -416,16 +416,9 @@ The embedding condition in (ii) ensures the graph is large enough to fit a $\lce
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
-\section{The Isoperimetric Sandwich \& Asymptotic Penalty}\label{sec:sandwich}
+\section{Asymptotic Penalty}\label{sec:sandwich}
 
-We propose the following bounds, supported by exhaustive subgraph enumeration up to $R = 10$ and formula-based verification up to $R = 20$:
-
-\begin{theorem}[The Dense Limit Lower Bound]
-The external boundary of any connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded below by the Hamming Ball, which achieves maximum internal shielding with $E_{int} = E_{seq}(R)$:
-\begin{equation*}
-\left| \partial_{\mathrm{ext}}(V') \right| \ge \big(R \cdot k - E_{seq}(R)\big)(n-k) - C_{const}(R)
-\end{equation*} This lower bound is rigorously proven by our Capstone Theorem in Lean 4.
-\end{theorem}
+The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
 The external boundary of any isoperimetrically optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which minimizes collisions with $E_{int} = R-1$ and $C = \binom{R}{2}$:
