@@ -88,6 +88,8 @@ For all $R \ge 2$, and all parameters $n, k$ satisfying the dual hypercube embed
 \end{equation*} where $E_{seq}(R) = \text{A000788}(R)$ (the cumulative binary weight) and $C_{const}(R)$ is a collision constant derived from Harper's Edge-Isoperimetric Theorem \cite{harper1966optimal}.
 \end{theorem}
 
+Equivalently, we identify the $R$-element subset $V' \subseteq V(A(n,k))$ that minimizes the external vertex boundary $|\partial_{\mathrm{ext}}(V')|$. The minimizer is the lexicographic Hamming Ball $\mathrm{HB}_R$, an explicit embedding of the first $R$ binary strings (ordered lexicographically) into $A(n,k)$. The formula decomposes the boundary into a \emph{dimensional term} $(R \cdot k - E_{seq}(R)) \cdot (n-k)$, which scales linearly with the network dimensions, minus a \emph{collision constant} $C_{const}(R)$ accounting for boundary vertices reachable from multiple coordinates.
+
 \subsection{Summary of Contributions}
 The main contributions of this paper are:
 \begin{itemize}
@@ -351,7 +353,7 @@ These propositions encode the extremal content of the Kruskal-Katona shadow theo
   \draw[red, dotted, thick] (2.2,4.5) -- (4.3,4.5);
   \draw[red, dotted, thick] (4.5,2.2) -- (4.5,4.3);
 \end{tikzpicture}
-\caption{Global Topological Structure accounting for internal defect edges ($D$) and overlapping boundary projections ($X$).}
+\caption{The boundary decomposition $|\partial_{\mathrm{ext}}(V')| = U(V') \cdot (n-k) - (X(V') + D(V'))$: defect edges $D$ shield internal vertices, while cross-collisions $X$ correct for boundary overlaps across coordinates.}
 \label{fig:structure}
 \end{figure}
 
@@ -359,10 +361,10 @@ These propositions encode the extremal content of the Kruskal-Katona shadow theo
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
   % Title
-  \node[font=\bfseries] at (4.75, 5.5) {Forbidden Edge Densities at $R=8$};
+  \node[font=\bfseries] at (4.75, 5.5) {Forbidden Edge Densities for $|V'|=8$ in $A(n,k)$};
 
   % Left side: Optimal Topology (Hamming Ball)
-  \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {Optimal \\ (Hamming Ball)};
+  \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {$V'=\mathrm{HB}_8$ \\ (Hamming Ball)};
   \node at (1.5, 3.5) {$E = 12$};
 
   \draw[thick, blue!80!black] (0,1) rectangle (3,3);
@@ -377,7 +379,7 @@ These propositions encode the extremal content of the Kruskal-Katona shadow theo
 
   % Right side: Second Best Topology
   \begin{scope}[xshift=1.5cm]
-  \node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {2nd Best \\ Connected};
+  \node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {Next-best $V'$ \\ ($|V'|=8$)};
   \node at (6.5, 3.5) {$E = 10$};
 
   \draw[thick, red!80!black] (5,1) rectangle (8,3);
@@ -525,14 +527,14 @@ Figures \ref{fig:r9} and \ref{fig:r10} visualize the exact optimal subset graph 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{../assets/out/R9_graph.png}
-\caption{The structurally optimal subgraph topology for $R=9$.}
+\caption{The boundary-minimizing subset $V' = \mathrm{HB}_9 \subseteq V(A(n,k))$ with $|V'|=9$.}
 \label{fig:r9}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{../assets/out/R10_graph.png}
-\caption{The structurally optimal subgraph topology for $R=10$.}
+\caption{The boundary-minimizing subset $V' = \mathrm{HB}_{10} \subseteq V(A(n,k))$ with $|V'|=10$.}
 \label{fig:r10}
 \end{figure}
 
