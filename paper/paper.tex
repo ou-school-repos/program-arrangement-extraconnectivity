@@ -69,7 +69,7 @@
 \maketitle
 
 \begin{abstract}
-We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. At $R = 3$ the minimizer is non-unique (the Hamming Ball and Star Graph coincide); for $R \ge 4$ the lexicographic Hamming Ball is the unique boundary-minimizing subset. We show that the boundary-minimizing subsets are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, an approach that replaces the geometric compression methods traditional to hypercube isoperimetry, which we show are inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, demonstrating that any $R$-element subset failing to achieve the optimal defect incurs a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball remains the unique minimizer as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), both computationally verified up to $R=20$.
+We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. At $R = 3$ the minimizer is non-unique (the Hamming Ball and Star Graph coincide); for $R \ge 4$ the lexicographic Hamming Ball is the unique boundary-minimizing subset, whose internal edge count matches the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on partial permutation spaces. We further establish the Asymptotic Penalty Theorem: any $R$-element subset missing even a single optimal internal edge incurs a penalty of at least $(n-k)$ additional boundary nodes, ensuring the Hamming Ball dominates as the network scales. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), both computationally verified up to $R=20$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -94,13 +94,11 @@ is the collision constant, counting the maximum combined shadow overlap $(X + D)
 
 Equivalently, we identify the $R$-element subset $V' \subseteq V(A(n,k))$ that minimizes the external vertex boundary $|\partial_{\mathrm{ext}}(V')|$. The minimizer is the lexicographic Hamming Ball $\mathrm{HB}_R$, an explicit embedding of the first $R$ binary strings (ordered lexicographically) into $A(n,k)$. The formula decomposes the boundary into a \emph{dimensional term} $(R \cdot k - E_{seq}(R)) \cdot (n-k)$, which scales linearly with the network dimensions, minus a \emph{collision constant} $C_{const}(R)$ accounting for boundary vertices reachable from multiple coordinates.
 
-\subsection{Summary of Contributions}
-The main contributions of this paper are:
+Our approach proceeds in three steps:
 \begin{itemize}
-    \item[(i)] Computational verification of the extraconnectivity formula for small $R$, illustrating a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$.
-    \item[(ii)] Demonstration that standard geometric shift operators fail on partial permutation spaces, necessitating the development of the \emph{algebraic defect framework}.
-    \item[(iii)] Introduction of the algebraic defect framework to decompose the vertex boundary into coordinate-wise roots, facilitating the mechanization of asymptotic dimension scaling.
-    \item[(iv)] Establishment of the Asymptotic Penalty Theorem, proving that subsets failing to achieve the optimal defect incur a linear boundary penalty proportional to the network dimensions.
+    \item \textbf{The Compression No-Go (Section~\ref{sec:nogo}):} We prove that standard geometric shifting fails on arrangement graphs due to the injectivity constraint.
+    \item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} We bypass the geometry entirely by counting algebraic roots, mechanically isolating the $(n-k)$ dimension scaling factor.
+    \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} We prove that every missing internal edge costs at least $(n-k)$ boundary nodes, confirming the Hamming Ball's dominance at scale.
 \end{itemize}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -113,6 +111,8 @@ We denote the set $\{1, 2, \dots, m\}$ by $[m]$. For a vertex $v$, the expressio
 \begin{definition}[Arrangement Graph]
 The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow [n] \}$ (injective functions) and edge set $E = \{ \{u, v\} : |\{p : u(p) \neq v(p)\}| = 1 \}$.
 \end{definition}
+
+To move to an adjacent vertex in $A(n,k)$, one selects one of the $k$ active coordinates and replaces its symbol with one of the $(n-k)$ unused symbols from the alphabet. Every vertex therefore has exactly $k(n-k)$ neighbors, and the factor $(n-k)$ governs how rapidly the boundary scales with the network dimensions.
 
 \begin{definition}[Unique Roots and Defect]
 For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size $n-k+1$ obtained by filling the missing coordinate with any available symbol. The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques that intersect the set $V'$ at coordinate $p$:
@@ -209,7 +209,7 @@ $R$ & $E_{seq}(R)$ & $C_{const}(R)$ & Exact Boundary Formula & Verification \\
 \noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the internal edge defect mirrors the external shadow collision constant, yielding $E_{seq}(2^d) = C_{const}(2^d) = d 2^{d-1}$.}
 
 % ════════════════════════════════════════════════════════════════════════
-\section{Failure of Geometric Compression}
+\section{Failure of Geometric Compression}\label{sec:nogo}
 
 In the Boolean hypercube $\{0,1\}^d$, shifting a vertex to use a smaller symbol $a < b$ provably reduces (or preserves) the boundary. In arrangement graphs, this geometric tool fundamentally fails.
 
@@ -281,7 +281,7 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
-\section{The Algebraic Defect Framework}
+\section{The Algebraic Defect Framework}\label{sec:defect}
 
 Instead of tracing geometric boundaries, we count global algebraic roots. The sum $U(V')$ represents the total number of 1-dimensional ``fibers'' (coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set projects onto along a specific dimension.
 
@@ -408,7 +408,7 @@ These propositions encode the extremal content of the Kruskal-Katona shadow theo
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
-\section{The Isoperimetric Sandwich \& Asymptotic Penalty}
+\section{The Isoperimetric Sandwich \& Asymptotic Penalty}\label{sec:sandwich}
 
 We propose the following bounds regarding the isoperimetrically optimal connected subgraphs, supported by exhaustive computational search up to $R=20$:
 
@@ -596,6 +596,22 @@ $R$ & $E_{seq}$ & $C_{const}$ & $R$ & $E_{seq}$ & $C_{const}$ & $R$ & $E_{seq}$ 
 \bottomrule
 \end{tabular}
 \end{table}
+
+% ════════════════════════════════════════════════════════════════════════
+\section{Formal Verification in Lean 4}\label{app:lean}
+
+The Algebraic Defect Framework, the dimensional scaling bijections, and the Asymptotic Penalty Theorem are mechanically verified in the Lean 4 proof assistant \cite{leanprover}. The entire graph theory of $A(n,k)$ is formalized from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit \texttt{axiom} declarations, cleanly isolating the classical extremal set theory from the novel algebraic machinery.
+
+The capstone theorem verifies both the universal lower bound and the constructive existence of the Hamming Ball minimum cut:
+
+\begin{verbatim}
+theorem arrangement_extraconnectivity_minimum
+    (R n k : Nat) (h_cond : can_embed_hypercube R n k) :
+  (exists V' : Finset (ArrVertex n k), V'.card = R /\
+    external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
+  (forall V' : Finset (ArrVertex n k), V'.card = R ->
+    external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
+\end{verbatim}
 
 \bibliographystyle{plain}
 \nocite{*}
