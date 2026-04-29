@@ -40,15 +40,14 @@ achieved uniquely by the Hamming Ball embedding.
 
 5. **The Capstone** — Sandwich of lower bound (∀ V') and upper bound (∃ Hamming Ball).
 
-## Axiom Inventory (3 axioms, all computationally verified)
+## Axiom Inventory (2 isoperimetric axioms)
 
-| Axiom | Role | Verified |
-|-------|------|----------|
-| `max_collision_defect_bound` | KK shadow bound (universal half) | `predict --verify` |
-| `hamming_ball_eval` | KK shadow bound (existential half) | `predict --verify` |
-| `root_fiber_card` | Fiber cardinality bijection | Mathematically immediate |
+| Axiom | Role | Status |
+|-------|------|--------|
+| `max_collision_defect_bound` | KK shadow bound (universal) | Computationally verified |
+| `hb_cross_collisions` | KK shadow bound (existential) | Computationally verified |
 
-All axioms are independent of (n, k) — purely functions of R.
+Both axioms are independent of (n, k) — purely functions of R.
 Run `predict --verify R` for brute-force cross-check at any R.
 See `docs/axiom-equivalence.md` for the full duality explanation.
 
@@ -1326,9 +1325,127 @@ private lemma nat_exists_lt_eq_except_bit (R d p_val : ℕ) (hR : R < 2^d) :
     intro q _ hq_ne
     rw [testBit_xor_two_pow R p_val q, if_neg hq_ne]
 
-/-- Pure Nat bitwise property: the number of 1-bits below d is exactly the popcount. -/
-axiom nat_popcount_eq_card_filter (R d k : ℕ) (hR : R < 2^d) (hk : d ≤ k) :
-    (Finset.univ.filter (fun p : Fin k => p.val < d ∧ R.testBit p.val = true)).card = popcount R
+/-- Helper: bits above the representation width are zero. -/
+private lemma testBit_high (R d i : ℕ) (hR : R < 2^d) (hi : d ≤ i) :
+    R.testBit i = false :=
+  Nat.testBit_eq_false_of_lt (lt_of_lt_of_le hR (Nat.pow_le_pow_right (by omega) hi))
+
+/-- Shifting the filter: positions 1..d with R.testBit biject with positions 0..d-1 with (R/2).testBit -/
+private lemma card_filter_shift (R d : ℕ) :
+    ((Finset.range d).filter (fun i => R.testBit (i + 1) = true)).card =
+    ((Finset.range d).filter (fun i => (R / 2).testBit i = true)).card := by
+  congr 1
+  apply Finset.filter_congr
+  intro i _
+  rw [Nat.testBit_succ]
+
+/-- Split a range (d+1) filter into the bit-0 contribution and the shifted tail. -/
+private lemma card_filter_succ (R d : ℕ) :
+    ((Finset.range (d + 1)).filter (fun i => R.testBit i = true)).card =
+    (if R.testBit 0 = true then 1 else 0) +
+    ((Finset.range d).filter (fun i => (R / 2).testBit i = true)).card := by
+  -- Rewrite range(d+1) using range_succ: range(d+1) = insert d (range d)
+  -- This peels from the top. Instead, we'll manipulate the filter directly.
+  -- Strategy: partition the filter by whether i = 0 or i ≥ 1
+  have h_eq : (Finset.range (d + 1)).filter (fun i => R.testBit i = true) =
+      ((Finset.range (d + 1)).filter (fun i => i = 0 ∧ R.testBit i = true)) ∪
+      ((Finset.range (d + 1)).filter (fun i => i ≠ 0 ∧ R.testBit i = true)) := by
+    ext x
+    simp only [Finset.mem_union, Finset.mem_filter, Finset.mem_range]
+    constructor
+    · intro ⟨hx, hb⟩
+      by_cases h0 : x = 0
+      · left; exact ⟨hx, h0, hb⟩
+      · right; exact ⟨hx, h0, hb⟩
+    · rintro (⟨hx, _, hb⟩ | ⟨hx, _, hb⟩) <;> exact ⟨hx, hb⟩
+  have h_disj : Disjoint
+      ((Finset.range (d + 1)).filter (fun i => i = 0 ∧ R.testBit i = true))
+      ((Finset.range (d + 1)).filter (fun i => i ≠ 0 ∧ R.testBit i = true)) := by
+    rw [Finset.disjoint_filter]
+    intro x _ h1 h2
+    exact h2.1 h1.1
+  rw [h_eq, Finset.card_union_of_disjoint h_disj]
+  congr 1
+  · -- The i=0 part: card is 0 or 1
+    by_cases hb : R.testBit 0 = true
+    · simp only [hb, ite_true]
+      convert Finset.card_singleton 0
+      ext x
+      simp only [Finset.mem_filter, Finset.mem_range, Finset.mem_singleton]
+      constructor
+      · rintro ⟨_, rfl, _⟩; rfl
+      · intro h; subst h; exact ⟨by omega, rfl, hb⟩
+    · simp only [hb]
+      convert Finset.card_empty
+      rw [Finset.eq_empty_iff_forall_notMem]
+      intro x; simp only [Finset.mem_filter, Finset.mem_range, not_and]
+      intro _ h0; rw [h0]; exact hb
+  · -- The i≥1 part: biject with range d via i ↦ i-1
+    have h_bij : ((Finset.range (d + 1)).filter (fun i => i ≠ 0 ∧ R.testBit i = true)).image (· - 1) =
+        (Finset.range d).filter (fun i => (R / 2).testBit i = true) := by
+      ext x
+      simp only [Finset.mem_image, Finset.mem_filter, Finset.mem_range]
+      constructor
+      · rintro ⟨y, ⟨hy_lt, hy_ne, hy_bit⟩, rfl⟩
+        refine ⟨by omega, ?_⟩
+        have : y = (y - 1) + 1 := by omega
+        rw [this, Nat.testBit_succ] at hy_bit
+        exact hy_bit
+      · intro ⟨hx_lt, hx_bit⟩
+        refine ⟨x + 1, ⟨by omega, by omega, ?_⟩, by omega⟩
+        rw [Nat.testBit_succ]
+        exact hx_bit
+    rw [← h_bij]
+    exact (Finset.card_image_of_injOn (by
+      intro a ha b hb hab
+      simp only [Finset.mem_coe, Finset.mem_filter, Finset.mem_range] at ha hb
+      dsimp at hab
+      omega)).symm
+
+/-- Core: popcount R = number of set bits in positions 0..d-1, when R < 2^d.
+    Proved by induction on d, generalizing R. -/
+private lemma popcount_eq_card_range_filter (R d : ℕ) (hR : R < 2^d) :
+    ((Finset.range d).filter (fun i => R.testBit i = true)).card = popcount R := by
+  induction d generalizing R with
+  | zero =>
+    simp only [Nat.pow_zero] at hR
+    have hR0 : R = 0 := by omega
+    subst hR0
+    have : (Finset.range 0).filter (fun i => Nat.testBit 0 i = true) = ∅ := by
+      rw [Finset.range_zero, Finset.filter_empty]
+    rw [this, Finset.card_empty, popcount, dif_pos rfl]
+  | succ d' ih =>
+    rw [card_filter_succ]
+    have hR_div : R / 2 < 2^d' := by omega
+    rw [ih (R / 2) hR_div]
+    -- Now: (if testBit 0 then 1 else 0) + popcount(R/2) = popcount R
+    if hR0 : R = 0 then
+      subst hR0
+      rw [Nat.zero_testBit, popcount, dif_pos rfl]
+      decide
+    else
+      -- Unfold popcount R on the RHS
+      conv_rhs => rw [popcount, dif_neg hR0]
+      -- Goal: (if R.testBit 0 = true then 1 else 0) + popcount (R / 2) = R % 2 + popcount (R / 2)
+      congr 1
+      rw [Nat.testBit_zero]
+      have hmod : R % 2 = 0 ∨ R % 2 = 1 := Nat.mod_two_eq_zero_or_one R
+      rcases hmod with h | h <;> simp [h]
+
+/-- PROVED (was axiom): The Fin k filter version, lifting from the range d result. -/
+lemma nat_popcount_eq_card_filter (R d k : ℕ) (hR : R < 2^d) (hk : d ≤ k) :
+    (Finset.univ.filter (fun p : Fin k => p.val < d ∧ R.testBit p.val = true)).card = popcount R := by
+  rw [← popcount_eq_card_range_filter R d hR]
+  -- Bijection: Fin k filter ↔ range d filter via Fin.val
+  have h_image : (Finset.univ.filter (fun p : Fin k => p.val < d ∧ R.testBit p.val = true)).image Fin.val =
+      (Finset.range d).filter (fun i => R.testBit i = true) := by
+    ext i
+    simp only [Finset.mem_image, Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_range]
+    constructor
+    · rintro ⟨p, ⟨hp_lt, hp_bit⟩, rfl⟩; exact ⟨hp_lt, hp_bit⟩
+    · intro ⟨hi_lt, hi_bit⟩; exact ⟨⟨i, by omega⟩, ⟨hi_lt, hi_bit⟩, rfl⟩
+  rw [← h_image]
+  exact (Finset.card_image_of_injOn (fun _ _ _ _ h => Fin.ext h)).symm
 
 -- ============================================================================
 -- THE GRAPH THEORY TO BIT-VECTOR BIJECTION
