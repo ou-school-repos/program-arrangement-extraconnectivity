@@ -34,8 +34,7 @@
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
-  \textbf{[PREPRINT] Isoperimetry of Arrangement Graphs:}\\
-  Hamming Ball Optimality and the Algebraic Defect Framework\\[0.5em]
+  \textbf{[PREPRINT] Isoperimetry of Arrangement Graphs and the Algebraic Defect Framework}\\[0.5em]
   \large \textit{Bachelor's thesis}
 }
 \author{
@@ -57,7 +56,7 @@
 \maketitle
 
 \begin{abstract}
-We establish the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R$ satisfying standard dimensional embedding conditions. We prove that the optimal fault-isolation topologies are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To establish this, we introduce the \emph{algebraic defect framework}, a method that replaces the standard geometric compression approach used in hypercube isoperimetry, which we prove is inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, proving that sub-optimal topologies incur a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball's asymptotic dominance as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric axioms which were computationally verified up to $R=20$.
+We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for cluster sizes $R$ satisfying standard dimensional embedding conditions, observing a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$. We show that the optimal fault-isolation topologies are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, an approach that replaces the geometric compression methods traditional to hypercube isoperimetry, which we show are inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, demonstrating that sub-optimal topologies incur a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball remains the unique minimizer as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric axioms which were computationally verified up to $R=20$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -76,11 +75,13 @@ For all $R \ge 2$, and all parameters $n, k$ satisfying the dual hypercube embed
 \end{equation*} where $E_{seq}(R) = \text{A000788}(R)$ (the cumulative binary weight) and $C_{const}(R)$ is a collision constant derived from Harper's Edge-Isoperimetric Theorem \cite{harper1966optimal}.
 \end{theorem}
 
-The proof is structured as follows:
+\subsection{Summary of Contributions}
+The main contributions of this paper are:
 \begin{itemize}
-    \item \textbf{Failure of Geometric Compression:} Proving that standard geometric shift operators fail on partial permutations due to coordinate tangling.
-    \item \textbf{Algebraic Defect Framework:} Decomposing the boundary into coordinate-wise roots to mechanize asymptotic dimension scaling.
-    \item \textbf{Asymptotic Penalty Theorem:} Proving sub-optimal topologies are strictly penalized by at least $\Delta E \cdot (n-k)$ vertices.
+    \item[(i)] Computational verification of the extraconnectivity formula for small $R$, illustrating a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$.
+    \item[(ii)] Demonstration that standard geometric shift operators fail on partial permutation spaces, necessitating the development of the \emph{algebraic defect framework}.
+    \item[(iii)] Introduction of the algebraic defect framework to decompose the vertex boundary into coordinate-wise roots, facilitating the mechanization of asymptotic dimension scaling.
+    \item[(iv)] Establishment of the Asymptotic Penalty Theorem, proving that sub-optimal topologies incur a linear penalty proportional to the network dimensions.
 \end{itemize}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -166,9 +167,9 @@ To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)
 % ════════════════════════════════════════════════════════════════════════
 \section{Algorithmic Verification}
 
-To escape the $\Omega(R^{R-2})$ explosion of labeled trees, we scaled exhaustive topological search up to $R=20$ using a symmetry-aware evaluation engine (utilizing McKay's \texttt{nauty} library for canonical pruning).
+To bypass the $\Omega(R^{R-2})$ growth of labeled trees, we scaled exhaustive topological search up to $R=20$ using a symmetry-aware evaluation engine (utilizing McKay's \texttt{nauty} library for canonical pruning).
 
-This algorithmic verification confirms that the maximum internal edges for connected subgraphs perfectly track OEIS A000788 \cite{oeis_A000788}, identifying the optimal topologies as embedded lexicographic Hamming Balls. These insights allowed us to develop an $O(R^4)$ characterization engine for arbitrary dimensions.
+This algorithmic verification confirms that the maximum internal edges for connected subgraphs correspond to OEIS A000788 \cite{oeis_A000788}, identifying the optimal topologies as embedded lexicographic Hamming Balls. These insights allowed us to develop an $O(R^4)$ characterization engine for arbitrary dimensions.
 
 \begin{table}[ht]
 \centering
@@ -186,7 +187,7 @@ $R$ & $E_{seq}(R)$ & $C_{const}(R)$ & Exact Boundary Formula & Verification \\
 \end{tabular}
 \end{table}
 
-\noindent \small \textit{Remarkably, our closed-form evaluation reveals a deep geometric symmetry for perfect hypercubes ($R=2^d$): the internal edge defect perfectly mirrors the external shadow collision constant, yielding $E_{seq}(2^d) = C_{const}(2^d) = d 2^{d-1}$.}
+\noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the internal edge defect mirrors the external shadow collision constant, yielding $E_{seq}(2^d) = C_{const}(2^d) = d 2^{d-1}$.}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Failure of Geometric Compression}
@@ -388,8 +389,8 @@ The external boundary of any isoperimetrically optimal connected $R$-vertex subg
 \end{equation*}
 \end{conjecture}
 
-\paragraph{Remark: Structural Convergence at $R=3$.}
-Remarkably, our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
+\paragraph{Structural Convergence at $R=3$.}
+Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a topology fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E = E_{seq}(R) - E_{int}(V')$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
@@ -407,7 +408,7 @@ Substituting this into the boundary equation yields the comparative boundary siz
 &= \left| \partial_{\mathrm{ext}}(V'_{opt}) \right| + \Delta E \cdot (n - k) + (X_{opt} + D_{opt}) - (X_{sub} + D_{sub})
 \end{align*}
 
-This formulation isolates the asymptotic behavior. The fluctuation in internal edges and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). In stark contrast, the penalty term $\Delta E \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single internal edge ($\Delta E = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
+This formulation isolates the asymptotic behavior. The fluctuation in internal edges and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). Conversely, the penalty term $\Delta E \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single internal edge ($\Delta E = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
 
 \subsection{Numerical Illustration}
 
@@ -505,7 +506,7 @@ The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n
 \appendix
 \section{Computational Bounds and Topological Visualizations}
 
-The combinatorial complexity of exhaustive topological search makes it computationally intractable beyond $R=7$. Figure~\ref{fig:complexity} illustrates the efficiency of our symmetry-aware $O(R^4)$ characterization engine compared to traditional state-space search (which grows as $\Omega(R^{R-2})$), allowing for the rapid computation of exact boundary limits across arbitrary $R$.
+The combinatorial complexity of exhaustive topological search makes it prohibitively complex beyond $R=7$. Figure~\ref{fig:complexity} illustrates the efficiency of our symmetry-aware $O(R^4)$ characterization engine compared to traditional state-space search (which grows as $\Omega(R^{R-2})$), allowing for the rapid computation of exact boundary limits across arbitrary $R$.
 
 \begin{figure}[H]
 \centering
