@@ -85,7 +85,11 @@ In this paper, we provide a general closed-form formula for arbitrary subset siz
 For all $R \ge 2$, and all parameters $n, k$ satisfying the dual hypercube embedding conditions $n-k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, the $(R-1)$-extraconnectivity of $A(n,k)$ is exactly:
 \begin{equation*}
 \kappa_{R-1}(A(n,k)) = \big(R \cdot k - E_{seq}(R)\big) \cdot (n - k) - C_{const}(R)
-\end{equation*} where $E_{seq}(R) = \text{A000788}(R)$ (the cumulative binary weight) and $C_{const}(R)$ is a collision constant derived from Harper's Edge-Isoperimetric Theorem \cite{harper1966optimal}.
+\end{equation*} where $E_{seq}(R) = \text{A000788}(R) = \sum_{i=0}^{R-1} \text{popcount}(i)$ is the cumulative binary weight, and
+\begin{equation*}
+C_{const}(R) = (R - 1) + \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - E_{seq}(R)
+\end{equation*}
+is the collision constant, counting the maximum combined shadow overlap $(X + D)$ achievable by any $R$-element subset (see Propositions~\ref{prop:universal}--\ref{prop:hb-eval}).
 \end{theorem}
 
 Equivalently, we identify the $R$-element subset $V' \subseteq V(A(n,k))$ that minimizes the external vertex boundary $|\partial_{\mathrm{ext}}(V')|$. The minimizer is the lexicographic Hamming Ball $\mathrm{HB}_R$, an explicit embedding of the first $R$ binary strings (ordered lexicographically) into $A(n,k)$. The formula decomposes the boundary into a \emph{dimensional term} $(R \cdot k - E_{seq}(R)) \cdot (n-k)$, which scales linearly with the network dimensions, minus a \emph{collision constant} $C_{const}(R)$ accounting for boundary vertices reachable from multiple coordinates.
