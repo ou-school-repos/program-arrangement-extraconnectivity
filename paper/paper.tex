@@ -1,7 +1,7 @@
 % Compile: pdflatex paper.tex && bibtex paper && pdflatex paper.tex && pdflatex paper.tex
 \documentclass[11pt, letterpaper]{article}
 
-\usepackage[margin=1in,headheight=14pt]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -10,17 +10,20 @@
 \usepackage{tikz}
 \usepackage{float}
 \usepackage{caption}
-\usepackage{fancyhdr}
+
 \usepackage[hidelinks,hypertexnames=false]{hyperref}
 \usetikzlibrary{positioning, arrows.meta, shapes.geometric}
 
 % ── Preprint watermark ───────────────────────────────────────────────────
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[R]{\textit{Preprint -- not peer reviewed}}
-\fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0pt}
-\fancypagestyle{plain}{\fancyhf{}\fancyhead[R]{\textit{Preprint -- not peer reviewed}}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+\usepackage{eso-pic}
+\AddToShipoutPictureBG{%
+  \put(\LenToUnit{0.5\paperwidth},\LenToUnit{0.955\paperheight}){%
+    \makebox(0,0){\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}%
+  }%
+  \put(\LenToUnit{0.5\paperwidth},\LenToUnit{0.04\paperheight}){%
+    \makebox(0,0){\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}%
+  }%
+}
 
 % ── Theorem environments ────────────────────────────────────────────────
 \newtheorem{theorem}{Theorem}[section]
