@@ -69,7 +69,7 @@
 \maketitle
 
 \begin{abstract}
-We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for cluster sizes $R$ satisfying standard dimensional embedding conditions, observing a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$. We show that the optimal fault-isolation topologies are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, an approach that replaces the geometric compression methods traditional to hypercube isoperimetry, which we show are inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, demonstrating that sub-optimal topologies incur a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball remains the unique minimizer as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric axioms which were computationally verified up to $R=20$.
+We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for cluster sizes $R$ satisfying standard dimensional embedding conditions, observing a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$. We show that the optimal fault-isolation topologies are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, an approach that replaces the geometric compression methods traditional to hypercube isoperimetry, which we show are inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, demonstrating that sub-optimal topologies incur a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball remains the unique minimizer as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), both computationally verified up to $R=20$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -295,8 +295,26 @@ The exact boundary size is then:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation*}
+The isoperimetric optimality of the Hamming Ball is captured by two extremal propositions. Together, they form the ``Algebraic Squeeze'': the first bounds \emph{all} subsets from above, and the second shows the Hamming Ball \emph{achieves} equality.
 
-By Harper's Edge-Isoperimetric Theorem \cite{harper1966optimal}, the lexicographic Hamming Ball simultaneously minimizes unique roots (maximizing the defect $D$\footnote{As established in Definition 2.3, for dense configurations such as $K_3$ triangles, $D(V')$ functions as an algebraic proxy rather than a literal edge count, naturally penalizing root duplications to prevent geometric over-counting within the framework mechanics.}) and maximizes the shadow overlap term $(X+D)$, reducing the boundary to its absolute minimum.
+\begin{proposition}[Universal Shadow Bound]\label{prop:universal}
+For every $R$-element subset $V' \subseteq V(A(n,k))$:
+\begin{equation*}
+X(V') + D(V') \le C_{const}(R)
+\end{equation*}
+where $C_{const}(R)$ depends only on $R$ and is independent of the network dimensions $n$ and $k$.
+\end{proposition}
+
+\begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
+The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
+\begin{equation*}
+X(\mathrm{HB}_R) + E_{seq}(R) = C_{const}(R).
+\end{equation*}
+\end{proposition}
+
+\begin{remark}
+These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{harper1966optimal} applied to the arrangement graph fiber structure. They are computationally verified for all $R \le 20$ via our C++ verification engine. The full Lean 4 formalization of the graph theory, dimensional scaling, and bitwise arithmetic proceeds from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit axioms in the proof framework, isolating the classical extremal set theory from the novel algebraic machinery.
+\end{remark}
 
 \begin{figure}[H]
 \centering
@@ -471,31 +489,6 @@ Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Isoperimetric Gap ($\Delta E$) \
 
 The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins by 464 vertices against a Star Graph and by 190 vertices against the second-best connected topology. In large-scale systems, this linear divergence ensures that the Hamming Ball remains the unique, dominant fault-isolation topology.
 
-% ════════════════════════════════════════════════════════════════════════
-\section{Formal Verification in Lean 4}
-
-To ensure absolute rigor, the Algebraic Defect Framework, the dimensional scaling bijections, and the Asymptotic Penalty Theorem are mechanically verified in the Lean 4 proof assistant \cite{leanprover}.
-
-We established a strict logical separation: the entire graph theory of $A(n,k)$ is formalized from first principles, while the pure extremal set theory bounding the maximum 4-cycles is isolated to two explicit, $n$-independent axioms (both computationally verified for $R \le 20$):
-\begin{enumerate}
-    \item \texttt{max\_collision\_defect\_bound}: The universal Kruskal-Katona shadow bound for all $R$-element subsets.
-    \item \texttt{hb\_cross\_collisions}: The exact 4-cycle overlap evaluation of the explicitly constructed Hamming Ball.
-\end{enumerate}
-
-Our primary formal verification result is the machine-checked theorem:
-\begin{center}
-  \texttt{arrangement\_extraconnectivity\_minimum}
-\end{center}
-which verifies the absolute lower bound mapping to the sequence bounds established by our C++ engine:
-
-\begin{verbatim}
-theorem arrangement_extraconnectivity_minimum
-    (R n k : Nat) (h_cond : can_embed_hypercube R n k) :
-  (exists V' : Finset (ArrVertex n k), V'.card = R /\
-    external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
-  (forall V' : Finset (ArrVertex n k), V'.card = R ->
-    external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
-\end{verbatim}
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Conjectures}
 
