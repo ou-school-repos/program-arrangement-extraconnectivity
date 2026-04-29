@@ -89,7 +89,7 @@ The main contributions of this paper are:
 \section{Preliminaries}
 
 \begin{definition}[Notation]
-We denote the set {1, 2, \dots, m} by $[m]$. For a vertex $v$, the expression $v|_{[k]\setminus\{p\}}$ denotes the sequence of length $k-1$ obtained by removing the symbol at position $p$.
+We denote the set $\{1, 2, \dots, m\}$ by $[m]$. For a vertex $v$, the expression $v|_{[k]\setminus\{p\}}$ denotes the sequence of length $k-1$ obtained by removing the symbol at position $p$.
 \end{definition}
 
 \begin{definition}[Arrangement Graph]
@@ -476,15 +476,14 @@ Our primary formal verification result is the machine-checked theorem:
 \end{center}
 which verifies the absolute lower bound mapping to the sequence bounds established by our C++ engine:
 
-\begin{quote}
-\small \ttfamily
-theorem arrangement\_extraconnectivity\_minimum \\
-(R n k : $\mathbb{N}$) (h\_cond : can\_embed\_hypercube R n k) : \\
-($\exists$ V' : A(n,k), V'.card = R $\land$ \\
-external\_neighbors V' = (R * k - E\_seq R) * (n - k) - C\_constant R) $\land$ \\
-($\forall$ V' : A(n,k), V'.card = R $\to$ \\
-external\_neighbors V' $\ge$ (R * k - E\_seq R) * (n - k) - C\_constant R)
-\end{quote}
+\begin{verbatim}
+theorem arrangement_extraconnectivity_minimum
+    (R n k : Nat) (h_cond : can_embed_hypercube R n k) :
+  (exists V' : Finset (ArrVertex n k), V'.card = R /\
+    external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
+  (forall V' : Finset (ArrVertex n k), V'.card = R ->
+    external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
+\end{verbatim}
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Conjectures}
 
@@ -592,5 +591,3 @@ $R$ & $E_{seq}$ & $C_{const}$ & $R$ & $E_{seq}$ & $C_{const}$ & $R$ & $E_{seq}$ 
 \bibliography{references}
 
 \end{document}
-}
-}
