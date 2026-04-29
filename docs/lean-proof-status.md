@@ -10,7 +10,7 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 0 sorries, 3 axioms** (2 KK shadow bounds + 1 arithmetic identity).
+Current status: **0 errors, 0 sorries, 2 axioms** (2 Kruskal-Katona shadow bounds).
 
 ## Architecture
 
@@ -27,7 +27,7 @@ Current status: **0 errors, 0 sorries, 3 axioms** (2 KK shadow bounds + 1 arithm
 | Collision-Adjusted Bound | `external_neighbors_collision_bound`                   | PROVEN   |
 | Collision Axiom          | `max_collision_defect_bound` (KK shadow, R-only)       | AXIOM    |
 | Fiber Identity           | `total_coord_edges_eq` (fiber counting)                | PROVEN   |
-| Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                          | AXIOM    |
+| Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                          | PROVEN   |
 | Construction             | `hamming_ball_subset` (named, explicit)                | PROVEN   |
 | Evaluation               | `hamming_ball_eval` (boundary count)                   | PROVEN   |
 | Evaluation Axiom         | `hb_cross_collisions` (KK shadow, existential)         | AXIOM    |
@@ -88,14 +88,6 @@ arrangement_extraconnectivity_minimum
 - Computationally verified alongside Axiom 1.
 - Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
 
-### Bitwise Arithmetic Identity (`nat_popcount_eq_card_filter`)
-
-**What it says**: The number of 1-bits in the binary representation of $R$ up to bit $d$ is exactly `popcount R`.
-
-**Justification**:
-
-- Pure arithmetic logic over `Nat.testBit` and `popcount`. We axiomatized it to avoid deep recursive integer proofs that have no bearing on the graph topology itself.
-
 ## Embedding Condition
 
 ```lean
@@ -117,6 +109,7 @@ The **Algebraic Defect Squeeze** and **Asymptotic Penalty Theorem** — the nove
 - **Defect fiber bound** (`defect_fiber_bound`): The topological decomposition showing D(V') ≤ Σ D(Fₛ) + R - y.
 - **Universal lower bound** (`sum_unique_roots_lower_bound`): The defect bound D(V') ≤ E_seq(R) for ALL R-element subsets.
 - **Total Coordinate Edges** (`total_coord_edges_eq`): Mechanically double-counting the available $(n-k+1)$ extensions for each unique root via pure Finset bijections.
+- **Bitwise Arithmetic** (`nat_popcount_eq_card_filter`): Mechanically verifying the exact Finset bijection between `Nat.testBit` filters and the recursive `popcount` weight, by induction on the bit width with a partition-and-shift decomposition.
 - **Arithmetic squeeze** (`lower_bound_all_embeddings`): Composing the lemmas to pin the exact extraconnectivity.
 - **Asymptotic Penalty** (`sub_optimal_penalty`): Proving that topologies with a defect shortfall $\Delta E$ are unconditionally penalized by at least $\Delta E(n-k)$ boundary nodes.
 - **Hamming Ball construction** (`hamming_ball_subset`): Explicit construction with proven cardinality.

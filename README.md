@@ -43,13 +43,12 @@ While hypercubes feature degenerate isomorphisms for internal edge counts, the A
 
 The Algebraic Defect Framework and the Asymptotic Penalty Theorem are mechanically verified in **Lean 4**.
 
-We have established a strict logical separation: Lean 4 verifies the entirety of the graph theory, dimensional scaling, and boundary projections. We isolate classical extremal bounds to explicit axioms:
+We have established a strict logical separation: Lean 4 verifies 100% of the graph theory, dimensional scaling, bitwise arithmetic, and boundary projections from first principles. We isolate classical extremal bounds to exactly two explicit axioms:
 
-- `max_collision_defect_bound`: The Kruskal-Katona shadow bound for $R$-element subsets.
-- `hb_cross_collisions`: The exact 4-cycle shadow overlap count of the Hamming Ball.
-- `nat_popcount_eq_card_filter`: A basic arithmetic identity linking `Nat.testBit` to `popcount`.
+- `max_collision_defect_bound`: The universal Kruskal-Katona shadow bound for all $R$-element subsets.
+- `hb_cross_collisions`: The exact 4-cycle shadow overlap count of the explicitly constructed Hamming Ball.
 
-_(Both topological axioms are purely functions of $R$, independent of network dimensions $n$ and $k$, and are computationally verified for $R \le 20$ via our C++ engine)._
+_(Both axioms are purely functions of $R$, independent of network dimensions $n$ and $k$, and are computationally verified for $R \le 20$ via our C++ engine)._
 
 ### Open Conjectures (Mechanized as `Prop`s)
 
@@ -96,15 +95,3 @@ make lean
 
 _Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." (2022).
 _Dual Theory:_ E. Cheng, L. Lipták, L. Mazza. "Higher order matching preclusion for regular interconnection networks." (2025).
-
-```
-
-## Reference
-
-_Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." (2022).
-
-```
-
-```
-
-```
