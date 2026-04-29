@@ -69,7 +69,7 @@
 \maketitle
 
 \begin{abstract}
-We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for cluster sizes $R$ satisfying standard dimensional embedding conditions, observing a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$. We show that the optimal fault-isolation topologies are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, an approach that replaces the geometric compression methods traditional to hypercube isoperimetry, which we show are inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, demonstrating that sub-optimal topologies incur a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball remains the unique minimizer as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), both computationally verified up to $R=20$.
+We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for cluster sizes $R$ satisfying standard dimensional embedding conditions, observing a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$. We show that the boundary-minimizing subsets are embedded lexicographic Hamming Balls, which achieve maximum internal shielding matching the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, an approach that replaces the geometric compression methods traditional to hypercube isoperimetry, which we show are inapplicable to partial permutation spaces. We further establish the Asymptotic Penalty Theorem, demonstrating that any $R$-element subset failing to achieve the optimal defect incurs a linear penalty of $\Delta E \cdot (n-k)$ boundary nodes, ensuring the Hamming Ball remains the unique minimizer as the network scales. The core structural graph theory is mechanized in Lean 4, conditional upon two explicit isoperimetric propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), both computationally verified up to $R=20$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -100,7 +100,7 @@ The main contributions of this paper are:
     \item[(i)] Computational verification of the extraconnectivity formula for small $R$, illustrating a transition from structural degeneracy at $R=3$ to unique minimality for $R \ge 4$.
     \item[(ii)] Demonstration that standard geometric shift operators fail on partial permutation spaces, necessitating the development of the \emph{algebraic defect framework}.
     \item[(iii)] Introduction of the algebraic defect framework to decompose the vertex boundary into coordinate-wise roots, facilitating the mechanization of asymptotic dimension scaling.
-    \item[(iv)] Establishment of the Asymptotic Penalty Theorem, proving that sub-optimal topologies incur a linear penalty proportional to the network dimensions.
+    \item[(iv)] Establishment of the Asymptotic Penalty Theorem, proving that subsets failing to achieve the optimal defect incur a linear boundary penalty proportional to the network dimensions.
 \end{itemize}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -118,7 +118,7 @@ The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow [n
 For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size $n-k+1$ obtained by filling the missing coordinate with any available symbol. The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques that intersect the set $V'$ at coordinate $p$:
 \begin{equation*}
 U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}
-\end{equation*} The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of these coordinate-aligned lines our set touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal ``shielding''. For topologies that embed isometrically into hypercubes, $D(V')$ exactly equals the number of internal edges. For dense cliques, it acts as a robust algebraic proxy for root duplications that naturally prevents geometric over-counting.
+\end{equation*} The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of these coordinate-aligned lines our set touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal ``shielding''. For subsets that embed isometrically into hypercubes, $D(V')$ exactly equals the number of internal edges. For dense cliques, it acts as a robust algebraic proxy for root duplications that naturally prevents geometric over-counting.
 \end{definition}
 
 \begin{example}
@@ -188,7 +188,7 @@ To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)
 
 To bypass the $\Omega(R^{R-2})$ growth of labeled trees, we scaled exhaustive topological search up to $R=20$ using a symmetry-aware evaluation engine (utilizing McKay's \texttt{nauty} library for canonical pruning).
 
-This algorithmic verification confirms that the maximum internal edges for connected subgraphs correspond to OEIS A000788 \cite{oeis_A000788}, identifying the optimal topologies as embedded lexicographic Hamming Balls. These insights allowed us to develop an $O(R^4)$ characterization engine for arbitrary dimensions.
+This algorithmic verification confirms that the maximum internal edges for connected subgraphs correspond to OEIS A000788 \cite{oeis_A000788}, identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. These insights allowed us to develop an $O(R^4)$ characterization engine for arbitrary dimensions.
 
 \begin{table}[ht]
 \centering
@@ -403,14 +403,14 @@ These propositions encode the extremal content of the Kruskal-Katona shadow theo
   \draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
   \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Isoperimetric\\Gap:\\$E=11$\\Impossible};
 \end{tikzpicture}
-\caption{Visualization of Isometric Rigidity. At $R=8$, the optimal embedded hypercube achieves 12 internal edges. Modifying the topology immediately breaks at least two edges, creating an "isoperimetric gap" at $E=11$.}
+\caption{Isometric rigidity at $R=8$: $\mathrm{HB}_8$ achieves $E_{int}=12$. Removing any edge from the $Q_3$ embedding breaks at least two edges, making $E_{int}=11$ impossible for connected $|V'|=8$ subgraphs.}
 \label{fig:fracture}
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{The Isoperimetric Sandwich \& Asymptotic Penalty}
 
-We propose the following bounds regarding the isoperimetrically optimal frontier of connected subgraphs, supported by exhaustive computational search up to $R=20$:
+We propose the following bounds regarding the isoperimetrically optimal connected subgraphs, supported by exhaustive computational search up to $R=20$:
 
 \begin{theorem}[The Dense Limit Lower Bound]
 The external boundary of any connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded below by the Hamming Ball, which achieves maximum internal shielding with $E_{int} = E_{seq}(R)$:
@@ -430,14 +430,14 @@ The external boundary of any isoperimetrically optimal connected $R$-vertex subg
 Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
-If a topology fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E = E_{seq}(R) - E_{int}(V')$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
+If a subset $V'$ fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E = E_{seq}(R) - E_{int}(V')$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
 \end{theorem}
 To understand this mechanism mathematically, we return to the exact boundary equation derived via the Algebraic Defect Framework:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big)
 \end{equation*}
 
-Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a sub-optimal topology falls short of the optimal Hamming Ball defect by $\Delta E$, it must inherently project onto $\Delta E$ \emph{additional} unique roots to maintain its vertex count ($U_{sub} = U_{opt} + \Delta E$).
+Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a subset $V'$ falls short of the optimal Hamming Ball defect by $\Delta E$, it must project onto $\Delta E$ \emph{additional} unique roots to maintain its vertex count ($U_{sub} = U_{opt} + \Delta E$).
 
 Substituting this into the boundary equation yields the comparative boundary size:
 \begin{align*}
@@ -449,16 +449,16 @@ This formulation isolates the asymptotic behavior. The fluctuation in internal e
 
 \subsection{Numerical Illustration}
 
-To visualize the Asymptotic Penalty and the effects of structural rigidity, we compare the Hamming Ball with sub-optimal connected topologies for a cluster of size $R=8, k=4$.
+To visualize the Asymptotic Penalty and the effects of structural rigidity, we compare the Hamming Ball with other connected $|V'|=8$ subgraphs for $k=4$.
 
 \paragraph{Competitive Spectrum at $R=8$ ($|V'| \cdot k = 32$):}
 \begin{enumerate}
     \item \textbf{Hamming Ball (Best):} $E_{int}=12$ (the perfect 3D-cube). $U = 32 - 12 = 20$. Constant $C=12$.
-    \item \textbf{Fractured Cube (2nd Best):} $E_{int}=10$ (the next available connected topology). $U = 32 - 10 = 22$. Constant $C \approx 14$.
+    \item \textbf{Fractured Cube (2nd Best):} $E_{int}=10$ (the next available connected subgraph). $U = 32 - 10 = 22$. Constant $C \approx 14$.
     \item \textbf{Star Graph (Sparse Limit):} $E_{int}=7$ (the minimum connectivity). $U = 32 - 7 = 25$. Constant $C = 28$.
 \end{enumerate}
 
-The gap between the optimal and 2nd best solutions is maximized at powers of 2 due to the \emph{Isoperimetric Gap}. As shown in Table~\ref{tab:comparison_r8}, even the most competitive sub-optimal topology ($E=10$) pays a linear penalty of $2(n-4)$ relative to the Hamming Ball.
+The gap between the optimal and 2nd best solutions is maximized at powers of 2 due to the \emph{Isoperimetric Gap}. As shown in Table~\ref{tab:comparison_r8}, even the most competitive alternative subset ($E=10$) pays a linear penalty of $2(n-4)$ relative to the Hamming Ball.
 
 \begin{table}[ht]
 \centering
@@ -493,7 +493,7 @@ Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Isoperimetric Gap ($\Delta E$) \
 \end{tabular}
 \end{table}
 
-The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins by 464 vertices against a Star Graph and by 190 vertices against the second-best connected topology. In large-scale systems, this linear divergence ensures that the Hamming Ball remains the unique, dominant fault-isolation topology.
+The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins by 464 vertices against a Star Graph and by 190 vertices against the second-best connected subgraph. In large-scale systems, this linear divergence ensures that the Hamming Ball remains the unique boundary minimizer.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Conjectures}
@@ -505,13 +505,13 @@ While generic hypercubes contain degenerate isomorphisms for internal edge count
 \end{conjecture}
 
 \begin{conjecture}[The Isoperimetric Gap]
-For perfect hypercubes ($R=2^d$), intermediate edge counts are geometrically impossible. The gap in internal edges between the optimal Hamming Ball and the second-best connected topology is exactly $d-1$. (e.g., at $R=8$, achieving exactly 11 internal edges is impossible; the topology fractures directly from 12 down to 10).
+For perfect hypercubes ($R=2^d$), intermediate edge counts are geometrically impossible. The gap in internal edges between the optimal Hamming Ball and the second-best connected subgraph is exactly $d-1$. (e.g., at $R=8$, achieving exactly 11 internal edges is impossible; the induced subgraph fractures directly from 12 down to 10).
 \end{conjecture}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
 
-The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n,k)$ for all $R$, replacing previously used geometric tools with a verified algebraic framework. The formalization provides a definitive foundation for future research on topological isoperimetrically optimal frontiers in large-scale interconnection networks.
+The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n,k)$ for all $R$, replacing previously used geometric tools with a verified algebraic framework. The formalization provides a definitive foundation for future research on isoperimetric bounds in large-scale interconnection networks.
 
 % ════════════════════════════════════════════════════════════════════════
 \appendix
@@ -544,7 +544,7 @@ Figures \ref{fig:r9} and \ref{fig:r10} visualize the exact optimal subset graph 
 
 \begin{table}[H]
 \centering
-\caption{Exact Topological Minimum-Cut Bounds ($R=2$ to $R=130$)}
+\caption{Exact minimum-cut bounds ($R=2$ to $R=130$)}
 \small
 \begin{tabular}{ccc|ccc|ccc}
 \toprule
