@@ -530,7 +530,13 @@ In both cases, $|E(S)| \le d\,2^{d-1} - (d-1)$, leaving exactly $d-1$ forbidden 
 For any $R$, every integer edge count from $R-1$ (spanning tree) up to the second-best connected subgraph is achievable.
 \end{theorem}
 \begin{proof}
-The minimum edge count for a connected graph on $R$ vertices is $R-1$ (a spanning tree). Any connected subgraph with $E_{int} > R-1$ contains at least one cycle. Pick a vertex $v$ in that cycle and replace one of its coordinates with an unused symbol from the $(n-k)$ available alphabet. This preserves connectivity (the cycle had an alternate path around $v$) but breaks exactly one internal edge, reducing $E_{int}$ by 1. Repeating this walks the edge count down to $R-1$ one step at a time.
+The minimum edge count for a connected graph on $R$ vertices is $R-1$ (a spanning tree). We construct subgraphs achieving every intermediate count.
+
+The Hamming Ball sequence builds vertices incrementally: vertex $i$ (in binary order) joins the existing $\mathrm{HB}_{i-1}$ with exactly $c_i = \mathrm{popcount}(i-1)$ edges, one per shared coordinate. The cumulative count $E_{seq}(i) = \sum_{j=0}^{i-1} \mathrm{popcount}(j)$ therefore grows in steps of size $c_i$.
+
+For each step $c_i \ge 2$, the vertex $i$ connects to $\mathrm{HB}_{i-1}$ via $c_i$ coordinate positions. By placing the $i$-th vertex at a position that matches only $m$ of these $c_i$ coordinates (using fresh symbols in the remaining $c_i - m$ positions), we obtain a connected $i$-vertex subgraph with $E_{seq}(i-1) + m$ internal edges for any $1 \le m \le c_i$. This fills every integer in $[E_{seq}(i-1) + 1,\; E_{seq}(i)]$.
+
+Concatenating these intervals for $i = 2, \ldots, R$ covers every integer from $1 = E_{seq}(2) - c_2 + 1$ up to $E_{seq}(R) - \gamma(R)$. The spanning tree at $R-1$ edges is achieved by a path.
 \end{proof}
 
 Together, these results completely characterize the achievable edge counts for $R = 2^d$. At $R = 8$ ($d = 3$), the Hamming Ball achieves $E = 12$, the fracture gap forbids $E = 11$, and continuity fills in $\{7, 8, 9, 10\}$. The full set of realizable counts is $\{7, 8, 9, 10, 12\}$.
@@ -545,7 +551,7 @@ Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$... but mo
 
 When $c \ge 2$: the $R$-th vertex has $c$ neighbors in $\mathrm{HB}_{R-1}$ corresponding to $c$ coordinate positions. By shifting one coordinate to a fresh symbol not used by any neighbor, we break one adjacency while preserving the remaining $c - 1 \ge 1$ connections, maintaining connectivity.
 
-When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this without disconnecting. Instead, since $d \ge 2$, the subcube $Q_d$ contains cycles. We apply the unfolding operation of Theorem~\ref{them:continuity} to an internal cycle edge of $Q_d$ (choosing a vertex that is not the sole neighbor of vertex $R-1$), reducing $E_{int}$ by 1 while preserving the connectivity of the full $R$-vertex subgraph.
+When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this connection without disconnecting. Instead, by Theorem~\ref{them:continuity}, the constructive Hamming Ball sequence already achieves every edge count up to $E_{seq}(R) - \gamma(R) = E_{seq}(R)$ (since $\gamma(R) = 0$), so $E_{seq}(R) - 1$ is achievable.
 
 In both cases, the resulting subgraph has $E_{seq}(R) - 1$ internal edges and is connected.
 \end{proof}
