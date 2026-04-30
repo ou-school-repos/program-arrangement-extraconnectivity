@@ -70,7 +70,7 @@
 \maketitle
 
 \begin{abstract}
-We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. At $R = 3$ the minimizer is non-unique (the Hamming Ball and Star Graph coincide); for $R \ge 4$ the lexicographic Hamming Ball is the unique boundary-minimizing subset, whose internal edge count matches the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We further establish the Asymptotic Penalty Theorem: any $R$-element subset missing even a single optimal internal edge incurs a penalty of at least $(n-k)$ additional boundary nodes, ensuring the Hamming Ball dominates as the network scales. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), both computationally verified up to $R=260$.
+We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. At $R = 3$ the minimizer is non-unique (the Hamming Ball and Star Graph coincide); for $R \ge 4$ the lexicographic Hamming Ball is the unique boundary-minimizing subset, whose internal edge count matches the cumulative binary weight sequence (OEIS A000788). To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We further establish the Asymptotic Penalty Theorem: any $R$-element subset missing even a single optimal internal edge incurs a penalty of at least $(n-k)$ additional boundary nodes, ensuring the Hamming Ball dominates as the network scales. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), verified exhaustively up to $R=10$ and by our characterization engine up to $R=260$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -80,7 +80,7 @@ The arrangement graph $A(n,k)$, introduced by Day and Tripathi \cite{day1992arra
 
 The $h$-extraconnectivity $\kappa_h(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $h$ vertices. The ``linearly many faults'' property, established for arrangement graphs by Cheng, Lipt\'ak, and Yuan \cite{cheng2013linearly}, proves that any minimum vertex cut isolates a single connected cluster of exactly $R = h+1$ nodes. Thus the global extraconnectivity problem reduces to finding the $R$-element subset with the smallest external boundary. Cheng et al.\ \cite{cheng2022extraconnectivity} solved this case-by-case for $R \le 7$; this paper provides the general closed-form solution for all $R$. This vertex-fault metric serves as a natural dual to the edge-fault matching preclusion metrics recently explored for regular interconnection networks in \cite{cheng2025higher}.
 
-In this paper, we provide a general closed-form formula for arbitrary subset sizes $R$. We prove that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external boundary of any $R$-element subset is bounded below by an explicit function of $R$, $k$, and $(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball when $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. The full statement appears as Theorem~\ref{them:main}.
+We prove that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external boundary of any $R$-element subset is bounded below by an explicit function of $R$, $k$, and $(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball when $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. The full statement appears as Theorem~\ref{them:main}.
 
 Our approach proceeds in three steps:
 \begin{itemize}
@@ -646,7 +646,7 @@ The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now
 For $R = 2^d$, the gap between the optimal internal edge count $E_{seq}(R) = d\,2^{d-1}$ and the next achievable count for a connected $R$-vertex subgraph is exactly $d-1$.
 \end{theorem}
 \begin{proof}
-By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$.
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Although $A(n,k)$ has a larger alphabet and is denser than a hypercube, Theorem~\ref{them:defect} bounds the internal edge count by $D(V') \le E_{seq}(R) = d\,2^{d-1}$, so $A(n,k)$ cannot exceed this ceiling.
 
 Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
 
