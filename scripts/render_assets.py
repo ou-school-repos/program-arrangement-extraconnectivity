@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-import sys
-import subprocess
 import os
+import subprocess
+
 
 def to_bin(i, d):
     return bin(i)[2:].zfill(d)
+
 
 def gen_comparison_dot(d, output):
     """
@@ -17,8 +18,21 @@ def gen_comparison_dot(d, output):
 
     with open(output, "w") as f:
         f.write(f'graph Comparison_{d} {{\n')
-        f.write(f'  graph [label="Stability Analysis (R={R})\\nOptimal vs Fractured", labelloc=t, fontname="Helvetica-bold", fontsize=20];\n')
-        f.write('  node [fontname="Helvetica", style=filled, shape=circle, width=0.6];\n')
+        label = (
+            f'"Stability Analysis (R={R})'
+            f'\\nOptimal vs Fractured"'
+        )
+        f.write(
+            f"  graph [label={label},"
+            f" labelloc=t,"
+            f' fontname="Helvetica-bold",'
+            f" fontsize=20];\n"
+        )
+        f.write(
+            '  node [fontname="Helvetica",'
+            ' style=filled, shape=circle,'
+            ' width=0.6];\n'
+        )
         f.write('  edge [penwidth=1.2];\n')
 
         # Optimal Cluster
@@ -47,10 +61,19 @@ def gen_comparison_dot(d, output):
                     f.write(f'    f{i} -- f{j};\n')
 
         # The Fractured/Splintered Node
-        f.write(f'    f{R-1} [fillcolor=orange, label="{to_bin(R-1, d)}\n(Splintered)"];\n')
-        f.write(f'    f0 -- f{R-1} [color=red, penwidth=3.0, label="Rigidity\nBreak"];\n')
+        lbl = to_bin(R - 1, d)
+        f.write(
+            f'    f{R-1} [fillcolor=orange,'
+            f' label="{lbl}\n(Splintered)"];\n'
+        )
+        f.write(
+            f'    f0 -- f{R-1} [color=red,'
+            f' penwidth=3.0,'
+            f' label="Rigidity\nBreak"];\n'
+        )
         f.write('  }\n')
         f.write('}\n')
+
 
 def render_dots(asset_dir="assets", output_dir="assets/out"):
     """
@@ -79,6 +102,7 @@ def render_dots(asset_dir="assets", output_dir="assets/out"):
             print(f"  ✓ Rendered: {output_path}")
         except subprocess.CalledProcessError as e:
             print(f"  ✗ Failed: {input_path} ({e})")
+
 
 if __name__ == "__main__":
     # Generate side-by-side comparison DOTs natively

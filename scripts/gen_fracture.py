@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
+# Generate fracture graph DOT files
 import sys
 
 
@@ -11,8 +11,14 @@ def gen_hypercube_dot(d, output):
     E = d * (2 ** (d - 1))
     with open(output, "w") as f:
         f.write(f"graph Hypercube_{d} {{\n")
+        label = (
+            f'"Optimal {d}-Cube (R={R}, E={E})"'
+        )
         f.write(
-            f'  graph [label="Optimal {d}-Cube (R={R}, E={E})", labelloc=t, fontname="Helvetica-bold", fontsize=20];\n'
+            f"  graph [label={label},"
+            f" labelloc=t,"
+            f' fontname="Helvetica-bold",'
+            f" fontsize=20];\n"
         )
         f.write('  node [fontname="Helvetica", style=filled, fillcolor=lightblue];\n')
         for i in range(R):
@@ -33,8 +39,14 @@ def gen_fracture_dot(d, output):
     E_max = E_opt - d + 1
     with open(output, "w") as f:
         f.write(f"graph Fracture_{d} {{\n")
+        label = (
+            f'"Fractured {d}-Cube (R={R}, E={E_max})"'
+        )
         f.write(
-            f'  graph [label="Fractured {d}-Cube (R={R}, E={E_max})", labelloc=t, fontname="Helvetica-bold", fontsize=20];\n'
+            f"  graph [label={label},"
+            f" labelloc=t,"
+            f' fontname="Helvetica-bold",'
+            f" fontsize=20];\n"
         )
         f.write('  node [fontname="Helvetica", style=filled];\n')
 
