@@ -298,7 +298,34 @@ The exact boundary size is then:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation*}
-The optimality of the Hamming Ball is captured by two extremal propositions. Together, they form the ``Algebraic Squeeze'': the first bounds \emph{all} subsets from above, and the second shows the Hamming Ball \emph{achieves} equality.
+The algebraic engine of this framework is a novel subadditivity inequality for the cumulative popcount sequence $E_{seq}$.
+
+\begin{lemma}[Subadditivity of A000788]\label{lem:subadditivity}
+For all $x, y \in \mathbb{N}$:
+\begin{equation*}
+E_{seq}(x) + E_{seq}(y) + \min(x, y) \leq E_{seq}(x + y).
+\end{equation*}
+\end{lemma}
+
+\begin{proof}
+By strong induction on $x + y$, case-splitting on the parity of both arguments and applying the even/odd recurrences $E_{seq}(2m) = 2\, E_{seq}(m) + m$ and $E_{seq}(2m+1) = E_{seq}(m) + E_{seq}(m+1) + m$. Each of the four parity cases reduces to the inductive hypothesis at strictly smaller arguments. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
+\end{proof}
+
+This inequality generalizes from binary splits to arbitrary partitions, yielding the central structural theorem: the Hamming Ball maximizes the defect among all connected subgraphs.
+
+\begin{theorem}[Defect Bound]\label{them:defect}
+For any $R$-element subset $V' \subseteq V(A(n,k))$:
+\begin{equation*}
+D(V') \leq E_{seq}(R).
+\end{equation*}
+Equivalently, $U(V') \geq R \cdot k - E_{seq}(R)$.
+\end{theorem}
+
+\begin{proof}
+By strong induction on $R$. For $R \ge 2$, choose a coordinate $p$ at which two vertices of $V'$ disagree and partition $V'$ into fibers $\{F_s\}$ by the symbol at position $p$. Each fiber is strictly smaller than $V'$, so the inductive hypothesis gives $D(F_s) \leq E_{seq}(|F_s|)$. The root-disjointness structure at coordinates $q \neq p$ yields the decomposition $D(V') \leq \sum_s D(F_s) + R - y$, where $y = |U_p(V')|$. Applying the generalized partition subadditivity (iterated Lemma~\ref{lem:subadditivity}) closes the induction. Mechanically verified in Lean~4 (\texttt{sum\_unique\_roots\_lower\_bound}).
+\end{proof}
+
+The optimality of the Hamming Ball for the \emph{collision} term is captured by two extremal propositions. Together with Theorem~\ref{them:defect}, they form the ``Algebraic Squeeze'': the Defect Bound controls $D(V')$, while the first proposition bounds the combined waste $X(V') + D(V')$ for \emph{all} subsets, and the second shows the Hamming Ball \emph{achieves} equality.
 
 \begin{proposition}[Universal Shadow Bound]\label{prop:universal}
 For every $R$-element subset $V' \subseteq V(A(n,k))$:
