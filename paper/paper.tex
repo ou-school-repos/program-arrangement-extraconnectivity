@@ -453,18 +453,18 @@ This formulation isolates the asymptotic behavior. The fluctuation in internal e
 
 To visualize the Asymptotic Penalty and the effects of structural rigidity, we compare the Hamming Ball with other connected $|V'|=8$ subgraphs for $k=4$.
 
-\paragraph{Competitive Spectrum at $R=8$ ($|V'| \cdot k = 32$):}
+\paragraph{Competing subsets at $R=8$ ($|V'| \cdot k = 32$):}
 \begin{enumerate}
     \item \textbf{Hamming Ball (Best):} $E_{int}=12$ (the perfect 3D-cube). $U = 32 - 12 = 20$. Constant $C=12$.
     \item \textbf{Fractured Cube (2nd Best):} $E_{int}=10$ (the next available connected subgraph). $U = 32 - 10 = 22$. Constant $C \approx 14$.
     \item \textbf{Star Graph (Sparse Limit):} $E_{int}=7$ (the minimum connectivity). $U = 32 - 7 = 25$. Constant $C = 28$.
 \end{enumerate}
 
-The gap between the optimal and 2nd best solutions is maximized at powers of 2 due to the \emph{Isoperimetric Gap}. As shown in Table~\ref{tab:comparison_r8}, even the most competitive alternative subset ($E=10$) pays a linear penalty of $2(n-4)$ relative to the Hamming Ball.
+The gap between the optimal and 2nd best solutions is maximized at powers of 2. As shown in Table~\ref{tab:comparison_r8}, even the most competitive alternative subset ($E=10$) pays a linear penalty of $2(n-4)$ relative to the Hamming Ball.
 
 \begin{table}[ht]
 \centering
-\caption{Boundary spectrum for $R=8, k=4$ (Penalty relative to Hamming Ball).}
+\caption{Boundary penalty for sub-optimal subsets at $R=8, k=4$.}
 \label{tab:comparison_r8}
 \begin{tabular}{@{}lccc@{}}
 \toprule
@@ -478,15 +478,15 @@ Topology & $E_{int}$ & Boundary Formula & Penalty ($n=16$) \\
 \end{table}
 
 \paragraph{Convergence Near Powers of 2 ($R=7$ vs $R=8$):}
-The "dominance" of the Hamming Ball fluctuates based on how closely $R$ fits a perfect hypercube embedding. At $R=7$, the gap between the optimal ($E=9$) and the 2nd best ($E=8$) is only $1(n-k)$, whereas at $R=8$, the gap "jumps" to $2(n-k)$ because $E=11$ is geometrically impossible. This illustrates the \emph{Isometric Rigidity} of the arrangement graph: at powers of 2, the optimal solution becomes exponentially more stable than its nearest competitors as the network dimensions scale.
+The "dominance" of the Hamming Ball fluctuates based on how closely $R$ fits a perfect hypercube embedding. At $R=7$, the gap between the optimal ($E=9$) and the 2nd best ($E=8$) is only $1(n-k)$, whereas at $R=8$, the gap jumps to $2(n-k)$ because $E=11$ is unrealizable (see Open Problem~\ref{prob:suboptimal}). At powers of 2, the optimal solution becomes increasingly stable relative to its nearest competitors as the network dimensions scale.
 
 \begin{table}[ht]
 \centering
-\caption{The Isoperimetric Gap jump between $R=7$ and $R=8$.}
+\caption{Edge count gap between $R=7$ and $R=8$.}
 \label{tab:gap_jump}
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Isoperimetric Gap ($\Delta E$) \\
+Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Gap ($\Delta E$) \\
 \midrule
 7 (Near-Cube) & 9  & 8  & 1 \\
 8 (Perfect Cube) & 12 & 10 & 2 \\
@@ -498,25 +498,18 @@ Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Isoperimetric Gap ($\Delta E$) \
 The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins by 464 vertices against a Star Graph and by 190 vertices against the second-best connected subgraph. In large-scale systems, this linear divergence ensures that the Hamming Ball remains the unique boundary minimizer.
 
 % ════════════════════════════════════════════════════════════════════════
-\section{Open Conjectures}
+\section{Open Problems}
 
-To provide a mathematically unambiguous foundation for future research, the remaining boundaries have been formalized as rigorous \texttt{Prop} declarations in our repository:
+The following question remains open and has been formalized as a \texttt{Prop} declaration in our repository:
 
-\begin{conjecture}[Uniqueness Tie-Breaker]
-While generic hypercubes contain degenerate isomorphisms for internal edge counts, the collision constant $C_{const}(R)$ acts as a geometric tie-breaker. Because the Hamming Ball strictly maximizes 4-cycle overlaps, any set achieving the minimum boundary must be isomorphic to the Hamming Ball.
-\end{conjecture}
-
-\begin{conjecture}[The Isoperimetric Gap]
-For perfect hypercubes ($R=2^d$), intermediate edge counts are geometrically impossible. The gap in internal edges between the optimal Hamming Ball and the second-best connected subgraph is exactly $d-1$. (e.g., at $R=8$, achieving exactly 11 internal edges is impossible; the induced subgraph fractures directly from 12 down to 10).
-\end{conjecture}
-
-\begin{problem}[Edge Spectrum Classification]
-For each $R$, determine the \emph{achievable edge spectrum}: the set of integers $E$ for which there exists a connected $R$-vertex subgraph of $A(n,k)$ with exactly $E$ internal edges. For each achievable $E$, determine:
+\begin{problem}[Sub-optimal Solution Distribution]\label{prob:suboptimal}
+For each $R$, classify the connected $R$-vertex subgraphs that fall short of the Hamming Ball optimum. Specifically:
 \begin{enumerate}
-\item the number of non-isomorphic connected subgraphs achieving $E$;
-\item the boundary penalty $\Delta E \cdot (n-k) + (C_{const}(R) - (X+D))$ relative to the Hamming Ball.
+\item \textbf{Gaps.} Which internal edge counts $E$ between $R-1$ (the star graph) and $E_{seq}(R)$ (the Hamming Ball) are realizable by some connected subgraph, and which are not? At $R = 2^d$, we observe that the gap between $E_{seq}(R)$ and the next achievable $E$ is exactly $d-1$ (e.g., at $R=8$, no connected subgraph achieves $E=11$; the count drops from 12 directly to 10).
+\item \textbf{Multiplicity.} How many non-isomorphic subgraphs achieve each realizable $E$? In particular, is the Hamming Ball the \emph{unique} subgraph achieving $E = E_{seq}(R)$ for all $R \ge 4$?
+\item \textbf{Penalty.} What is the exact boundary penalty $\Delta E \cdot (n-k) + (C_{const}(R) - (X+D))$ for each sub-optimal configuration relative to the Hamming Ball?
 \end{enumerate}
-Our exhaustive enumeration confirms the spectrum up to $R = 10$; extending this classification to arbitrary $R$ remains open.
+Our exhaustive enumeration characterizes this distribution up to $R = 10$.
 \end{problem}
 
 % ════════════════════════════════════════════════════════════════════════
