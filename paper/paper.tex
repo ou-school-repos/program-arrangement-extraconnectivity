@@ -289,7 +289,7 @@ The exact boundary size is then:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation*}
-The isoperimetric optimality of the Hamming Ball is captured by two extremal propositions. Together, they form the ``Algebraic Squeeze'': the first bounds \emph{all} subsets from above, and the second shows the Hamming Ball \emph{achieves} equality.
+The optimality of the Hamming Ball is captured by two extremal propositions. Together, they form the ``Algebraic Squeeze'': the first bounds \emph{all} subsets from above, and the second shows the Hamming Ball \emph{achieves} equality.
 
 \begin{proposition}[Universal Shadow Bound]\label{prop:universal}
 For every $R$-element subset $V' \subseteq V(A(n,k))$:
@@ -376,7 +376,7 @@ The embedding condition in (ii) ensures the graph is large enough to fit a $\lce
   % Title
   \node[font=\bfseries] at (4.75, 5.5) {Forbidden Edge Densities for $|V'|=8$ in $A(n,k)$};
 
-  % Left side: Optimal Topology (Hamming Ball)
+  % Left side: Optimal subset (Hamming Ball)
   \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {$V'=\mathrm{HB}_8$ \\ (Hamming Ball)};
   \node at (1.5, 3.5) {$E = 12$};
 
@@ -390,7 +390,7 @@ The embedding condition in (ii) ensures the graph is large enough to fit a $\lce
   \fill[blue!80!black] (1,2) circle (0.1);
   \fill[blue!80!black] (2,2) circle (0.1);
 
-  % Right side: Second Best Topology
+  % Right side: Second Best subset
   \begin{scope}[xshift=1.5cm]
   \node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {Next-best $V'$ \\ ($|V'|=8$)};
   \node at (6.5, 3.5) {$E = 10$};
@@ -408,11 +408,11 @@ The embedding condition in (ii) ensures the graph is large enough to fit a $\lce
   \node[text=red, font=\bfseries] at (7, 1.5) {X};
   \end{scope}
 
-  % Connecting arrow with "Isoperimetric Gap"
+  % Connecting arrow with gap label
   \draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
-  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Isoperimetric\\Gap:\\$E=11$\\Impossible};
+  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$E=11$\\Impossible};
 \end{tikzpicture}
-\caption{Isometric rigidity at $R=8$: $\mathrm{HB}_8$ achieves $E_{int}=12$. Removing any edge from the $Q_3$ embedding breaks at least two edges, making $E_{int}=11$ impossible for connected $|V'|=8$ subgraphs.}
+\caption{Structural rigidity at $R=8$: $\mathrm{HB}_8$ achieves $E_{int}=12$. Removing any edge from the $Q_3$ embedding breaks at least two edges, making $E_{int}=11$ impossible for connected $|V'|=8$ subgraphs.}
 \label{fig:fracture}
 \end{figure}
 
@@ -422,7 +422,7 @@ The embedding condition in (ii) ensures the graph is large enough to fit a $\lce
 The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
-The external boundary of any isoperimetrically optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which minimizes collisions with $E_{int} = R-1$ and $C = \binom{R}{2}$:
+The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which minimizes collisions with $E_{int} = R-1$ and $C = \binom{R}{2}$:
 \begin{equation*}
 \left| \partial_{\mathrm{ext}}(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
 \end{equation*}
@@ -456,7 +456,7 @@ To visualize the Asymptotic Penalty and the effects of structural rigidity, we c
 \paragraph{Competing subsets at $R=8$ ($|V'| \cdot k = 32$):}
 \begin{enumerate}
     \item \textbf{Hamming Ball (Best):} $E_{int}=12$ (the perfect 3D-cube). $U = 32 - 12 = 20$. Constant $C=12$.
-    \item \textbf{Fractured Cube (2nd Best):} $E_{int}=10$ (the next available connected subgraph). $U = 32 - 10 = 22$. Constant $C \approx 14$.
+    \item \textbf{Fractured Cube (2nd Best):} $E_{int}=10$ (the next available connected subgraph). $U = 32 - 10 = 22$. Constant $C = 14$.
     \item \textbf{Star Graph (Sparse Limit):} $E_{int}=7$ (the minimum connectivity). $U = 32 - 7 = 25$. Constant $C = 28$.
 \end{enumerate}
 
@@ -468,7 +468,7 @@ The gap between the optimal and 2nd best solutions is maximized at powers of 2. 
 \label{tab:comparison_r8}
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Topology & $E_{int}$ & Boundary Formula & Penalty ($n=16$) \\
+Subset & $E_{int}$ & Boundary Formula & Penalty ($n=16$) \\
 \midrule
 \textbf{Hamming Ball} & 12 & $20(n-4) - 12$ & 0 (228 nodes) \\
 \textbf{2nd Best}     & 10 & $22(n-4) - 14$ & $2(n-4)-2 = 22$ \\
@@ -515,11 +515,11 @@ Our exhaustive enumeration characterizes this distribution up to $R = 10$.
 % ════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
 
-The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n,k)$ for all $R$, replacing previously used geometric tools with a verified algebraic framework. The formalization provides a definitive foundation for future research on isoperimetric bounds in large-scale interconnection networks.
+The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n,k)$ for all $R$, replacing previously used geometric tools with a verified algebraic framework. The formalization provides a definitive foundation for future research on boundary-minimization problems in large-scale interconnection networks.
 
 % ════════════════════════════════════════════════════════════════════════
 \appendix
-\section{Computational Bounds and Topological Visualizations}
+\section{Computational Bounds and Visualizations}
 
 Exhaustive enumeration of connected subgraphs becomes intractable beyond $R=7$. Figure~\ref{fig:complexity} illustrates the efficiency of our $O(R^4)$ characterization engine compared to brute-force search (which grows as $\Omega(R^{R-2})$), enabling exact boundary computation for arbitrary $R$.
 
