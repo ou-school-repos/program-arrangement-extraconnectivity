@@ -370,6 +370,14 @@ C_{const}(R) = (R - 1) + \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - E_{seq}(R)
 The embedding condition in (ii) ensures the graph is large enough to fit a $\lceil \log_2 R \rceil$-dimensional hypercube.
 \end{theorem}
 
+\begin{proof}
+\textbf{Part~(i).}  By Theorem~\ref{them:defect}, $D(V') \le E_{seq}(R)$, so $U(V') \ge R \cdot k - E_{seq}(R)$.  Each of these $U(V')$ unique roots contributes $(n-k)$ external neighbors minus at most one collision, giving
+$|\partial_{\mathrm{ext}}(V')| \ge U(V') \cdot (n-k) - X(V') - D(V')$.
+Proposition~\ref{prop:universal} bounds the waste: $X(V') + D(V') \le C_{const}(R)$.  Substituting yields the lower bound.
+
+\textbf{Part~(ii).}  Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) + E_{seq}(R) = C_{const}(R)$, so the Hamming Ball achieves equality in the lower bound.  The embedding condition ensures $A(n,k)$ has a large enough alphabet and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
+\end{proof}
+
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
