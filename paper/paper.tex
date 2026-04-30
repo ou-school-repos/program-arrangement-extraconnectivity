@@ -541,7 +541,28 @@ In both cases, the resulting subgraph has $E_{seq}(R) - 1$ internal edges and is
 \[
 \mathcal{E}(R) = \{R-1,\; R,\; \ldots,\; E_{seq}(R) - g(R)\} \;\cup\; \{E_{seq}(R)\}
 \]
-where $g(R) = d - 1$ if $R = 2^d$, and $g(R) = 0$ otherwise.
+where $g(R) = d - 1$ if $R = 2^d$, and $g(R) = 0$ otherwise. Table~\ref{tab:edge_spectrum} illustrates this for selected values of $R$.
+
+\begin{table}[ht]
+\centering
+\caption{Achievable edge counts $\mathcal{E}(R)$ for selected $R$. Powers of 2 exhibit a fracture gap of $d{-}1$; all other $R$ have no gap.}
+\label{tab:edge_spectrum}
+\begin{tabular}{rrrrl}
+\toprule
+$R$ & $E_{seq}(R)$ & $g(R)$ & $|\mathcal{E}(R)|$ & Achievable range \\
+\midrule
+$8 = 2^3$   & 12  & 2 & 6   & $\{7,\ldots,10\} \cup \{12\}$ \\
+9           & 13  & 0 & 6   & $\{8,\ldots,13\}$ \\
+10          & 15  & 0 & 7   & $\{9,\ldots,15\}$ \\
+12          & 20  & 0 & 10  & $\{11,\ldots,20\}$ \\
+15          & 28  & 0 & 15  & $\{14,\ldots,28\}$ \\
+$16 = 2^4$  & 32  & 3 & 16  & $\{15,\ldots,29\} \cup \{32\}$ \\
+17          & 33  & 0 & 18  & $\{16,\ldots,33\}$ \\
+$32 = 2^5$  & 80  & 4 & 50  & $\{31,\ldots,76\} \cup \{80\}$ \\
+$64 = 2^6$  & 192 & 5 & 131 & $\{63,\ldots,187\} \cup \{192\}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Problems}
