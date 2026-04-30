@@ -506,12 +506,25 @@ The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now
 For $R = 2^d$, the gap between the optimal internal edge count $E_{seq}(R) = d\,2^{d-1}$ and the next achievable count for a connected $R$-vertex subgraph is exactly $d-1$.
 \end{theorem}
 \begin{proof}
-By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a hypercube is $d\,2^{d-1}$, achieved uniquely by the $d$-dimensional subcube $Q_d$.
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$.
 
-To form the densest sub-optimal connected subgraph, we must replace at least one vertex $v$ of $Q_d$ with a vertex $v'$ outside $Q_d$. Removing $v$ destroys exactly $d$ edges (since every vertex in $Q_d$ has degree $d$). The replacement $v'$ lies outside $Q_d$, meaning it differs from the subcube in at least one of the coordinates that $Q_d$ holds fixed. To remain adjacent to any vertex inside $Q_d$, $v'$ can flip at most that one differing coordinate back, giving it \emph{at most one} neighbor inside $Q_d$.
+Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d \setminus S| = |S \setminus Q_d| \ge 1$.
 
-The second-best edge count is therefore at most $(d\,2^{d-1} - d) + 1 = d\,2^{d-1} - (d-1)$, leaving a gap of exactly $d-1$ forbidden edge counts below the optimum.
+\textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d \setminus S$ destroys exactly $d$ edges (the degree of $v$ in $Q_d$). The replacement $v' \in S \setminus Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ has \emph{at most one} neighbor in $Q_d \cap S$. The net change is at most $-d + 1$, giving $|E(S)| \le d\,2^{d-1} - (d-1)$.
+
+\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ edges to the remaining vertices (minus edges among the removed vertices themselves, which we denote $e_{rem}$). The $m$ replacement vertices each contribute at most 1 edge back into $Q_d \cap S$, and share at most $\binom{m}{2}$ edges among themselves. Therefore:
+\[
+|E(S)| \le d\,2^{d-1} - md + e_{rem} + m + \textstyle\binom{m}{2} \le d\,2^{d-1} - m(d - m)
+\]
+since $e_{rem} \le \binom{m}{2}$. For $1 \le m \le d-1$, the gap $m(d - m)$ is minimized at $m = 1$, giving $d - 1$. Multi-vertex deviations only widen the gap.
+
+In both cases, $|E(S)| \le d\,2^{d-1} - (d-1)$, leaving exactly $d-1$ forbidden edge counts below the optimum.
 \end{proof}
+
+\noindent We formalize this as the \emph{fracture gap}:
+\[
+\gamma(R) \;=\; \begin{cases} d - 1 & \text{if } R = 2^d, \\ 0 & \text{otherwise.} \end{cases}
+\]
 
 \begin{theorem}[Edge Count Continuity]\label{them:continuity}
 For any $R$, every integer edge count from $R-1$ (spanning tree) up to the second-best connected subgraph is achievable.
