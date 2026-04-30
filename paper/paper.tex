@@ -346,7 +346,7 @@ X(\mathrm{HB}_R) + E_{seq}(R) = C_{const}(R).
 \end{proposition}
 
 \begin{remark}
-These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{harper1966optimal} applied to the arrangement graph fiber structure. They are computationally verified for all $R \le 260$ via our C++ verification engine. The full Lean 4 formalization of the graph theory, dimensional scaling, and bitwise arithmetic proceeds from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit axioms in the proof framework, isolating the classical extremal set theory from the novel algebraic machinery.
+These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. They are computationally verified for all $R \le 260$ via our C++ verification engine. The full Lean 4 formalization of the graph theory, dimensional scaling, and bitwise arithmetic proceeds from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit axioms in the proof framework, isolating the classical extremal set theory from the novel algebraic machinery.
 \end{remark}
 
 Combining these propositions with the boundary decomposition yields our main result:
@@ -872,6 +872,7 @@ theorem arrangement_extraconnectivity_minimum
 \end{verbatim}
 
 \bibliographystyle{plain}
+% \nocite{*}
 \bibliography{references}
 
 \end{document}

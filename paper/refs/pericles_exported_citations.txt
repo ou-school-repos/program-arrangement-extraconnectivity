@@ -1,0 +1,21 @@
+
+TY  - JOUR
+AU  - Cheng, Eddie
+AU  - Lipták, László
+AU  - Yuan, Allen
+TI  - Linearly many faults in arrangement graphs
+JO  - Networks
+JA  - Networks
+VL  - 61
+IS  - 4
+SN  - 0028-3045
+UR  - https://doi.org/10.1002/net.21476
+DO  - https://doi.org/10.1002/net.21476
+SP  - 281
+EP  - 289
+KW  - connectivity
+KW  - fault tolerance
+KW  - arrangement graphs
+PY  - 2013
+AB  - Abstract The star graph proposed by Akers et al. (Proc Int Conf Parallel Process, University Park, PA, 1987, pp. 393?400) has many advantages over the n-cube. However, it suffers from having large gaps in the possible number of vertices. The arrangement graph was proposed by Day and Tripathi (Inf Process Lett 42 (1992), 235?241) to address this issue. Since it is a generalization of the star graph, it retains many of the nice properties of the star graph. In fact, it also generalizes the alternating group graph (Jwo et al., Networks 23 (1993), 315?326). There are many different measures of structural integrity of interconnection networks. In this article, we prove results of the following type for the arrangement graph: If h(r,n,k) vertices are deleted from the arrangement graph An,k, the resulting graph will either be connected or have a large component and small components having at most r ? 1 vertices in total. Our result is tight for r ≤ 3, and it is asymptotically tight for r ≥ 4. Moreover, we also determine the cyclic vertex-connectivity of the arrangement graph. ? 2012 Wiley Periodicals, Inc. NETWORKS, 2013
+ER  -

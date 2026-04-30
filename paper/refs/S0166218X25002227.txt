@@ -1,0 +1,11 @@
+Eddie Cheng, László Lipták, Lucia Mazza,
+Higher order matching preclusion for regular interconnection networks,
+Discrete Applied Mathematics,
+Volume 373,
+2025,
+Pages 107-124,
+ISSN 0166-218X,
+https://doi.org/10.1016/j.dam.2025.04.042.
+(https://www.sciencedirect.com/science/article/pii/S0166218X25002227)
+Abstract: For a graph with an even number of vertices, the matching preclusion number is the minimum number of edges whose deletion results in a graph with no perfect matchings. The conditional matching preclusion number, introduced as an extension of the matching preclusion number, has the additional requirement that the resulting graph has no isolated vertices. In this paper we consider results related to a further generalization of this concept, called level 2 matching preclusion. We find sufficient conditions for a graph with girth at least 4 to be level 2 maximally matched and level 2 super matched. We apply these results to the class of pancake graphs, and show that they are level 2 maximally and super matched.
+Keywords: Interconnection networks; Perfect matching; Regular graphs; Matching preclusion
