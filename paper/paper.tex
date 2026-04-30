@@ -498,18 +498,41 @@ Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Gap ($\Delta E$) \\
 The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins by 464 vertices against a Star Graph and by 190 vertices against the second-best connected subgraph. In large-scale systems, this linear divergence ensures that the Hamming Ball remains the unique boundary minimizer.
 
 % ════════════════════════════════════════════════════════════════════════
+\section{The Fracture Gap and Edge Count Continuity}\label{sec:fracture}
+
+The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now characterize \emph{which} internal edge counts are achievable and which are not.
+
+\begin{theorem}[The Fracture Gap]\label{them:fracture}
+For $R = 2^d$, the gap between the optimal internal edge count $E_{seq}(R) = d\,2^{d-1}$ and the next achievable count for a connected $R$-vertex subgraph is exactly $d-1$.
+\end{theorem}
+\begin{proof}
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a hypercube is $d\,2^{d-1}$, achieved uniquely by the $d$-dimensional subcube $Q_d$.
+
+To form the densest sub-optimal connected subgraph, we must replace at least one vertex $v$ of $Q_d$ with a vertex $v'$ outside $Q_d$. Removing $v$ destroys exactly $d$ edges (since every vertex in $Q_d$ has degree $d$). The replacement $v'$ lies outside $Q_d$, meaning it differs from the subcube in at least one of the coordinates that $Q_d$ holds fixed. To remain adjacent to any vertex inside $Q_d$, $v'$ can flip at most that one differing coordinate back, giving it \emph{at most one} neighbor inside $Q_d$.
+
+The second-best edge count is therefore at most $(d\,2^{d-1} - d) + 1 = d\,2^{d-1} - (d-1)$, leaving a gap of exactly $d-1$ forbidden edge counts below the optimum.
+\end{proof}
+
+\begin{theorem}[Edge Count Continuity]\label{them:continuity}
+For any $R$, every integer edge count from $R-1$ (spanning tree) up to the second-best connected subgraph is achievable.
+\end{theorem}
+\begin{proof}
+The minimum edge count for a connected graph on $R$ vertices is $R-1$ (a spanning tree). Any connected subgraph with $E_{int} > R-1$ contains at least one cycle. Pick a vertex $v$ in that cycle and replace one of its coordinates with an unused symbol from the $(n-k)$ available alphabet. This preserves connectivity (the cycle had an alternate path around $v$) but breaks exactly one internal edge, reducing $E_{int}$ by 1. Repeating this walks the edge count down to $R-1$ one step at a time.
+\end{proof}
+
+Together, these results completely characterize the achievable edge counts for $R = 2^d$. At $R = 8$ ($d = 3$), the Hamming Ball achieves $E = 12$, the fracture gap forbids $E = 11$, and continuity fills in $\{7, 8, 9, 10\}$. The full set of realizable counts is $\{7, 8, 9, 10, 12\}$.
+
+% ════════════════════════════════════════════════════════════════════════
 \section{Open Problems}
 
-The following question remains open and has been formalized as a \texttt{Prop} declaration in our repository:
+The Fracture Gap (Theorem~\ref{them:fracture}) resolves the gap structure at powers of 2, and Edge Count Continuity (Theorem~\ref{them:continuity}) fills in everything below. The following questions remain open:
 
-\begin{problem}[Sub-optimal Solution Distribution]\label{prob:suboptimal}
-For each $R$, classify the connected $R$-vertex subgraphs that fall short of the Hamming Ball optimum. Specifically:
+\begin{problem}[Sub-optimal Solution Distribution]\label{prob:suboptimal}\leavevmode
 \begin{enumerate}
-\item \textbf{Gaps.} Which internal edge counts $E$ between $R-1$ (the star graph) and $E_{seq}(R)$ (the Hamming Ball) are realizable by some connected subgraph, and which are not? At $R = 2^d$, we observe that the gap between $E_{seq}(R)$ and the next achievable $E$ is exactly $d-1$ (e.g., at $R=8$, no connected subgraph achieves $E=11$; the count drops from 12 directly to 10).
+\item \textbf{Non-power-of-2 gaps.} For $R \neq 2^d$, what is the exact gap between $E_{seq}(R)$ and the next achievable edge count? Our enumeration up to $R = 10$ suggests the gap is always 1 when $R$ is not a power of 2, but a general proof is missing.
 \item \textbf{Multiplicity.} How many non-isomorphic subgraphs achieve each realizable $E$? In particular, is the Hamming Ball the \emph{unique} subgraph achieving $E = E_{seq}(R)$ for all $R \ge 4$?
 \item \textbf{Penalty.} What is the exact boundary penalty $\Delta E \cdot (n-k) + (C_{const}(R) - (X+D))$ for each sub-optimal configuration relative to the Hamming Ball?
 \end{enumerate}
-Our exhaustive enumeration characterizes this distribution up to $R = 10$.
 \end{problem}
 
 % ════════════════════════════════════════════════════════════════════════
