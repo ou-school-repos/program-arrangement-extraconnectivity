@@ -85,7 +85,7 @@ Our approach proceeds in three steps:
 \begin{itemize}
     \item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In $A(n,k)$, the target symbol may already appear at another coordinate of the same vertex, so the shift can either violate injectivity or sever internal edges.
     \item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving vertices geometrically, we count the coordinate-aligned lines (roots) that the subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary factors cleanly into a term proportional to $(n-k)$ minus a correction that depends only on the subset's shape.
-    \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing internal edge costs at least $(n-k)$ boundary nodes, confirming the Hamming Ball's dominance at scale.
+    \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing internal edge costs at least $(n-k)$ boundary nodes, so the Hamming Ball's boundary advantage over any competitor grows linearly with $(n-k)$.
 \end{itemize}
 
 % ════════════════════════════════════════════════════════════════════════
