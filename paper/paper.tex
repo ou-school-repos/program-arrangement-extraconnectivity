@@ -109,6 +109,14 @@ U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}
 \end{equation*} The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of these coordinate-aligned lines our set touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal ``shielding''. For subsets that embed isometrically into hypercubes, $D(V')$ exactly equals the number of internal edges. For dense cliques, it acts as a robust algebraic proxy for root duplications that naturally prevents geometric over-counting.
 \end{definition}
 
+\begin{definition}[External Boundary]
+For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\partial_{ext}(V')$ is the set of vertices not in $V'$ that are adjacent to at least one vertex in $V'$:
+\[
+\partial_{ext}(V') = \{ w \in V \setminus V' : \exists\, v \in V',\; \{v,w\} \in E \}.
+\]
+Its cardinality $|\partial_{ext}(V')|$ is the quantity we seek to minimize.
+\end{definition}
+
 \begin{example}
 To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)$ where $4$ symbols are fixed (e.g., \texttt{B,C,D,E}). The missing coordinate can be filled by any of the remaining $10 - 5 + 1 = 6$ available symbols. This single root physically expands into a 1D-clique (a line) of 6 vertices:
 
@@ -556,11 +564,17 @@ When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor i
 In both cases, the resulting subgraph has $E_{seq}(R) - 1$ internal edges and is connected.
 \end{proof}
 
-\noindent\textbf{Complete characterization.} The three theorems together fully determine the achievable edge counts for every $R$:
+\begin{theorem}[Complete Edge Count Classification]\label{them:classification}
+For any valid cluster size $R \ge 4$, the set of achievable internal edge counts for connected $R$-vertex subgraphs is exactly:
 \[
 \mathcal{E}(R) = \{R-1,\; R,\; \ldots,\; E_{seq}(R) - \gamma(R)\} \;\cup\; \{E_{seq}(R)\}
 \]
-where $\gamma(R) = d - 1$ if $R = 2^d$, and $\gamma(R) = 0$ otherwise. Table~\ref{tab:edge_spectrum} illustrates this for selected values of $R$.
+where $\gamma(R) = d - 1$ if $R = 2^d$, and $\gamma(R) = 0$ otherwise.
+\end{theorem}
+\begin{proof}
+The maximum $E_{seq}(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theorem~\ref{them:nogap} constructs a subgraph with $E_{seq}(R) - 1$ edges, and Theorem~\ref{them:continuity} fills every integer down to $R - 1$. For $R = 2^d$, Theorem~\ref{them:fracture} forbids edge counts in $(E_{seq}(R) - (d-1),\; E_{seq}(R))$. The value $E_{seq}(R) - (d-1)$ is achieved by taking $Q_d$, removing one vertex $v$ (destroying $d$ edges), and attaching a fresh vertex $v'$ adjacent to exactly one vertex of $Q_d \setminus \{v\}$, yielding $d\,2^{d-1} - d + 1$ edges. Theorem~\ref{them:continuity} then fills every integer down to $R - 1$.
+\end{proof}
+\noindent Table~\ref{tab:edge_spectrum} illustrates this classification for selected values of $R$.
 
 \begin{table}[ht]
 \centering
