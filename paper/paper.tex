@@ -78,7 +78,7 @@ We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for al
 
 The arrangement graph $A(n,k)$, introduced by Day and Tripathi \cite{day1992arrangement}, models interconnection networks for multiprocessor systems. A vertex of $A(n,k)$ is an injective sequence of $k$ symbols drawn from an alphabet of size $n$, and two vertices are adjacent if and only if they differ in exactly one coordinate.
 
-The $h$-extraconnectivity $\kappa_h(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $h$ vertices. The ``linearly many faults'' property, established for arrangement graphs by Cheng, Lipt\'ak, and Yuan \cite{cheng2013linearly}, proves that any minimum vertex cut isolates a single connected cluster of exactly $R = h+1$ nodes. Thus the global extraconnectivity problem reduces to finding the $R$-element subset with the smallest external boundary. Cheng et al.\ \cite{cheng2022extraconnectivity} solved this case-by-case for $R \le 7$; this paper provides the general closed-form solution for all $R$. This vertex-fault metric serves as a natural dual to the edge-fault matching preclusion metrics recently explored for regular interconnection networks in \cite{cheng2025higher}.
+The $g$-extraconnectivity $\kappa_g(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $g$ vertices. The ``linearly many faults'' property, established for arrangement graphs by Cheng, Lipt\'ak, and Yuan \cite{cheng2013linearly}, proves that any minimum vertex cut isolates a single connected cluster of exactly $R = g+1$ nodes. Thus the global extraconnectivity problem reduces to finding the $R$-element subset with the smallest external boundary. Cheng et al.\ \cite{cheng2022extraconnectivity} solved this case-by-case for $R \le 7$; this paper provides the general closed-form solution for all $R$. This vertex-fault metric serves as a natural dual to the edge-fault matching preclusion metrics recently explored for regular interconnection networks in \cite{cheng2025higher}.
 
 We prove that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external boundary of any $R$-element subset is bounded below by an explicit function of $R$, $k$, and $(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball when $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. The full statement appears as Theorem~\ref{them:main}.
 
@@ -378,6 +378,10 @@ Proposition~\ref{prop:universal} bounds the waste: $X(V') + D(V') \le C_{const}(
 \textbf{Part~(ii).}  Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) + E_{seq}(R) = C_{const}(R)$, so the Hamming Ball achieves equality in the lower bound.  The embedding condition ensures $A(n,k)$ has a large enough alphabet and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
 \end{proof}
 
+\begin{corollary}[System-Level Diagnosability]\label{cor:diagnosis}
+In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ under the PMC and MM* models is directly derived from the $g$-extra connectivity \cite{cheng2023augmented}. By establishing the exact $(R-1)$-extraconnectivity of $A(n,k)$, Theorem~\ref{them:main} analytically unlocks the exact $(R-1)$-extra diagnosability of the arrangement graph, extending recent diagnostic advances (e.g., adaptive local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries. Under standard network size conditions, the diagnosability is exactly $t_{R-1}(A(n,k)) = \kappa_{R-1}(A(n,k)) + R - 1$.
+\end{corollary}
+
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
@@ -636,6 +640,9 @@ Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Gap ($\Delta E$) \\
 \end{table}
 
 The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins by 464 vertices against a Star Graph and by 190 vertices against the second-best connected subgraph. In large-scale systems, this linear divergence ensures that the Hamming Ball remains the unique boundary minimizer.
+
+\paragraph{The Structural Inversion: Hypercubes vs.\ Arrangement Graphs.}
+In recent literature concerning hypercube variants like Augmented Cubes \cite{cheng2023augmented}, the optimal boundary-minimizing cut is frequently constructed using the Star Graph $K_{1, R-1}$. Why does the Star Graph represent the global optimum in hypercubes, but the absolute worst-case Sparse Limit in arrangement graphs? Our framework provides the exact mathematical mechanism for this \emph{structural inversion}. In hypercubes, the penalty for missing an internal edge is a static constant. The Star Graph produces cross-collisions that scale quadratically as $\binom{R-1}{2}$, quickly overpowering the static penalty and minimizing the boundary. In $A(n,k)$, however, the penalty for missing an internal edge is $(n-k)$ (Theorem~\ref{them:penalty}). Because $(n-k)$ scales with the network dimensions, it completely obliterates the static $\binom{R-1}{2}$ savings of the Star Graph. Thus, the optimal structure permanently inverts: in hypercubes, the minimum cut is the Sparse Limit, but in arrangement graphs, the minimum cut is the Dense Limit.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{The Fracture Gap and Edge Count Continuity}\label{sec:fracture}
