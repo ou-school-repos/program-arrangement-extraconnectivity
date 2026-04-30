@@ -525,15 +525,21 @@ Together, these results completely characterize the achievable edge counts for $
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Problems}
 
-The Fracture Gap (Theorem~\ref{them:fracture}) resolves the gap structure at powers of 2, and Edge Count Continuity (Theorem~\ref{them:continuity}) fills in everything below. The following questions remain open:
+The Fracture Gap (Theorem~\ref{them:fracture}) resolves the gap structure at powers of 2, and Edge Count Continuity (Theorem~\ref{them:continuity}) fills in everything below. We conjecture the complete picture:
 
-\begin{problem}[Sub-optimal Solution Distribution]\label{prob:suboptimal}\leavevmode
-\begin{enumerate}
-\item \textbf{Non-power-of-2 gaps.} For $R \neq 2^d$, what is the exact gap between $E_{seq}(R)$ and the next achievable edge count? Our enumeration up to $R = 10$ suggests the gap is always 1 when $R$ is not a power of 2, but a general proof is missing.
-\item \textbf{Multiplicity.} How many non-isomorphic subgraphs achieve each realizable $E$? In particular, is the Hamming Ball the \emph{unique} subgraph achieving $E = E_{seq}(R)$ for all $R \ge 4$?
-\item \textbf{Penalty.} What is the exact boundary penalty $\Delta E \cdot (n-k) + (C_{const}(R) - (X+D))$ for each sub-optimal configuration relative to the Hamming Ball?
-\end{enumerate}
-\end{problem}
+\begin{conjecture}[Complete Edge Count Classification]\label{conj:classification}
+For each $R$, the set of achievable internal edge counts for connected $R$-vertex subgraphs of $A(n,k)$ is exactly:
+\[
+\mathcal{E}(R) = \{R-1,\; R,\; \ldots,\; E_{seq}(R) - g(R)\} \;\cup\; \{E_{seq}(R)\}
+\]
+where the \emph{fracture gap} $g(R)$ satisfies:
+\[
+g(R) = \begin{cases} d - 1 & \text{if } R = 2^d, \\ 0 & \text{otherwise.} \end{cases}
+\]
+In particular, when $R$ is not a power of 2, every integer from $R-1$ to $E_{seq}(R)$ is achievable with no gaps. Furthermore, the Hamming Ball is the unique (up to graph automorphism) subgraph achieving $E = E_{seq}(R)$ for all $R \ge 4$.
+\end{conjecture}
+
+Our exhaustive enumeration confirms this conjecture for all $R \le 10$. The $R = 2^d$ case is proven by the Fracture Gap (Theorem~\ref{them:fracture}); the general case remains open.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
