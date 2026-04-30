@@ -38,8 +38,11 @@ R_smooth = np.linspace(2, 12, 500)
 x_smooth = (R_smooth - 2) * np.log10(R_smooth)
 T_fit = 10 ** (a_fit + b_fit * x_smooth)
 
-# ── Predictor: measured <2ms for all R up to 128 ─────────────────
-pred_T = 0.002  # flat
+# ── Predictor: O(R^4) ────────────────────────────────────────────
+# Process startup (~1.4ms) dominates, masking actual compute time.
+# Scale so curve passes through ~1ms at R=10 (measured floor).
+pred_c = 0.001 / (10 ** 4)
+T_pred = pred_c * R_smooth ** 4
 
 # ── Plot ──────────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=(6.5, 3.2))
@@ -51,13 +54,13 @@ ax.semilogy(R_smooth[R_smooth > 10], T_fit[R_smooth > 10], "r--",
             linewidth=1.5, alpha=0.5)
 ax.plot(search_R, search_T, "ro", markersize=5, zorder=5)
 
-# Predictor
-ax.axhline(y=pred_T, color="blue", linewidth=2,
-           label=r"Hamming Predictor ($\leq 2$ ms)")
+# Predictor: O(R^4)
+ax.semilogy(R_smooth, T_pred, "b-", linewidth=2,
+            label=r"Hamming Predictor ($O(R^4)$)")
 
 # Fill gap
-ax.fill_between(R_smooth, pred_T, T_fit, alpha=0.12, color="red",
-                where=(T_fit > pred_T))
+ax.fill_between(R_smooth, T_pred, T_fit, alpha=0.12, color="red",
+                where=(T_fit > T_pred))
 
 ax.set_xlabel("Subgraph Size ($R$)")
 ax.set_ylabel("Wall Time (Seconds)")
