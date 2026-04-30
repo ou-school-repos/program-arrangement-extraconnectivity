@@ -93,7 +93,7 @@ Our approach proceeds in three steps:
 \section{Preliminaries}
 
 \begin{definition}[Notation]
-We denote the set $\{1, 2, \dots, m\}$ by $[m]$. For a vertex $v$, the expression $v|_{[k]\setminus\{p\}}$ denotes the sequence of length $k-1$ obtained by removing the symbol at position $p$.
+We denote the set $\{1, 2, \dots, m\}$ by $[m]$. For a vertex $v$, the expression $v|_{[k] - \{p\}}$ denotes the sequence of length $k-1$ obtained by removing the symbol at position $p$.
 \end{definition}
 
 \begin{definition}[Arrangement Graph]
@@ -105,14 +105,14 @@ To move to an adjacent vertex in $A(n,k)$, one selects one of the $k$ active coo
 \begin{definition}[Unique Roots and Defect]
 For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size $n-k+1$ obtained by filling the missing coordinate with any available symbol. The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques that intersect the set $V'$ at coordinate $p$:
 \begin{equation*}
-U_p(V') = \{ v|_{[k]\setminus\{p\}} : v \in V' \}
+U_p(V') = \{ v|_{[k] - \{p\}} : v \in V' \}
 \end{equation*} The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of these coordinate-aligned lines our set touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ measures internal ``shielding''. For subsets that embed isometrically into hypercubes, $D(V')$ exactly equals the number of internal edges. For dense cliques, it acts as a robust algebraic proxy for root duplications that naturally prevents geometric over-counting.
 \end{definition}
 
 \begin{definition}[External Boundary]
 For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\partial_{ext}(V')$ is the set of vertices not in $V'$ that are adjacent to at least one vertex in $V'$:
 \[
-\partial_{ext}(V') = \{ w \in V \setminus V' : \exists\, v \in V',\; \{v,w\} \in E \}.
+\partial_{ext}(V') = \{ w \in V  -  V' : \exists\, v \in V',\; \{v,w\} \in E \}.
 \]
 Its cardinality $|\partial_{ext}(V')|$ is the quantity we seek to minimize.
 \end{definition}
@@ -516,9 +516,9 @@ For $R = 2^d$, the gap between the optimal internal edge count $E_{seq}(R) = d\,
 \begin{proof}
 By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$.
 
-Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d \setminus S| = |S \setminus Q_d| \ge 1$.
+Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
 
-\textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d \setminus S$ destroys exactly $d$ edges (the degree of $v$ in $Q_d$). The replacement $v' \in S \setminus Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ has \emph{at most one} neighbor in $Q_d \cap S$. The net change is at most $-d + 1$, giving $|E(S)| \le d\,2^{d-1} - (d-1)$.
+\textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d  -  S$ destroys exactly $d$ edges (the degree of $v$ in $Q_d$). The replacement $v' \in S  -  Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ has \emph{at most one} neighbor in $Q_d \cap S$. The net change is at most $-d + 1$, giving $|E(S)| \le d\,2^{d-1} - (d-1)$.
 
 \textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ edges to the remaining vertices (minus edges among the removed vertices themselves, which we denote $e_{rem}$). The $m$ replacement vertices each contribute at most 1 edge back into $Q_d \cap S$, and share at most $\binom{m}{2}$ edges among themselves. Therefore:
 \[
@@ -572,7 +572,7 @@ For any valid cluster size $R \ge 4$, the set of achievable internal edge counts
 where $\gamma(R) = d - 1$ if $R = 2^d$, and $\gamma(R) = 0$ otherwise.
 \end{theorem}
 \begin{proof}
-The maximum $E_{seq}(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theorem~\ref{them:nogap} constructs a subgraph with $E_{seq}(R) - 1$ edges, and Theorem~\ref{them:continuity} fills every integer down to $R - 1$. For $R = 2^d$, Theorem~\ref{them:fracture} forbids edge counts in $(E_{seq}(R) - (d-1),\; E_{seq}(R))$. The value $E_{seq}(R) - (d-1)$ is achieved by taking $Q_d$, removing one vertex $v$ (destroying $d$ edges), and attaching a fresh vertex $v'$ adjacent to exactly one vertex of $Q_d \setminus \{v\}$, yielding $d\,2^{d-1} - d + 1$ edges. Theorem~\ref{them:continuity} then fills every integer down to $R - 1$.
+The maximum $E_{seq}(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theorem~\ref{them:nogap} constructs a subgraph with $E_{seq}(R) - 1$ edges, and Theorem~\ref{them:continuity} fills every integer down to $R - 1$. For $R = 2^d$, Theorem~\ref{them:fracture} forbids edge counts in $(E_{seq}(R) - (d-1),\; E_{seq}(R))$. The value $E_{seq}(R) - (d-1)$ is achieved by taking $Q_d$, removing one vertex $v$ (destroying $d$ edges), and attaching a fresh vertex $v'$ adjacent to exactly one vertex of $Q_d  -  \{v\}$, yielding $d\,2^{d-1} - d + 1$ edges. Theorem~\ref{them:continuity} then fills every integer down to $R - 1$.
 \end{proof}
 \noindent Table~\ref{tab:edge_spectrum} illustrates this classification for selected values of $R$.
 
