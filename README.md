@@ -91,6 +91,107 @@ make lean/cache
 make lean
 ```
 
+<details>
+<summary><strong>Sample Output (R=2 through R=10)</strong></summary>
+
+```text
+Searching R=2 (nauty limit: 3)
+  ver[0]=AB  ver[1]=CB
+(2nk-1) (n-k)-1, iedges=1, EX: AB CB
+Done: 0.000s | Gen: 1 | Eval: 1
+Pruned | Iso: 0 | Exact: 0 | Local: 0
+  [brute-force] |N(V')| = 5 ✓
+  formula(n=4,k=2): |N(V')| = 3·2 - 1 = 5
+
+Searching R=3 (nauty limit: 3)
+  ver[0]=ABC  ver[1]=DBC
+(3nk-2) (n-k)-3, iedges=2, EX: ABC DBC AEC
+Done: 0.000s | Gen: 6 | Eval: 5
+Pruned | Iso: 0 | Exact: 0 | Local: 1
+  [brute-force] |N(V')| = 18 ✓
+  formula(n=6,k=3): |N(V')| = 7·3 - 3 = 18
+
+Searching R=4 (nauty limit: 3)
+  ver[0]=ABCD  ver[1]=EBCD
+(4nk-3) (n-k)-6, iedges=3, EX: ABCD EBCD AFCD ABGD
+(4nk-4) (n-k)-4, iedges=4, EX: ABCD EBCD AFCD EFCD
+Done: 0.000s | Gen: 46 | Eval: 40
+Pruned | Iso: 2 | Exact: 0 | Local: 10
+  [brute-force] |N(V')| = 44 ✓
+  formula(n=8,k=4): |N(V')| = 12·4 - 4 = 44
+
+Searching R=5 (nauty limit: 3)
+  ver[0]=ABCDE  ver[1]=FBCDE
+(5nk-4) (n-k)-10, iedges=4, EX: ABCDE FBCDE AGCDE ABHDE ABCIE
+(5nk-5) (n-k)- 7, iedges=5, EX: ABCDE FBCDE AGCDE ABHDE FGCDE
+Done: 0.000s | Gen: 1102 | Eval: 1056
+Pruned | Iso: 2 | Exact: 3 | Local: 268
+  [brute-force] |N(V')| = 93 ✓
+  formula(n=10,k=5): |N(V')| = 20·5 - 7 = 93
+
+Searching R=6 (nauty limit: 4)
+  ver[0]=ABCDEF  ver[1]=GBCDEF
+(6nk-5) (n-k)-15, iedges=5, EX: ABCDEF GBCDEF AHCDEF ABIDEF ABCJEF ABCDKF
+(6nk-6) (n-k)-11, iedges=6, EX: ABCDEF GBCDEF AHCDEF ABIDEF ABCJEF GHCDEF
+(6nk-7) (n-k)- 9, iedges=7, EX: ABCDEF GBCDEF AHCDEF ABIDEF GHCDEF GBIDEF
+Done: 0.004s | Gen: 19507 | Eval: 19059
+Pruned | Iso: 28 | Exact: 36 | Local: 4676
+  [brute-force] |N(V')| = 165 ✓
+  formula(n=12,k=6): |N(V')| = 29·6 - 9 = 165
+
+Searching R=7 (nauty limit: 5)
+  ver[0]=ABCDEFG  ver[1]=HBCDEFG
+(7nk-6) (n-k)-21, iedges=6, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG ABCDLFG ABCDEMG
+(7nk-7) (n-k)-16, iedges=7, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG ABCDLFG HICDEFG
+(7nk-8) (n-k)-13, iedges=8, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG ABCKEFG HICDEFG HBJDEFG
+(7nk-9) (n-k)-11, iedges=9, EX: ABCDEFG HBCDEFG AICDEFG ABJDEFG HICDEFG HBJDEFG AIJDEFG
+Done: 0.072s | Gen: 394905 | Eval: 389021
+Pruned | Iso: 323 | Exact: 729 | Local: 88799
+  [brute-force] |N(V')| = 269 ✓
+  formula(n=14,k=7): |N(V')| = 40·7 - 11 = 269
+
+Searching R=8 (nauty limit: 6)
+  ver[0]=ABCDEFGH  ver[1]=IBCDEFGH
+(8nk- 7) (n-k)-28, iedges=7, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH ABCDMFGH ABCDENGH ABCDEFOH
+(8nk- 8) (n-k)-22, iedges=8, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH ABCDMFGH ABCDENGH IJCDEFGH
+(8nk- 9) (n-k)-18, iedges=9, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH ABCDMFGH IJCDEFGH IBKDEFGH
+(8nk-10) (n-k)-16, iedges=10, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH ABCLEFGH IJCDEFGH IBKDEFGH IBCLEFGH
+(8nk-12) (n-k)-12, iedges=12, EX: ABCDEFGH IBCDEFGH AJCDEFGH ABKDEFGH IJCDEFGH IBKDEFGH AJKDEFGH IJKDEFGH
+Done: 1.782s | Gen: 12053012 | Eval: 11926956
+Pruned | Iso: 4264 | Exact: 21554 | Local: 2544542
+  [brute-force] |N(V')| = 404 ✓
+  formula(n=16,k=8): |N(V')| = 52·8 - 12 = 404
+
+Searching R=9 (nauty limit: 7)
+  ver[0]=ABCDEFGHI  ver[1]=JBCDEFGHI
+(9nk- 8) (n-k)-36, iedges=8, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI ABCDNFGHI ABCDEOGHI ABCDEFPHI ABCDEFGQI
+(9nk- 9) (n-k)-29, iedges=9, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI ABCDNFGHI ABCDEOGHI ABCDEFPHI JKCDEFGHI
+(9nk-10) (n-k)-24, iedges=10, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI ABCDNFGHI ABCDEOGHI JKCDEFGHI JBLDEFGHI
+(9nk-11) (n-k)-21, iedges=11, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI ABCDNFGHI JKCDEFGHI JBLDEFGHI JBCMEFGHI
+(9nk-12) (n-k)-18, iedges=12, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI JKCDEFGHI JBLDEFGHI JBCMEFGHI AKLDEFGHI
+(9nk-13) (n-k)-16, iedges=13, EX: ABCDEFGHI JBCDEFGHI AKCDEFGHI ABLDEFGHI ABCMEFGHI JKCDEFGHI JBLDEFGHI AKLDEFGHI JKLDEFGHI
+Done: 74.553s | Gen: 502684606 | Eval: 498731225
+Pruned | Iso: 91823 | Exact: 846078 | Local: 99682702
+  [brute-force] |N(V')| = 596 ✓
+  formula(n=18,k=9): |N(V')| = 68·9 - 16 = 596
+
+Searching R=10 (nauty limit: 8)
+  ver[0]=ABCDEFGHIJ  ver[1]=KBCDEFGHIJ
+(10nk- 9) (n-k)-45, iedges=9, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ ABMDEFGHIJ ABCNEFGHIJ ABCDOFGHIJ ABCDEPGHIJ ABCDEFQHIJ ABCDEFGRIJ ABCDEFGHSJ
+(10nk-10) (n-k)-37, iedges=10, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ ABMDEFGHIJ ABCNEFGHIJ ABCDOFGHIJ ABCDEPGHIJ ABCDEFQHIJ ABCDEFGRIJ KLCDEFGHIJ
+(10nk-11) (n-k)-31, iedges=11, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ ABMDEFGHIJ ABCNEFGHIJ ABCDOFGHIJ ABCDEPGHIJ ABCDEFQHIJ KLCDEFGHIJ KBMDEFGHIJ
+(10nk-12) (n-k)-27, iedges=12, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ ABMDEFGHIJ ABCNEFGHIJ ABCDOFGHIJ ABCDEPGHIJ KLCDEFGHIJ KBMDEFGHIJ KBCNEFGHIJ
+(10nk-13) (n-k)-25, iedges=13, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ ABMDEFGHIJ ABCNEFGHIJ ABCDOFGHIJ KLCDEFGHIJ KBMDEFGHIJ KBCNEFGHIJ KBCDOFGHIJ
+(10nk-14) (n-k)-21, iedges=14, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ ABMDEFGHIJ ABCNEFGHIJ ABCDOFGHIJ KLCDEFGHIJ KBMDEFGHIJ ALMDEFGHIJ KLMDEFGHIJ
+(10nk-15) (n-k)-19, iedges=15, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ ABMDEFGHIJ ABCNEFGHIJ KLCDEFGHIJ KBMDEFGHIJ KBCNEFGHIJ ALMDEFGHIJ KLMDEFGHIJ
+Done: 4140.057s | Gen: 26990844071 | Eval: 26824727353
+Pruned | Iso: 2921831 | Exact: 41791746 | Local: 5041435454
+  [brute-force] |N(V')| = 831 ✓
+  formula(n=20,k=10): |N(V')| = 85·10 - 19 = 831
+```
+
+</details>
+
 ## Reference
 
 _Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." (2022).

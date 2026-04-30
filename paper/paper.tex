@@ -551,15 +551,29 @@ where $g(R) = d - 1$ if $R = 2^d$, and $g(R) = 0$ otherwise. Table~\ref{tab:edge
 \toprule
 $R$ & $E_{seq}(R)$ & $g(R)$ & $|\mathcal{E}(R)|$ & Achievable range \\
 \midrule
-$8 = 2^3$   & 12  & 2 & 6   & $\{7,\ldots,10\} \cup \{12\}$ \\
-9           & 13  & 0 & 6   & $\{8,\ldots,13\}$ \\
-10          & 15  & 0 & 7   & $\{9,\ldots,15\}$ \\
-12          & 20  & 0 & 10  & $\{11,\ldots,20\}$ \\
-15          & 28  & 0 & 15  & $\{14,\ldots,28\}$ \\
-$16 = 2^4$  & 32  & 3 & 16  & $\{15,\ldots,29\} \cup \{32\}$ \\
-17          & 33  & 0 & 18  & $\{16,\ldots,33\}$ \\
-$32 = 2^5$  & 80  & 4 & 50  & $\{31,\ldots,76\} \cup \{80\}$ \\
-$64 = 2^6$  & 192 & 5 & 131 & $\{63,\ldots,187\} \cup \{192\}$ \\
+$2^2 = 4$   & 4   & 1 & 2   & $\{3\} \cup \{4\}$ \\
+5           & 5   & 0 & 2   & $\{e \in \mathbb{Z} : 4 \le e \le 5\}$ \\
+6           & 7   & 0 & 3   & $\{e \in \mathbb{Z} : 5 \le e \le 7\}$ \\
+7           & 9   & 0 & 4   & $\{e \in \mathbb{Z} : 6 \le e \le 9\}$ \\
+$2^3 = 8$   & 12  & 2 & 5   & $\{e \in \mathbb{Z} : 7 \le e \le 10\} \cup \{12\}$ \\
+9           & 13  & 0 & 6   & $\{e \in \mathbb{Z} : 8 \le e \le 13\}$ \\
+10          & 15  & 0 & 7   & $\{e \in \mathbb{Z} : 9 \le e \le 15\}$ \\
+\midrule
+11          & 17  & 0 & 8   & $\{e \in \mathbb{Z} : 10 \le e \le 17\}$ \\
+12          & 20  & 0 & 10  & $\{e \in \mathbb{Z} : 11 \le e \le 20\}$ \\
+13          & 22  & 0 & 11  & $\{e \in \mathbb{Z} : 12 \le e \le 22\}$ \\
+14          & 25  & 0 & 13  & $\{e \in \mathbb{Z} : 13 \le e \le 25\}$ \\
+15          & 28  & 0 & 15  & $\{e \in \mathbb{Z} : 14 \le e \le 28\}$ \\
+$2^4 = 16$  & 32  & 3 & 16  & $\{e \in \mathbb{Z} : 15 \le e \le 29\} \cup \{32\}$ \\
+17          & 33  & 0 & 18  & $\{e \in \mathbb{Z} : 16 \le e \le 33\}$ \\
+18          & 35  & 0 & 19  & $\{e \in \mathbb{Z} : 17 \le e \le 35\}$ \\
+19          & 37  & 0 & 20  & $\{e \in \mathbb{Z} : 18 \le e \le 37\}$ \\
+20          & 40  & 0 & 22  & $\{e \in \mathbb{Z} : 19 \le e \le 40\}$ \\
+\midrule
+$2^5 = 32$  & 80  & 4 & 47  & $\{e \in \mathbb{Z} : 31 \le e \le 76\} \cup \{80\}$ \\
+48          & 128 & 0 & 82  & $\{e \in \mathbb{Z} : 47 \le e \le 128\}$ \\
+$2^6 = 64$  & 192 & 5 & 126 & $\{e \in \mathbb{Z} : 63 \le e \le 187\} \cup \{192\}$ \\
+$2^7 = 128$ & 448 & 6 & 317 & $\{e \in \mathbb{Z} : 127 \le e \le 442\} \cup \{448\}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -567,13 +581,17 @@ $64 = 2^6$  & 192 & 5 & 131 & $\{63,\ldots,187\} \cup \{192\}$ \\
 % ════════════════════════════════════════════════════════════════════════
 \section{Open Problems}
 
-The gap structure is now fully resolved. The following question remains open:
+The gap structure is now fully resolved. The following question generalizes the remaining open direction:
 
-\begin{conjecture}[Hamming Ball Uniqueness]\label{conj:uniqueness}
-For all $R \ge 4$, the Hamming Ball is the unique connected $R$-vertex subgraph (up to graph automorphism) achieving the maximum internal edge count $E = E_{seq}(R)$.
+\begin{conjecture}[Multiplicity of Achievable Edge Counts]\label{conj:multiplicity}
+For each $R$ and each achievable edge count $E \in \mathcal{E}(R)$, let $M(R, E)$ denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$ with exactly $E$ internal edges. Then:
+\begin{enumerate}
+\item $M(R, E_{seq}(R)) = 1$ for all $R \ge 4$ (the Hamming Ball is the unique maximizer).
+\item $M(R, E)$ is non-decreasing as $E$ decreases from $E_{seq}(R)$ toward $R-1$.
+\end{enumerate}
 \end{conjecture}
 
-Our exhaustive enumeration confirms this conjecture for all $R \le 10$.
+Our exhaustive enumeration confirms both parts for all $R \le 10$.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
