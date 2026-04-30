@@ -173,6 +173,7 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
 	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRCS) | tee lint.log
 	#-clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
+	flake8 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 
 .PHONY: format
