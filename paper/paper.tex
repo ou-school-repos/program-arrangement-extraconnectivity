@@ -539,9 +539,9 @@ In both cases, the resulting subgraph has $E_{seq}(R) - 1$ internal edges and is
 
 \noindent\textbf{Complete characterization.} The three theorems together fully determine the achievable edge counts for every $R$:
 \[
-\mathcal{E}(R) = \{R-1,\; R,\; \ldots,\; E_{seq}(R) - g(R)\} \;\cup\; \{E_{seq}(R)\}
+\mathcal{E}(R) = \{R-1,\; R,\; \ldots,\; E_{seq}(R) - \gamma(R)\} \;\cup\; \{E_{seq}(R)\}
 \]
-where $g(R) = d - 1$ if $R = 2^d$, and $g(R) = 0$ otherwise. Table~\ref{tab:edge_spectrum} illustrates this for selected values of $R$.
+where $\gamma(R) = d - 1$ if $R = 2^d$, and $\gamma(R) = 0$ otherwise. Table~\ref{tab:edge_spectrum} illustrates this for selected values of $R$.
 
 \begin{table}[ht]
 \centering
@@ -549,7 +549,7 @@ where $g(R) = d - 1$ if $R = 2^d$, and $g(R) = 0$ otherwise. Table~\ref{tab:edge
 \label{tab:edge_spectrum}
 \begin{tabular}{rrrrl}
 \toprule
-$R$ & $E_{seq}(R)$ & $g(R)$ & $|\mathcal{E}(R)|$ & Achievable range \\
+$R$ & $E_{seq}(R)$ & $\gamma(R)$ & $|\mathcal{E}(R)|$ & Achievable range \\
 \midrule
 $2^2 = 4$   & 4   & 1 & 2   & $\{3\} \cup \{4\}$ \\
 5           & 5   & 0 & 2   & $\{e \in \mathbb{Z} : 4 \le e \le 5\}$ \\
@@ -570,6 +570,7 @@ $2^4 = 16$  & 32  & 3 & 16  & $\{e \in \mathbb{Z} : 15 \le e \le 29\} \cup \{32\
 19          & 37  & 0 & 20  & $\{e \in \mathbb{Z} : 18 \le e \le 37\}$ \\
 20          & 40  & 0 & 22  & $\{e \in \mathbb{Z} : 19 \le e \le 40\}$ \\
 \midrule
+24          & 52  & 0 & 30  & $\{e \in \mathbb{Z} : 23 \le e \le 52\}$ \\
 $2^5 = 32$  & 80  & 4 & 47  & $\{e \in \mathbb{Z} : 31 \le e \le 76\} \cup \{80\}$ \\
 48          & 128 & 0 & 82  & $\{e \in \mathbb{Z} : 47 \le e \le 128\}$ \\
 $2^6 = 64$  & 192 & 5 & 126 & $\{e \in \mathbb{Z} : 63 \le e \le 187\} \cup \{192\}$ \\
