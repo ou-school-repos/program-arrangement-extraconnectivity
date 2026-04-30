@@ -52,18 +52,20 @@ print(
     f" + {b_fit:.4f} * (R-2)*log10(R)"
 )
 
-# ── Best fit predictor: log10(T) = c + d*log10(R) ───────────
-log_pred_T = np.log10(pred_T)
-log_pred_R = np.log10(pred_R)
-popt_p, _ = curve_fit(linear_model, log_pred_R, log_pred_T)
-c_fit, d_fit = popt_p
-print(f"Predictor fit: T ~ R^{d_fit:.2f}")
+# ── Best fit predictor: T = c * R^3 * log(R) ────────────────
+def pred_model(r, c):
+    return c * r**3 * np.log(r)
+
+
+popt_p, _ = curve_fit(pred_model, pred_R, pred_T, p0=[1e-8])
+c_fit = popt_p[0]
+print(f"Predictor fit: T = {c_fit:.2e} * R^3 * log(R)")
 
 # ── Generate curves ─────────────────────────────────────────
 R_smooth = np.linspace(2, 12, 500)
 x_smooth = (R_smooth - 2) * np.log10(R_smooth)
 T_search_fit = 10 ** (a_fit + b_fit * x_smooth)
-T_pred_fit = 10 ** (c_fit + d_fit * np.log10(R_smooth))
+T_pred_fit = c_fit * R_smooth**3 * np.log(R_smooth)
 
 # ── Plot ─────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=(6.5, 3.2))
@@ -71,7 +73,7 @@ fig, ax = plt.subplots(figsize=(6.5, 3.2))
 # Search: data points + fit
 ax.semilogy(
     R_smooth, T_search_fit, "r-", linewidth=2,
-    label=rf"Exhaustive Search (fit: $R^{{{b_fit:.1f}(R-2)}}$)",
+    label=r"Exhaustive Search ($\Omega(R^{R-2})$)",
 )
 ax.semilogy(
     R_smooth[R_smooth > 10], T_search_fit[R_smooth > 10],
@@ -82,7 +84,7 @@ ax.plot(search_R, search_T, "ro", markersize=5, zorder=5)
 # Predictor: data points + fit
 ax.semilogy(
     R_smooth, T_pred_fit, "b-", linewidth=2,
-    label=rf"Hamming Predictor (fit: $R^{{{d_fit:.1f}}}$)",
+    label=r"Hamming Predictor ($O(R^3 \log R)$)",
 )
 ax.plot(
     pred_R[pred_R <= 12], pred_T[pred_R <= 12],
