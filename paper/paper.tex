@@ -31,6 +31,7 @@
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{corollary}[theorem]{Corollary}
 \newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{problem}[theorem]{Open Problem}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem{example}[theorem]{Example}
@@ -84,7 +85,7 @@ In this paper, we provide a general closed-form formula for arbitrary subset siz
 Our approach proceeds in three steps:
 \begin{itemize}
     \item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In $A(n,k)$, the target symbol may already appear at another coordinate of the same vertex, so the shift can either violate injectivity or sever internal edges.
-    \item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving vertices geometrically, we count the coordinate-aligned lines (roots) that the subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary factors cleanly into a term proportional to $(n-k)$ minus a correction that depends only on the subset's shape.
+    \item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving vertices geometrically, we count the coordinate-aligned lines (roots) that the subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary factors cleanly into a term proportional to $(n-k)$ minus a correction that depends only on the subset's internal edges and collisions---not on $n$ or $k$.
     \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing internal edge costs at least $(n-k)$ boundary nodes, so the Hamming Ball's boundary advantage over any competitor grows linearly with $(n-k)$.
 \end{itemize}
 
@@ -508,6 +509,15 @@ While generic hypercubes contain degenerate isomorphisms for internal edge count
 \begin{conjecture}[The Isoperimetric Gap]
 For perfect hypercubes ($R=2^d$), intermediate edge counts are geometrically impossible. The gap in internal edges between the optimal Hamming Ball and the second-best connected subgraph is exactly $d-1$. (e.g., at $R=8$, achieving exactly 11 internal edges is impossible; the induced subgraph fractures directly from 12 down to 10).
 \end{conjecture}
+
+\begin{problem}[Edge Spectrum Classification]
+For each $R$, determine the \emph{achievable edge spectrum}: the set of integers $E$ for which there exists a connected $R$-vertex subgraph of $A(n,k)$ with exactly $E$ internal edges. For each achievable $E$, determine:
+\begin{enumerate}
+\item the number of non-isomorphic connected subgraphs achieving $E$;
+\item the boundary penalty $\Delta E \cdot (n-k) + (C_{const}(R) - (X+D))$ relative to the Hamming Ball.
+\end{enumerate}
+Our exhaustive enumeration confirms the spectrum up to $R = 10$; extending this classification to arbitrary $R$ remains open.
+\end{problem}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
