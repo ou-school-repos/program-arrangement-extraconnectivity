@@ -442,13 +442,14 @@ The embedding condition in (ii) ensures the graph is large enough to fit a $\lce
   \draw[red!80!black, dashed] (7,1) -- (7,3);
   \node[text=red, font=\bfseries] at (7, 2.5) {X};
   \node[text=red, font=\bfseries] at (7, 1.5) {X};
+  \node[text=red!70!black, font=\footnotesize, align=center] at (7, 0.5) {both edges\\lost};
   \end{scope}
 
   % Connecting arrow with gap label
   \draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
   \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$E=11$\\Impossible};
 \end{tikzpicture}
-\caption{Structural rigidity at $R=8$: $\mathrm{HB}_8$ achieves $E_{int}=12$. Removing any edge from the $Q_3$ embedding breaks at least two edges, making $E_{int}=11$ impossible for connected $|V'|=8$ subgraphs.}
+\caption{The fracture gap at $R=8$: $\mathrm{HB}_8$ achieves $E_{int}=12$. In $A(n,k)$, edges arise from root-sharing---two vertices that agree on all coordinates but one. Each edge therefore has a ``twin'' at the same coordinate, so removing one vertex from a root pair destroys both edges simultaneously. This makes $E_{int}=11$ impossible; the next achievable value is $E_{int}=10$.}
 \label{fig:fracture}
 \end{figure}
 
