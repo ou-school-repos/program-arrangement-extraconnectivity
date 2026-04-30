@@ -223,13 +223,17 @@ def main():
     )
 
     import io
+
     from PIL import Image
 
     out = "assets/out/compression_counterexample.gif"
     buf = io.BytesIO()
     fig.savefig(
-        buf, format="png", dpi=120,
-        bbox_inches="tight", pad_inches=0.15,
+        buf,
+        format="png",
+        dpi=120,
+        bbox_inches="tight",
+        pad_inches=0.15,
         facecolor="white",
     )
     buf.seek(0)

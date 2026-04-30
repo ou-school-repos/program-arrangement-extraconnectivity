@@ -11,9 +11,7 @@ def gen_hypercube_dot(d, output):
     E = d * (2 ** (d - 1))
     with open(output, "w") as f:
         f.write(f"graph Hypercube_{d} {{\n")
-        label = (
-            f'"Optimal {d}-Cube (R={R}, E={E})"'
-        )
+        label = f'"Optimal {d}-Cube (R={R}, E={E})"'
         f.write(
             f"  graph [label={label},"
             f" labelloc=t,"
@@ -39,9 +37,7 @@ def gen_fracture_dot(d, output):
     E_max = E_opt - d + 1
     with open(output, "w") as f:
         f.write(f"graph Fracture_{d} {{\n")
-        label = (
-            f'"Fractured {d}-Cube (R={R}, E={E_max})"'
-        )
+        label = f'"Fractured {d}-Cube (R={R}, E={E_max})"'
         f.write(
             f"  graph [label={label},"
             f" labelloc=t,"

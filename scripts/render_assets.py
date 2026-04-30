@@ -13,15 +13,12 @@ def gen_comparison_dot(d, output):
     comparing the optimal and fractured topologies.
     """
     R = 2**d
-    E_opt = d * (2**(d-1))
+    E_opt = d * (2 ** (d - 1))
     E_max = E_opt - d + 1
 
     with open(output, "w") as f:
-        f.write(f'graph Comparison_{d} {{\n')
-        label = (
-            f'"Stability Analysis (R={R})'
-            f'\\nOptimal vs Fractured"'
-        )
+        f.write(f"graph Comparison_{d} {{\n")
+        label = f'"Stability Analysis (R={R})' f'\\nOptimal vs Fractured"'
         f.write(
             f"  graph [label={label},"
             f" labelloc=t,"
@@ -30,49 +27,46 @@ def gen_comparison_dot(d, output):
         )
         f.write(
             '  node [fontname="Helvetica",'
-            ' style=filled, shape=circle,'
-            ' width=0.6];\n'
+            " style=filled, shape=circle,"
+            " width=0.6];\n"
         )
-        f.write('  edge [penwidth=1.2];\n')
+        f.write("  edge [penwidth=1.2];\n")
 
         # Optimal Cluster
-        f.write('  subgraph cluster_opt {\n')
+        f.write("  subgraph cluster_opt {\n")
         f.write(f'    label="Optimal {d}-Cube (E={E_opt})";\n')
-        f.write('    color=blue; fontcolor=blue; style=dashed;\n')
+        f.write("    color=blue; fontcolor=blue; style=dashed;\n")
         for i in range(R):
             f.write(f'    o{i} [fillcolor=lightblue, label="{to_bin(i, d)}"];\n')
         for i in range(R):
             for bit in range(d):
                 j = i ^ (1 << bit)
                 if i < j:
-                    f.write(f'    o{i} -- o{j};\n')
-        f.write('  }\n')
+                    f.write(f"    o{i} -- o{j};\n")
+        f.write("  }\n")
 
         # Fractured Cluster
-        f.write('  subgraph cluster_frac {\n')
+        f.write("  subgraph cluster_frac {\n")
         f.write(f'    label="Fractured {d}-Cube (E={E_max})";\n')
-        f.write('    color=red; fontcolor=red; style=dashed;\n')
+        f.write("    color=red; fontcolor=red; style=dashed;\n")
         for i in range(R - 1):
             f.write(f'    f{i} [fillcolor=lightpink, label="{to_bin(i, d)}"];\n')
         for i in range(R - 1):
             for bit in range(d):
                 j = i ^ (1 << bit)
                 if i < j and j < R - 1:
-                    f.write(f'    f{i} -- f{j};\n')
+                    f.write(f"    f{i} -- f{j};\n")
 
         # The Fractured/Splintered Node
         lbl = to_bin(R - 1, d)
+        f.write(f"    f{R-1} [fillcolor=orange," f' label="{lbl}\n(Splintered)"];\n')
         f.write(
-            f'    f{R-1} [fillcolor=orange,'
-            f' label="{lbl}\n(Splintered)"];\n'
-        )
-        f.write(
-            f'    f0 -- f{R-1} [color=red,'
-            f' penwidth=3.0,'
+            f"    f0 -- f{R-1} [color=red,"
+            f" penwidth=3.0,"
             f' label="Rigidity\nBreak"];\n'
         )
-        f.write('  }\n')
-        f.write('}\n')
+        f.write("  }\n")
+        f.write("}\n")
 
 
 def render_dots(asset_dir="assets", output_dir="assets/out"):

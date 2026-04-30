@@ -181,8 +181,8 @@ format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
 	find . -not -path '*/.lake/*' -name '*.md' -exec sed -i 's/[[:space:]]*$$//' {} +
 	-prettier -w .
-	-black docs/
-	-isort docs/
+	-black $$(git ls-files '*.py')
+	-isort $$(git ls-files '*.py')
 	-pre-commit run --all-files
 	clang-format -i $(SRCS)
 	@$(call print_success,Format complete.)

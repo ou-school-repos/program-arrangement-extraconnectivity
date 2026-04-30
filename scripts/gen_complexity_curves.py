@@ -14,24 +14,18 @@ matplotlib.use("pdf")
 import matplotlib.pyplot as plt  # noqa: E402
 
 # ── Actual measured search times from README.md ──────────────
-search_R = np.array(
-    [2, 3, 4, 5, 6, 7, 8, 9, 10]
-)
+search_R = np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])
 search_T = np.array(
-    [0.000001, 0.000002, 0.00001, 0.0002, 0.004,
-     0.072, 1.782, 74.553, 4140.057]
+    [0.000001, 0.000002, 0.00001, 0.0002, 0.004, 0.072, 1.782, 74.553, 4140.057]
 )
 # R=2: 1 gen, R=3: 6 gen, R=4: 46 gen, R=5: 1102 gen (all <1ms)
 # R=6..10: actual wall clock from README.md brute-force logs.
 # R>=11 never completed (intractable).
 
 # ── Predictor times: ./predict --verify, 100 iters, overhead sub'd ─
-pred_R = np.array(
-    [4, 6, 8, 10, 12, 16, 20, 25, 30, 35, 40]
-)
+pred_R = np.array([4, 6, 8, 10, 12, 16, 20, 25, 30, 35, 40])
 pred_T = np.array(
-    [0.099, 0.240, 0.205, 0.581, 1.194,
-     2.739, 5.349, 9.035, 15.66, 24.80, 39.80]
+    [0.099, 0.240, 0.205, 0.581, 1.194, 2.739, 5.349, 9.035, 15.66, 24.80, 39.80]
 )
 pred_T = pred_T / 1000.0  # convert ms -> seconds
 
@@ -47,10 +41,8 @@ def linear_model(x, a, b):
 
 popt, _ = curve_fit(linear_model, x_model, log_T)
 a_fit, b_fit = popt
-print(
-    f"Search fit: log10(T) = {a_fit:.4f}"
-    f" + {b_fit:.4f} * (R-2)*log10(R)"
-)
+print(f"Search fit: log10(T) = {a_fit:.4f}" f" + {b_fit:.4f} * (R-2)*log10(R)")
+
 
 # ── Best fit predictor: T = c * R^3 * log(R) ────────────────
 def pred_model(r, c):
@@ -72,29 +64,44 @@ fig, ax = plt.subplots(figsize=(6.5, 3.2))
 
 # Search: data points + fit
 ax.semilogy(
-    R_smooth, T_search_fit, "r-", linewidth=2,
+    R_smooth,
+    T_search_fit,
+    "r-",
+    linewidth=2,
     label=r"Exhaustive Search ($\Omega(R^{R-2})$)",
 )
 ax.semilogy(
-    R_smooth[R_smooth > 10], T_search_fit[R_smooth > 10],
-    "r--", linewidth=1.5, alpha=0.5,
+    R_smooth[R_smooth > 10],
+    T_search_fit[R_smooth > 10],
+    "r--",
+    linewidth=1.5,
+    alpha=0.5,
 )
 ax.plot(search_R, search_T, "ro", markersize=5, zorder=5)
 
 # Predictor: data points + fit
 ax.semilogy(
-    R_smooth, T_pred_fit, "b-", linewidth=2,
+    R_smooth,
+    T_pred_fit,
+    "b-",
+    linewidth=2,
     label=r"Hamming Predictor ($O(R^3 \log R)$)",
 )
 ax.plot(
-    pred_R[pred_R <= 12], pred_T[pred_R <= 12],
-    "bs", markersize=4, zorder=5,
+    pred_R[pred_R <= 12],
+    pred_T[pred_R <= 12],
+    "bs",
+    markersize=4,
+    zorder=5,
 )
 
 # Fill gap
 ax.fill_between(
-    R_smooth, T_pred_fit, T_search_fit,
-    alpha=0.12, color="red",
+    R_smooth,
+    T_pred_fit,
+    T_search_fit,
+    alpha=0.12,
+    color="red",
     where=(T_search_fit > T_pred_fit),
 )
 
@@ -110,8 +117,11 @@ ax.grid(True, alpha=0.3)
 ax.annotate(
     "intractable",
     xy=(11.5, T_search_fit[R_smooth >= 11.5][0]),
-    fontsize=9, color="red", ha="center",
-    va="bottom", style="italic",
+    fontsize=9,
+    color="red",
+    ha="center",
+    va="bottom",
+    style="italic",
 )
 
 plt.tight_layout()
