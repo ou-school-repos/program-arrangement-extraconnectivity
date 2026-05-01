@@ -46,12 +46,12 @@
 \newcommand{\Eseq}{E_{\mathrm{seq}}}
 \newcommand{\Hamball}{\mathcal{H}}
 
-\title{
+\title{%
   \textbf{Exact Extraconnectivity of Arrangement Graphs $A(n,k)$:}\\[0.5em]
   Analysis via Algebraic Defect Framework\\[0.5em]
   % \large \textit{Bachelor's thesis}
 }
-\author{
+\author{%
   Shane Jaroch \\
   % \small \textit{Bachelor's Candidate} \\
   \small \textit{Department of Mathematics and Statistics,} \\
@@ -362,9 +362,9 @@ For all $R \ge 2$ and $n \ge k \ge 1$:
 \begin{equation}\label{eq:extraconnectivity}
 \kappa_{R-1}(A(n,k)) = \big(R \cdot k - E_{seq}(R)\big) \cdot (n - k) - C_{const}(R)
 \end{equation}
-where $E_{seq}(R) = \sum_{i=0}^{R-1} \text{popcount}(i)$ is the cumulative binary weight (OEIS A000788), and writing $d = \lceil \log_2 R \rceil$,
+where $E_{seq}(R) = \sum_{i=0}^{R-1} \mathrm{popcount}(i)$ is the cumulative binary weight (OEIS A000788), $\mathrm{popcount}(i)$ denotes the number of 1-bits in the binary representation of $i$, and writing $d = \lceil \log_2 R \rceil$,
 \begin{equation}\label{eq:cconst}
-C_{const}(R) = (R - 1) + R\,d - 2^{d} + 1 - E_{seq}(R) \;=\; R(d + 1) - 2^d - E_{seq}(R).
+C_{const}(R) = \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - E_{seq}(R) \;=\; (R - 1) + R\,d - 2^{d} + 1 - E_{seq}(R) \;=\; R(d + 1) - 2^d - E_{seq}(R).
 \end{equation}
 \end{enumerate}
 The embedding condition in (ii) ensures the graph is large enough to fit a $d$-dimensional hypercube.
@@ -537,7 +537,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
   \node[font=\footnotesize, text=gray] at (11.5, 1.85) {sparse, $E=7$};
 
   \node[hub] (c2) at (11.5, 0.3) {};
-  \foreach \i/\a in {1/90,2/141,3/193,4/244,5/296,6/347,7/39} {
+  \foreach \i/\a in {1/90,2/141,3/193,4/244,5/296,6/347,7/39} {%
     \node[vertex] (s\i) at ({11.5 + 1.3*cos(\a)}, {0.3 + 1.3*sin(\a)}) {};
     \draw[thick] (c2) -- (s\i);
   }
@@ -668,7 +668,7 @@ Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. L
 \begin{equation}\label{eq:case2-bound}
 |E(S)| \le d\,2^{d-1} - md + e_{rem} + m + \textstyle\binom{m}{2} \le d\,2^{d-1} - m(d - m)
 \end{equation}
-since $e_{rem} \le \binom{m}{2}$. For $1 \le m \le d-1$, the gap $m(d - m)$ is minimized at $m = 1$, giving $d - 1$. Multi-vertex deviations only widen the gap.
+since $e_{rem} \le \binom{m}{2}$. For $1 \le m \le d-1$, the gap $m(d - m)$ is minimized at $m = 1$, giving $d - 1$. For $m \ge d$, removing $m \ge d$ vertices from $Q_d$ destroys at least $d\,2^{d-1} - \binom{m}{2}$ edges while the replacements contribute at most $m + \binom{m}{2}$, so the gap exceeds $d - 1$ for all $d \ge 2$. In every case, multi-vertex deviations cannot narrow the gap below $d - 1$.
 
 In both cases, $|E(S)| \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden edge counts in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below the optimum.
 \end{proof}
@@ -699,7 +699,7 @@ For $R \neq 2^d$, a defect of $E_{seq}(R) - 1$ is achievable by a connected $R$-
 \begin{proof}
 The cumulative binary weight satisfies $E_{seq}(R) = E_{seq}(R-1) + c$, where $c = \mathrm{popcount}(R-1)$ is the number of 1-bits in $(R-1)$. In the Hamming Ball $\mathrm{HB}_R$, the last vertex (vertex $R-1$ in colexicographic order) connects to exactly $c$ vertices in $\mathrm{HB}_{R-1}$.
 
-Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$... but more directly: we construct a connected subgraph with $E_{seq}(R) - 1$ edges by placing the $R$-th vertex at a position adjacent to only $c - 1$ of its potential neighbors in $\mathrm{HB}_{R-1}$.
+Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$, but more directly: we construct a connected subgraph with $E_{seq}(R) - 1$ edges by placing the $R$-th vertex at a position adjacent to only $c - 1$ of its potential neighbors in $\mathrm{HB}_{R-1}$.
 
 When $c \ge 2$: the $R$-th vertex has $c$ neighbors in $\mathrm{HB}_{R-1}$ corresponding to $c$ coordinate positions. By shifting one coordinate to a fresh symbol not used by any neighbor, we break one adjacency while preserving the remaining $c - 1 \ge 1$ connections, maintaining connectivity.
 
@@ -789,7 +789,7 @@ Exhaustive enumeration of connected subgraphs becomes intractable beyond $R=7$. 
 \label{fig:complexity}
 \end{figure}
 
-Figures \ref{fig:r9} and \ref{fig:r10} show the induced subgraph structure of $\mathrm{HB}_R$ for $R = 9$ and $R = 10$. Because the Hamming Ball is defined by binary strings, this structure is independent of the host graph $A(n,k)$ (provided $n-k \ge 4$ and $k \ge 4$). Both extend the perfect $Q_3$ cube ($R=8$) by adding vertices that share the maximum number of edges with the existing ball.
+Figures~\ref{fig:r9} and~\ref{fig:r10} show the induced subgraph structure of $\mathrm{HB}_R$ for $R = 9$ and $R = 10$. Because the Hamming Ball is defined by binary strings, this structure is independent of the host graph $A(n,k)$ (provided $n-k \ge 4$ and $k \ge 4$). Both extend the perfect $Q_3$ cube ($R=8$) by adding vertices that share the maximum number of edges with the existing ball.
 
 \begin{figure}[H]
 \centering
