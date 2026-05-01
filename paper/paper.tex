@@ -14,7 +14,7 @@
 \usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!70!black,hypertexnames=false]{hyperref}
 \usetikzlibrary{positioning, arrows.meta, shapes.geometric, decorations.pathreplacing}
 
-% ── Preprint watermark ───────────────────────────────────────────────────
+% -- Preprint watermark ---------------------------------------------------
 \usepackage{eso-pic}
 \AddToShipoutPictureBG{%
   \put(\LenToUnit{0.5\paperwidth},\LenToUnit{0.955\paperheight}){%
@@ -25,7 +25,7 @@
   }%
 }
 
-% ── Theorem environments ────────────────────────────────────────────────
+% -- Theorem environments ------------------------------------------------
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{proposition}[theorem]{Proposition}
@@ -38,7 +38,7 @@
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 
-% ── Notation shortcuts ──────────────────────────────────────────────────
+% -- Notation shortcuts --------------------------------------------------
 \newcommand{\ank}{A(n,k)}
 \newcommand{\Nats}{\mathbb{N}}
 \newcommand{\extbd}{\partial_{\mathrm{ext}}}
@@ -70,7 +70,7 @@
 \maketitle
 
 \begin{abstract}
-We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. For all $R \ge 2$, the lexicographic Hamming Ball is the unique boundary-minimizing subset (up to isomorphism), whose defect matches the cumulative binary weight sequence (OEIS A000788); notably, at $R=3$ the sparse and dense limits coincide. To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We establish the Asymptotic Penalty Theorem: any sub-optimal topology suffers a linear penalty of at least $(n-k)$ boundary nodes, ensuring the Hamming Ball dominates as the network scales. Finally, we completely classify the achievable defect spectrum, proving that it forms a ``Topological Funnel'' that fractures at powers of 2 but remains strictly continuous elsewhere. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), computationally verified up to $R=260$.
+We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. For all $R \ge 2$, the lexicographic Hamming Ball is the unique boundary-minimizing subset (up to isomorphism), whose defect matches the cumulative binary weight sequence (OEIS A000788); notably, at $R=3$ the sparse and dense limits coincide. To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We establish the Asymptotic Penalty Theorem: any sub-optimal topology suffers a linear penalty of at least $(n-k)$ boundary nodes, ensuring the Hamming Ball dominates as the network scales. Finally, we completely classify the achievable defect spectrum, proving that it forms a ``Topological Funnel'' that fractures at powers of 2 but remains strictly continuous elsewhere. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), with Proposition~\ref{prop:hb-eval} computationally verified up to $R=260$ and Proposition~\ref{prop:universal} verified exhaustively for $R \le 10$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -346,7 +346,7 @@ X(\mathrm{HB}_R) + E_{seq}(R) = C_{const}(R).
 \end{proposition}
 
 \begin{remark}
-These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. They are computationally verified for all $R \le 260$ via our C++ verification engine. The full Lean 4 formalization of the graph theory, dimensional scaling, and bitwise arithmetic proceeds from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit axioms in the proof framework, isolating the classical extremal set theory from the novel algebraic machinery.
+These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is computationally verified for all $R \le 260$ by constructing $\mathrm{HB}_R$ and enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}). Proposition~\ref{prop:universal} is verified exhaustively for all $R \le 10$ by enumerating every non-isomorphic connected $R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). The full Lean 4 formalization of the graph theory, dimensional scaling, and bitwise arithmetic proceeds from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit axioms in the proof framework, isolating the classical extremal set theory from the novel algebraic machinery.
 \end{remark}
 
 Combining these propositions with the boundary decomposition yields our main result:
@@ -494,7 +494,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
     vertex/.style={circle, draw, fill=blue!30, inner sep=0pt, minimum size=5pt},
     hub/.style={circle, draw, fill=red!50, inner sep=0pt, minimum size=7pt}]
 
-  % ── R=3: Path P_2 (sparse = dense) ────────────────────
+  % -- R=3: Path P_2 (sparse = dense) --------------------
   \node[font=\bfseries] at (0, 2.3) {$P_2$};
   \node[font=\footnotesize, text=gray] at (0, 1.85) {sparse $=$ dense};
   \node[font=\footnotesize, text=gray] at (0, 1.45) {$E=2$};
@@ -505,7 +505,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 
   \draw[thick] (p0) -- (p1) -- (p2);
 
-  % ── K_{1,3}: Star on 4 vertices ───────────────────────
+  % -- K_{1,3}: Star on 4 vertices -----------------------
   \node[font=\bfseries] at (4, 2.3) {$K_{1,3}$};
   \node[font=\footnotesize, text=gray] at (4, 1.85) {sparse, $E=3$};
 
@@ -518,7 +518,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
   \draw[thick] (c1) -- (b1);
   \draw[thick] (c1) -- (d1);
 
-  % ── Q_2: Hamming Ball on 4 vertices (square) ──────────
+  % -- Q_2: Hamming Ball on 4 vertices (square) ----------
   \node[font=\bfseries] at (7.5, 2.3) {$Q_2$};
   \node[font=\footnotesize, text=gray] at (7.5, 1.85) {dense, $E=4$};
 
@@ -532,7 +532,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
   % Arrow between R=4 pair
   \draw[->, thick, gray] (5.4, 0.3) -- (6.4, 0.3);
 
-  % ── K_{1,7}: Star on 8 vertices ───────────────────────
+  % -- K_{1,7}: Star on 8 vertices -----------------------
   \node[font=\bfseries] at (11.5, 2.3) {$K_{1,7}$};
   \node[font=\footnotesize, text=gray] at (11.5, 1.85) {sparse, $E=7$};
 
@@ -542,7 +542,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
     \draw[thick] (c2) -- (s\i);
   }
 
-  % ── Q_3: Hamming Ball on 8 vertices (cube) ────────────
+  % -- Q_3: Hamming Ball on 8 vertices (cube) ------------
   \node[font=\bfseries] at (16, 2.3) {$Q_3$};
   \node[font=\footnotesize, text=gray] at (16, 1.85) {dense, $E=12$};
 
@@ -875,6 +875,137 @@ theorem arrangement_extraconnectivity_minimum
   (forall V' : Finset (ArrVertex n k), V'.card = R ->
     external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
 \end{verbatim}
+
+% ════════════════════════════════════════════════════════════════════════
+\section{Characterization Engine Source Code}\label{app:engine}
+
+The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $E_{seq}(R)$ and $C_{const}(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. Only the core algorithmic functions are shown; the full source including CLI interface is available at the project repository.
+
+\begin{verbatim}
+// -- A000788: cumulative popcount -- O(log R) ----------------------
+static uint64_t popcount_u(uint64_t n) {
+    return (uint64_t)__builtin_popcountll(n);
+}
+static uint64_t bit_length_u(uint64_t n) {
+    return n == 0 ? 0 : 64 - (uint64_t)__builtin_clzll(n);
+}
+static int64_t A000788(int64_t n) {
+    if (n <= 0) return 0;
+    int64_t m = n / 2;
+    if (n % 2 == 0) return 2 * A000788(m) + m;
+    else return 2*A000788(m) + m + (int64_t)popcount_u((uint64_t)m);
+}
+
+// -- C_const(R) -- O(R) -------------------------------------------
+// C(R) = (R-1) + sum_{x=1}^{R-1} bit_length(x) - E_seq(R)
+static int64_t constant_analytical(int64_t R) {
+    if (R <= 0) return 0;
+    int64_t eseq = A000788(R);
+    int64_t L = 0;
+    for (int64_t x = 1; x < R; x++)
+        L += (int64_t)bit_length_u((uint64_t)x);
+    return (R - 1) + L - eseq;
+}
+
+// -- Hamming Ball construction ------------------------------------
+// Vertex: injective sequence of R symbols from [R + dims].
+// Vertex i flips coordinate d when bit d of i is set.
+template <typename SymT>
+static vector<Vertex<SymT>> build_hamming_ball(int R) {
+    int dims = 0;
+    while ((1 << dims) < R) dims++;
+    vector<Vertex<SymT>> verts(R);
+    for (int i = 0; i < R; i++) {
+        for (int p = 0; p < R; p++)
+            verts[i].syms[p] = (SymT)p;       // identity
+        for (int d = 0; d < dims; d++)
+            if (i & (1 << d))
+                verts[i].syms[d] = (SymT)(R + d); // flip
+    }
+    return verts;
+}
+
+// -- Formula computation via construction -- O(R^3) ----------------
+// Returns (E_seq, C_const) by constructing the Hamming Ball
+// and counting unique roots and named neighbors.
+template <typename SymT>
+static FormulaResult compute_formula(
+        const vector<Vertex<SymT>>& verts, int R) {
+    // Collect used symbols
+    vector<SymT> used_syms;
+    for (auto& v : verts)
+        for (int p = 0; p < R; p++) {
+            SymT s = v.syms[p];
+            if (!any_of(used_syms.begin(), used_syms.end(),
+                        [s](SymT u){ return u == s; }))
+                used_syms.push_back(s);
+        }
+    int M = (int)used_syms.size();
+
+    // Unique roots per coordinate (distinct groups)
+    int anon_coeff = 0;
+    for (int p = 0; p < R; p++) {
+        vector<Vertex<SymT>> keys;
+        for (int i = 0; i < R; i++) {
+            Vertex<SymT> key = verts[i];
+            key.syms[p] = SENTINEL;
+            if (!any_of(keys.begin(), keys.end(),
+                [&key](const Vertex<SymT>& g){ return g == key; }))
+                keys.push_back(key);
+        }
+        anon_coeff += (int)keys.size();
+    }
+
+    // Named external neighbors (sort-dedup)
+    auto sorted = verts;
+    sort(sorted.begin(), sorted.end());
+    vector<Vertex<SymT>> nbrs;
+    for (int i = 0; i < R; i++)
+        for (int p = 0; p < R; p++)
+            for (auto s : used_syms)
+                if (!contains_sym(verts[i], s)) {
+                    Vertex<SymT> vtx = verts[i];
+                    vtx.syms[p] = s;
+                    if (!binary_search(sorted.begin(),
+                                       sorted.end(), vtx))
+                        nbrs.push_back(vtx);
+                }
+    sort(nbrs.begin(), nbrs.end());
+    nbrs.erase(unique(nbrs.begin(), nbrs.end()), nbrs.end());
+
+    int64_t nk1 = R*R - anon_coeff;     // = E_seq(R)
+    int64_t cst = (int64_t)anon_coeff*(M-R) - (int64_t)nbrs.size();
+    return {nk1, cst};                   // {E_seq, C_const}
+}
+
+// -- Brute-force boundary verification -- O(R^3 log R) -------------
+// Enumerates all neighbors in A(n,k) and compares to the formula.
+template <typename SymT>
+static int64_t brute_force_neighbors(
+        const vector<Vertex<SymT>>& verts, int n, int k) {
+    auto sorted = verts;
+    sort(sorted.begin(), sorted.end());
+    vector<Vertex<SymT>> nbrs;
+    for (int i = 0; i < (int)verts.size(); i++)
+        for (int p = 0; p < k; p++)
+            for (int s = 0; s < n; s++) {
+                if (contains_sym(verts[i], s)) continue;
+                Vertex<SymT> nbr = verts[i];
+                nbr.syms[p] = (SymT)s;
+                if (!binary_search(sorted.begin(),
+                                   sorted.end(), nbr))
+                    nbrs.push_back(nbr);
+            }
+    sort(nbrs.begin(), nbrs.end());
+    nbrs.erase(unique(nbrs.begin(), nbrs.end()), nbrs.end());
+    return (int64_t)nbrs.size();
+}
+\end{verbatim}
+
+\noindent This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
+\texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
+for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
+
 
 \bibliographystyle{plain}
 % \nocite{*}
