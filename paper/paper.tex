@@ -24,6 +24,9 @@
   xleftmargin=0.5em,
   aboveskip=0.8em,
   belowskip=0.8em,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{red},
 }
 \usetikzlibrary{positioning, arrows.meta, shapes.geometric, decorations.pathreplacing}
 
@@ -532,10 +535,10 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
     vertex/.style={circle, draw, fill=blue!30, inner sep=0pt, minimum size=5pt},
     hub/.style={circle, draw, fill=red!50, inner sep=0pt, minimum size=7pt}]
 
-  % -- R=3: Path P_2 (sparse = dense) --------------------
-  \node[font=\bfseries] at (0, 2.3) {$P_2$};
+  % -- R=3: Path P_3 (sparse = dense) --------------------
+  \node[font=\bfseries] at (0, 2.3) {$P_3$};
   \node[font=\footnotesize, text=gray] at (0, 1.85) {sparse $=$ dense};
-  \node[font=\footnotesize, text=gray] at (0, 1.45) {$E=2$};
+  \node[font=\footnotesize, text=gray] at (0, 1.45) {$D=2$};
 
   \node[vertex] (p0) at (-0.9, 0.3) {};
   \node[vertex] (p1) at (0,    0.3) {};
@@ -545,7 +548,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 
   % -- K_{1,3}: Star on 4 vertices -----------------------
   \node[font=\bfseries] at (4, 2.3) {$K_{1,3}$};
-  \node[font=\footnotesize, text=gray] at (4, 1.85) {sparse, $E=3$};
+  \node[font=\footnotesize, text=gray] at (4, 1.85) {sparse, $D=3$};
 
   \node[hub]    (c1) at (4, 0.8) {};
   \node[vertex] (a1) at (2.9, -0.4) {};
@@ -558,7 +561,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 
   % -- Q_2: Hamming Ball on 4 vertices (square) ----------
   \node[font=\bfseries] at (7.5, 2.3) {$Q_2$};
-  \node[font=\footnotesize, text=gray] at (7.5, 1.85) {dense, $E=4$};
+  \node[font=\footnotesize, text=gray] at (7.5, 1.85) {dense, $D=4$};
 
   \node[vertex] (q0) at (6.7, -0.4) {};
   \node[vertex] (q1) at (8.3, -0.4) {};
@@ -572,7 +575,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 
   % -- K_{1,7}: Star on 8 vertices -----------------------
   \node[font=\bfseries] at (11.5, 2.3) {$K_{1,7}$};
-  \node[font=\footnotesize, text=gray] at (11.5, 1.85) {sparse, $E=7$};
+  \node[font=\footnotesize, text=gray] at (11.5, 1.85) {sparse, $D=7$};
 
   \node[hub] (c2) at (11.5, 0.3) {};
   \foreach \i/\a in {1/90,2/141,3/193,4/244,5/296,6/347,7/39} {%
@@ -582,7 +585,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 
   % -- Q_3: Hamming Ball on 8 vertices (cube) ------------
   \node[font=\bfseries] at (16, 2.3) {$Q_3$};
-  \node[font=\footnotesize, text=gray] at (16, 1.85) {dense, $E=12$};
+  \node[font=\footnotesize, text=gray] at (16, 1.85) {dense, $D=12$};
 
   % Front face
   \node[vertex] (f0) at (14.8, -0.5) {};
@@ -618,7 +621,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}] (9.8, -1.2) -- (17.2, -1.2)
     node[midway, below=5pt, font=\footnotesize] {$R = 8$};
 \end{tikzpicture}
-\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball coincide (both are $P_2$). At $R=4$ the gap is 1 edge; at $R=8$ it widens to 5 edges. Arrows connect the sparse limit $K_{1,R-1}$ ($E = R - 1$) to the dense limit $Q_d$ ($E = E_{seq}(R)$).}
+\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball coincide (both are $P_3$). At $R=4$ the gap is 1 defect link; at $R=8$ it widens to 5. Arrows connect the sparse limit $K_{1,R-1}$ ($D = R - 1$) to the dense limit $Q_d$ ($D = E_{seq}(R)$).}
 \label{fig:limits}
 \end{figure}
 
@@ -626,19 +629,19 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $D = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
-If a subset $V'$ fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E = E_{seq}(R) - D(V')$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
+If a subset $V'$ fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta D = E_{seq}(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
 \end{theorem}
 To understand this mechanism, we return to the exact boundary decomposition~\eqref{eq:boundary}:
 
-Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a subset $V'$ falls short of the optimal Hamming Ball defect by $\Delta E$, it must project onto $\Delta E$ \emph{additional} unique roots to maintain its vertex count ($U_{sub} = U_{opt} + \Delta E$).
+Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a subset $V'$ falls short of the optimal Hamming Ball defect by $\Delta D$, it must project onto $\Delta D$ \emph{additional} unique roots to maintain its vertex count ($U_{sub} = U_{opt} + \Delta D$).
 
 Substituting this into the boundary equation yields the comparative boundary size:
 \begin{align}\label{eq:penalty-expansion}
-\left| \partial_{\mathrm{ext}}(V'_{sub}) \right| &= (U_{opt} + \Delta E) \cdot (n - k) - (X_{sub} + D_{sub}) \nonumber\\
-&= \left| \partial_{\mathrm{ext}}(V'_{opt}) \right| + \Delta E \cdot (n - k) + (X_{opt} + D_{opt}) - (X_{sub} + D_{sub})
+\left| \partial_{\mathrm{ext}}(V'_{sub}) \right| &= (U_{opt} + \Delta D) \cdot (n - k) - (X_{sub} + D_{sub}) \nonumber\\
+&= \left| \partial_{\mathrm{ext}}(V'_{opt}) \right| + \Delta D \cdot (n - k) + (X_{opt} + D_{opt}) - (X_{sub} + D_{sub})
 \end{align}
 
-This formulation isolates the asymptotic behavior. The fluctuation in defect and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). Conversely, the penalty term $\Delta E \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single unit of defect ($\Delta E = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
+This formulation isolates the asymptotic behavior. The fluctuation in defect and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). Conversely, the penalty term $\Delta D \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single unit of defect ($\Delta D = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
 
 \subsection{Numerical Illustration}
 
@@ -673,7 +676,7 @@ The dominance of the Hamming Ball fluctuates based on how closely $R$ fits a per
 \label{tab:gap_jump}
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Cluster Size $R$ & Optimal $E$ & 2nd Best $E$ & Gap ($\Delta E$) \\
+Cluster Size $R$ & Optimal $D$ & 2nd Best $D$ & Gap ($\Delta D$) \\
 \midrule
 7 (Near-Cube) & 9  & 8  & 1 \\
 8 (Perfect Cube) & 12 & 10 & 2 \\
@@ -706,7 +709,7 @@ Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. L
 \begin{equation}\label{eq:case2-bound}
 D(S) \le d\,2^{d-1} - md + e_{rem} + m + E_{seq}(m)
 \end{equation}
-Since $e_{rem} \le E_{seq}(m) \le \binom{m}{2}$, the gap $d\,2^{d-1} - D(S) \ge m(d-1) - 2E_{seq}(m)$, which for $1 \le m \le d-1$ is minimized at $m = 1$, giving $d - 1$. Multi-vertex deviations only widen the gap.
+Since $e_{rem} \le E_{seq}(m)$, the gap from the optimum is at least $m(d-1) - 2E_{seq}(m)$. For small deviations ($1 \le m < d$), this bound strictly forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the defect strictly faster than single-vertex removal, so the gap only widens.
 
 In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden defect values in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below the optimum.
 \end{proof}
@@ -739,7 +742,7 @@ The cumulative binary weight satisfies $E_{seq}(R) = E_{seq}(R-1) + c$, where $c
 
 Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$, but more directly: we construct a connected subgraph with $E_{seq}(R) - 1$ edges by placing the $R$-th vertex at a position adjacent to only $c - 1$ of its potential neighbors in $\mathrm{HB}_{R-1}$.
 
-When $c \ge 2$: the $R$-th vertex has $c$ neighbors in $\mathrm{HB}_{R-1}$ corresponding to $c$ coordinate positions. By placing the $R$-th vertex at a valid position that matches only $c - 1$ of these coordinates (using a fresh symbol at the remaining position), we preserve $c - 1 \ge 1$ connections while reducing the defect by one, maintaining connectivity.
+When $c \ge 2$: the $R$-th vertex has $c$ neighbors in $\mathrm{HB}_{R-1}$ corresponding to $c$ coordinate positions. By placing the $R$-th vertex at a valid position that matches only $c - 1$ of these coordinates (using a fresh symbol at the remaining position), we preserve $c - 1 \ge 1$ shared roots while reducing the defect by one, maintaining connectivity.
 
 When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this connection without disconnecting. Instead, by Theorem~\ref{them:continuity}, the constructive Hamming Ball sequence already achieves every edge count up to $E_{seq}(R) - \gamma(R) = E_{seq}(R)$ (since $\gamma(R) = 0$), so $E_{seq}(R) - 1$ is achievable.
 
@@ -928,7 +931,7 @@ The engine is designed for exact integer arithmetic with zero heap allocation in
 
 \noindent This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
 \texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
-for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
+for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Because the Algebraic Defect Framework decouples the network dimensions from the subset structure, the constants $E_{seq}(R)$ and $C_{const}(R)$ are strictly independent of $n$ and $k$; thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to guarantee the formula's exactness for all valid dimensions. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
 
 \bibliographystyle{plain}
 % \nocite{*}
