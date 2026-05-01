@@ -12,18 +12,41 @@
 \usepackage{caption}
 
 \usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!70!black,hypertexnames=false]{hyperref}
+\usepackage{accsupp}
+\usepackage{embedfile}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=false,
+  frame=none,
+  xleftmargin=0.5em,
+  aboveskip=0.8em,
+  belowskip=0.8em,
+}
 \usetikzlibrary{positioning, arrows.meta, shapes.geometric, decorations.pathreplacing}
 
 % -- Preprint watermark ---------------------------------------------------
 \usepackage{eso-pic}
+\newcommand{\nocopytext}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
 \AddToShipoutPictureBG{%
   \put(\LenToUnit{0.5\paperwidth},\LenToUnit{0.955\paperheight}){%
-    \makebox(0,0){\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}%
+    \makebox(0,0){\nocopytext{\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}}%
   }%
   \put(\LenToUnit{0.5\paperwidth},\LenToUnit{0.04\paperheight}){%
-    \makebox(0,0){\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}%
+    \makebox(0,0){\nocopytext{\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}}%
   }%
 }
+
+% -- Non-copyable page numbers ---------------------------------------------
+\usepackage{fancyhdr}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\nocopytext{\thepage}}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+\pagestyle{plain}
 
 % -- Theorem environments ------------------------------------------------
 \newtheorem{theorem}{Theorem}[section]
@@ -301,7 +324,7 @@ The exact boundary size is then:
 \begin{equation}\label{eq:boundary}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation}
-The algebraic engine of this framework is a novel subadditivity inequality for the cumulative popcount sequence $E_{seq}$.
+The algebraic engine of this framework relies on a fundamental subadditivity inequality for the cumulative popcount sequence $E_{seq}$. While this inequality reflects the classical inductive step in Harper's edge-isoperimetric theorem for Boolean hypercubes \cite{harper1966optimal}, we formally mechanize it here to bound arbitrary fiber partitions in $A(n,k)$.
 
 \begin{lemma}[Subadditivity of A000788]\label{lem:subadditivity}
 For all $x, y \in \mathbb{N}$:
@@ -867,145 +890,27 @@ The Algebraic Defect Framework, the dimensional scaling bijections, and the Asym
 
 The capstone theorem verifies both the universal lower bound and the constructive existence of the Hamming Ball minimum cut:
 
-\begin{verbatim}
+\begin{lstlisting}[language={}]
 theorem arrangement_extraconnectivity_minimum
     (R n k : Nat) (h_cond : can_embed_hypercube R n k) :
   (exists V' : Finset (ArrVertex n k), V'.card = R /\
     external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
   (forall V' : Finset (ArrVertex n k), V'.card = R ->
     external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
-\end{verbatim}
+\end{lstlisting}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Characterization Engine Source Code}\label{app:engine}
 
-The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $E_{seq}(R)$ and $C_{const}(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. Only the core algorithmic functions are shown; the full source including CLI interface is available at the project repository.
+The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $E_{seq}(R)$ and $C_{const}(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. Only the core algorithmic functions are shown; the full source is embedded as a PDF attachment (\texttt{predict.cpp}) and can be extracted from this PDF in any standard reader.
 
-\begin{verbatim}
-// -- A000788: cumulative popcount -- O(log R) ----------------------
-static uint64_t popcount_u(uint64_t n) {
-    return (uint64_t)__builtin_popcountll(n);
-}
-static uint64_t bit_length_u(uint64_t n) {
-    return n == 0 ? 0 : 64 - (uint64_t)__builtin_clzll(n);
-}
-static int64_t A000788(int64_t n) {
-    if (n <= 0) return 0;
-    int64_t m = n / 2;
-    if (n % 2 == 0) return 2 * A000788(m) + m;
-    else return 2*A000788(m) + m + (int64_t)popcount_u((uint64_t)m);
-}
+\embedfile[filespec=predict.cpp,desc={Characterization engine source (C++17)}]{../src/predict.cpp}
 
-// -- C_const(R) -- O(R) -------------------------------------------
-// C(R) = (R-1) + sum_{x=1}^{R-1} bit_length(x) - E_seq(R)
-static int64_t constant_analytical(int64_t R) {
-    if (R <= 0) return 0;
-    int64_t eseq = A000788(R);
-    int64_t L = 0;
-    for (int64_t x = 1; x < R; x++)
-        L += (int64_t)bit_length_u((uint64_t)x);
-    return (R - 1) + L - eseq;
-}
-
-// -- Hamming Ball construction ------------------------------------
-// Vertex: injective sequence of R symbols from [R + dims].
-// Vertex i flips coordinate d when bit d of i is set.
-template <typename SymT>
-static vector<Vertex<SymT>> build_hamming_ball(int R) {
-    int dims = 0;
-    while ((1 << dims) < R) dims++;
-    vector<Vertex<SymT>> verts(R);
-    for (int i = 0; i < R; i++) {
-        for (int p = 0; p < R; p++)
-            verts[i].syms[p] = (SymT)p;       // identity
-        for (int d = 0; d < dims; d++)
-            if (i & (1 << d))
-                verts[i].syms[d] = (SymT)(R + d); // flip
-    }
-    return verts;
-}
-
-// -- Formula computation via construction -- O(R^3) ----------------
-// Returns (E_seq, C_const) by constructing the Hamming Ball
-// and counting unique roots and named neighbors.
-template <typename SymT>
-static FormulaResult compute_formula(
-        const vector<Vertex<SymT>>& verts, int R) {
-    // Collect used symbols
-    vector<SymT> used_syms;
-    for (auto& v : verts)
-        for (int p = 0; p < R; p++) {
-            SymT s = v.syms[p];
-            if (!any_of(used_syms.begin(), used_syms.end(),
-                        [s](SymT u){ return u == s; }))
-                used_syms.push_back(s);
-        }
-    int M = (int)used_syms.size();
-
-    // Unique roots per coordinate (distinct groups)
-    int anon_coeff = 0;
-    for (int p = 0; p < R; p++) {
-        vector<Vertex<SymT>> keys;
-        for (int i = 0; i < R; i++) {
-            Vertex<SymT> key = verts[i];
-            key.syms[p] = SENTINEL;
-            if (!any_of(keys.begin(), keys.end(),
-                [&key](const Vertex<SymT>& g){ return g == key; }))
-                keys.push_back(key);
-        }
-        anon_coeff += (int)keys.size();
-    }
-
-    // Named external neighbors (sort-dedup)
-    auto sorted = verts;
-    sort(sorted.begin(), sorted.end());
-    vector<Vertex<SymT>> nbrs;
-    for (int i = 0; i < R; i++)
-        for (int p = 0; p < R; p++)
-            for (auto s : used_syms)
-                if (!contains_sym(verts[i], s)) {
-                    Vertex<SymT> vtx = verts[i];
-                    vtx.syms[p] = s;
-                    if (!binary_search(sorted.begin(),
-                                       sorted.end(), vtx))
-                        nbrs.push_back(vtx);
-                }
-    sort(nbrs.begin(), nbrs.end());
-    nbrs.erase(unique(nbrs.begin(), nbrs.end()), nbrs.end());
-
-    int64_t nk1 = R*R - anon_coeff;     // = E_seq(R)
-    int64_t cst = (int64_t)anon_coeff*(M-R) - (int64_t)nbrs.size();
-    return {nk1, cst};                   // {E_seq, C_const}
-}
-
-// -- Brute-force boundary verification -- O(R^3 log R) -------------
-// Enumerates all neighbors in A(n,k) and compares to the formula.
-template <typename SymT>
-static int64_t brute_force_neighbors(
-        const vector<Vertex<SymT>>& verts, int n, int k) {
-    auto sorted = verts;
-    sort(sorted.begin(), sorted.end());
-    vector<Vertex<SymT>> nbrs;
-    for (int i = 0; i < (int)verts.size(); i++)
-        for (int p = 0; p < k; p++)
-            for (int s = 0; s < n; s++) {
-                if (contains_sym(verts[i], s)) continue;
-                Vertex<SymT> nbr = verts[i];
-                nbr.syms[p] = (SymT)s;
-                if (!binary_search(sorted.begin(),
-                                   sorted.end(), nbr))
-                    nbrs.push_back(nbr);
-            }
-    sort(nbrs.begin(), nbrs.end());
-    nbrs.erase(unique(nbrs.begin(), nbrs.end()), nbrs.end());
-    return (int64_t)nbrs.size();
-}
-\end{verbatim}
+\lstinputlisting[language=C++]{predict_core.cpp}
 
 \noindent This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
 \texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
 for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
-
 
 \bibliographystyle{plain}
 % \nocite{*}

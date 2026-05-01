@@ -1,9 +1,10 @@
 // Hamming Ball Predictor for Arrangement Graph Extraconnectivity
 //
 // Three-tier prediction:
-//   1. O(R)    — analytical: A000788 coefficient + cumulative-zeros constant
-//   2. O(R³)   — construction: Hamming ball + formula computation
-//   3. O(R³logR)— verification: brute-force neighbor enumeration (R ≤ 40)
+//   1. O(R)         — analytical: A000788 coefficient + cumulative-zeros
+//   constant
+//   2. O(R^3)       — construction: Hamming ball + formula computation
+//   3. O(R^3 log R) — verification: brute-force neighbor enumeration (R ≤ 40)
 //
 // Usage: ./predict [R]       Single R prediction (R ≤ 64)
 //        ./predict --csv N   CSV output for R=2..N
@@ -18,7 +19,6 @@
 #include <cstring>
 #include <iostream>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 // __int128 is a GCC/Clang extension, not ISO C++17.
@@ -28,7 +28,7 @@ static inline int128_t widen(int64_t x) { return x; }
 
 static int R = 10;
 
-// ── Vertex type: fixed-size stack struct, templatized on symbol type ──
+// -- Vertex type: fixed-size stack struct, templatized on symbol type --
 
 template <typename SymT> struct Vertex {
     static constexpr SymT SENTINEL = static_cast<SymT>(~SymT{0}); // max value
@@ -64,7 +64,7 @@ static std::string vertex_to_string(const Vertex<SymT> &v) {
     return str;
 }
 
-// ── 128-bit integer printing (for large R where coeff*R > 2^63) ──────
+// -- 128-bit integer printing (for large R where coeff*R > 2^63) ----
 static std::string i128_to_string(int128_t x) {
     if (x == 0)
         return "0";
@@ -82,7 +82,7 @@ static std::string i128_to_string(int128_t x) {
     return s;
 }
 
-// ── A000788: cumulative popcount — O(log R) ──────────────────────────
+// -- A000788: cumulative popcount — O(log R) ------------------------
 
 static uint64_t popcount_u(uint64_t n) {
     return static_cast<uint64_t>(__builtin_popcountll(n));
@@ -103,7 +103,7 @@ static int64_t A000788(int64_t n) {
                static_cast<int64_t>(popcount_u(static_cast<uint64_t>(m)));
 }
 
-// ── Constant C(R) — O(R) ─────────────────────────────────────────────
+// -- Constant C(R) — O(R) ---------------------------------------------
 // C(R) = (R-1) + Σ_{x=1}^{R-1} bit_length(x) - E(R)
 // Equivalently: (R-1) + Σ zero-bits in binary(1..R-1)
 
@@ -117,7 +117,7 @@ static int64_t constant_analytical(int64_t R_val) {
     return (R_val - 1) + L - nk1;
 }
 
-// ── Hamming ball construction ────────────────────────────────────────
+// -- Hamming ball construction ----------------------------------------
 
 template <typename SymT> static std::vector<Vertex<SymT>> build_hamming_ball() {
     int dims = 0;
@@ -136,7 +136,7 @@ template <typename SymT> static std::vector<Vertex<SymT>> build_hamming_ball() {
     return verts;
 }
 
-// ── Formula computation via construction — O(R³) ─────────────────────
+// -- Formula computation via construction — O(R^3) --------------------
 
 struct FormulaResult {
     int64_t nk1;
@@ -203,7 +203,7 @@ static FormulaResult compute_formula(const std::vector<Vertex<SymT>> &verts) {
     return {nk1, constant};
 }
 
-// ── Brute-force verification — O(R³ log R) ───────────────────────────
+// -- Brute-force verification — O(R^3 * log R) -------------------------
 
 template <typename SymT>
 static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
@@ -231,7 +231,7 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
     return static_cast<int64_t>(nbrs.size());
 }
 
-// ── Verify runner — templated on symbol type ─────────────────────────
+// -- Verify runner — templated on symbol type -------------------------
 
 template <typename SymT>
 static int run_verify(int64_t expected_nk1, int64_t expected_const,
@@ -258,7 +258,7 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
         return 1;
     }
 
-    // ── Tier 3: Brute-force verification — O(R³ log R) ───────────
+    // Brute-force neighbor enumeration
     const int ver_n = 2 * R;
     const int64_t brute_count = brute_force_neighbors(verts, ver_n, R);
     const int128_t coeff = widen(R) * R - nk1;
@@ -280,10 +280,10 @@ static int run_verify(int64_t expected_nk1, int64_t expected_const,
     return 0;
 }
 
-// ── Main ──────────────────────────────────────────────────────────────
+// -- Main -------------------------------------------------------------
 
 int main(int argc, const char *argv[]) {
-    // ── Flag parsing ──────────────────────────────────────────────────
+    // -- Flag parsing -------------------------------------------------
     bool csv_mode = false;
     bool verify_mode = false;
     bool range_mode = false;
@@ -330,7 +330,7 @@ int main(int argc, const char *argv[]) {
         R = static_cast<int>(std::strtol(positional[0].c_str(), nullptr, 10));
     }
 
-    // ── Usage ─────────────────────────────────────────────────────────
+    // -- Usage ----------------------------------------------------------
     if (positional.empty() && !range_mode && !csv_mode) {
         std::cerr
             << "Usage:\n"
@@ -342,7 +342,7 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
 
-    // ── Range/CSV mode ────────────────────────────────────────────────
+    // -- Range/CSV mode -----------------------------------------------
     if (range_mode || (csv_mode && end_r > 0)) {
         if (csv_mode && !range_mode)
             start_r = 2;
@@ -382,7 +382,7 @@ int main(int argc, const char *argv[]) {
         return 0;
     }
 
-    // ── Single R mode ─────────────────────────────────────────────────
+    // -- Single R mode ------------------------------------------------
     if (R < 0) {
         std::cerr << "Error: R must be >= 0\n";
         return 1;
