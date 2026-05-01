@@ -104,17 +104,17 @@ To move to an adjacent vertex in $A(n,k)$, one selects one of the $k$ active coo
 
 \begin{definition}[Unique Roots and Defect]
 For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size $n-k+1$ obtained by filling the missing coordinate with any available symbol. The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques that intersect the set $V'$ at coordinate $p$:
-\begin{equation*}
+\begin{equation}\label{eq:unique-roots}
 U_p(V') = \{ (v_1, \ldots, v_{p-1},\, v_{p+1}, \ldots, v_k) : v \in V' \}
-\end{equation*}
+\end{equation}
 That is, each root is the $(k{-}1)$-tuple formed by taking a vertex $v \in V'$ and deleting its $p$-th coordinate. The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of distinct coordinate-aligned lines that $V'$ touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ counts how many times two vertices in $V'$ share the same root, i.e., the number of internal edges within $V'$. For hypercube-embedded subsets this is exact; for dense cliques it serves as a robust algebraic upper bound that naturally prevents over-counting.
 \end{definition}
 
 \begin{definition}[External Boundary]
 For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\partial_{ext}(V')$ is the set of vertices not in $V'$ that are adjacent to at least one vertex in $V'$:
-\[
+\begin{equation}\label{eq:ext-boundary}
 \partial_{ext}(V') = \{ w \in V  -  V' : \exists\, v \in V',\; \{v,w\} \in E \}.
-\]
+\end{equation}
 Its cardinality $|\partial_{ext}(V')|$ is the quantity we seek to minimize.
 \end{definition}
 
@@ -286,28 +286,28 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
 Instead of tracing geometric boundaries, we count global algebraic roots. The sum $U(V')$ represents the total number of 1-dimensional ``fibers'' (coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set projects onto along a specific dimension.
 
 The framework utilizes a double-counting correction. By counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
-\begin{align*}
-  E_{\mathrm{cand}} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \\
-           &= \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \\
+\begin{align}\label{eq:ecand}
+  E_{\mathrm{cand}} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \nonumber\\
+           &= \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \nonumber\\
            &= U(V') \cdot (n-k) - D(V').
-\end{align*}
+\end{align}
 
 Because external neighbors may be hit by multiple dimensions, we subtract the \emph{Cross-Collisions} $X(V')$ to retrieve the exact boundary of unique vertices. We formally define $X(V')$ as the sum of over-counted boundary adjacencies:
-\begin{equation*}
+\begin{equation}\label{eq:cross-collision}
 X(V') = \sum_{v \in \partial_{ext}(V')} (\text{deg}_{V'}(v) - 1).
-\end{equation*}
+\end{equation}
 
 The exact boundary size is then:
-\begin{equation*}
+\begin{equation}\label{eq:boundary}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
-\end{equation*}
+\end{equation}
 The algebraic engine of this framework is a novel subadditivity inequality for the cumulative popcount sequence $E_{seq}$.
 
 \begin{lemma}[Subadditivity of A000788]\label{lem:subadditivity}
 For all $x, y \in \mathbb{N}$:
-\begin{equation*}
+\begin{equation}\label{eq:subadditivity}
 E_{seq}(x) + E_{seq}(y) + \min(x, y) \leq E_{seq}(x + y).
-\end{equation*}
+\end{equation}
 \end{lemma}
 
 \begin{proof}
@@ -318,9 +318,9 @@ This inequality generalizes from binary splits to arbitrary partitions, yielding
 
 \begin{theorem}[Defect Bound]\label{them:defect}
 For any $R$-element subset $V' \subseteq V(A(n,k))$:
-\begin{equation*}
+\begin{equation}\label{eq:defect-bound}
 D(V') \leq E_{seq}(R).
-\end{equation*}
+\end{equation}
 Equivalently, $U(V') \geq R \cdot k - E_{seq}(R)$.
 \end{theorem}
 
@@ -332,17 +332,17 @@ The optimality of the Hamming Ball for the \emph{collision} term is captured by 
 
 \begin{proposition}[Universal Shadow Bound]\label{prop:universal}
 For every $R$-element subset $V' \subseteq V(A(n,k))$:
-\begin{equation*}
+\begin{equation}\label{eq:shadow-bound}
 X(V') + D(V') \le C_{const}(R)
-\end{equation*}
+\end{equation}
 where $C_{const}(R)$ depends only on $R$ and is independent of the network dimensions $n$ and $k$.
 \end{proposition}
 
 \begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
 The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
-\begin{equation*}
+\begin{equation}\label{eq:hb-eval}
 X(\mathrm{HB}_R) + E_{seq}(R) = C_{const}(R).
-\end{equation*}
+\end{equation}
 \end{proposition}
 
 \begin{remark}
@@ -355,26 +355,26 @@ Combining these propositions with the boundary decomposition yields our main res
 For all $R \ge 2$ and $n \ge k \ge 1$:
 \begin{enumerate}
 \item[\textup{(i)}] \textbf{Universal lower bound.} Every $R$-element subset $V' \subseteq V(A(n,k))$ satisfies
-\begin{equation*}
+\begin{equation}\label{eq:lower-bound}
 \left|\partial_{\mathrm{ext}}(V')\right| \ge \big(R \cdot k - E_{seq}(R)\big) \cdot (n - k) - C_{const}(R).
-\end{equation*}
+\end{equation}
 \item[\textup{(ii)}] \textbf{Achievability.} When $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, the lexicographic Hamming Ball $\mathrm{HB}_R$ achieves this bound with equality, giving
-\begin{equation*}
+\begin{equation}\label{eq:extraconnectivity}
 \kappa_{R-1}(A(n,k)) = \big(R \cdot k - E_{seq}(R)\big) \cdot (n - k) - C_{const}(R)
-\end{equation*}
+\end{equation}
 where $E_{seq}(R) = \sum_{i=0}^{R-1} \text{popcount}(i)$ is the cumulative binary weight (OEIS A000788), and writing $d = \lceil \log_2 R \rceil$,
-\begin{equation*}
+\begin{equation}\label{eq:cconst}
 C_{const}(R) = (R - 1) + R\,d - 2^{d} + 1 - E_{seq}(R) \;=\; R(d + 1) - 2^d - E_{seq}(R).
-\end{equation*}
+\end{equation}
 \end{enumerate}
 The embedding condition in (ii) ensures the graph is large enough to fit a $d$-dimensional hypercube.
 \end{theorem}
 
 \begin{remark}[Closed-form evaluation of $C_{const}$]
 The summation $\sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil$ admits a closed form by grouping indices by dimension level. For each $j \ge 1$, exactly $2^{j-1}$ indices satisfy $\lceil \log_2(i+1) \rceil = j$ (those with $2^{j-1} < i+1 \le 2^j$). Summing the complete levels $j = 1, \ldots, d-1$ via the identity $\sum_{j=1}^{m} j \cdot 2^{j-1} = (m-1) 2^m + 1$ and adding the partial level at $j = d$ yields
-\begin{equation*}
+\begin{equation}\label{eq:ceillog-sum}
 \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil = R\,\lceil \log_2 R \rceil - 2^{\lceil \log_2 R \rceil} + 1,
-\end{equation*}
+\end{equation}
 eliminating the last summation from the formula for $C_{const}(R)$.
 \end{remark}
 
@@ -483,9 +483,9 @@ The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the d
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
 The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which minimizes collisions with $E_{int} = R-1$ and $C = \binom{R}{2}$:
-\begin{equation*}
+\begin{equation}\label{eq:sparse-limit}
 \left| \partial_{\mathrm{ext}}(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
-\end{equation*}
+\end{equation}
 \end{conjecture}
 
 \begin{figure}[H]
@@ -590,18 +590,15 @@ Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a subset $V'$ fails to achieve the optimal defect $E_{seq}(R)$ by a shortfall $\Delta E = E_{seq}(R) - E_{int}(V')$, the boundary unconditionally grows by at least $\Delta E \cdot (n-k)$.
 \end{theorem}
-To understand this mechanism mathematically, we return to the exact boundary equation derived via the Algebraic Defect Framework:
-\begin{equation*}
-\left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big)
-\end{equation*}
+To understand this mechanism, we return to the exact boundary decomposition~\eqref{eq:boundary}:
 
 Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a subset $V'$ falls short of the optimal Hamming Ball defect by $\Delta E$, it must project onto $\Delta E$ \emph{additional} unique roots to maintain its vertex count ($U_{sub} = U_{opt} + \Delta E$).
 
 Substituting this into the boundary equation yields the comparative boundary size:
-\begin{align*}
-\left| \partial_{\mathrm{ext}}(V'_{sub}) \right| &= (U_{opt} + \Delta E) \cdot (n - k) - (X_{sub} + D_{sub}) \\
+\begin{align}\label{eq:penalty-expansion}
+\left| \partial_{\mathrm{ext}}(V'_{sub}) \right| &= (U_{opt} + \Delta E) \cdot (n - k) - (X_{sub} + D_{sub}) \nonumber\\
 &= \left| \partial_{\mathrm{ext}}(V'_{opt}) \right| + \Delta E \cdot (n - k) + (X_{opt} + D_{opt}) - (X_{sub} + D_{sub})
-\end{align*}
+\end{align}
 
 This formulation isolates the asymptotic behavior. The fluctuation in internal edges and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). Conversely, the penalty term $\Delta E \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single internal edge ($\Delta E = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
 
@@ -668,18 +665,18 @@ Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. L
 \textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d  -  S$ destroys exactly $d$ edges (the degree of $v$ in $Q_d$). The replacement $v' \in S  -  Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ has \emph{at most one} neighbor in $Q_d \cap S$. The net change is at most $-d + 1$, giving $|E(S)| \le d\,2^{d-1} - (d-1)$.
 
 \textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ edges to the remaining vertices (minus edges among the removed vertices themselves, which we denote $e_{rem}$). The $m$ replacement vertices each contribute at most 1 edge back into $Q_d \cap S$, and share at most $\binom{m}{2}$ edges among themselves. Therefore:
-\[
+\begin{equation}\label{eq:case2-bound}
 |E(S)| \le d\,2^{d-1} - md + e_{rem} + m + \textstyle\binom{m}{2} \le d\,2^{d-1} - m(d - m)
-\]
+\end{equation}
 since $e_{rem} \le \binom{m}{2}$. For $1 \le m \le d-1$, the gap $m(d - m)$ is minimized at $m = 1$, giving $d - 1$. Multi-vertex deviations only widen the gap.
 
 In both cases, $|E(S)| \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden edge counts in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below the optimum.
 \end{proof}
 
 \noindent We formalize this as the \emph{fracture gap}:
-\[
+\begin{equation}\label{eq:fracture-gap}
 \gamma(R) \;=\; \begin{cases} d - 1 & \text{if } R = 2^d, \\ 0 & \text{otherwise.} \end{cases}
-\]
+\end{equation}
 
 \begin{theorem}[Defect Continuity]\label{them:continuity}
 For any $R$, every integer defect from $R-1$ (spanning tree) up to the second-best connected subgraph is achievable.
@@ -713,9 +710,9 @@ In both cases, the resulting subgraph has $E_{seq}(R) - 1$ internal edges and is
 
 \begin{theorem}[Complete Defect Classification]\label{them:classification}
 For any valid cluster size $R \ge 4$, the set of achievable defect values for connected $R$-vertex subgraphs is exactly:
-\[
+\begin{equation}\label{eq:defect-spectrum}
 \mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; E_{seq}(R) - \gamma(R)\} \;\cup\; \{E_{seq}(R)\}
-\]
+\end{equation}
 where $\gamma(R) = d - 1$ if $R = 2^d$, and $\gamma(R) = 0$ otherwise.
 \end{theorem}
 \begin{proof}
