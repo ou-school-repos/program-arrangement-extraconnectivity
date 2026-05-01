@@ -143,6 +143,17 @@ For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\partial_{e
 Its cardinality $|\partial_{ext}(V')|$ is the quantity we seek to minimize.
 \end{definition}
 
+\begin{definition}[Cumulative Binary Weight and Correction Constant]
+The \emph{cumulative binary weight} is
+\begin{equation}\label{eq:eseq}
+E_{seq}(R) = \sum_{i=0}^{R-1} \mathrm{popcount}(i),
+\end{equation}
+where $\mathrm{popcount}(i)$ denotes the number of 1-bits in the binary representation of $i$ (OEIS A000788 \cite{oeis_A000788}). The \emph{correction constant} is
+\begin{equation}\label{eq:cconst-def}
+C_{const}(R) = (R-1) + \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - E_{seq}(R).
+\end{equation}
+\end{definition}
+
 \begin{example}
 To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)$ where $4$ symbols are fixed (e.g., \texttt{B,C,D,E}). The missing coordinate can be filled by any of the remaining $10 - 5 + 1 = 6$ available symbols. This single root physically expands into a 1D-clique (a line) of 6 vertices:
 
@@ -210,7 +221,7 @@ To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)
 
 The number of distinct connected graphs on $R$ labeled vertices grows as $\Omega(R^{R-2})$. To check all of them, we built a symmetry-aware engine that enumerates non-isomorphic connected subgraphs up to $R = 10$, computes their boundary in $A(n,k)$, and identifies the minimizer. Isomorphic duplicates are pruned via McKay's \texttt{nauty} library \cite{mckay2014practical}.
 
-This exhaustive search confirms that the maximum internal edges for connected subgraphs match OEIS A000788 \cite{oeis_A000788}, identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. From these patterns, we developed an $O(R^3 \log R)$ closed-form characterization engine that predicts exact boundaries for arbitrary $R$ and dimensions. The key quantities are the cumulative binary weight $E_{seq}(R) = \sum_{i=0}^{R-1} \mathrm{popcount}(i)$ (the total number of 1-bits across all integers $0, \ldots, R{-}1$) and a correction constant $C_{const}(R)$ defined formally in Theorem~\ref{them:main}.
+This exhaustive search confirms that the maximum internal edges for connected subgraphs match $E_{seq}(R)$ (Definition~2.5), identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. From these patterns, we developed an $O(R^3 \log R)$ closed-form characterization engine that predicts exact boundaries for arbitrary $R$ and dimensions.
 
 \begin{table}[ht]
 \centering
@@ -328,7 +339,7 @@ The exact boundary size is then:
 \begin{equation}\label{eq:boundary}
 \left| \partial_{\mathrm{ext}}(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation}
-The algebraic engine of this framework relies on a fundamental subadditivity inequality for the cumulative popcount sequence $E_{seq}$. While this inequality reflects the classical inductive step in Harper's edge-isoperimetric theorem for Boolean hypercubes \cite{harper1966optimal}, we formally mechanize it here to bound arbitrary fiber partitions in $A(n,k)$.
+The algebraic engine of this framework relies on a fundamental subadditivity inequality for $E_{seq}$ (Definition~2.5). While this inequality reflects the classical inductive step in Harper's edge-isoperimetric theorem for Boolean hypercubes \cite{harper1966optimal}, we formally mechanize it here to bound arbitrary fiber partitions in $A(n,k)$.
 
 \begin{lemma}[Subadditivity of A000788]\label{lem:subadditivity}
 For all $x, y \in \mathbb{N}$:
@@ -389,9 +400,9 @@ For all $R \ge 2$ and $n \ge k \ge 1$:
 \begin{equation}\label{eq:extraconnectivity}
 \kappa_{R-1}(A(n,k)) = \big(R \cdot k - E_{seq}(R)\big) \cdot (n - k) - C_{const}(R)
 \end{equation}
-where $E_{seq}(R) = \sum_{i=0}^{R-1} \mathrm{popcount}(i)$ is the cumulative binary weight (OEIS A000788), $\mathrm{popcount}(i)$ denotes the number of 1-bits in the binary representation of $i$, and writing $d = \lceil \log_2 R \rceil$,
+where $E_{seq}(R)$ and $C_{const}(R)$ are as in Definition~2.5. Writing $d = \lceil \log_2 R \rceil$, the correction constant admits the closed form
 \begin{equation}\label{eq:cconst}
-C_{const}(R) = \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - E_{seq}(R) \;=\; (R - 1) + R\,d - 2^{d} + 1 - E_{seq}(R) \;=\; R(d + 1) - 2^d - E_{seq}(R).
+C_{const}(R) = R(d + 1) - 2^d - E_{seq}(R).
 \end{equation}
 \end{enumerate}
 The embedding condition in (ii) ensures the graph is large enough to fit a $d$-dimensional hypercube.
