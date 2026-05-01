@@ -876,37 +876,6 @@ theorem arrangement_extraconnectivity_minimum
     external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
 \end{verbatim}
 
-% ════════════════════════════════════════════════════════════════════════
-\section{Sample Computer Code}\label{app:code}
-
-The characterization engine computes exact extraconnectivity bounds via two core functions: the cumulative popcount $E_{seq}(R)$ (OEIS A000788) and the collision constant $C_{const}(R)$. The following C++ excerpt implements both in $O(\log R)$ and $O(R)$ time respectively.
-
-\begin{verbatim}
-// A000788: cumulative popcount — O(log R)
-static int64_t A000788(int64_t n) {
-    if (n <= 0) return 0;
-    int64_t m = n / 2;
-    if (n % 2 == 0)
-        return 2 * A000788(m) + m;
-    else
-        return 2 * A000788(m) + m + __builtin_popcountll(m);
-}
-
-// C(R) = (R-1) + sum_{x=1}^{R-1} bit_length(x) - E_seq(R)
-static int64_t constant_analytical(int64_t R) {
-    if (R <= 0) return 0;
-    int64_t E = A000788(R);
-    int64_t L = 0;
-    for (int64_t x = 1; x < R; x++)
-        L += 64 - __builtin_clzll(x);  // bit_length(x)
-    return (R - 1) + L - E;
-}
-
-// Exact boundary: (R*k - E_seq(R)) * (n-k) - C_const(R)
-\end{verbatim}
-
-\noindent Full source code, including the Hamming Ball construction and brute-force verification engine, is available in the accompanying repository.
-
 \bibliographystyle{plain}
 % \nocite{*}
 \bibliography{references}
