@@ -68,8 +68,8 @@
 \newcommand{\ank}{A(n,k)}
 \newcommand{\Nats}{\mathbb{N}}
 \newcommand{\extbd}{\partial_{\mathrm{ext}}}
-\newcommand{\Cconst}{\sigma_{\mathrm{c}}}
-\newcommand{\Eseq}{\beta}
+\newcommand{\Cconst}{\tau_{\mathrm{c}}}
+\newcommand{\Eseq}{\mathrm{s}}
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
@@ -156,10 +156,10 @@ The \emph{lexicographic Hamming Ball} $\mathrm{HB}_R$ consists of the first $R$ 
 \end{itemize}
 Summing over all vertices gives the two constants:
 \begin{align}
-\beta(R) &= \sum_{i=0}^{R-1} \mathrm{popcount}(i) & &\text{(cumulative binary weight, OEIS A000788 \cite{oeis_A000788})}, \label{eq:eseq} \\
+\Eseq(R) &= \sum_{i=0}^{R-1} \mathrm{popcount}(i) & &\text{(cumulative binary weight, OEIS A000788 \cite{oeis_A000788})}, \label{eq:eseq} \\
 \Cconst(R) &= \sum_{i=1}^{R-1} d_i = \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil & &\text{(total interaction budget)}. \label{eq:cconst-def}
 \end{align}
-By construction, $\Cconst(R) = \beta(R) + X(\mathrm{HB}_R)$, where $X$ denotes the cross-collision count (defined formally in Section~\ref{sec:defect}). The quantity $\beta(R)$ is the maximum defect achievable by any $R$-element subset (Theorem~\ref{them:defect}), and $\Cconst(R)$ is the total waste of the boundary-minimizing ball (Proposition~\ref{prop:hb-eval}).
+By construction, $\Cconst(R) = \Eseq(R) + X(\mathrm{HB}_R)$, where $X$ denotes the cross-collision count (defined formally in Section~\ref{sec:defect}). The quantity $\Eseq(R)$ is the maximum defect achievable by any $R$-element subset (Theorem~\ref{them:defect}), and $\Cconst(R)$ is the total waste of the boundary-minimizing ball (Proposition~\ref{prop:hb-eval}).
 \end{definition}
 
 \begin{example}
@@ -229,7 +229,7 @@ To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)
 
 The number of distinct connected graphs on $R$ labeled vertices grows as $\Omega(R^{R-2})$. To check all of them, we built a symmetry-aware engine that enumerates non-isomorphic connected subgraphs up to $R = 10$, computes their boundary in $A(n,k)$, and identifies the minimizer. Isomorphic duplicates are pruned via McKay's \texttt{nauty} library \cite{mckay2014practical}.
 
-This exhaustive search confirms that the maximum internal edges for connected subgraphs match $\beta(R)$ (Definition~2.5), identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. From these patterns, we developed an $O(R^3 \log R)$ closed-form characterization engine that predicts exact boundaries for arbitrary $R$ and dimensions.
+This exhaustive search confirms that the maximum internal edges for connected subgraphs match $\Eseq(R)$ (Definition~2.5), identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. From these patterns, we developed an $O(R^3 \log R)$ closed-form characterization engine that predicts exact boundaries for arbitrary $R$ and dimensions.
 
 \begin{table}[ht]
 \centering
@@ -237,7 +237,7 @@ This exhaustive search confirms that the maximum internal edges for connected su
 \label{tab:engine}
 \begin{tabular}{@{}ccccl@{}}
 \toprule
-$R$ & $\beta(R)$ & $\Cconst(R)$ & Exact Boundary Formula & Verification \\
+$R$ & $\Eseq(R)$ & $\Cconst(R)$ & Exact Boundary Formula & Verification \\
 \midrule
 2  & 1  & 1  & $(2k-1)(n-k)-1$    & Cheng et al. \cite{cheng2022extraconnectivity} \\
 4  & 4  & 4  & $(4k-4)(n-k)-4$    & Cheng et al. \cite{cheng2022extraconnectivity} \\
@@ -247,10 +247,10 @@ $R$ & $\beta(R)$ & $\Cconst(R)$ & Exact Boundary Formula & Verification \\
 \end{tabular}
 \end{table}
 
-\noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the defect mirrors the external shadow collision constant, yielding $\beta(2^d) = \Cconst(2^d) = d 2^{d-1}$.}
+\noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the defect mirrors the external shadow collision constant, yielding $\Eseq(2^d) = \Cconst(2^d) = d 2^{d-1}$.}
 
 \medskip
-\noindent \textbf{Connection to Prior Literature.}  This formula subsumes the ad-hoc topological cases manually discovered by Cheng et al.\ \cite{cheng2022extraconnectivity} for $R \le 7$, revealing that those early constructions were initial segments of the lexicographic Hamming Ball. Moreover, as dimensions scale ($k,\, n{-}k \to \infty$), the constants $\Cconst(R)$ and $\beta(R)$ become negligible relative to the leading $R \cdot k(n-k)$ term, confirming the asymptotic limits conjectured in~\cite{cheng2022extraconnectivity}.
+\noindent \textbf{Connection to Prior Literature.}  This formula subsumes the ad-hoc topological cases manually discovered by Cheng et al.\ \cite{cheng2022extraconnectivity} for $R \le 7$, revealing that those early constructions were initial segments of the lexicographic Hamming Ball. Moreover, as dimensions scale ($k,\, n{-}k \to \infty$), the constants $\Cconst(R)$ and $\Eseq(R)$ become negligible relative to the leading $R \cdot k(n-k)$ term, confirming the asymptotic limits conjectured in~\cite{cheng2022extraconnectivity}.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Failure of Geometric Compression}\label{sec:nogo}
@@ -347,17 +347,17 @@ The exact boundary size is then:
 \begin{equation}\label{eq:boundary}
 \left| \extbd(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation}
-The algebraic engine of this framework relies on a fundamental subadditivity inequality for $\beta$ (Definition~2.5). While this inequality reflects the classical inductive step in Harper's edge-isoperimetric theorem for Boolean hypercubes \cite{harper1966optimal}, we formally mechanize it here to bound arbitrary fiber partitions in $A(n,k)$.
+The algebraic engine of this framework relies on a fundamental subadditivity inequality for $\Eseq(\cdot)$ (Definition~2.5). While this inequality reflects the classical inductive step in Harper's edge-isoperimetric theorem for Boolean hypercubes \cite{harper1966optimal}, we formally mechanize it here to bound arbitrary fiber partitions in $A(n,k)$.
 
 \begin{lemma}[Subadditivity of A000788]\label{lem:subadditivity}
 For all $x, y \in \mathbb{N}$:
 \begin{equation}\label{eq:subadditivity}
-\beta(x) + \beta(y) + \min(x, y) \leq \beta(x + y).
+\Eseq(x) + \Eseq(y) + \min(x, y) \leq \Eseq(x + y).
 \end{equation}
 \end{lemma}
 
 \begin{proof}
-By strong induction on $x + y$, case-splitting on the parity of both arguments and applying the even/odd recurrences $\beta(2m) = 2\, \beta(m) + m$ and $\beta(2m+1) = \beta(m) + \beta(m+1) + m$. Each of the four parity cases reduces to the inductive hypothesis at strictly smaller arguments. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
+By strong induction on $x + y$, case-splitting on the parity of both arguments and applying the even/odd recurrences $\Eseq(2m) = 2\, \Eseq(m) + m$ and $\Eseq(2m+1) = \Eseq(m) + \Eseq(m+1) + m$. Each of the four parity cases reduces to the inductive hypothesis at strictly smaller arguments. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
 \end{proof}
 
 This inequality generalizes from binary splits to arbitrary partitions, yielding the central structural theorem: the Hamming Ball maximizes the defect among all connected subgraphs.
@@ -365,13 +365,13 @@ This inequality generalizes from binary splits to arbitrary partitions, yielding
 \begin{theorem}[Defect Bound]\label{them:defect}
 For any $R$-element subset $V' \subseteq V(A(n,k))$:
 \begin{equation}\label{eq:defect-bound}
-D(V') \leq \beta(R).
+D(V') \leq \Eseq(R).
 \end{equation}
-Equivalently, $U(V') \geq R \cdot k - \beta(R)$.
+Equivalently, $U(V') \geq R \cdot k - \Eseq(R)$.
 \end{theorem}
 
 \begin{proof}
-By strong induction on $R$. For $R \ge 2$, choose a coordinate $p$ at which two vertices of $V'$ disagree and partition $V'$ into fibers $\{F_s\}$ by the symbol at position $p$. Each fiber is strictly smaller than $V'$, so the inductive hypothesis gives $D(F_s) \leq \beta(|F_s|)$. The root-disjointness structure at coordinates $q \neq p$ yields the decomposition $D(V') \leq \sum_s D(F_s) + R - y$, where $y = |U_p(V')|$. Applying the generalized partition subadditivity (iterated Lemma~\ref{lem:subadditivity}) closes the induction. Mechanically verified in Lean~4 (\texttt{sum\_unique\_roots\_lower\_bound}).
+By strong induction on $R$. For $R \ge 2$, choose a coordinate $p$ at which two vertices of $V'$ disagree and partition $V'$ into fibers $\{F_\alpha\}$ by the symbol $\alpha$ at position $p$. Each fiber is strictly smaller than $V'$, so the inductive hypothesis gives $D(F_\alpha) \leq \Eseq(|F_\alpha|)$. The root-disjointness structure at coordinates $q \neq p$ yields the decomposition $D(V') \leq \sum_\alpha D(F_\alpha) + R - y$, where $y = |U_p(V')|$. Applying the generalized partition subadditivity (iterated Lemma~\ref{lem:subadditivity}) closes the induction. Mechanically verified in Lean~4 (\texttt{sum\_unique\_roots\_lower\_bound}).
 \end{proof}
 
 The optimality of the Hamming Ball for the \emph{collision} term is captured by two extremal propositions. Together with Theorem~\ref{them:defect}, they form the ``Algebraic Squeeze'': the Defect Bound controls $D(V')$, while the first proposition bounds the combined waste $X(V') + D(V')$ for \emph{all} subsets, and the second shows the Hamming Ball \emph{achieves} equality.
@@ -387,7 +387,7 @@ where $\Cconst(R)$ depends only on $R$ and is independent of the network dimensi
 \begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
 The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
 \begin{equation}\label{eq:hb-eval}
-X(\mathrm{HB}_R) + \beta(R) = \Cconst(R).
+X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R).
 \end{equation}
 \end{proposition}
 
@@ -402,15 +402,15 @@ For all $R \ge 2$ and $n \ge k \ge 1$:
 \begin{enumerate}
 \item[\textup{(i)}] \textbf{Universal lower bound.} Every $R$-element subset $V' \subseteq V(A(n,k))$ satisfies
 \begin{equation}\label{eq:lower-bound}
-\left|\extbd(V')\right| \ge \big(R \cdot k - \beta(R)\big) \cdot (n - k) - \Cconst(R).
+\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 \end{equation}
 \item[\textup{(ii)}] \textbf{Achievability.} When $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, the lexicographic Hamming Ball $\mathrm{HB}_R$ achieves this bound with equality, giving
 \begin{equation}\label{eq:extraconnectivity}
-\kappa_{R-1}(A(n,k)) = \big(R \cdot k - \beta(R)\big) \cdot (n - k) - \Cconst(R)
+\kappa_{R-1}(A(n,k)) = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R)
 \end{equation}
-where $\beta(R)$ and $\Cconst(R)$ are as in Definition~2.5. Writing $d = \lceil \log_2 R \rceil$, the correction constant admits the closed form
+where $\Eseq(R)$ and $\Cconst(R)$ are as in Definition~2.5. Writing $d = \lceil \log_2 R \rceil$, the correction constant admits the closed form
 \begin{equation}\label{eq:cconst}
-\Cconst(R) = R(d + 1) - 2^d - \beta(R).
+\Cconst(R) = R(d + 1) - 2^d - \Eseq(R).
 \end{equation}
 \end{enumerate}
 The embedding condition in (ii) ensures the graph is large enough to fit a $d$-dimensional hypercube.
@@ -425,11 +425,11 @@ eliminating the last summation from the formula for $\Cconst(R)$.
 \end{remark}
 
 \begin{proof}
-\textbf{Part~(i).}  By Theorem~\ref{them:defect}, $D(V') \le \beta(R)$, so $U(V') \ge R \cdot k - \beta(R)$.  Each of these $U(V')$ unique roots contributes $(n-k)$ external neighbors minus at most one collision, giving
+\textbf{Part~(i).}  By Theorem~\ref{them:defect}, $D(V') \le \Eseq(R)$, so $U(V') \ge R \cdot k - \Eseq(R)$.  Each of these $U(V')$ unique roots contributes $(n-k)$ external neighbors minus at most one collision, giving
 $|\extbd(V')| \ge U(V') \cdot (n-k) - X(V') - D(V')$.
 Proposition~\ref{prop:universal} bounds the waste: $X(V') + D(V') \le \Cconst(R)$.  Substituting yields the lower bound.
 
-\textbf{Part~(ii).}  Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) + \beta(R) = \Cconst(R)$, so the Hamming Ball achieves equality in the lower bound.  The embedding condition ensures $A(n,k)$ has a large enough alphabet and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
+\textbf{Part~(ii).}  Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R)$, so the Hamming Ball achieves equality in the lower bound.  The embedding condition ensures $A(n,k)$ has a large enough alphabet and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
 \end{proof}
 
 \begin{corollary}[System-Level Diagnosability]\label{cor:diagnosis}
@@ -626,15 +626,15 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}] (9.8, -1.2) -- (17.2, -1.2)
     node[midway, below=5pt, font=\footnotesize] {$R = 8$};
 \end{tikzpicture}
-\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball coincide (both are $P_3$). At $R=4$ the gap is 1 defect link; at $R=8$ it widens to 5. Arrows connect the sparse limit $K_{1,R-1}$ ($D = R - 1$) to the dense limit $Q_d$ ($D = \beta(R)$).}
+\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball coincide (both are $P_3$). At $R=4$ the gap is 1 defect link; at $R=8$ it widens to 5. Arrows connect the sparse limit $K_{1,R-1}$ ($D = R - 1$) to the dense limit $Q_d$ ($D = \Eseq(R)$).}
 \label{fig:limits}
 \end{figure}
 
 \paragraph{Structural Convergence at $R=3$.}
-Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\beta(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $D = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
+Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $D = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
-If a subset $V'$ fails to achieve the optimal defect $\beta(R)$ by a shortfall $\Delta D = \beta(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
+If a subset $V'$ fails to achieve the optimal defect $\Eseq(R)$ by a shortfall $\Delta D = \Eseq(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
 \end{theorem}
 To understand this mechanism, we return to the exact boundary decomposition~\eqref{eq:boundary}:
 
@@ -701,20 +701,20 @@ In recent literature concerning hypercube variants like Augmented Cubes \cite{ch
 The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now characterize \emph{which} defect values are achievable and which are not. Because the defect $D(V')$ serves as an algebraic proxy for internal edges---absorbing clique structure in $A(n,k)$ without over-counting---all classification results in this section are stated in terms of the defect.
 
 \begin{theorem}[The Fracture Gap]\label{them:fracture}
-For $R = 2^d$, the gap between the optimal defect $\beta(R) = d\,2^{d-1}$ and the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
+For $R = 2^d$, the gap between the optimal defect $\Eseq(R) = d\,2^{d-1}$ and the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
 \end{theorem}
 \begin{proof}
-By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Any other hypercube configuration of $2^d$ vertices suffers a loss of at least $d-1$ internal edges. Although $A(n,k)$ has a much larger alphabet and is vastly denser than a Boolean hypercube, Theorem~\ref{them:defect} mathematically restricts the internal structure of $A(n,k)$ to obey this hypercube ceiling: $D(V') \le \beta(R)$. Because the defect acts as a strict upper bound on internal edges, $A(n,k)$ perfectly inherits the hypercube's isoperimetric fracture gap.
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Any other hypercube configuration of $2^d$ vertices suffers a loss of at least $d-1$ internal edges. Although $A(n,k)$ has a much larger alphabet and is vastly denser than a Boolean hypercube, Theorem~\ref{them:defect} mathematically restricts the internal structure of $A(n,k)$ to obey this hypercube ceiling: $D(V') \le \Eseq(R)$. Because the defect acts as a strict upper bound on internal edges, $A(n,k)$ perfectly inherits the hypercube's isoperimetric fracture gap.
 
 Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
 
 \textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d  -  S$ destroys exactly $d$ defect links (the degree of $v$ in $Q_d$). The replacement $v' \in S  -  Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ shares \emph{at most one} root with $Q_d \cap S$. The net change is at most $-d + 1$, giving $D(S) \le d\,2^{d-1} - (d-1)$.
 
-\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ defect links to the remaining vertices (minus links among the removed vertices themselves, which we denote $e_{rem}$). By Theorem~\ref{them:defect}, the $m$ replacement vertices satisfy $D(\text{replacements}) \le \beta(m)$, and each contributes at most 1 shared root back into $Q_d \cap S$. Therefore:
+\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ defect links to the remaining vertices (minus links among the removed vertices themselves, which we denote $e_{rem}$). By Theorem~\ref{them:defect}, the $m$ replacement vertices satisfy $D(\text{replacements}) \le \Eseq(m)$, and each contributes at most 1 shared root back into $Q_d \cap S$. Therefore:
 \begin{equation}\label{eq:case2-bound}
-D(S) \le d\,2^{d-1} - md + e_{rem} + m + \beta(m)
+D(S) \le d\,2^{d-1} - md + e_{rem} + m + \Eseq(m)
 \end{equation}
-Since $e_{rem} \le \beta(m)$, the gap from the optimum is at least $m(d-1) - 2\beta(m)$. For small deviations ($1 \le m < d$), this bound strictly forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the defect strictly faster than single-vertex removal, so the gap only widens.
+Since $e_{rem} \le \Eseq(m)$, the gap from the optimum is at least $m(d-1) - 2\Eseq(m)$. For small deviations ($1 \le m < d$), this bound strictly forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the defect strictly faster than single-vertex removal, so the gap only widens.
 
 In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden defect values in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below the optimum.
 \end{proof}
@@ -730,39 +730,39 @@ For any $R$, every integer defect from $R-1$ (spanning tree) up to the second-be
 \begin{proof}
 The minimum defect for a connected graph on $R$ vertices is $R-1$ (a spanning tree). We construct subgraphs achieving every intermediate value.
 
-The Hamming Ball sequence builds vertices incrementally: vertex $i$ (in binary order) joins the existing $\mathrm{HB}_{i-1}$ with exactly $c_i = \mathrm{popcount}(i-1)$ shared roots, one per coordinate. The cumulative defect $\beta(i) = \sum_{j=0}^{i-1} \mathrm{popcount}(j)$ therefore grows in steps of size $c_i$.
+The Hamming Ball sequence builds vertices incrementally: vertex $i$ (in binary order) joins the existing $\mathrm{HB}_{i-1}$ with exactly $c_i = \mathrm{popcount}(i-1)$ shared roots, one per coordinate. The cumulative defect $\Eseq(i) = \sum_{j=0}^{i-1} \mathrm{popcount}(j)$ therefore grows in steps of size $c_i$.
 
-For each step $c_i \ge 2$, the vertex $i$ connects to $\mathrm{HB}_{i-1}$ via $c_i$ coordinate positions. By placing the $i$-th vertex at a position that matches only $m$ of these $c_i$ coordinates (using fresh symbols in the remaining $c_i - m$ positions), we obtain a connected $i$-vertex subgraph with defect $\beta(i-1) + m$ for any $1 \le m \le c_i$. This fills every integer in $[\beta(i-1) + 1,\; \beta(i)]$.
+For each step $c_i \ge 2$, the vertex $i$ connects to $\mathrm{HB}_{i-1}$ via $c_i$ coordinate positions. By placing the $i$-th vertex at a position that matches only $m$ of these $c_i$ coordinates (using fresh symbols in the remaining $c_i - m$ positions), we obtain a connected $i$-vertex subgraph with defect $\Eseq(i-1) + m$ for any $1 \le m \le c_i$. This fills every integer in $[\Eseq(i-1) + 1,\; \Eseq(i)]$.
 
-Concatenating these intervals for $i = 2, \ldots, R$ covers every integer from $1 = \beta(2) - c_2 + 1$ up to $\beta(R) - \gamma(R)$. The spanning tree with defect $R-1$ is achieved by a path.
+Concatenating these intervals for $i = 2, \ldots, R$ covers every integer from $1 = \Eseq(2) - c_2 + 1$ up to $\Eseq(R) - \gamma(R)$. The spanning tree with defect $R-1$ is achieved by a path.
 \end{proof}
 
 Together, these results completely characterize the achievable defect values for $R = 2^d$. At $R = 8$ ($d = 3$), the Hamming Ball achieves $D = 12$, the fracture gap forbids $D = 11$, and continuity fills in $\{7, 8, 9, 10\}$. The full set of realizable defects is $\{7, 8, 9, 10, 12\}$.
 
 \begin{theorem}[No Gap for Non-Powers of 2]\label{them:nogap}
-For $R \neq 2^d$, a defect of $\beta(R) - 1$ is achievable by a connected $R$-vertex subgraph. Combined with Defect Continuity (Theorem~\ref{them:continuity}), this implies every integer from $R-1$ to $\beta(R)$ is achievable with no gaps.
+For $R \neq 2^d$, a defect of $\Eseq(R) - 1$ is achievable by a connected $R$-vertex subgraph. Combined with Defect Continuity (Theorem~\ref{them:continuity}), this implies every integer from $R-1$ to $\Eseq(R)$ is achievable with no gaps.
 \end{theorem}
 \begin{proof}
-The cumulative binary weight satisfies $\beta(R) = \beta(R-1) + c$, where $c = \mathrm{popcount}(R-1)$ is the number of 1-bits in $(R-1)$. In the Hamming Ball $\mathrm{HB}_R$, the last vertex (vertex $R-1$ in colexicographic order) connects to exactly $c$ vertices in $\mathrm{HB}_{R-1}$.
+The cumulative binary weight satisfies $\Eseq(R) = \Eseq(R-1) + c$, where $c = \mathrm{popcount}(R-1)$ is the number of 1-bits in $(R-1)$. In the Hamming Ball $\mathrm{HB}_R$, the last vertex (vertex $R-1$ in colexicographic order) connects to exactly $c$ vertices in $\mathrm{HB}_{R-1}$.
 
-Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$, but more directly: we construct a connected subgraph with $\beta(R) - 1$ edges by placing the $R$-th vertex at a position adjacent to only $c - 1$ of its potential neighbors in $\mathrm{HB}_{R-1}$.
+Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$, but more directly: we construct a connected subgraph with $\Eseq(R) - 1$ edges by placing the $R$-th vertex at a position adjacent to only $c - 1$ of its potential neighbors in $\mathrm{HB}_{R-1}$.
 
 When $c \ge 2$: the $R$-th vertex has $c$ neighbors in $\mathrm{HB}_{R-1}$ corresponding to $c$ coordinate positions. By placing the $R$-th vertex at a valid position that matches only $c - 1$ of these coordinates (using a fresh symbol at the remaining position), we preserve $c - 1 \ge 1$ shared roots while reducing the defect by one, maintaining connectivity.
 
-When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this without disconnecting. Instead, by Theorem~\ref{them:continuity}, the constructive Hamming Ball sequence already achieves every defect value up to $\beta(R) - \gamma(R) = \beta(R)$ (since $\gamma(R) = 0$), so $\beta(R) - 1$ is achievable.
+When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this without disconnecting. Instead, by Theorem~\ref{them:continuity}, the constructive Hamming Ball sequence already achieves every defect value up to $\Eseq(R) - \gamma(R) = \Eseq(R)$ (since $\gamma(R) = 0$), so $\Eseq(R) - 1$ is achievable.
 
-In both cases, the resulting subgraph has defect $\beta(R) - 1$ and is connected.
+In both cases, the resulting subgraph has defect $\Eseq(R) - 1$ and is connected.
 \end{proof}
 
 \begin{theorem}[Complete Defect Classification]\label{them:classification}
 For any valid cluster size $R \ge 4$, the set of achievable defect values for connected $R$-vertex subgraphs is exactly:
 \begin{equation}\label{eq:defect-spectrum}
-\mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; \beta(R) - \gamma(R)\} \;\cup\; \{\beta(R)\}
+\mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; \Eseq(R) - \gamma(R)\} \;\cup\; \{\Eseq(R)\}
 \end{equation}
 with $\gamma(R)$ as in~\eqref{eq:fracture-gap}.
 \end{theorem}
 \begin{proof}
-The maximum $\beta(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theorem~\ref{them:nogap} constructs a subgraph with defect $\beta(R) - 1$, and Theorem~\ref{them:continuity} fills every integer down to $R - 1$. For $R = 2^d$, Theorem~\ref{them:fracture} forbids defect values in $(\beta(R) - (d-1),\; \beta(R))$. The value $\beta(R) - (d-1)$ is achieved by taking $Q_d$, removing one vertex $v$ (destroying $d$ defect links), and attaching a fresh vertex $v'$ adjacent to exactly one vertex of $Q_d  -  \{v\}$, yielding defect $d\,2^{d-1} - d + 1$. Theorem~\ref{them:continuity} then fills every integer down to $R - 1$.
+The maximum $\Eseq(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theorem~\ref{them:nogap} constructs a subgraph with defect $\Eseq(R) - 1$, and Theorem~\ref{them:continuity} fills every integer down to $R - 1$. For $R = 2^d$, Theorem~\ref{them:fracture} forbids defect values in $(\Eseq(R) - (d-1),\; \Eseq(R))$. The value $\Eseq(R) - (d-1)$ is achieved by taking $Q_d$, removing one vertex $v$ (destroying $d$ defect links), and attaching a fresh vertex $v'$ adjacent to exactly one vertex of $Q_d  -  \{v\}$, yielding defect $d\,2^{d-1} - d + 1$. Theorem~\ref{them:continuity} then fills every integer down to $R - 1$.
 \end{proof}
 \noindent Table~\ref{tab:edge_spectrum} illustrates this classification for selected values of $R$.
 
@@ -772,7 +772,7 @@ The maximum $\beta(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theore
 \label{tab:edge_spectrum}
 \begin{tabular}{rrrrl}
 \toprule
-$R$ & $\beta(R)$ & $\gamma(R)$ & $|\mathcal{D}(R)|$ & Achievable range \\
+$R$ & $\Eseq(R)$ & $\gamma(R)$ & $|\mathcal{D}(R)|$ & Achievable range \\
 \midrule
 $2^2 = 4$   & 4   & 1 & 2   & $\{3\} \cup \{4\}$ \\
 5           & 5   & 0 & 2   & $\{D \in \mathbb{Z} : 4 \le D \le 5\}$ \\
@@ -805,13 +805,13 @@ $2^7 = 128$ & 448 & 6 & 317 & $\{D \in \mathbb{Z} : 127 \le D \le 442\} \cup \{4
 % ════════════════════════════════════════════════════════════════════════
 \section{The Topological Funnel and Open Problems}
 
-Theorem~\ref{them:classification} reveals a striking geometric structure in the space of achievable defect values. At the sparse limit ($D = R-1$), the number of valid connected topologies is the number of non-isomorphic trees on $R$ vertices, which grows exponentially (OEIS A000055). As the defect increases, the geometric constraints imposed by root-sharing progressively tighten the design space, creating a \emph{Topological Funnel} that narrows monotonically until it collapses to a single topology---the Hamming Ball---at the dense limit $D = \beta(R)$. At powers of $2$, the funnel exhibits a discrete fracture: the gap $\gamma(R) = d - 1$ excises an entire band of defect values, forcing a discontinuous jump from the second-best topology to the unique optimum.
+Theorem~\ref{them:classification} reveals a striking geometric structure in the space of achievable defect values. At the sparse limit ($D = R-1$), the number of valid connected topologies is the number of non-isomorphic trees on $R$ vertices, which grows exponentially (OEIS A000055). As the defect increases, the geometric constraints imposed by root-sharing progressively tighten the design space, creating a \emph{Topological Funnel} that narrows monotonically until it collapses to a single topology---the Hamming Ball---at the dense limit $D = \Eseq(R)$. At powers of $2$, the funnel exhibits a discrete fracture: the gap $\gamma(R) = d - 1$ excises an entire band of defect values, forcing a discontinuous jump from the second-best topology to the unique optimum.
 
 \begin{conjecture}[Multiplicity of Achievable Defects]\label{conj:multiplicity}
 For each $R$ and each achievable defect $D \in \mathcal{D}(R)$, let $M(R, D)$ denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$ with defect exactly $D$. Then:
 \begin{enumerate}
-\item $M(R, \beta(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique maximizer).
-\item $M(R, D)$ is non-decreasing as $D$ decreases from $\beta(R)$ toward $R-1$.
+\item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique maximizer).
+\item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$ toward $R-1$.
 \end{enumerate}
 \end{conjecture}
 
@@ -857,7 +857,7 @@ Figures~\ref{fig:r9} and~\ref{fig:r10} show the induced subgraph structure of $\
 \small
 \begin{tabular}{ccc|ccc|ccc}
 \toprule
-$R$ & $\beta$ & $\Cconst$ & $R$ & $\beta$ & $\Cconst$ & $R$ & $\beta$ & $\Cconst$ \\
+$R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq(R)$ & $\Cconst(R)$ \\
 \midrule
 2 & 1 & 1 & 45 & 115 & 136 & 88 & 268 & 308 \\
 3 & 2 & 3 & 46 & 119 & 139 & 89 & 271 & 313 \\
@@ -925,7 +925,7 @@ theorem arrangement_extraconnectivity_minimum
 % ════════════════════════════════════════════════════════════════════════
 \section{Characterization Engine Source Code}\label{app:engine}
 
-The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $\beta(R)$ and $\Cconst(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full source repository is available at \href{https://github.com/shanep-ou/arrangement-extraconnectivity}{\texttt{github.com/shanep-ou/arrangement-extraconnectivity}} and is embedded as a PDF attachment (\texttt{predict.cpp}).
+The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $\Eseq(R)$ and $\Cconst(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full source repository is available at \href{https://github.com/shanep-ou/arrangement-extraconnectivity}{\texttt{github.com/shanep-ou/arrangement-extraconnectivity}} and is embedded as a PDF attachment (\texttt{predict.cpp}).
 
 \paragraph{Implementation details.}
 The engine is designed for exact integer arithmetic with zero heap allocation in the hot path. All vertex representations use a fixed-size 512-element stack array (\texttt{Vertex<SymT>}), templatized on the symbol type: \texttt{uint8\_t} for $R \le 127$ and \texttt{uint16\_t} for $R \le 512$. Sorting and deduplication use \texttt{std::memcmp}-based comparison, which provides a consistent total order regardless of architecture endianness. For $R > 64$, intermediate products exceed $2^{63}$, so the engine promotes to \texttt{\_\_int128} for the final boundary computation while keeping all inner loops in native 64-bit arithmetic.
@@ -936,7 +936,7 @@ The engine is designed for exact integer arithmetic with zero heap allocation in
 
 \noindent This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
 \texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
-for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Because the Algebraic Defect Framework decouples the network dimensions from the subset structure, the constants $\beta(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$; thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to guarantee the formula's exactness for all valid dimensions. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
+for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Because the Algebraic Defect Framework decouples the network dimensions from the subset structure, the constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$; thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to guarantee the formula's exactness for all valid dimensions. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
 
 \bibliographystyle{plain}
 % \nocite{*}
