@@ -242,7 +242,7 @@ $R$ & $E_{seq}(R)$ & $C_{const}(R)$ & Exact Boundary Formula & Verification \\
 \end{tabular}
 \end{table}
 
-\noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the internal edge defect mirrors the external shadow collision constant, yielding $E_{seq}(2^d) = C_{const}(2^d) = d 2^{d-1}$.}
+\noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the defect mirrors the external shadow collision constant, yielding $E_{seq}(2^d) = C_{const}(2^d) = d 2^{d-1}$.}
 
 \medskip
 \noindent \textbf{Connection to Prior Literature.}  This formula subsumes the ad-hoc topological cases manually discovered by Cheng et al.\ \cite{cheng2022extraconnectivity} for $R \le 7$, revealing that those early constructions were initial segments of the lexicographic Hamming Ball. Moreover, as dimensions scale ($k,\, n{-}k \to \infty$), the constants $C_{const}(R)$ and $E_{seq}(R)$ become negligible relative to the leading $R \cdot k(n-k)$ term, confirming the asymptotic limits conjectured in~\cite{cheng2022extraconnectivity}.
@@ -474,11 +474,11 @@ In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ 
 \centering
 \begin{tikzpicture}[scale=0.9, font=\small]
   % Title
-  \node[font=\bfseries] at (4.75, 5.5) {Forbidden Edge Densities for $|V'|=8$ in $A(n,k)$};
+  \node[font=\bfseries] at (4.75, 5.5) {Forbidden Defect Values for $|V'|=8$ in $A(n,k)$};
 
   % Left side: Optimal subset (Hamming Ball)
   \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {$V'=\mathrm{HB}_8$ \\ (Hamming Ball)};
-  \node at (1.5, 3.5) {$E = 12$};
+  \node at (1.5, 3.5) {$D = 12$};
 
   \draw[thick, blue!80!black] (0,1) rectangle (3,3);
   \fill[blue!20] (0,1) rectangle (3,3);
@@ -493,7 +493,7 @@ In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ 
   % Right side: Second Best subset
   \begin{scope}[xshift=1.5cm]
   \node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {Next-best $V'$ \\ ($|V'|=8$)};
-  \node at (6.5, 3.5) {$E = 10$};
+  \node at (6.5, 3.5) {$D = 10$};
 
   \draw[thick, red!80!black] (5,1) rectangle (8,3);
   \fill[red!10] (5,1) rectangle (8,3);
@@ -506,12 +506,12 @@ In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ 
   \draw[red!80!black, dashed] (7,1) -- (7,3);
   \node[text=red, font=\bfseries] at (7, 2.5) {X};
   \node[text=red, font=\bfseries] at (7, 1.5) {X};
-  \node[text=red!70!black, font=\footnotesize, align=center] at (7, 0.5) {both edges\\lost};
+  \node[text=red!70!black, font=\footnotesize, align=center] at (7, 0.5) {both links\\lost};
   \end{scope}
 
   % Connecting arrow with gap label
   \draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
-  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$E=11$\\Impossible};
+  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$D=11$\\Impossible};
 \end{tikzpicture}
 \caption{The fracture gap at $R=8$: $\mathrm{HB}_8$ achieves $D=12$. In $A(n,k)$, defect links arise from root-sharing---two vertices that agree on all coordinates but one. Each link therefore has a ``twin'' at the same coordinate, so removing one vertex from a root pair destroys both links simultaneously. This makes $D=11$ impossible; the next achievable value is $D=10$.}
 \label{fig:fracture}
@@ -723,13 +723,13 @@ In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden de
 For any $R$, every integer defect from $R-1$ (spanning tree) up to the second-best connected subgraph is achievable.
 \end{theorem}
 \begin{proof}
-The minimum edge count for a connected graph on $R$ vertices is $R-1$ (a spanning tree). We construct subgraphs achieving every intermediate count.
+The minimum defect for a connected graph on $R$ vertices is $R-1$ (a spanning tree). We construct subgraphs achieving every intermediate value.
 
-The Hamming Ball sequence builds vertices incrementally: vertex $i$ (in binary order) joins the existing $\mathrm{HB}_{i-1}$ with exactly $c_i = \mathrm{popcount}(i-1)$ edges, one per shared coordinate. The cumulative count $E_{seq}(i) = \sum_{j=0}^{i-1} \mathrm{popcount}(j)$ therefore grows in steps of size $c_i$.
+The Hamming Ball sequence builds vertices incrementally: vertex $i$ (in binary order) joins the existing $\mathrm{HB}_{i-1}$ with exactly $c_i = \mathrm{popcount}(i-1)$ shared roots, one per coordinate. The cumulative defect $E_{seq}(i) = \sum_{j=0}^{i-1} \mathrm{popcount}(j)$ therefore grows in steps of size $c_i$.
 
 For each step $c_i \ge 2$, the vertex $i$ connects to $\mathrm{HB}_{i-1}$ via $c_i$ coordinate positions. By placing the $i$-th vertex at a position that matches only $m$ of these $c_i$ coordinates (using fresh symbols in the remaining $c_i - m$ positions), we obtain a connected $i$-vertex subgraph with defect $E_{seq}(i-1) + m$ for any $1 \le m \le c_i$. This fills every integer in $[E_{seq}(i-1) + 1,\; E_{seq}(i)]$.
 
-Concatenating these intervals for $i = 2, \ldots, R$ covers every integer from $1 = E_{seq}(2) - c_2 + 1$ up to $E_{seq}(R) - \gamma(R)$. The spanning tree at $R-1$ edges is achieved by a path.
+Concatenating these intervals for $i = 2, \ldots, R$ covers every integer from $1 = E_{seq}(2) - c_2 + 1$ up to $E_{seq}(R) - \gamma(R)$. The spanning tree with defect $R-1$ is achieved by a path.
 \end{proof}
 
 Together, these results completely characterize the achievable defect values for $R = 2^d$. At $R = 8$ ($d = 3$), the Hamming Ball achieves $D = 12$, the fracture gap forbids $D = 11$, and continuity fills in $\{7, 8, 9, 10\}$. The full set of realizable defects is $\{7, 8, 9, 10, 12\}$.
@@ -744,7 +744,7 @@ Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$, but more
 
 When $c \ge 2$: the $R$-th vertex has $c$ neighbors in $\mathrm{HB}_{R-1}$ corresponding to $c$ coordinate positions. By placing the $R$-th vertex at a valid position that matches only $c - 1$ of these coordinates (using a fresh symbol at the remaining position), we preserve $c - 1 \ge 1$ shared roots while reducing the defect by one, maintaining connectivity.
 
-When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this connection without disconnecting. Instead, by Theorem~\ref{them:continuity}, the constructive Hamming Ball sequence already achieves every edge count up to $E_{seq}(R) - \gamma(R) = E_{seq}(R)$ (since $\gamma(R) = 0$), so $E_{seq}(R) - 1$ is achievable.
+When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this without disconnecting. Instead, by Theorem~\ref{them:continuity}, the constructive Hamming Ball sequence already achieves every defect value up to $E_{seq}(R) - \gamma(R) = E_{seq}(R)$ (since $\gamma(R) = 0$), so $E_{seq}(R) - 1$ is achievable.
 
 In both cases, the resulting subgraph has defect $E_{seq}(R) - 1$ and is connected.
 \end{proof}
@@ -770,29 +770,29 @@ The maximum $E_{seq}(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theo
 $R$ & $E_{seq}(R)$ & $\gamma(R)$ & $|\mathcal{D}(R)|$ & Achievable range \\
 \midrule
 $2^2 = 4$   & 4   & 1 & 2   & $\{3\} \cup \{4\}$ \\
-5           & 5   & 0 & 2   & $\{e \in \mathbb{Z} : 4 \le e \le 5\}$ \\
-6           & 7   & 0 & 3   & $\{e \in \mathbb{Z} : 5 \le e \le 7\}$ \\
-7           & 9   & 0 & 4   & $\{e \in \mathbb{Z} : 6 \le e \le 9\}$ \\
-$2^3 = 8$   & 12  & 2 & 5   & $\{e \in \mathbb{Z} : 7 \le e \le 10\} \cup \{12\}$ \\
-9           & 13  & 0 & 6   & $\{e \in \mathbb{Z} : 8 \le e \le 13\}$ \\
-10          & 15  & 0 & 7   & $\{e \in \mathbb{Z} : 9 \le e \le 15\}$ \\
+5           & 5   & 0 & 2   & $\{D \in \mathbb{Z} : 4 \le D \le 5\}$ \\
+6           & 7   & 0 & 3   & $\{D \in \mathbb{Z} : 5 \le D \le 7\}$ \\
+7           & 9   & 0 & 4   & $\{D \in \mathbb{Z} : 6 \le D \le 9\}$ \\
+$2^3 = 8$   & 12  & 2 & 5   & $\{D \in \mathbb{Z} : 7 \le D \le 10\} \cup \{12\}$ \\
+9           & 13  & 0 & 6   & $\{D \in \mathbb{Z} : 8 \le D \le 13\}$ \\
+10          & 15  & 0 & 7   & $\{D \in \mathbb{Z} : 9 \le D \le 15\}$ \\
 \midrule
-11          & 17  & 0 & 8   & $\{e \in \mathbb{Z} : 10 \le e \le 17\}$ \\
-12          & 20  & 0 & 10  & $\{e \in \mathbb{Z} : 11 \le e \le 20\}$ \\
-13          & 22  & 0 & 11  & $\{e \in \mathbb{Z} : 12 \le e \le 22\}$ \\
-14          & 25  & 0 & 13  & $\{e \in \mathbb{Z} : 13 \le e \le 25\}$ \\
-15          & 28  & 0 & 15  & $\{e \in \mathbb{Z} : 14 \le e \le 28\}$ \\
-$2^4 = 16$  & 32  & 3 & 16  & $\{e \in \mathbb{Z} : 15 \le e \le 29\} \cup \{32\}$ \\
-17          & 33  & 0 & 18  & $\{e \in \mathbb{Z} : 16 \le e \le 33\}$ \\
-18          & 35  & 0 & 19  & $\{e \in \mathbb{Z} : 17 \le e \le 35\}$ \\
-19          & 37  & 0 & 20  & $\{e \in \mathbb{Z} : 18 \le e \le 37\}$ \\
-20          & 40  & 0 & 22  & $\{e \in \mathbb{Z} : 19 \le e \le 40\}$ \\
+11          & 17  & 0 & 8   & $\{D \in \mathbb{Z} : 10 \le D \le 17\}$ \\
+12          & 20  & 0 & 10  & $\{D \in \mathbb{Z} : 11 \le D \le 20\}$ \\
+13          & 22  & 0 & 11  & $\{D \in \mathbb{Z} : 12 \le D \le 22\}$ \\
+14          & 25  & 0 & 13  & $\{D \in \mathbb{Z} : 13 \le D \le 25\}$ \\
+15          & 28  & 0 & 15  & $\{D \in \mathbb{Z} : 14 \le D \le 28\}$ \\
+$2^4 = 16$  & 32  & 3 & 16  & $\{D \in \mathbb{Z} : 15 \le D \le 29\} \cup \{32\}$ \\
+17          & 33  & 0 & 18  & $\{D \in \mathbb{Z} : 16 \le D \le 33\}$ \\
+18          & 35  & 0 & 19  & $\{D \in \mathbb{Z} : 17 \le D \le 35\}$ \\
+19          & 37  & 0 & 20  & $\{D \in \mathbb{Z} : 18 \le D \le 37\}$ \\
+20          & 40  & 0 & 22  & $\{D \in \mathbb{Z} : 19 \le D \le 40\}$ \\
 \midrule
-24          & 52  & 0 & 30  & $\{e \in \mathbb{Z} : 23 \le e \le 52\}$ \\
-$2^5 = 32$  & 80  & 4 & 47  & $\{e \in \mathbb{Z} : 31 \le e \le 76\} \cup \{80\}$ \\
-48          & 128 & 0 & 82  & $\{e \in \mathbb{Z} : 47 \le e \le 128\}$ \\
-$2^6 = 64$  & 192 & 5 & 126 & $\{e \in \mathbb{Z} : 63 \le e \le 187\} \cup \{192\}$ \\
-$2^7 = 128$ & 448 & 6 & 317 & $\{e \in \mathbb{Z} : 127 \le e \le 442\} \cup \{448\}$ \\
+24          & 52  & 0 & 30  & $\{D \in \mathbb{Z} : 23 \le D \le 52\}$ \\
+$2^5 = 32$  & 80  & 4 & 47  & $\{D \in \mathbb{Z} : 31 \le D \le 76\} \cup \{80\}$ \\
+48          & 128 & 0 & 82  & $\{D \in \mathbb{Z} : 47 \le D \le 128\}$ \\
+$2^6 = 64$  & 192 & 5 & 126 & $\{D \in \mathbb{Z} : 63 \le D \le 187\} \cup \{192\}$ \\
+$2^7 = 128$ & 448 & 6 & 317 & $\{D \in \mathbb{Z} : 127 \le D \le 442\} \cup \{448\}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -830,7 +830,7 @@ Exhaustive enumeration of connected subgraphs becomes intractable beyond $R=7$. 
 \label{fig:complexity}
 \end{figure}
 
-Figures~\ref{fig:r9} and~\ref{fig:r10} show the induced subgraph structure of $\mathrm{HB}_R$ for $R = 9$ and $R = 10$. Because the Hamming Ball is defined by binary strings, this structure is independent of the host graph $A(n,k)$ (provided $n-k \ge 4$ and $k \ge 4$). Both extend the perfect $Q_3$ cube ($R=8$) by adding vertices that share the maximum number of edges with the existing ball.
+Figures~\ref{fig:r9} and~\ref{fig:r10} show the induced subgraph structure of $\mathrm{HB}_R$ for $R = 9$ and $R = 10$. Because the Hamming Ball is defined by binary strings, this structure is independent of the host graph $A(n,k)$ (provided $n-k \ge 4$ and $k \ge 4$). Both extend the perfect $Q_3$ cube ($R=8$) by adding vertices that share the maximum number of roots with the existing ball.
 
 \begin{figure}[H]
 \centering
@@ -920,7 +920,7 @@ theorem arrangement_extraconnectivity_minimum
 % ════════════════════════════════════════════════════════════════════════
 \section{Characterization Engine Source Code}\label{app:engine}
 
-The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $E_{seq}(R)$ and $C_{const}(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full source repository is available at \texttt{github.com/shanep-ou/arrangement-extraconnectivity} and is embedded as a PDF attachment (\texttt{predict.cpp}).
+The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $E_{seq}(R)$ and $C_{const}(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full source repository is available at \href{https://github.com/shanep-ou/arrangement-extraconnectivity}{\texttt{github.com/shanep-ou/arrangement-extraconnectivity}} and is embedded as a PDF attachment (\texttt{predict.cpp}).
 
 \paragraph{Implementation details.}
 The engine is designed for exact integer arithmetic with zero heap allocation in the hot path. All vertex representations use a fixed-size 512-element stack array (\texttt{Vertex<SymT>}), templatized on the symbol type: \texttt{uint8\_t} for $R \le 127$ and \texttt{uint16\_t} for $R \le 512$. Sorting and deduplication use \texttt{std::memcmp}-based comparison, which provides a consistent total order regardless of architecture endianness. For $R > 64$, intermediate products exceed $2^{63}$, so the engine promotes to \texttt{\_\_int128} for the final boundary computation while keeping all inner loops in native 64-bit arithmetic.
