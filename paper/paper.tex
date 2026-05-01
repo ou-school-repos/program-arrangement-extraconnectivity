@@ -740,7 +740,7 @@ For any valid cluster size $R \ge 4$, the set of achievable defect values for co
 \begin{equation}\label{eq:defect-spectrum}
 \mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; E_{seq}(R) - \gamma(R)\} \;\cup\; \{E_{seq}(R)\}
 \end{equation}
-where $\gamma(R) = d - 1$ if $R = 2^d$, and $\gamma(R) = 0$ otherwise.
+with $\gamma(R)$ as in~\eqref{eq:fracture-gap}.
 \end{theorem}
 \begin{proof}
 The maximum $E_{seq}(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theorem~\ref{them:nogap} constructs a subgraph with $E_{seq}(R) - 1$ edges, and Theorem~\ref{them:continuity} fills every integer down to $R - 1$. For $R = 2^d$, Theorem~\ref{them:fracture} forbids edge counts in $(E_{seq}(R) - (d-1),\; E_{seq}(R))$. The value $E_{seq}(R) - (d-1)$ is achieved by taking $Q_d$, removing one vertex $v$ (destroying $d$ edges), and attaching a fresh vertex $v'$ adjacent to exactly one vertex of $Q_d  -  \{v\}$, yielding $d\,2^{d-1} - d + 1$ edges. Theorem~\ref{them:continuity} then fills every integer down to $R - 1$.
