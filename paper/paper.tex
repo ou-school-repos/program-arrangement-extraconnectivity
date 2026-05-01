@@ -68,7 +68,7 @@
 \newcommand{\ank}{A(n,k)}
 \newcommand{\Nats}{\mathbb{N}}
 \newcommand{\extbd}{\partial_{\mathrm{ext}}}
-\newcommand{\Cconst}{C_{\mathrm{corr}}}
+\newcommand{\Cconst}{\sigma_{\mathrm{c}}}
 \newcommand{\Eseq}{\beta}
 \newcommand{\Hamball}{\mathcal{H}}
 
@@ -146,16 +146,20 @@ For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\extbd(V')$
 Its cardinality $|\extbd(V')|$ is the quantity we seek to minimize.
 \end{definition}
 
-\begin{definition}[Cumulative Binary Weight and Correction Constant]
-The \emph{cumulative binary weight} is
-\begin{equation}\label{eq:eseq}
-\beta(R) = \sum_{i=0}^{R-1} \mathrm{popcount}(i),
-\end{equation}
-where $\mathrm{popcount}(i)$ denotes the number of 1-bits in the binary representation of $i$ (OEIS A000788 \cite{oeis_A000788}). The \emph{correction constant} is
-\begin{equation}\label{eq:cconst-def}
-\Cconst(R) = \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil,
-\end{equation}
-the sum of bit-lengths of the integers $1, \ldots, R{-}1$. Its role as the exact waste budget of the boundary-minimizing subset is established in Theorem~\ref{them:main}.
+The boundary-minimizing subset turns out to be the \emph{lexicographic Hamming Ball}: the first $R$ binary strings $0, 1, \ldots, R-1$, embedded as vertices via their binary expansions into the coordinate slots of $A(n,k)$. The exact extraconnectivity (Theorem~\ref{them:main}) depends on two constants that emerge from building this ball vertex by vertex.
+
+\begin{definition}[Hamming Ball and its Constants]\label{def:constants}
+The \emph{lexicographic Hamming Ball} $\mathrm{HB}_R$ consists of the first $R$ vertices in colexicographic (binary) order. When vertex $i$ $(i \ge 1)$ joins $\mathrm{HB}_{i}$, it occupies the $d_i = \lceil \log_2(i+1) \rceil$-th dimension level of the embedding hypercube and therefore interacts with exactly $d_i$ coordinates of the existing ball. Of these $d_i$ interactions:
+\begin{itemize}
+  \item $\mathrm{popcount}(i)$ are \emph{shared roots}---coordinates where vertex $i$ agrees with a vertex already in $\mathrm{HB}_{i}$, creating an internal (defect) link;
+  \item $d_i - \mathrm{popcount}(i)$ are \emph{cross-collisions}---coordinates that generate duplicate boundary neighbors.
+\end{itemize}
+Summing over all vertices gives the two constants:
+\begin{align}
+\beta(R) &= \sum_{i=0}^{R-1} \mathrm{popcount}(i) & &\text{(cumulative binary weight, OEIS A000788 \cite{oeis_A000788})}, \label{eq:eseq} \\
+\Cconst(R) &= \sum_{i=1}^{R-1} d_i = \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil & &\text{(total interaction budget)}. \label{eq:cconst-def}
+\end{align}
+By construction, $\Cconst(R) = \beta(R) + X(\mathrm{HB}_R)$, where $X$ denotes the cross-collision count (defined formally in Section~\ref{sec:defect}). The quantity $\beta(R)$ is the maximum defect achievable by any $R$-element subset (Theorem~\ref{them:defect}), and $\Cconst(R)$ is the total waste of the boundary-minimizing ball (Proposition~\ref{prop:hb-eval}).
 \end{definition}
 
 \begin{example}
