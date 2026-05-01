@@ -135,7 +135,7 @@ For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct
 \begin{equation}\label{eq:unique-roots}
 U_p(V') = \{ (v_1, \ldots, v_{p-1},\, v_{p+1}, \ldots, v_k) : v \in V' \}
 \end{equation}
-That is, each root is the $(k{-}1)$-tuple formed by taking a vertex $v \in V'$ and deleting its $p$-th coordinate. The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of distinct coordinate-aligned lines that $V'$ touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ counts how many times two vertices in $V'$ share the same root, i.e., the number of internal edges within $V'$. For hypercube-embedded subsets this is exact; for dense cliques it serves as a robust algebraic upper bound that naturally prevents over-counting.
+That is, each root is the $(k{-}1)$-tuple formed by taking a vertex $v \in V'$ and deleting its $p$-th coordinate. The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of distinct coordinate-aligned lines that $V'$ touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ counts how many times two vertices in $V'$ share the same root, i.e., it acts as an algebraic proxy for the number of internal edges within $V'$. For hypercube-embedded subsets (where no two vertices share more than one root) this equality is exact; for dense cliques it serves as a robust algebraic lower bound on the physical edge count that naturally prevents over-counting.
 \end{definition}
 
 \begin{definition}[External Boundary]
@@ -274,7 +274,7 @@ The new external boundary becomes:
 \extbd(C(V')) = \{[2,1], [3,1], [4,2], [4,3], [2,3], [1,2], [1,4]\} \implies \left| \extbd(C(V')) \right| = 7
 \end{equation*}
 
-Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary strictly increased.
+Because the defect link between $[4,3]$ and $[1,3]$ was severed, the boundary strictly increased.
 \end{proof}
 
 \begin{figure}[H]
@@ -284,7 +284,7 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
   \node at (0,3.2) {\textbf{Initial Set} $V'$};
   \node (v1) at (0,1.2) [draw, circle, fill=blue!20, thick] {$[4,3]$};
   \node (v2) at (0,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
-  \draw[blue, ultra thick] (v1) -- (v2) node[midway, right=0.2cm, align=center] {Internal\\Edge};
+  \draw[blue, ultra thick] (v1) -- (v2) node[midway, right=0.2cm, align=center] {Defect\\Link};
 
   \node (n1) at (-2.5,0) [draw, circle, dashed] {$[2,3]$};
   \node (n2) at (2.2,1.2) [draw, circle, dashed] {$[4,1]$};
@@ -320,7 +320,7 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
   \draw (u2) -- (m5); \draw (u2) -- (m6); \draw (u2) -- (m7);
   \node at (8.5,-2.2) {$|\extbd| = 7$};
 \end{tikzpicture}
-\caption{Visualization of the Failure of Geometric Compression. Shifting symbol $3 \to 1$ in $A(4,2)$ severs an internal edge because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
+\caption{Visualization of the Failure of Geometric Compression. Shifting symbol $3 \to 1$ in $A(4,2)$ severs a defect link because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
 \label{fig:nogo}
 \end{figure}
 
@@ -357,7 +357,7 @@ For all $x, y \in \mathbb{N}$:
 \end{lemma}
 
 \begin{proof}
-By strong induction on $x + y$, case-splitting on the parity of both arguments and applying the even/odd recurrences $\Eseq(2m) = 2\, \Eseq(m) + m$ and $\Eseq(2m+1) = \Eseq(m) + \Eseq(m+1) + m$. Each of the four parity cases reduces to the inductive hypothesis at strictly smaller arguments. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
+By strong induction on $x + y$: assume \eqref{eq:subadditivity} holds for all pairs summing to less than $x + y$. Case-split on the parity of both $x$ and $y$ (four cases) and expand via the even/odd recurrences $\Eseq(2m) = 2\, \Eseq(m) + m$ and $\Eseq(2m+1) = \Eseq(m) + \Eseq(m+1) + m$. In each case, the recurrences halve the arguments, reducing the inequality to the inductive hypothesis at a strictly smaller sum. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
 \end{proof}
 
 This inequality generalizes from binary splits to arbitrary partitions, yielding the central structural theorem: the Hamming Ball maximizes the defect among all connected subgraphs.
@@ -457,7 +457,7 @@ In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ 
 
   % Draw internal edges (Defect)
   \draw[blue, line width=3.5pt] (2.2,2) -- (4.3,2);
-  \node[blue!70!black, font=\footnotesize, anchor=north] at (3.25,1.8) {Defect Edge};
+  \node[blue!70!black, font=\footnotesize, anchor=north] at (3.25,1.8) {Defect Link};
 
   % Draw boundary vertices
   \draw[gray, dashed] (2,4) circle (0.12) node[left=0.1cm] {$\extbd$};
@@ -528,7 +528,7 @@ In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ 
 The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
-The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which minimizes collisions with $D = R-1$ and $X = \binom{R}{2}$:
+The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, which has defect $D = R-1$, cross-collisions $X = \binom{R-1}{2}$, and total correction $(X + D) = \binom{R}{2}$:
 \begin{equation}\label{eq:sparse-limit}
 \left| \extbd(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
 \end{equation}
@@ -631,7 +631,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 \end{figure}
 
 \paragraph{Structural Convergence at $R=3$.}
-Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $D = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
+Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields defect $D = 2$, cross-collisions $X = 1$, and total correction $(X + D) = \binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a subset $V'$ fails to achieve the optimal defect $\Eseq(R)$ by a shortfall $\Delta D = \Eseq(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
@@ -670,7 +670,7 @@ $D(V')$ & Construction & $U$ & Boundary \\
 \end{tabular}
 \end{table}
 
-\noindent Each missing defect link increases $U$ by one, adding $(n{-}k)$ to the boundary. The cross-collision constants ($12, 16, 18, 22, 28$) are fixed by the graph structure and bounded by $\binom{8}{2} = 28$; as $n \to \infty$, the boundary ranking is determined entirely by $D(V')$.
+\noindent Each missing defect link increases $U$ by one, adding $(n{-}k)$ to the boundary. The total correction constants ($12, 16, 18, 22, 28$) are fixed by the graph structure and bounded by $\binom{8}{2} = 28$; as $n \to \infty$, the boundary ranking is determined entirely by $D(V')$.
 
 \paragraph{Convergence Near Powers of 2 ($R=7$ vs $R=8$):}
 The dominance of the Hamming Ball fluctuates based on how closely $R$ fits a perfect hypercube embedding. At $R=7$, the gap between the optimal ($D=9$) and the 2nd best ($D=8$) is only $1(n-k)$, whereas at $R=8$, the gap jumps to $2(n-k)$ because $D=11$ is unrealizable (Theorem~\ref{them:fracture}). At powers of 2, the optimal solution becomes increasingly stable relative to its nearest competitors as the network dimensions scale.
@@ -704,7 +704,7 @@ The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now
 For $R = 2^d$, the gap between the optimal defect $\Eseq(R) = d\,2^{d-1}$ and the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
 \end{theorem}
 \begin{proof}
-By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum defect for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Any other hypercube configuration of $2^d$ vertices suffers a defect loss of at least $d-1$. Although $A(n,k)$ has a much larger alphabet and is vastly denser than a Boolean hypercube, Theorem~\ref{them:defect} bounds the internal defect by $D(V') \le \Eseq(R)$, so $A(n,k)$ perfectly inherits the hypercube's isoperimetric fracture gap.
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Since hypercubes are triangle-free, each shared root corresponds to exactly one edge, so the defect equals the internal edge count exactly. Any other configuration of $2^d$ vertices suffers a loss of at least $d-1$ edges. Because Theorem~\ref{them:defect} bounds the defect in $A(n,k)$ by $D(V') \le \Eseq(R)$, the arrangement graph perfectly inherits the hypercube's isoperimetric fracture gap.
 
 Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
 
@@ -934,7 +934,7 @@ The engine is designed for exact integer arithmetic with zero heap allocation in
 
 \lstinputlisting[language=C++]{predict_core.cpp}
 
-\noindent \emph{Note:} In the C++ source, the variables \texttt{E\_seq} and \texttt{C\_const} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
+\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
 \texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
 for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Because the Algebraic Defect Framework decouples the network dimensions from the subset structure, the constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$; thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to guarantee the formula's exactness for all valid dimensions. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
 
