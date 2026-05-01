@@ -685,7 +685,7 @@ The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now
 For $R = 2^d$, the gap between the optimal defect $E_{seq}(R) = d\,2^{d-1}$ and the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
 \end{theorem}
 \begin{proof}
-By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Although $A(n,k)$ has a larger alphabet and is denser than a hypercube, Theorem~\ref{them:defect} bounds the internal edge count by $D(V') \le E_{seq}(R) = d\,2^{d-1}$, so $A(n,k)$ cannot exceed this ceiling.
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Any other hypercube configuration of $2^d$ vertices suffers a loss of at least $d-1$ internal edges. Although $A(n,k)$ has a much larger alphabet and is vastly denser than a Boolean hypercube, Theorem~\ref{them:defect} mathematically restricts the internal structure of $A(n,k)$ to obey this hypercube ceiling: $D(V') \le E_{seq}(R)$. Because the defect acts as a strict upper bound on internal edges, $A(n,k)$ perfectly inherits the hypercube's isoperimetric fracture gap.
 
 Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
 
