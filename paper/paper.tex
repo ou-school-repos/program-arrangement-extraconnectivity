@@ -210,7 +210,7 @@ To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)
 
 The number of distinct connected graphs on $R$ labeled vertices grows as $\Omega(R^{R-2})$. To check all of them, we built a symmetry-aware engine that enumerates non-isomorphic connected subgraphs up to $R = 10$, computes their boundary in $A(n,k)$, and identifies the minimizer. Isomorphic duplicates are pruned via McKay's \texttt{nauty} library \cite{mckay2014practical}.
 
-This exhaustive search confirms that the maximum internal edges for connected subgraphs match OEIS A000788 \cite{oeis_A000788}, identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. From these patterns, we developed an $O(R^3 \log R)$ closed-form characterization engine that predicts exact boundaries for arbitrary $R$ and dimensions.
+This exhaustive search confirms that the maximum internal edges for connected subgraphs match OEIS A000788 \cite{oeis_A000788}, identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. From these patterns, we developed an $O(R^3 \log R)$ closed-form characterization engine that predicts exact boundaries for arbitrary $R$ and dimensions. The key quantities are the cumulative binary weight $E_{seq}(R) = \sum_{i=0}^{R-1} \mathrm{popcount}(i)$ (the total number of 1-bits across all integers $0, \ldots, R{-}1$) and a correction constant $C_{const}(R)$ defined formally in Theorem~\ref{them:main}.
 
 \begin{table}[ht]
 \centering
