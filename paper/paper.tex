@@ -112,6 +112,8 @@ Our approach proceeds in three steps:
     \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing internal edge costs at least $(n-k)$ boundary nodes, so the Hamming Ball's boundary advantage over any competitor grows linearly with $(n-k)$.
 \end{itemize}
 
+The exact $(R-1)$-extraconnectivity established in Theorem~\ref{them:main} has immediate consequences for the design and reliability analysis of fault-tolerant distributed systems. In multiprocessor interconnects and data center network architectures, our closed-form boundary formula provides system designers with the precise redundancy requirements needed to guarantee that any $R$-node workgroup survives catastrophic link failures, eliminating the wasted capacity inherent to looser bounds. Furthermore, within distributed consensus protocols, this exact boundary quantifies the minimum threshold of faulty nodes required to partition a Byzantine fault-tolerant (BFT) quorum. Beyond these practical systems applications, our Algebraic Defect Framework successfully extends Harper's classical edge-isoperimetric machinery~\cite{harper1966optimal} into permutation-constrained spaces, offering a new analytical baseline for combinatorial optimization and coding theory on Cayley graphs.
+
 % ════════════════════════════════════════════════════════════════════════
 \section{Preliminaries}
 
@@ -306,7 +308,9 @@ Because the internal edge between $[4,3]$ and $[1,3]$ was severed, the boundary 
 % ════════════════════════════════════════════════════════════════════════
 \section{The Algebraic Defect Framework}\label{sec:defect}
 
-Instead of tracing geometric boundaries, we count global algebraic roots. The sum $U(V')$ represents the total number of 1-dimensional ``fibers'' (coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set projects onto along a specific dimension.
+The failure of geometric compression reveals a fundamental constraint: any method that \emph{moves} symbols between vertices risks violating the injectivity requirement of the arrangement graph. The algebraic defect framework circumvents this trap entirely by abandoning vertex-level transformations in favor of \emph{coordinate-level counting}. Rather than asking ``can we shift vertex $v$ to reduce the boundary?'' we ask ``how many distinct projections (roots) does $V'$ cast along each coordinate?'' This root-counting perspective is immune to the injectivity constraint because it never attempts to reassign symbols---it merely observes the fiber structure that the set $V'$ already induces.
+
+Concretely, we count global algebraic roots. The sum $U(V')$ represents the total number of 1-dimensional ``fibers'' (coordinate-aligned cliques) that intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set projects onto along a specific dimension.
 
 The framework utilizes a double-counting correction. By counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
 \begin{align}\label{eq:ecand}
@@ -902,7 +906,10 @@ theorem arrangement_extraconnectivity_minimum
 % ════════════════════════════════════════════════════════════════════════
 \section{Characterization Engine Source Code}\label{app:engine}
 
-The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $E_{seq}(R)$ and $C_{const}(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. Only the core algorithmic functions are shown; the full source is embedded as a PDF attachment (\texttt{predict.cpp}) and can be extracted from this PDF in any standard reader.
+The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $E_{seq}(R)$ and $C_{const}(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full source repository is available at \texttt{github.com/shanep-ou/arrangement-extraconnectivity} and is embedded as a PDF attachment (\texttt{predict.cpp}).
+
+\paragraph{Implementation details.}
+The engine is designed for exact integer arithmetic with zero heap allocation in the hot path. All vertex representations use a fixed-size 512-element stack array (\texttt{Vertex<SymT>}), templatized on the symbol type: \texttt{uint8\_t} for $R \le 127$ and \texttt{uint16\_t} for $R \le 512$. Sorting and deduplication use \texttt{std::memcmp}-based comparison, which provides a consistent total order regardless of architecture endianness. For $R > 64$, intermediate products exceed $2^{63}$, so the engine promotes to \texttt{\_\_int128} for the final boundary computation while keeping all inner loops in native 64-bit arithmetic.
 
 \embedfile[filespec=predict.cpp,desc={Characterization engine source (C++17)}]{../src/predict.cpp}
 
