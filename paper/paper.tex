@@ -125,7 +125,7 @@ We denote the set $\{1, 2, \dots, m\}$ by $[m]$.
 \end{definition}
 
 \begin{definition}[Arrangement Graph]
-The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow [n] \}$ (injective functions) and edge set $E = \{ \{u, v\} : |\{p : u(p) \neq v(p)\}| = 1 \}$.
+The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow [n] \}$ (injective functions) and edge set $E = \{ \{u, v\} : |\{p \in [k] : u_p \neq v_p\}| = 1 \}$.
 \end{definition}
 
 To move to an adjacent vertex in $A(n,k)$, one selects one of the $k$ active coordinates and replaces its symbol with one of the $(n-k)$ unused symbols from the alphabet. Every vertex therefore has exactly $k(n-k)$ neighbors, and the factor $(n-k)$ governs how rapidly the boundary scales with the network dimensions.

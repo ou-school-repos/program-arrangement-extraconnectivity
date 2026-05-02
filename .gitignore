@@ -21,7 +21,7 @@ predict
 # ── Build directories ────────────────────────────────────────
 build/
 cmake-build-*/
-out/
+assets/out/
 
 # ── CMake ────────────────────────────────────────────────────
 CMakeCache.txt
@@ -63,3 +63,8 @@ docs/*.gif
 *.synctex.gz
 *.fdb_latexmk
 *.fls
+
+# xournalpp
+*.xopp
+*.png
+*.pdf
