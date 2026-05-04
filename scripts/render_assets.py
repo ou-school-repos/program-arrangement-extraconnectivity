@@ -71,7 +71,7 @@ def gen_comparison_dot(d, output):
 
 def render_dots(asset_dir="assets", output_dir="assets/out"):
     """
-    Renders all .dot files in the asset directory to .gif using fdp.
+    Renders all .dot files in the asset directory to .png using fdp.
     """
     if not os.path.exists(asset_dir):
         print(f"Error: {asset_dir} not found.")
@@ -87,15 +87,17 @@ def render_dots(asset_dir="assets", output_dir="assets/out"):
     print(f"Rendering {len(dot_files)} files to {output_dir}...")
     for f in dot_files:
         input_path = os.path.join(asset_dir, f)
-        output_path = os.path.join(output_dir, f.replace(".dot", ".gif"))
+        output_path = os.path.join(output_dir, f.replace(".dot", ".png"))
 
         # Using GIF for lighter weight, and scale down DPI to prevent high-res
-        cmd = ["fdp", "-Tgif", "-Gdpi=60", input_path, "-o", output_path]
+        cmd = ["fdp", "-Tpng", "-Gdpi=60", input_path, "-o", output_path]
         try:
             subprocess.run(cmd, check=True)
             print(f"  ✓ Rendered: {output_path}")
         except subprocess.CalledProcessError as e:
             print(f"  ✗ Failed: {input_path} ({e})")
+
+
 
 
 if __name__ == "__main__":

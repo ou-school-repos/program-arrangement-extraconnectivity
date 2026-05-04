@@ -14,8 +14,8 @@ BIN_OPT   = arrangement
 R         ?= 8
 I         ?= 2
 K         ?= 127
-DOCS_SRC  = README.md
-DOCS_OUT  = README.pdf
+DOCS_SRC  = $(wildcard README.md docs/*.md)
+DOCS_PDF  = $(DOCS_SRC:.md=.pdf)
 BUNDLE_OUT = bundle.zip
 SITE_OUT   = site.zip
 
@@ -276,21 +276,23 @@ paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 	@$(call print_success,Paper built: docs/paper/paper.pdf)
 
 .PHONY: docs
-docs:	##H @General Generate PDF documentation from README
-	@$(call print_info,Generating $(DOCS_OUT) from $(DOCS_SRC))
-	pandoc $(DOCS_SRC) -o $(DOCS_OUT) \
+docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
+
+%.pdf: %.md
+	@$(call print_info,Generating $@ from $<)
+	pandoc $< -o $@ \
 		--pdf-engine=xelatex \
 		-V geometry:margin=0.5in \
 		-V monofont="DejaVu Sans Mono" \
 		-V monofontoptions="Scale=0.8" \
 		-V pagestyle=empty || \
-	pandoc $(DOCS_SRC) -o $(DOCS_OUT) \
+	pandoc $< -o $@ \
 		--pdf-engine=lualatex \
 		-V geometry:margin=0.5in \
 		-V monofont="DejaVu Sans Mono" \
 		-V monofontoptions="Scale=0.8" \
 		-V pagestyle=empty
-	@$(call print_success,Documentation generated.)
+	@$(call print_success,Generated $@)
 
 .PHONY: bundle
 bundle: clean ##H @General Create a zip archive of the project sources
@@ -309,7 +311,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_OUT) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars

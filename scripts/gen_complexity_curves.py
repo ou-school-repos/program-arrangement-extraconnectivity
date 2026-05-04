@@ -125,5 +125,5 @@ ax.annotate(
 )
 
 plt.tight_layout()
-fig.savefig("../docs/complexity-curves.pdf", bbox_inches="tight")
+fig.savefig("docs/complexity-curves.pdf", bbox_inches="tight")
 print("Wrote docs/complexity-curves.pdf")

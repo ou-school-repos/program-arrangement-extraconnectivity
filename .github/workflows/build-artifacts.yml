@@ -1,0 +1,38 @@
+name: Build Artifacts (Self-Hosted)
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [self-hosted, dev, ubuntu22, skylake]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Required Local Dependencies (pre-installed on the runner):
+      # - System: texlive-latex-recommended, texlive-pictures, texlive-latex-extra, texlive-xetex, lmodern, texlive-fonts-recommended, graphviz, pandoc
+      # - Python: matplotlib, pandas, scipy
+
+      - name: Generate Assets (Conditional/Optional)
+        run: |
+          make render
+          python3 scripts/gen_complexity_curves.py
+
+      - name: Build Paper and Documentation
+        run: |
+          make paper
+          make docs
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-pdfs
+          path: |
+            paper/paper.pdf
+            README.pdf
+            docs/*.pdf
