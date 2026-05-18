@@ -932,7 +932,7 @@ The engine is designed for exact integer arithmetic with zero heap allocation in
 
 \embedfile[filespec=predict.cpp,desc={Characterization engine source (C++17)}]{../src/predict.cpp}
 
-\lstinputlisting[language=C++]{predict_core.cpp}
+\lstinputlisting[language=C++]{predict_core_sample.cpp}
 
 \noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
 \texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
