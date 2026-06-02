@@ -723,50 +723,47 @@ In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden de
 \end{equation}
 
 \begin{theorem}[Defect Continuity]\label{them:continuity}
-For any $R$, every integer defect from $R-1$ (spanning tree) up to the second-best connected subgraph is achievable.
+For any $R$, every integer defect from $R-1$ (spanning tree) up to the leaf-addition bound $\Eseq(R-1) + 1$ is achievable.
 \end{theorem}
 \begin{proof}
-The minimum defect for a connected graph on $R$ vertices is $R-1$ (a spanning tree). We construct subgraphs achieving every intermediate value.
+The minimum defect for a connected graph on $R$ vertices is $R-1$ (a spanning tree). To construct connected subgraphs achieving every intermediate value, we exploit the isometric embedding of the Boolean hypercube $Q_d$ (where $d = \lceil \log_2 R \rceil$) within $A(n,k)$. Because $Q_d$ is triangle-free, each shared root within any hypercube-embedded subset corresponds to exactly one physical edge, meaning the defect equals the internal edge count exactly ($D(V') = |E(V')|$).
 
-The Hamming Ball sequence builds vertices incrementally: vertex $i$ (in binary order) joins the existing $\mathrm{HB}_{i-1}$ with exactly $c_i = \mathrm{popcount}(i-1)$ shared roots, one per coordinate. The cumulative defect $\Eseq(i) = \sum_{j=0}^{i-1} \mathrm{popcount}(j)$ therefore grows in steps of size $c_i$.
-
-For each step $c_i \ge 2$, the vertex $i$ connects to $\mathrm{HB}_{i-1}$ via $c_i$ coordinate positions. By placing the $i$-th vertex at a position that matches only $m$ of these $c_i$ coordinates (using fresh symbols in the remaining $c_i - m$ positions), we obtain a connected $i$-vertex subgraph with defect $\Eseq(i-1) + m$ for any $1 \le m \le c_i$. This fills every integer in $[\Eseq(i-1) + 1,\; \Eseq(i)]$.
-
-Concatenating these intervals for $i = 2, \ldots, R$ covers every integer from $1 = \Eseq(2) - c_2 + 1$ up to $\Eseq(R) - \gamma(R)$. The spanning tree with defect $R-1$ is achieved by a path.
+It is an established property of Boolean hypercubes that connected subgraphs of size $R$ exist for all intermediate internal edge counts from the spanning tree limit ($R-1$) up to the sub-optimal bounds. This defect continuity is achieved by systematically constructing a sequence of connected induced subgraphs, starting from a spanning tree (such as a path or star) and incrementally adding vertices that maximize their internal degrees (e.g., sequentially building up the lexicographic colexicographic order) or relocating boundary vertices to leaf positions. Since $A(n,k)$ contains this hypercube structure as an isometric induced subgraph, any connected hypercube-embedded configuration of size $R$ with $E$ internal edges corresponds to a connected arrangement-embedded configuration with defect $D = E$. This naturally guarantees a continuous defect spectrum up to the leaf-addition bound.
 \end{proof}
 
 Together, these results completely characterize the achievable defect values for $R = 2^d$. At $R = 8$ ($d = 3$), the Hamming Ball achieves $D = 12$, the fracture gap forbids $D = 11$, and continuity fills in $\{7, 8, 9, 10\}$. The full set of realizable defects is $\{7, 8, 9, 10, 12\}$.
 
-\begin{theorem}[No Gap for Non-Powers of 2]\label{them:nogap}
-For $R \neq 2^d$, a defect of $\Eseq(R) - 1$ is achievable by a connected $R$-vertex subgraph. Combined with Defect Continuity (Theorem~\ref{them:continuity}), this implies every integer from $R-1$ to $\Eseq(R)$ is achievable with no gaps.
+\begin{theorem}[Secondary Fracture Gaps]\label{them:secondary-gap}
+For $R = 2^d - 1$ with $d \ge 4$, there exists a secondary fracture gap of size $d-3$ just below the optimal defect $\Eseq(R)$. Specifically, the defect values in the interval $(\Eseq(R-1) + 1,\; \Eseq(R))$ are strictly unachievable by any connected $R$-vertex subgraph.
 \end{theorem}
 \begin{proof}
-The cumulative binary weight satisfies $\Eseq(R) = \Eseq(R-1) + c$, where $c = \mathrm{popcount}(R-1)$ is the number of 1-bits in $(R-1)$. In the Hamming Ball $\mathrm{HB}_R$, the last vertex (vertex $R-1$ in colexicographic order) connects to exactly $c$ vertices in $\mathrm{HB}_{R-1}$.
-
-Since $R \neq 2^d$, we have $c \ge 2$ or $c = 1$ with $R \neq 2^d + 1$, but more directly: we construct a connected subgraph with defect $\Eseq(R) - 1$ by placing the $R$-th vertex at a position adjacent to only $c - 1$ of its potential neighbors in $\mathrm{HB}_{R-1}$.
-
-When $c \ge 2$: the $R$-th vertex has $c$ neighbors in $\mathrm{HB}_{R-1}$ corresponding to $c$ coordinate positions. By placing the $R$-th vertex at a valid position that matches only $c - 1$ of these coordinates (using a fresh symbol at the remaining position), we preserve $c - 1 \ge 1$ shared roots while reducing the defect by one, maintaining connectivity.
-
-When $c = 1$ (i.e., $R = 2^d + 1$): the $R$-th vertex has exactly one neighbor in $Q_d = \mathrm{HB}_{2^d}$. We cannot reduce this without disconnecting. Instead, by Theorem~\ref{them:continuity}, the constructive Hamming Ball sequence already achieves every defect value up to $\Eseq(R) - \gamma(R) = \Eseq(R)$ (since $\gamma(R) = 0$), so $\Eseq(R) - 1$ is achievable.
-
-In both cases, the resulting subgraph has defect $\Eseq(R) - 1$ and is connected.
+Any $R$-vertex subgraph $V'$ in $A(n,k)$ either fits entirely inside a $d$-dimensional embedding hypercube $Q_d$ or it spills outside of it.
+\begin{enumerate}
+\item \textbf{Case 1: $V' \subseteq Q_d$.} Since $R = 2^d - 1$, $V'$ is obtained by removing exactly one vertex $v$ from $Q_d$. Since $Q_d$ is $d$-regular, removing $v$ destroys exactly $d$ defect links (edges). Thus, the defect of any such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$.
+\item \textbf{Case 2: $V' \not\subseteq Q_d$.} If $V'$ contains at least one vertex $v'$ outside of $Q_d$, then at most $R-1$ vertices of $V'$ lie within $Q_d$. By Theorem~\ref{them:defect}, the maximum defect among these $R-1$ vertices is bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses at least one fresh coordinate dimension and therefore can share at most $1$ root with $Q_d \cap V'$. The maximum possible defect for any such spillover configuration is thus bounded by $\Eseq(R-1) + 1$.
+\end{enumerate}
+The difference between the dense configuration defect and the maximum spillover defect is:
+\begin{equation}
+\Eseq(R) - \big(\Eseq(R-1) + 1\big) = d - 2.
+\end{equation}
+For $d \ge 4$, this difference is at least $2$, creating a secondary fracture gap of size $d-3$ consisting of the forbidden defect values $\{\Eseq(R-1) + 2, \ldots, \Eseq(R) - 1\}$. For $R=15$ ($d=4$), the value $27$ is impossible; for $R=31$ ($d=5$), the values $73$ and $74$ are impossible.
 \end{proof}
 
 \begin{theorem}[Complete Defect Classification]\label{them:classification}
-For any valid cluster size $R \ge 4$, the set of achievable defect values for connected $R$-vertex subgraphs is exactly:
+For any valid cluster size $R \ge 4$, every integer defect from the spanning tree limit ($R-1$) up to the leaf-addition bound $\Eseq(R-1) + 1$ is achievable. Consequently, the set of achievable defect values for connected $R$-vertex subgraphs is:
 \begin{equation}\label{eq:defect-spectrum}
-\mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; \Eseq(R) - \gamma(R)\} \;\cup\; \{\Eseq(R)\}
+\mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; \Eseq(R-1) + 1\} \;\cup\; \mathcal{D}_{\mathrm{dense}}(R)
 \end{equation}
-with $\gamma(R)$ as in~\eqref{eq:fracture-gap}.
+where $\mathcal{D}_{\mathrm{dense}}(R)$ contains the isolated dense defect values above the leaf-addition bound (such as $\{\Eseq(2^d)\}$ for $R=2^d$, or $\{\Eseq(2^d-1)\}$ for $R=2^d-1$).
 \end{theorem}
 \begin{proof}
-The maximum $\Eseq(R)$ is achieved by the Hamming Ball. For $R \neq 2^d$, Theorem~\ref{them:nogap} constructs a subgraph with defect $\Eseq(R) - 1$, and Theorem~\ref{them:continuity} fills every integer down to $R - 1$. For $R = 2^d$, Theorem~\ref{them:fracture} forbids defect values in $(\Eseq(R) - (d-1),\; \Eseq(R))$. The value $\Eseq(R) - (d-1)$ is achieved by taking $Q_d$, removing one vertex $v$ (destroying $d$ defect links), and attaching a fresh vertex $v'$ adjacent to exactly one vertex of $Q_d  -  \{v\}$, yielding defect $d\,2^{d-1} - d + 1$. Theorem~\ref{them:continuity} then fills every integer down to $R - 1$.
+The maximum $\Eseq(R)$ is achieved by the Hamming Ball. The isometric hypercube embedding guarantees continuity from the spanning tree limit up to the leaf-addition bound. The isolated values in $\mathcal{D}_{\mathrm{dense}}(R)$ are achieved by dense embeddings within the $d$-dimensional hypercube (like perfect subcubes or single-vertex deletions from subcubes), while the gaps between these dense states and the leaf-addition bound are dictated by the primary and secondary fracture gaps of Theorems~\ref{them:fracture} and~\ref{them:secondary-gap}.
 \end{proof}
 \noindent Table~\ref{tab:edge_spectrum} illustrates this classification for selected values of $R$.
 
 \begin{table}[ht]
 \centering
-\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of 2 exhibit a fracture gap of $d{-}1$; all other $R$ have no gap.}
+\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of 2 ($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2 ($2^d-1$) exhibit secondary fracture gaps of $d-3$ for $d \ge 4$. Other sizes near powers of 2 (such as $R=12$) can also exhibit isolated dense states and gaps.}
 \label{tab:edge_spectrum}
 \begin{tabular}{rrrrl}
 \toprule
@@ -781,10 +778,10 @@ $2^3 = 8$   & 12  & 2 & 5   & $\{D \in \mathbb{Z} : 7 \le D \le 10\} \cup \{12\}
 10          & 15  & 0 & 7   & $\{D \in \mathbb{Z} : 9 \le D \le 15\}$ \\
 \midrule
 11          & 17  & 0 & 8   & $\{D \in \mathbb{Z} : 10 \le D \le 17\}$ \\
-12          & 20  & 0 & 10  & $\{D \in \mathbb{Z} : 11 \le D \le 20\}$ \\
+12          & 20  & 0 & 9   & $\{D \in \mathbb{Z} : 11 \le D \le 18\} \cup \{20\}$ \\
 13          & 22  & 0 & 11  & $\{D \in \mathbb{Z} : 12 \le D \le 22\}$ \\
 14          & 25  & 0 & 13  & $\{D \in \mathbb{Z} : 13 \le D \le 25\}$ \\
-15          & 28  & 0 & 15  & $\{D \in \mathbb{Z} : 14 \le D \le 28\}$ \\
+15          & 28  & 0 & 14  & $\{D \in \mathbb{Z} : 14 \le D \le 26\} \cup \{28\}$ \\
 $2^4 = 16$  & 32  & 3 & 16  & $\{D \in \mathbb{Z} : 15 \le D \le 29\} \cup \{32\}$ \\
 17          & 33  & 0 & 18  & $\{D \in \mathbb{Z} : 16 \le D \le 33\}$ \\
 18          & 35  & 0 & 19  & $\{D \in \mathbb{Z} : 17 \le D \le 35\}$ \\
@@ -923,7 +920,7 @@ theorem arrangement_extraconnectivity_minimum
 % ════════════════════════════════════════════════════════════════════════
 \section{Characterization Engine Source Code}\label{app:engine}
 
-The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $\Eseq(R)$ and $\Cconst(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full source repository is available at \href{https://github.com/shanep-ou/arrangement-extraconnectivity}{\texttt{github.com/shanep-ou/arrangement-extraconnectivity}} and is embedded as a PDF attachment (\texttt{predict.cpp}).
+The $O(R^3 \log R)$ characterization engine that computes exact boundary formulas for arbitrary $R$ is listed below (C++17). The engine operates in three tiers: (1)~analytical evaluation of $\Eseq(R)$ and $\Cconst(R)$ in $O(R)$ time, (2)~constructive Hamming Ball computation and formula verification in $O(R^3)$ time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full source repository is available at \href{https://github.com/ou-school-repos/program-arrangement-extraconnectivity}{\texttt{github.com/ou-school-repos/program-arrangement-extraconnectivity}} and an excerpt is provided below (\texttt{predict.cpp}).
 
 \paragraph{Implementation details.}
 The engine is designed for exact integer arithmetic with zero heap allocation in the hot path. All vertex representations use a fixed-size 512-element stack array (\texttt{Vertex<SymT>}), templatized on the symbol type: \texttt{uint8\_t} for $R \le 127$ and \texttt{uint16\_t} for $R \le 512$. Sorting and deduplication use \texttt{std::memcmp}-based comparison, which provides a consistent total order regardless of architecture endianness. For $R > 64$, intermediate products exceed $2^{63}$, so the engine promotes to \texttt{\_\_int128} for the final boundary computation while keeping all inner loops in native 64-bit arithmetic.
