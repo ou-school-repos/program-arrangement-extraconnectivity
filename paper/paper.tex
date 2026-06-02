@@ -932,9 +932,10 @@ The engine is designed for exact integer arithmetic with zero heap allocation in
 
 \lstinputlisting[language=C++]{predict_core_sample.cpp}
 
-\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine verifies Proposition~\ref{prop:hb-eval} by checking that \\
+\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine checks Proposition~\ref{prop:hb-eval} \\
 \texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
-for all $R \le 260$, confirming the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Because the Algebraic Defect Framework decouples the network dimensions from the subset structure, the constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$; thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to guarantee the formula's exactness for all valid dimensions. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
+for all $R \le 260$, giving strong numerical evidence that the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Because the Algebraic Defect Framework decouples the network dimensions from the subset structure,
+this paper leverages a property of $A(n,k)$, that the constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$; thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to guarantee the formula's exactness for all valid dimensions. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
 
 \bibliographystyle{plain}
 % \nocite{*}
