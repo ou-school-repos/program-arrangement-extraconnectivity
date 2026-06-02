@@ -526,7 +526,7 @@ In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ 
 The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
-The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is strictly bounded above by the Star Graph $K_{1, R-1}$, yielding a total correction $(X+D) = \binom{R}{2}$:
+The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is bounded above by the Star Graph $K_{1, R-1}$, yielding a total correction $(X+D) = \binom{R}{2}$:
 \begin{equation}\label{eq:sparse-limit}
 \left| \extbd(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
 \end{equation}
@@ -629,7 +629,7 @@ The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,
 \end{figure}
 
 \paragraph{Structural Convergence at $R=3$.}
-Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields defect $D = 2$, yielding a total correction $(X + D) = \binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
+Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields defect $D = 2$, cross-collisions $X=1$, and a total correction $(X + D) = \binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
 If a subset $V'$ fails to achieve the optimal defect $\Eseq(R)$ by a shortfall $\Delta D = \Eseq(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
@@ -702,7 +702,7 @@ The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now
 For $R = 2^d$, the gap between the optimal defect $\Eseq(R) = d\,2^{d-1}$ and the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
 \end{theorem}
 \begin{proof}
-By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Since hypercubes are triangle-free, each shared root corresponds to exactly one edge, so the defect equals the internal edge count exactly. Any other configuration of $2^d$ vertices suffers a loss of at least $d-1$ edges. Because Theorem~\ref{them:defect} bounds the defect in $A(n,k)$ by $D(V') \le \Eseq(R)$, the arrangement graph perfectly inherits the hypercube's isoperimetric fracture gap.
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Since hypercubes are triangle-free, each shared root corresponds to exactly one edge, so the defect equals the internal edge count exactly. Any other configuration of $2^d$ vertices suffers a loss of at least $d-1$ edges. Because Theorem~\ref{them:defect} restricts the internal defect to obey the hypercube ceiling ($D(V') \le \Eseq(R)$), the arrangement graph perfectly inherits the hypercube's isoperimetric fracture gap.
 
 Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
 
@@ -929,8 +929,8 @@ The engine is designed for exact integer arithmetic with zero heap allocation in
 
 \lstinputlisting[language=C++]{predict_core_sample.cpp}
 
-\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine checks Proposition~\ref{prop:hb-eval} \\
-\texttt{brute\_force\_neighbors(verts, 2R, R) == (R*k - E\_seq) * (n-k) - C\_const} \\
+\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine checks Proposition~\ref{prop:hb-eval} by verifying \\
+\texttt{brute\_force\_neighbors(verts, 2 * R, R) == (R * R - nk1) * R - constant} \\
 for all $R \le 260$, giving strong numerical evidence that the Hamming Ball achieves the exact boundary predicted by Theorem~\ref{them:main}. Because the Algebraic Defect Framework decouples the network dimensions from the subset structure,
 this paper leverages a property of $A(n,k)$, that the constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$; thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to guarantee the formula's exactness for all valid dimensions. Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets) is verified separately by exhaustive enumeration for $R \le 10$.
 
