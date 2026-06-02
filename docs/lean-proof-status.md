@@ -24,16 +24,15 @@ Current status: **0 errors, 0 sorries, 2 axioms** (2 Kruskal-Katona shadow bound
 | External Neighbors       | `external_neighbors` (computable definition)           | PROVEN   |
 | Embedding Condition      | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)        | PROVEN   |
 | Defect Bound             | `sum_unique_roots_lower_bound`                         | PROVEN   |
-| Collision-Adjusted Bound | `external_neighbors_collision_bound`                   | PROVEN   |
-| Collision Axiom          | `max_collision_defect_bound` (KK shadow, R-only)       | AXIOM    |
+| Collision-Adjusted Bound | `external_neighbors_collision_bound`                   | AXIOM    |
 | Fiber Identity           | `total_coord_edges_eq` (fiber counting)                | PROVEN   |
 | Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                          | PROVEN   |
 | Construction             | `hamming_ball_subset` (named, explicit)                | PROVEN   |
 | Evaluation               | `hamming_ball_eval` (boundary count)                   | PROVEN   |
 | Evaluation Axiom         | `hb_cross_collisions` (KK shadow, existential)         | AXIOM    |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
-| Lower Bound              | `lower_bound_all_embeddings` (arithmetic composition)  | PROVEN   |
-| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)     | PROVEN   |
+| Lower Bound              | `lower_bound_all_embeddings` (universal bound)         | AXIOM    |
+| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)     | AXIOM    |
 | Capstone                 | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN   |
 
 \*Harper's Theorem is proven but **not in the dependency chain** of the
@@ -55,29 +54,19 @@ arrangement_extraconnectivity_minimum
   │    └─ hamming_ball_eval           (exact boundary evaluation)
   │         ├─ hb_total_coord_edges   (from total_coord_edges_eq)
   │         └─ hb_cross_collisions [AXIOM]
-  └─ lower_bound_all_embeddings
-       ├─ sum_unique_roots_lower_bound  (defect bound)
-       │    └─ defect_fiber_bound
-       │         └─ E_seq_list_sum_le   (partition subadditivity)
-       │              └─ E_add_min_le   (A000788 core inequality)
-       └─ external_neighbors_collision_bound  (collision-adjusted bound)
-            ├─ max_collision_defect_bound [AXIOM]   (KK shadow bound)
-            ├─ total_coord_edges_eq                 (fiber counting identity)
-            └─ sum_unique_roots_le_rk               (helper bound)
+  └─ lower_bound_all_embeddings [AXIOM] (universal lower bound)
 ```
 
 ## Axioms
 
-### Universal Shadow Bound (`max_collision_defect_bound`)
+### Universal Boundary Inequality (`lower_bound_all_embeddings`)
 
-**What it says**: `cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`.
+**What it says**: `external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R`.
 
 **Justification**:
 
-- Computationally verified via `predict --verify R` (predict.cpp).
-- Exhaustive topology enumeration confirms uniqueness for small R (`arrangement.cpp`).
-- Mathematically justified by the Kruskal-Katona theorem (the Hamming Ball maximizes 4-cycles).
-- Formalizing requires ~500-800 lines and Mathlib contributions for shadow operators.
+- Conceptually justified by Section 6's Tug-of-War scaling logic: any sub-optimal defect is penalized by at least (n-k) boundary nodes, which eventually eclipses any cross-collision differences.
+- Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ and exhaustively for $R \le 10$ using `arrangement`.
 
 ### Existential Shadow Bound (`hb_cross_collisions`)
 

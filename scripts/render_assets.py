@@ -98,8 +98,6 @@ def render_dots(asset_dir="assets", output_dir="assets/out"):
             print(f"  ✗ Failed: {input_path} ({e})")
 
 
-
-
 if __name__ == "__main__":
     # Generate side-by-side comparison DOTs natively
     gen_comparison_dot(3, "assets/r8_stability.dot")

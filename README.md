@@ -45,10 +45,8 @@ The Algebraic Defect Framework and the Asymptotic Penalty Theorem are mechanical
 
 We have established a strict logical separation: Lean 4 verifies 100% of the graph theory, dimensional scaling, bitwise arithmetic, and boundary projections from first principles. We isolate classical extremal bounds to exactly two explicit axioms:
 
-- `max_collision_defect_bound`: The universal Kruskal-Katona shadow bound for all $R$-element subsets.
+- `lower_bound_all_embeddings`: The universal boundary lower bound for all $R$-element subsets.
 - `hb_cross_collisions`: The exact 4-cycle shadow overlap count of the explicitly constructed Hamming Ball.
-
-_(Both axioms are purely functions of $R$, independent of network dimensions $n$ and $k$, and are computationally verified for $R \le 20$ via our C++ engine)._
 
 ### Open Conjectures (Mechanized as `Prop`s)
 

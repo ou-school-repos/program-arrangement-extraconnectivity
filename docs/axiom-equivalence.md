@@ -1,18 +1,16 @@
-# Axiom Equivalence: The Duality of max_collision_defect_bound and hamming_ball_eval
+# Axiom Equivalence: The Duality of lower_bound_all_embeddings and hamming_ball_eval
 
 ## The Two Axioms
 
-### Axiom 1: `max_collision_defect_bound` (Lower Bound Engine)
+### Axiom 1: `lower_bound_all_embeddings` (Lower Bound Engine)
 
 ```lean
-axiom max_collision_defect_bound {n k : ℕ}
-    (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
-    cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R
+axiom lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 ```
 
 **Role:** Supplies the _universally quantified lower bound_. For **every**
-R-vertex subset V', the total "waste" (collisions + defect) is at most
-C_constant(R).
+R-vertex subset V', the external boundary is bounded below by the predicted boundary.
 
 ### Axiom 2: `hamming_ball_eval` (Upper Bound Witness)
 
@@ -26,40 +24,43 @@ axiom hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
 **Role:** Supplies the _existential upper bound_. There **exists** a specific
 subset (the Hamming Ball) that achieves the formula exactly.
 
-## The Duality
+## The Mathematical Correction and Duality
 
-These two axioms are not independent — they are **dual faces of the same
-extremal inequality**. Together they form the "sandwich" that pins the
-isoperimetric profile to a single value:
+In previous versions of the framework, Axiom 1 was formulated as a dimension-independent bound on the combined waste: `cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`. However, this statement is **provably false** for sub-optimal topologies.
+
+### The Star Graph Counterexample
+
+For the Star Graph $K_{1, R-1}$ at $R=8$ in $A(15, 7)$ (where $n-k = 8$), the defect is $D = 7$ (shortfall of 5 from the optimal $E(8) = 12$). Since the star graph leaves are placed along coordinates with distinct symbols, they can share an external neighbor across every pair, yielding:
+$$X = \binom{7}{2} = 21 \text{ cross-collisions}$$
+$$X + D = 21 + 7 = 28$$
+But $C_{constant}(8) = 12$. Since $28 \not\le 12$, the combined waste bound is violated.
+
+### Why the Hamming Ball Still Wins ("Tug-of-War" Scaling)
+
+Although the Star Graph can achieve higher collision savings, it requires a larger $n-k$ dimension factor. The penalty for missing 5 defect links is:
+$$\Delta D \cdot (n-k) = 5 \cdot 7 = 35$$
+This linear dimensional penalty of 35 easily outpaces the 16 additional cross-collisions ($28 - 12 = 16$). As $n-k \to \infty$, the dimensional penalty completely crushes any non-standard collision savings.
+
+Therefore, the true universal bound must be stated as the final boundary inequality directly.
+
+Together, these two axioms form the "sandwich" that pins the isoperimetric profile to a single value:
 
 ```
-∀ V', |N(V')| ≥ formula(R)      ← from max_collision_defect_bound
+∀ V', |N(V')| ≥ formula(R)      ← from lower_bound_all_embeddings
 ∃ V*, |N(V*)| = formula(R)      ← from hamming_ball_eval
 ────────────────────────────────
 ∴ min_{|V'|=R} |N(V')| = formula(R)
 ```
 
-### Why They Share a Root
-
-Both axioms rest on the same mathematical claim:
-
-> **The Hamming Ball maximizes internal shielding (defect + collisions)
-> among all R-element subsets of the arrangement graph.**
-
-This is equivalent to saying the Hamming Ball maximizes the count of
-**4-cycles** (squares) in the induced subgraph, which is a direct
-consequence of the **Kruskal-Katona shadow theorem** applied to the
-binary representation of vertex neighborhoods.
-
 ### The Information Flow
 
 ```
-Kruskal-Katona Shadow Theorem
+Kruskal-Katona Shadow Theorem + Tug-of-War Scaling
   │
-  ├──► "Hamming Ball maximizes 4-cycles"
+  ├──► "Hamming Ball maximizes internal shielding/minimizes boundary"
   │        │
-  │        ├──► max_collision_defect_bound
-  │        │      (waste ≤ C_constant = HB waste)
+  │        ├──► lower_bound_all_embeddings
+  │        │      (boundary ≥ HB boundary)
   │        │
   │        └──► hamming_ball_eval
   │               (HB achieves exact formula)
@@ -116,11 +117,11 @@ neighbor that would otherwise be counted twice.
 
 ## Why They Cannot Be Merged
 
-Although both axioms follow from KK, they serve structurally different roles
+Although both axioms follow from KK and Tug-of-War scaling, they serve structurally different roles
 in the proof:
 
-1. **`max_collision_defect_bound`** is a ∀-statement over all V'.
-   It flows into `external_neighbors_collision_bound` → `lower_bound_all_embeddings`.
+1. **`lower_bound_all_embeddings`** is a ∀-statement over all V'.
+   It provides the universal lower bound.
 
 2. **`hamming_ball_eval`** is an ∃-statement about a specific V\*.
    It flows into `exists_optimal_embedding`.

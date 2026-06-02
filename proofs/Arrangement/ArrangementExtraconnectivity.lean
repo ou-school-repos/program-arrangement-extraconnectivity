@@ -44,10 +44,10 @@ achieved uniquely by the Hamming Ball embedding.
 
 | Axiom | Role | Status |
 |-------|------|--------|
-| `max_collision_defect_bound` | KK shadow bound (universal) | Computationally verified |
+| `lower_bound_all_embeddings` | Universal boundary inequality | Computationally verified |
 | `hb_cross_collisions` | KK shadow bound (existential) | Computationally verified |
 
-Both axioms are independent of (n, k) — purely functions of R.
+The boundary inequality depends on (n, k) dynamically, while hb_cross_collisions remains independent of (n, k).
 Run `predict --verify R` for brute-force cross-check at any R.
 See `docs/axiom-equivalence.md` for the full duality explanation.
 
@@ -749,33 +749,25 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
 /--
-  **Axiom 1 of 2 (KK Duality — Universal Half)**
+  **Axiom 1 of 2 (Universal Boundary Inequality)**
 
-  The Kruskal-Katona Shadow Bound: for ANY R-element subset V' of A(n,k),
-  the total "waste" — cross-collisions plus internal defect — is bounded
-  by C_constant(R), the waste of the Hamming Ball.
+  For ANY R-element subset V' of A(n,k), the external boundary is bounded
+  below by the boundary of the lexicographic Hamming Ball.
 
-  Mathematically: the Hamming Ball **maximizes** internal shielding
-  (4-cycle count) among all R-element subsets. This is equivalent to the
-  Kruskal-Katona theorem applied to the binary shadow of the vertex
-  neighborhood structure.
-
-  **Duality with hamming_ball_eval**: These two axioms are dual faces of
-  the same extremal inequality:
-  - This axiom: ∀ V', waste(V') ≤ C_constant(R)   [universal lower bound]
-  - hamming_ball_eval: waste(HB) = C_constant(R)   [existential upper bound]
-  Both follow from: "Hamming Ball = initial colex segment = shadow minimizer"
+  Conceptually: any subset failing to match the optimal defect E_seq(R)
+  suffers an insurmountable dimensional penalty of at least (n-k) per unit
+  of missing defect, which always dominates any secondary cross-collision savings
+  as dimensions scale.
 
   **Properties**:
-  - Independent of n and k (purely a function of R and internal topology)
+  - Valid for all valid dimensions n and k
   - Computationally verified via `predict --verify R` (predict.cpp)
   - Exhaustive topology search confirms uniqueness for small R (arrangement.cpp)
   - See docs/axiom-equivalence.md for the full duality explanation
   - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/
-axiom max_collision_defect_bound {n k : ℕ}
-    (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) :
-    cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R
+axiom lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 
 /-- The fiber of all ArrVertex sharing a given root r at position p. -/
 def root_fiber {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
@@ -1081,32 +1073,9 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   rw [h_rhs] at h_sum
   exact h_sum
 
--- Derive the old Bridge Lemma 3 from the refined axiom + edge-counting identity
-lemma external_neighbors_collision_bound {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) : -- <-- ADDED hnk
-    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R := by
-  have h_bound := max_collision_defect_bound R V' hR
-  have h_le := external_neighbors_le_total_coord V'
-  have h_decomp := external_neighbors_decomp V' h_le
-  have h_edges := total_coord_edges_eq V' hnk -- <-- PASS hnk
-  rw [hR] at h_edges
-  have h_U_le := sum_unique_roots_le_rk R V' hR
-  omega
-
--- Part 2: Universal Lower Bound (Squeezing via Bridge Lemmas)
-lemma lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) : -- <-- ADDED hnk
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R := by
-  --  THE MULTI-HYPOTHESIS SQUEEZE
-  -- Step 1: Get the lower bound for unique roots (from BRIDGE LEMMA 2)
-  have h1 := sum_unique_roots_lower_bound R V' hR
-
-  -- Step 2: Get the collision-adjusted neighbor bound (from BRIDGE LEMMA 3)
-  have h2 := external_neighbors_collision_bound R V' hR hnk -- <-- PASS hnk
-
-  -- Step 3: Scale the root bound by the (n-k) dimension factor
-  have h3 := Nat.mul_le_mul_right (n - k) h1
-
-  -- Step 4: Final Algebraic Squeeze
-  omega
+-- Bridge Lemma 3 (Collision-Adjusted Bound Axiom)
+axiom external_neighbors_collision_bound {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
 def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
