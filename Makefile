@@ -131,7 +131,7 @@ test/predict: build	##H @Dev Verify predictor matches search for R=2..$(R)
 	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
 	@fail=0; \
 	for r in $$(seq 2 $(R)); do \
-		expected=$$(./$(BIN_OPT) $$r 2>/dev/null | tail -1 | sed 's/,.*//' | tr -d ' '); \
+		expected=$$(./$(BIN_OPT) $$r 2>/dev/null | grep 'EX:' | tail -1 | sed 's/,.*//' | tr -d ' '); \
 		actual=$$(./$(BIN_PRED) $$r 2>/dev/null | sed 's/,.*//' | tr -d ' '); \
 		if [ "$$actual" = "$$expected" ]; then \
 			$(call print_success,R=$$r: prediction matches search.); \
