@@ -636,15 +636,15 @@ If a subset $V'$ fails to achieve the optimal defect $\Eseq(R)$ by a shortfall $
 \end{theorem}
 To understand this mechanism, we return to the exact boundary decomposition~\eqref{eq:boundary}:
 
-Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a subset $V'$ falls short of the optimal Hamming Ball defect by $\Delta D$, it must project onto $\Delta D$ \emph{additional} unique roots to maintain its vertex count ($U_{sub} = U_{opt} + \Delta D$).
+Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a subset $V'$ falls short of the optimal Hamming Ball defect by $\Delta D$, it must project onto $\Delta D$ \emph{additional} unique roots to maintain its vertex count ($U_{\mathrm{sub}} = U_{\mathrm{opt}} + \Delta D$).
 
 Substituting this into the boundary equation yields the comparative boundary size:
 \begin{align}\label{eq:penalty-expansion}
-\left| \extbd(V'_{sub}) \right| &= (U_{opt} + \Delta D) \cdot (n - k) - (X_{sub} + D_{sub}) \nonumber\\
-&= \left| \extbd(V'_{opt}) \right| + \Delta D \cdot (n - k) + (X_{opt} + D_{opt}) - (X_{sub} + D_{sub})
+\left| \extbd(V'_{\mathrm{sub}}) \right| &= (U_{\mathrm{opt}} + \Delta D) \cdot (n - k) - (X_{\mathrm{sub}} + D_{\mathrm{sub}}) \nonumber\\
+&= \left| \extbd(V'_{\mathrm{opt}}) \right| + \Delta D \cdot (n - k) + (X_{\mathrm{opt}} + D_{\mathrm{opt}}) - (X_{\mathrm{sub}} + D_{\mathrm{sub}})
 \end{align}
 
-This formulation isolates the asymptotic behavior. The fluctuation in defect and cross-collisions, $(X_{opt} + D_{opt}) - (X_{sub} + D_{sub})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). Conversely, the penalty term $\Delta D \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single unit of defect ($\Delta D = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
+This formulation isolates the asymptotic behavior. The fluctuation in defect and cross-collisions, $(X_{\mathrm{opt}} + D_{\mathrm{opt}}) - (X_{\mathrm{sub}} + D_{\mathrm{sub}})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). Conversely, the penalty term $\Delta D \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single unit of defect ($\Delta D = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
 
 \subsection{Numerical Illustration}
 
@@ -708,11 +708,11 @@ Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. L
 
 \textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d  -  S$ destroys exactly $d$ defect links (the degree of $v$ in $Q_d$). The replacement $v' \in S  -  Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ shares \emph{at most one} root with $Q_d \cap S$. The net change is at most $-d + 1$, giving $D(S) \le d\,2^{d-1} - (d-1)$.
 
-\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ defect links to the remaining vertices (minus links among the removed vertices themselves, which we denote $D_{rem}$). By Theorem~\ref{them:defect}, the $m$ replacement vertices satisfy $D(\text{replacements}) \le \Eseq(m)$, and each contributes at most 1 shared root back into $Q_d \cap S$. Therefore:
+\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ defect links to the remaining vertices (minus links among the removed vertices themselves, which we denote $D_{\mathrm{rem}}$). By Theorem~\ref{them:defect}, the $m$ replacement vertices satisfy $D(\text{replacements}) \le \Eseq(m)$, and each contributes at most 1 shared root back into $Q_d \cap S$. Therefore:
 \begin{equation}\label{eq:case2-bound}
-D(S) \le d\,2^{d-1} - md + D_{rem} + m + \Eseq(m)
+D(S) \le d\,2^{d-1} - md + D_{\mathrm{rem}} + m + \Eseq(m)
 \end{equation}
-Since $D_{rem} \le \Eseq(m)$, the gap from the optimum is at least $m(d-1) - 2\Eseq(m)$. For small deviations ($1 \le m < d$), this bound strictly forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the defect strictly faster than single-vertex removal, so the gap only widens.
+Since $D_{\mathrm{rem}} \le \Eseq(m)$, the gap from the optimum is at least $m(d-1) - 2\Eseq(m)$. For small deviations ($1 \le m < d$), this bound strictly forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the defect strictly faster than single-vertex removal, so the gap only widens.
 
 In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden defect values in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below the optimum.
 \end{proof}
