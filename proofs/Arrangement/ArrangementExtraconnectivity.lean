@@ -748,6 +748,8 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   unfold coord_boundary
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
+section Extraconnectivity
+
 /--
   **Axiom 1 of 2 (Universal Boundary Inequality)**
 
@@ -766,8 +768,8 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   - See docs/axiom-equivalence.md for the full duality explanation
   - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/
-axiom lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
+variable (lower_bound_all_embeddings : ∀ (R n k : ℕ) (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
 
 /-- The fiber of all ArrVertex sharing a given root r at position p. -/
 def root_fiber {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
@@ -1074,8 +1076,8 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   exact h_sum
 
 -- Bridge Lemma 3 (Collision-Adjusted Bound Axiom)
-axiom external_neighbors_collision_bound {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
-    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R
+variable (external_neighbors_collision_bound : ∀ {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R)
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
 def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
@@ -1569,9 +1571,9 @@ lemma hb_total_coord_edges {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     This explicitly counts the 4-cycles in the Hamming Ball. It is mathematically
     equivalent to the existential half of the Kruskal-Katona Theorem and requires
     extremal set theory shadow operators to prove formally. -/
-axiom hb_cross_collisions {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
-    (hd : d = bit_length (R - 1)) :
-    cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R
+variable (hb_cross_collisions : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
+    (hd : d = bit_length (R - 1)),
+    cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R)
 
 /-- THE AXIOM KILLER: We formally prove the Hamming Ball evaluation
     by composing the double-counting identity with Phase 1 and Phase 2. -/
@@ -1739,3 +1741,5 @@ def hypercube_fracture_gap_conjecture (n k d : ℕ) : Prop :=
     V'.card = R → is_connected_subgraph V' →
     (R * k - sum_unique_roots V') < E_opt →
     (R * k - sum_unique_roots V') ≤ E_opt - d + 1
+
+end Extraconnectivity

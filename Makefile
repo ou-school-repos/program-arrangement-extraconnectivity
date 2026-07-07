@@ -227,7 +227,9 @@ lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@printf "\033[1;32m--------------------------------\033[0m\n"
 	@$(call print_success,Lean proofs verified.)
 
-.PHONY: _lean/cache
+.PHONY: cache lean/cache _lean/cache
+cache: lean/cache
+lean/cache: _lean/cache
 _lean/cache:	##H @Build Download pre-built Mathlib cache
 	@$(call print_info,Fetching Mathlib cache)
 	cd proofs && lake exe cache get
