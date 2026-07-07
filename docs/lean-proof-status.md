@@ -10,7 +10,7 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 0 sorries, 2 axioms** (2 Kruskal-Katona shadow bounds).
+Current status: **0 errors, 0 sorries, 3 axioms** (the 3 underlying logical gaps in the mechanization).
 
 ## Architecture
 
@@ -32,10 +32,11 @@ Current status: **0 errors, 0 sorries, 2 axioms** (2 Kruskal-Katona shadow bound
 | Evaluation Axiom         | `hb_cross_collisions` (KK shadow, existential)         | AXIOM    |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
 | Lower Bound              | `lower_bound_all_embeddings` (universal bound)         | AXIOM    |
-| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)     | AXIOM    |
-| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN   |
+| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)     | PROVEN\* |
+| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN\* |
 
-\*Harper's Theorem is proven but **not in the dependency chain** of the
+\*Proven but **conditional on outstanding axioms** (see Axioms section below).
+Harper's Theorem is proven but **not in the dependency chain** of the
 capstone theorem. The defect-based proof bypasses it entirely via algebraic
 subadditivity of E_seq.
 
@@ -59,7 +60,7 @@ arrangement_extraconnectivity_minimum
 
 ## Axioms
 
-### Universal Boundary Inequality (`lower_bound_all_embeddings`)
+### 1. Universal Boundary Inequality (`lower_bound_all_embeddings`)
 
 **What it says**: `external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R`.
 
@@ -68,7 +69,15 @@ arrangement_extraconnectivity_minimum
 - Conceptually justified by Section 6's Tug-of-War scaling logic: any sub-optimal defect is penalized by at least (n-k) boundary nodes, which eventually eclipses any cross-collision differences.
 - Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ and exhaustively for $R \le 10$ using `arrangement`.
 
-### Existential Shadow Bound (`hb_cross_collisions`)
+### 2. Collision-Adjusted Bound (`external_neighbors_collision_bound`)
+
+**What it says**: `external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R`.
+
+**Justification**:
+
+- Core isoperimetric inequality bounding external neighbors by unique roots and the maximal collision constant.
+
+### 3. Existential Shadow Bound (`hb_cross_collisions`)
 
 **What it says**: The cross collisions of the Hamming Ball is exactly `C_constant R - E_seq R`.
 
@@ -91,7 +100,7 @@ Dual constraint on the hypercube dimension `d = bit_length(R-1) = Nat.size(R-1)`
 
 ## What IS Fully Proven (No Axioms)
 
-The **Algebraic Defect Squeeze** and **Asymptotic Penalty Theorem** — the novel contributions — are 100% mechanized:
+The core algebra, bijections, and isoperimetric defect inequalities of the **Algebraic Defect Framework** are 100% mechanized with zero axioms:
 
 - **E_seq subadditivity** (`E_add_min_le`): The core isoperimetric inequality on A000788.
 - **Generalized partition bound** (`E_seq_list_sum_le`): Extension from binary splits to arbitrary partitions.
@@ -99,9 +108,13 @@ The **Algebraic Defect Squeeze** and **Asymptotic Penalty Theorem** — the nove
 - **Universal lower bound** (`sum_unique_roots_lower_bound`): The defect bound D(V') ≤ E_seq(R) for ALL R-element subsets.
 - **Total Coordinate Edges** (`total_coord_edges_eq`): Mechanically double-counting the available $(n-k+1)$ extensions for each unique root via pure Finset bijections.
 - **Bitwise Arithmetic** (`nat_popcount_eq_card_filter`): Mechanically verifying the exact Finset bijection between `Nat.testBit` filters and the recursive `popcount` weight, by induction on the bit width with a partition-and-shift decomposition.
-- **Arithmetic squeeze** (`lower_bound_all_embeddings`): Composing the lemmas to pin the exact extraconnectivity.
-- **Asymptotic Penalty** (`sub_optimal_penalty`): Proving that topologies with a defect shortfall $\Delta E$ are unconditionally penalized by at least $\Delta E(n-k)$ boundary nodes.
 - **Hamming Ball construction** (`hamming_ball_subset`): Explicit construction with proven cardinality.
+
+The following high-level results are **mechanically proven inside Lean**, but remain conditional on the three axioms above:
+
+- **Asymptotic Penalty** (`sub_optimal_penalty`): Proving that topologies with a defect shortfall $\Delta E$ are unconditionally penalized by at least $\Delta E(n-k)$ boundary nodes (conditional on Axiom 2).
+- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor showing that the Hamming Ball achieves the exact optimal boundary (conditional on Axiom 3).
+- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines existence and lower bound to squeeze the exact minimum cut (conditional on Axiom 1 and Axiom 3).
 
 ## Novel Contributions
 
