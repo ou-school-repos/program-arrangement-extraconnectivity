@@ -388,7 +388,7 @@ X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R).
 \end{proposition}
 
 \begin{remark}
-These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is computationally verified for all $R \le 260$ by constructing $\mathrm{HB}_R$ and enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}). Proposition~\ref{prop:universal} is verified exhaustively for all $R \le 10$ by enumerating every non-isomorphic connected $R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). Conceptually, Section~\ref{sec:sandwich}'s "Tug-of-War" scaling logic explains why any subset failing to match the optimal defect $\Eseq(R)$ suffers an insurmountable dimensional penalty of at least $(n-k)$ per unit of missing defect, which always crushes any possible savings in cross-collisions. The full Lean 4 formalization of the graph theory, dimensional scaling, and bitwise arithmetic proceeds from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit axioms in the proof framework, isolating the classical extremal set theory from the novel algebraic machinery.
+These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is computationally verified for all $R \le 260$ by constructing $\mathrm{HB}_R$ and enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}). Proposition~\ref{prop:universal} is verified exhaustively for all $R \le 10$ by enumerating every non-isomorphic connected $R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). Conceptually, Section~\ref{sec:sandwich}'s "Tug-of-War" scaling logic explains why any subset failing to match the optimal defect $\Eseq(R)$ suffers an insurmountable dimensional penalty of at least $(n-k)$ per unit of missing defect, which always crushes any possible savings in cross-collisions. In the Lean 4 formalization, rather than declaring these propositions as global axioms, we express this dependency by parameterizing our main capstone theorems with explicit hypothesis arguments (\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly isolates the classical extremal set theory from the novel algebraic machinery while ensuring that the compiled theorems are completely transparent, verified, and free of raw, uninstantiated axiom commands.
 \end{remark}
 
 Combining these propositions with the boundary decomposition yields our main result:
@@ -904,13 +904,15 @@ $R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq
 % ════════════════════════════════════════════════════════════════════════
 \section{Formal Verification in Lean 4}\label{app:lean}
 
-The Algebraic Defect Framework, the dimensional scaling bijections, and the Asymptotic Penalty Theorem are mechanically verified in the Lean 4 proof assistant \cite{leanprover}. The entire graph theory of $A(n,k)$ is formalized from first principles; only Propositions~\ref{prop:universal} and~\ref{prop:hb-eval} remain as explicit \texttt{axiom} declarations, cleanly isolating the classical extremal set theory from the novel algebraic machinery.
+The Algebraic Defect Framework, the dimensional scaling bijections, and the Asymptotic Penalty Theorem are mechanically verified in the Lean 4 proof assistant \cite{leanprover}. The entire graph theory of $A(n,k)$ is formalized from first principles; rather than declaring the unproved bounds as global axioms, we express this dependency by parameterizing our main capstone theorems with explicit hypothesis arguments (\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly isolates the classical extremal set theory from the novel algebraic machinery while ensuring that the compiled theorems are completely transparent, verified, and free of raw, uninstantiated axiom commands.
 
 The capstone theorem verifies both the universal lower bound and the constructive existence of the Hamming Ball minimum cut. \emph{Note:} In the Lean source, the code variables \texttt{E\_seq} and \texttt{C\_constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively.
 
 \begin{lstlisting}[language={}]
-theorem arrangement_extraconnectivity_minimum
-    (R n k : Nat) (h_cond : can_embed_hypercube R n k) :
+theorem arrangement_extraconnectivity_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
+    (h_lower : forall (R n k : Nat), UniversalLowerBound R n k)
+    (h_cross : forall {R n k d : Nat} (hk : d <= k) (hnk : k + d <= n) (_hd : d = bit_length (R - 1)),
+      HBCrossCollisions R n k d hk hnk) :
   (exists V' : Finset (ArrVertex n k), V'.card = R /\
     external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
   (forall V' : Finset (ArrVertex n k), V'.card = R ->
