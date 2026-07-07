@@ -13,6 +13,7 @@
 # Compiled binaries
 arrangement
 predict
+predict_test
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

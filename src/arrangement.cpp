@@ -446,7 +446,8 @@ static uint64_t solve(int point, int nodl, int largchg,
     }
 
     // Generate candidates
-    uint64_t local_seen[2048];
+    uint64_t local_seen[8192];
+    int local_seen_count = 0;
     uint64_t total_evals = 0;
     std::memset(local_seen, 0xFF, sizeof(local_seen));
 
@@ -461,14 +462,14 @@ static uint64_t solve(int point, int nodl, int largchg,
                     continue;
 
                 uint32_t h = static_cast<uint32_t>(
-                    (temp ^ (temp >> 27) ^ (temp >> 13)) & 2047);
+                    (temp ^ (temp >> 27) ^ (temp >> 13)) & 8191);
                 bool duplicate = false;
                 while (local_seen[h] != 0xFFFFFFFFFFFFFFFFULL) {
                     if (local_seen[h] == temp) {
                         duplicate = true;
                         break;
                     }
-                    h = (h + 1) & 2047;
+                    h = (h + 1) & 8191;
                 }
                 if (duplicate) {
                     nodes_pruned_local++;
@@ -481,6 +482,12 @@ static uint64_t solve(int point, int nodl, int largchg,
                     continue;
                 }
                 local_seen[h] = temp;
+                local_seen_count++;
+                if (local_seen_count >= 8192) {
+                    std::cerr << "Fatal: local_seen table overflow at depth "
+                              << point << "\n";
+                    std::abort();
+                }
 
                 ver[point] = temp;
                 ver_sym_mask[point] = sym_mask(temp);
@@ -558,6 +565,15 @@ int main(int argc, const char *argv[]) {
     nauty_check(WORDSIZE, MAX_NAUTY_M, MAX_NAUTY_N, NAUTYVERSIONID);
     if (argc >= 2)
         R = static_cast<int>(std::strtol(argv[1], nullptr, 10));
+
+    if (R < 2 || R > 12) {
+        std::cerr << "Error: R must be between 2 and 12. R=" << R
+                  << " is out of bounds (5-bit packing max 12).\n";
+        return 1;
+    }
+    static_assert(
+        MAX_R >= 16,
+        "MAX_R must be >= 16 to safely index ver[16] and ver_sym_mask[16]");
 
     global_nauty_limit = std::max(3, R - 2);
     if (argc >= 3)

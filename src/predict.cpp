@@ -28,29 +28,28 @@ static inline int128_t widen(int64_t x) { return x; }
 
 static int R = 10;
 
-// -- Vertex type: fixed-size stack struct, templatized on symbol type --
+#include <array>
 
-template <typename SymT> struct Vertex {
+// -- Vertex type: dynamic-size stack struct, templatized on size and symbol
+// type --
+
+template <int K, typename SymT> struct Vertex {
     static constexpr SymT SENTINEL = static_cast<SymT>(~SymT{0}); // max value
-    SymT syms[512] = {};
-    bool operator<(const Vertex &o) const {
-        return std::memcmp(syms, o.syms, R * sizeof(SymT)) < 0;
-    }
-    bool operator==(const Vertex &o) const {
-        return std::memcmp(syms, o.syms, R * sizeof(SymT)) == 0;
-    }
+    std::array<SymT, K> syms = {};
+    bool operator<(const Vertex &o) const { return syms < o.syms; }
+    bool operator==(const Vertex &o) const { return syms == o.syms; }
 };
 
-template <typename SymT>
-static bool contains_sym(const Vertex<SymT> &v, int sym) {
+template <int K, typename SymT>
+static bool contains_sym(const Vertex<K, SymT> &v, int sym) {
     for (int i = 0; i < R; i++)
         if (v.syms[i] == static_cast<SymT>(sym))
             return true;
     return false;
 }
 
-template <typename SymT>
-static std::string vertex_to_string(const Vertex<SymT> &v) {
+template <int K, typename SymT>
+static std::string vertex_to_string(const Vertex<K, SymT> &v) {
     std::string str(R, ' ');
     for (int i = 0; i < R; i++) {
         int s = static_cast<int>(v.syms[i]);
@@ -119,12 +118,13 @@ static int64_t constant_analytical(int64_t R_val) {
 
 // -- Hamming ball construction ----------------------------------------
 
-template <typename SymT> static std::vector<Vertex<SymT>> build_hamming_ball() {
+template <int K, typename SymT>
+static std::vector<Vertex<K, SymT>> build_hamming_ball() {
     int dims = 0;
     while ((1 << dims) < R)
         dims++;
 
-    std::vector<Vertex<SymT>> verts(R);
+    std::vector<Vertex<K, SymT>> verts(R);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++)
             verts[i].syms[p] = static_cast<SymT>(p);
@@ -143,8 +143,9 @@ struct FormulaResult {
     int64_t constant;
 };
 
-template <typename SymT>
-static FormulaResult compute_formula(const std::vector<Vertex<SymT>> &verts) {
+template <int K, typename SymT>
+static FormulaResult
+compute_formula(const std::vector<Vertex<K, SymT>> &verts) {
     // Collect used symbols
     std::vector<SymT> used_syms;
     for (const auto &v : verts) {
@@ -160,29 +161,29 @@ static FormulaResult compute_formula(const std::vector<Vertex<SymT>> &verts) {
     // Anonymous coefficient: distinct groups per position
     int anon_coeff = 0;
     for (int p = 0; p < R; p++) {
-        std::vector<Vertex<SymT>> group_keys;
+        std::vector<Vertex<K, SymT>> group_keys;
         for (int i = 0; i < R; i++) {
-            Vertex<SymT> key = verts[i];
-            key.syms[p] = Vertex<SymT>::SENTINEL;
+            Vertex<K, SymT> key = verts[i];
+            key.syms[p] = Vertex<K, SymT>::SENTINEL;
             if (!std::any_of(
                     group_keys.begin(), group_keys.end(),
-                    [&key](const Vertex<SymT> &g) { return g == key; }))
+                    [&key](const Vertex<K, SymT> &g) { return g == key; }))
                 group_keys.push_back(key);
         }
         anon_coeff += static_cast<int>(group_keys.size());
     }
 
     // Named neighbors (sort-based dedup, zero heap alloc in hot path)
-    std::vector<Vertex<SymT>> sorted_verts = verts;
+    std::vector<Vertex<K, SymT>> sorted_verts = verts;
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
-    std::vector<Vertex<SymT>> named_nbrs;
+    std::vector<Vertex<K, SymT>> named_nbrs;
     named_nbrs.reserve(R * R * M);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < R; p++) {
             for (auto s : used_syms) {
                 if (!contains_sym(verts[i], s)) {
-                    Vertex<SymT> vtx = verts[i];
+                    Vertex<K, SymT> vtx = verts[i];
                     vtx.syms[p] = s;
                     if (!std::binary_search(sorted_verts.begin(),
                                             sorted_verts.end(), vtx))
@@ -205,20 +206,20 @@ static FormulaResult compute_formula(const std::vector<Vertex<SymT>> &verts) {
 
 // -- Brute-force verification — O(R^3 * log R) -------------------------
 
-template <typename SymT>
-static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
+template <int K, typename SymT>
+static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
                                      int n, int k) {
-    std::vector<Vertex<SymT>> sorted_verts = verts;
+    std::vector<Vertex<K, SymT>> sorted_verts = verts;
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
-    std::vector<Vertex<SymT>> nbrs;
-    Vertex<SymT> nbr;
+    std::vector<Vertex<K, SymT>> nbrs;
+    Vertex<K, SymT> nbr;
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < k; p++) {
             for (int s = 0; s < n; s++) {
                 if (contains_sym(verts[i], s))
                     continue;
-                std::memcpy(nbr.syms, verts[i].syms, k * sizeof(SymT));
+                nbr.syms = verts[i].syms;
                 nbr.syms[p] = static_cast<SymT>(s);
                 if (!std::binary_search(sorted_verts.begin(),
                                         sorted_verts.end(), nbr))
@@ -233,10 +234,10 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<SymT>> &verts,
 
 // -- Verify runner — templated on symbol type -------------------------
 
-template <typename SymT>
+template <int K, typename SymT>
 static int run_verify(int64_t expected_nk1, int64_t expected_const,
                       bool quiet = false) {
-    auto verts = build_hamming_ball<SymT>();
+    auto verts = build_hamming_ball<K, SymT>();
 
     if (!quiet && R <= 12) {
         std::cerr << "  vertex set:";
@@ -360,10 +361,19 @@ int main(int argc, const char *argv[]) {
             if (range_mode) {
                 std::cerr << "R=" << R << " ... ";
                 int rc;
-                if (R <= 127)
-                    rc = run_verify<uint8_t>(nk1, cst, /*quiet=*/true);
+                if (R <= 16)
+                    rc = run_verify<16, uint8_t>(nk1, cst, true);
+                else if (R <= 32)
+                    rc = run_verify<32, uint8_t>(nk1, cst, true);
+                else if (R <= 64)
+                    rc = run_verify<64, uint8_t>(nk1, cst, true);
+                else if (R <= 127)
+                    rc = run_verify<128, uint8_t>(nk1, cst, true);
+                else if (R <= 256)
+                    rc = run_verify<256, uint16_t>(nk1, cst, true);
                 else
-                    rc = run_verify<uint16_t>(nk1, cst, /*quiet=*/true);
+                    rc = run_verify<512, uint16_t>(nk1, cst, true);
+
                 if (rc != 0) {
                     std::cerr << "FAILED at R=" << R << "\n";
                     return 1;
@@ -402,13 +412,19 @@ int main(int argc, const char *argv[]) {
             return 1;
         }
         int rc;
-        if (R <= 127) {
-            std::cerr << "  [type] uint8_t symbols\n";
-            rc = run_verify<uint8_t>(expected_nk1, expected_const);
-        } else {
-            std::cerr << "  [type] uint16_t symbols\n";
-            rc = run_verify<uint16_t>(expected_nk1, expected_const);
-        }
+        if (R <= 16)
+            rc = run_verify<16, uint8_t>(expected_nk1, expected_const);
+        else if (R <= 32)
+            rc = run_verify<32, uint8_t>(expected_nk1, expected_const);
+        else if (R <= 64)
+            rc = run_verify<64, uint8_t>(expected_nk1, expected_const);
+        else if (R <= 127)
+            rc = run_verify<128, uint8_t>(expected_nk1, expected_const);
+        else if (R <= 256)
+            rc = run_verify<256, uint16_t>(expected_nk1, expected_const);
+        else
+            rc = run_verify<512, uint16_t>(expected_nk1, expected_const);
+
         if (rc != 0)
             return rc;
     }
@@ -419,7 +435,7 @@ int main(int argc, const char *argv[]) {
     std::cout << "(" << R << "nk-" << expected_nk1 << ") (n-k)-"
               << expected_const << ", EX:";
     if (R <= 12) {
-        auto verts = build_hamming_ball<uint8_t>();
+        auto verts = build_hamming_ball<16, uint8_t>();
         for (int i = 0; i < R; i++)
             std::cout << " " << vertex_to_string(verts[i]);
     } else {

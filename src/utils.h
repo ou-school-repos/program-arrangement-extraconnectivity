@@ -81,10 +81,10 @@ inline int count_internal_edges(const uint64_t *verts, int n) {
 ///   n:     total number of symbols in the alphabet (graph parameter)
 ///   k:     sequence length (graph parameter, derived from encoding)
 ///   R:     number of vertices in verts[]
-inline int64_t count_external_neighbors(const uint64_t *verts, int n, int R) {
+inline int64_t count_external_neighbors(const uint64_t *verts, int n, int r_val) {
     (void)verts;
     (void)n;
-    (void)R;
+    (void)r_val;
     return -1;
 }
 
