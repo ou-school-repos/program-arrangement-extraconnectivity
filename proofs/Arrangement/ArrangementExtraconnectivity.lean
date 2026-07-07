@@ -749,7 +749,7 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
 /--
-  **Axiom 1 of 2 (Universal Boundary Inequality)**
+  **Proposition 1 (Universal Boundary Inequality)**
 
   For ANY R-element subset V' of A(n,k), the external boundary is bounded
   below by the boundary of the lexicographic Hamming Ball.
@@ -766,7 +766,8 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   - See docs/axiom-equivalence.md for the full duality explanation
   - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/
-axiom lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+def UniversalLowerBound (R n k : ℕ) : Prop :=
+  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 
 /-- The fiber of all ArrVertex sharing a given root r at position p. -/
@@ -1073,8 +1074,9 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   rw [h_rhs] at h_sum
   exact h_sum
 
--- Bridge Lemma 3 (Collision-Adjusted Bound Axiom)
-axiom external_neighbors_collision_bound {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+-- Bridge Lemma 3 (Collision-Adjusted Bound Proposition)
+def CollisionAdjustedBound {n k : ℕ} (R : ℕ) : Prop :=
+  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
     external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
@@ -1569,30 +1571,32 @@ lemma hb_total_coord_edges {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     This explicitly counts the 4-cycles in the Hamming Ball. It is mathematically
     equivalent to the existential half of the Kruskal-Katona Theorem and requires
     extremal set theory shadow operators to prove formally. -/
-axiom hb_cross_collisions {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
-    (hd : d = bit_length (R - 1)) :
-    cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R
+def HBCrossCollisions (R n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Prop :=
+  cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R
 
 /-- THE AXIOM KILLER: We formally prove the Hamming Ball evaluation
     by composing the double-counting identity with Phase 1 and Phase 2. -/
 lemma hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
-    (hd : d = bit_length (R - 1)) :
+    (hd : d = bit_length (R - 1))
+    (h_cross : HBCrossCollisions R n k d hk hnk) :
     external_neighbors (hamming_ball_subset R n k d hk hnk) =
       (R * k - E_seq R) * (n - k) - C_constant R := by
-  have h_cross := hb_cross_collisions hk hnk hd
+  unfold HBCrossCollisions at h_cross
   have h_total := hb_total_coord_edges hk hnk hd
   have h_le := external_neighbors_le_total_coord (hamming_ball_subset R n k d hk hnk)
   have h_decomp := external_neighbors_decomp _ h_le
   omega
 
-lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
+lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
+      HBCrossCollisions R n k d hk hnk) :
     ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R := by
   obtain ⟨h_nk, h_k⟩ := h_cond
   let d := bit_length (R - 1)
   have hk : d ≤ k := h_k
   have hnk : k + d ≤ n := by omega
-  refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl⟩
+  refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl (h_cross hk hnk rfl)⟩
   exact hamming_ball_card hk hnk rfl
 
 
@@ -1606,9 +1610,14 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
   of a constructive witness (the Hamming ball), we establish the
   **Full Isoperimetric Profile** of A(n,k) for all natural numbers R.
 -/
-theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k) : (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧ (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
+theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
+    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
+      HBCrossCollisions R n k d hk hnk) :
+    (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
+    (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
-  exact ⟨exists_optimal_embedding R n k h_cond, fun V' hR => lower_bound_all_embeddings R n k V' hR hnk⟩
+  exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower R n k V' hR hnk⟩
 
 /--
   COROLLARY: Globally Optimal Growth Strategy.
@@ -1623,10 +1632,13 @@ theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_
     configuration (clique, path, etc.) can outperform the Hamming Ball.
 -/
 theorem globally_optimal_growth_strategy
-    (n k R : ℕ) (h_cond : can_embed_hypercube R n k) :
+    (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
+    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
+    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
+      HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
-  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond
+  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond h_lower h_cross
   ⟨h_univ, h_exists⟩
 
 /-!
@@ -1646,9 +1658,10 @@ theorem globally_optimal_growth_strategy
 -/
 theorem sub_optimal_penalty (R n k ΔE : ℕ) (V' : Finset (ArrVertex n k))
     (hR : V'.card = R) (hnk : k ≤ n)
-    (h_suboptimal : sum_unique_roots V' = R * k - E_seq R + ΔE) :
+    (h_suboptimal : sum_unique_roots V' = R * k - E_seq R + ΔE)
+    (h_coll_bound : @CollisionAdjustedBound n k R) :
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) + ΔE * (n - k) - C_constant R := by
-  have h1 := external_neighbors_collision_bound R V' hR hnk
+  have h1 := h_coll_bound V' hR hnk
   have h2 : sum_unique_roots V' * (n - k) = (R * k - E_seq R) * (n - k) + ΔE * (n - k) := by
     calc sum_unique_roots V' * (n - k)
       _ = (R * k - E_seq R + ΔE) * (n - k) := by rw [h_suboptimal]
@@ -1709,9 +1722,10 @@ def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
   as the Hamming Ball universally bounds ALL subsets.
 -/
 theorem sandwich_lower_bound_proven (R n k : ℕ) (hnk : k ≤ n)
-    (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (_hConn : is_connected_subgraph V') :
+    (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (_hConn : is_connected_subgraph V')
+    (h_lower : UniversalLowerBound R n k) :
     (R * k - E_seq R) * (n - k) - C_constant R ≤ external_neighbors V' :=
-  lower_bound_all_embeddings R n k V' hR hnk
+  h_lower V' hR hnk
 
 /--
   HALF 2: CONJECTURE.
