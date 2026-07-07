@@ -96,7 +96,7 @@
 \maketitle
 
 \begin{abstract}
-We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. For all $R \ge 2$, the lexicographic Hamming Ball is the unique boundary-minimizing subset (up to isomorphism), whose defect matches the cumulative binary weight sequence (OEIS A000788); notably, at $R=3$ the sparse and dense limits coincide. To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We establish the Asymptotic Penalty Theorem: any sub-optimal topology suffers a linear penalty of at least $(n-k)$ boundary nodes, ensuring the Hamming Ball dominates as the network scales. Finally, we completely classify the achievable defect spectrum, proving that it forms a ``Topological Funnel'' that exhibits primary and secondary fractures near powers of 2, while maintaining a continuous spectrum at lower defect densities. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), with Proposition~\ref{prop:hb-eval} computationally verified up to $R=260$ and Proposition~\ref{prop:universal} verified exhaustively for $R \le 10$.
+	We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. For all $R \ge 2$, the lexicographic Hamming Ball is the unique boundary-minimizing subset (up to isomorphism), whose defect matches the cumulative binary weight sequence (OEIS A000788); notably, at $R=3$ the sparse and dense limits coincide. To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We establish the Asymptotic Penalty Theorem: any sub-optimal topology suffers a linear penalty of at least $(n-k)$ boundary nodes, ensuring the Hamming Ball dominates as the network scales. Finally, we completely classify the achievable defect spectrum, proving that it forms a ``Topological Funnel'' that exhibits primary and secondary fractures near powers of 2, while maintaining a continuous spectrum at lower defect densities. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), with Proposition~\ref{prop:hb-eval} computationally verified up to $R=260$ and Proposition~\ref{prop:universal} verified exhaustively for $R \le 10$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -110,9 +110,9 @@ We prove that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external bounda
 
 Our approach proceeds in three steps:
 \begin{itemize}
-    \item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In $A(n,k)$, the target symbol may already appear at another coordinate of the same vertex, so the shift can either violate injectivity ($1324 \xrightarrow{4\to 1} 1321$) or sever defect links ($\{13,\,23,\,43\}$ form a clique along root $\_3$; shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies).
-    \item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving vertices geometrically, we count the coordinate-aligned lines (roots) that the subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary factors cleanly into a term proportional to $(n-k)$ minus a correction that depends only on the subset's internal defect and cross-collisions---not on $n$ or $k$.
-    \item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing unit of defect costs at least $(n-k)$ boundary nodes, so the Hamming Ball's boundary advantage over any competitor grows linearly with $(n-k)$.
+	\item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In $A(n,k)$, the target symbol may already appear at another coordinate of the same vertex, so the shift can either violate injectivity ($1324 \xrightarrow{4\to 1} 1321$) or sever defect links ($\{13,\,23,\,43\}$ form a clique along root $\_3$; shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies).
+	\item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving vertices geometrically, we count the coordinate-aligned lines (roots) that the subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary factors cleanly into a term proportional to $(n-k)$ minus a correction that depends only on the subset's internal defect and cross-collisions---not on $n$ or $k$.
+	\item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing unit of defect costs at least $(n-k)$ boundary nodes, so the Hamming Ball's boundary advantage over any competitor grows linearly with $(n-k)$.
 \end{itemize}
 
 The exact $(R-1)$-extraconnectivity established in Theorem~\ref{them:main} has immediate consequences for the design and reliability analysis of fault-tolerant distributed systems. In multiprocessor interconnects and data center network architectures, our closed-form boundary formula provides system designers with the precise redundancy requirements needed to guarantee that any $R$-node workgroup survives catastrophic link failures, eliminating the wasted capacity inherent to looser bounds. Furthermore, within distributed consensus protocols, this exact boundary quantifies the minimum threshold of faulty nodes required to partition a Byzantine fault-tolerant (BFT) quorum. Beyond these practical systems applications, our Algebraic Defect Framework successfully extends Harper's classical edge-isoperimetric machinery~\cite{harper1966optimal} into permutation-constrained spaces, offering a new analytical baseline for combinatorial optimization and coding theory on Cayley graphs.
@@ -121,104 +121,104 @@ The exact $(R-1)$-extraconnectivity established in Theorem~\ref{them:main} has i
 \section{Preliminaries}
 
 \begin{definition}[Notation]
-We denote the set $\{1, 2, \dots, m\}$ by $[m]$.
+	We denote the set $\{1, 2, \dots, m\}$ by $[m]$.
 \end{definition}
 
 \begin{definition}[Arrangement Graph]
-The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow [n] \}$ (injective functions) and edge set $E = \{ \{u, v\} : |\{p \in [k] : u_p \neq v_p\}| = 1 \}$.
+	The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow [n] \}$ (injective functions) and edge set $E = \{ \{u, v\} : |\{p \in [k] : u_p \neq v_p\}| = 1 \}$.
 \end{definition}
 
 To move to an adjacent vertex in $A(n,k)$, one selects one of the $k$ active coordinates and replaces its symbol with one of the $(n-k)$ unused symbols from the alphabet. Every vertex therefore has exactly $k(n-k)$ neighbors, and the factor $(n-k)$ governs how rapidly the boundary scales with the network dimensions.
 
 \begin{definition}[Unique Roots and Defect]
-For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size $n-k+1$ obtained by filling the missing coordinate with any available symbol. The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques that intersect the set $V'$ at coordinate $p$:
-\begin{equation}\label{eq:unique-roots}
-U_p(V') = \{ (v_1, \ldots, v_{p-1},\, v_{p+1}, \ldots, v_k) : v \in V' \}
-\end{equation}
-That is, each root is the $(k{-}1)$-tuple formed by taking a vertex $v \in V'$ and deleting its $p$-th coordinate. The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of distinct coordinate-aligned lines that $V'$ touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ counts how many times two vertices in $V'$ share the same root, i.e., it acts as an algebraic proxy for the number of internal edges within $V'$. For hypercube-embedded subsets (where no two vertices share more than one root) this equality is exact; for dense cliques it serves as a robust algebraic lower bound on the physical edge count that naturally prevents over-counting.
+	For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size $n-k+1$ obtained by filling the missing coordinate with any available symbol. The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques that intersect the set $V'$ at coordinate $p$:
+	\begin{equation}\label{eq:unique-roots}
+		U_p(V') = \{ (v_1, \ldots, v_{p-1},\, v_{p+1}, \ldots, v_k) : v \in V' \}
+	\end{equation}
+	That is, each root is the $(k{-}1)$-tuple formed by taking a vertex $v \in V'$ and deleting its $p$-th coordinate. The sum of unique roots $U(V') = \sum_{p=1}^k |U_p(V')|$ counts the total number of distinct coordinate-aligned lines that $V'$ touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ counts how many times two vertices in $V'$ share the same root, i.e., it acts as an algebraic proxy for the number of internal edges within $V'$. For hypercube-embedded subsets (where no two vertices share more than one root) this equality is exact; for dense cliques it serves as a robust algebraic lower bound on the physical edge count that naturally prevents over-counting.
 \end{definition}
 
 \begin{definition}[External Boundary]
-For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\extbd(V')$ is the set of vertices not in $V'$ that are adjacent to at least one vertex in $V'$:
-\begin{equation}\label{eq:ext-boundary}
-\extbd(V') = \{ w \in V  -  V' : \exists\, v \in V',\; \{v,w\} \in E \}.
-\end{equation}
-Its cardinality $|\extbd(V')|$ is the quantity we seek to minimize.
+	For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\extbd(V')$ is the set of vertices not in $V'$ that are adjacent to at least one vertex in $V'$:
+	\begin{equation}\label{eq:ext-boundary}
+		\extbd(V') = \{ w \in V  -  V' : \exists\, v \in V',\; \{v,w\} \in E \}.
+	\end{equation}
+	Its cardinality $|\extbd(V')|$ is the quantity we seek to minimize.
 \end{definition}
 
 The boundary-minimizing subset turns out to be the \emph{lexicographic Hamming Ball}: the first $R$ binary strings $0, 1, \ldots, R-1$, embedded as vertices via their binary expansions into the coordinate slots of $A(n,k)$. The exact extraconnectivity (Theorem~\ref{them:main}) depends on two constants that emerge from building this ball vertex by vertex.
 
 \begin{definition}[Hamming Ball and its Constants]\label{def:constants}
-The \emph{lexicographic Hamming Ball} $\mathrm{HB}_R$ consists of the first $R$ vertices in colexicographic (binary) order. When vertex $i$ $(i \ge 1)$ joins $\mathrm{HB}_{i}$, it occupies the $d_i = \lceil \log_2(i+1) \rceil$-th dimension level of the embedding hypercube and therefore interacts with exactly $d_i$ coordinates of the existing ball, of which $\mathrm{popcount}(i)$ are \emph{shared roots}---coordinates where vertex $i$ agrees with a vertex already in $\mathrm{HB}_{i}$, creating an internal (defect) link.
+	The \emph{lexicographic Hamming Ball} $\mathrm{HB}_R$ consists of the first $R$ vertices in colexicographic (binary) order. When vertex $i$ $(i \ge 1)$ joins $\mathrm{HB}_{i}$, it occupies the $d_i = \lceil \log_2(i+1) \rceil$-th dimension level of the embedding hypercube and therefore interacts with exactly $d_i$ coordinates of the existing ball, of which $\mathrm{popcount}(i)$ are \emph{shared roots}---coordinates where vertex $i$ agrees with a vertex already in $\mathrm{HB}_{i}$, creating an internal (defect) link.
 
-Summing over all vertices yields two key constants:
-\begin{align}
-\Eseq(R) &= \sum_{i=0}^{R-1} \mathrm{popcount}(i) & &\text{(cumulative binary weight, OEIS A000788 \cite{oeis_A000788})}, \label{eq:eseq} \\
-\Cconst(R) &= (R-1) + \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - \Eseq(R) & &\text{(boundary correction constant)}. \label{eq:cconst-def}
-\end{align}
-The quantity $\Eseq(R)$ is the maximum defect achievable by any $R$-element subset (Theorem~\ref{them:defect}), and $\Cconst(R)$ is the total waste of the boundary-minimizing ball (Proposition~\ref{prop:hb-eval}), satisfying $\Cconst(R) = \Eseq(R) + X(\mathrm{HB}_R)$ by construction, where $X$ denotes the cross-collision count (defined formally in Section~\ref{sec:defect}).
+	Summing over all vertices yields two key constants:
+	\begin{align}
+		\Eseq(R)   & = \sum_{i=0}^{R-1} \mathrm{popcount}(i)                         &  & \text{(cumulative binary weight, OEIS A000788 \cite{oeis_A000788})}, \label{eq:eseq} \\
+		\Cconst(R) & = (R-1) + \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - \Eseq(R) &  & \text{(boundary correction constant)}. \label{eq:cconst-def}
+	\end{align}
+	The quantity $\Eseq(R)$ is the maximum defect achievable by any $R$-element subset (Theorem~\ref{them:defect}), and $\Cconst(R)$ is the total waste of the boundary-minimizing ball (Proposition~\ref{prop:hb-eval}), satisfying $\Cconst(R) = \Eseq(R) + X(\mathrm{HB}_R)$ by construction, where $X$ denotes the cross-collision count (defined formally in Section~\ref{sec:defect}).
 \end{definition}
 
 \begin{example}
-To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)$ where $4$ symbols are fixed (e.g., \texttt{B,C,D,E}). The missing coordinate can be filled by any of the remaining $10 - 5 + 1 = 6$ available symbols. This single root physically expands into a 1D-clique (a line) of 6 vertices:
+	To visualize ``filling the missing coordinate,'' consider a root $r$ in $A(10,5)$ where $4$ symbols are fixed (e.g., \texttt{B,C,D,E}). The missing coordinate can be filled by any of the remaining $10 - 5 + 1 = 6$ available symbols. This single root physically expands into a 1D-clique (a line) of 6 vertices:
 
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.9, font=\small, node distance=0.15cm]
-  % Root definition
-  \node[anchor=east, font=\bfseries] at (-0.5, 0.3) {Root $r$:};
-  \draw[thick, fill=gray!20] (0,0) rectangle (1,0.6);
-  \node at (0.5,0.3) {?};
-  \draw[thick, fill=gray!10] (1,0) rectangle (5,0.6);
-  \node at (1.5,0.3) {\texttt{B}};
-  \node at (2.5,0.3) {\texttt{C}};
-  \node at (3.5,0.3) {\texttt{D}};
-  \node at (4.5,0.3) {\texttt{E}};
+	\begin{figure}[H]
+		\centering
+		\begin{tikzpicture}[scale=0.9, font=\small, node distance=0.15cm]
+			% Root definition
+			\node[anchor=east, font=\bfseries] at (-0.5, 0.3) {Root $r$:};
+			\draw[thick, fill=gray!20] (0,0) rectangle (1,0.6);
+			\node at (0.5,0.3) {?};
+			\draw[thick, fill=gray!10] (1,0) rectangle (5,0.6);
+			\node at (1.5,0.3) {\texttt{B}};
+			\node at (2.5,0.3) {\texttt{C}};
+			\node at (3.5,0.3) {\texttt{D}};
+			\node at (4.5,0.3) {\texttt{E}};
 
-  % Expansion arrow
-  \draw[->, >=Stealth, ultra thick] (5.2, 0.3) -- (6.3, 0.3) node[midway, above] {Fill};
+			% Expansion arrow
+			\draw[->, >=Stealth, ultra thick] (5.2, 0.3) -- (6.3, 0.3) node[midway, above] {Fill};
 
-  % Stack of vertices
-  \node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v1) at (8, 1.8) {\texttt{[A,B,C,D,E]} $\in V'$};
-  \node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v2) at (8, 1.1) {\texttt{[F,B,C,D,E]} $\in V'$};
+			% Stack of vertices
+			\node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v1) at (8, 1.8) {\texttt{[A,B,C,D,E]} $\in V'$};
+			\node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v2) at (8, 1.1) {\texttt{[F,B,C,D,E]} $\in V'$};
 
-  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v3) at (8, 0.4) {\texttt{[G,B,C,D,E]} $\notin V'$};
-  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v4) at (8, -0.3) {\texttt{[H,B,C,D,E]} $\notin V'$};
-  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v5) at (8, -1.0) {\texttt{[I,B,C,D,E]} $\notin V'$};
-  \node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v6) at (8, -1.7) {\texttt{[J,B,C,D,E]} $\notin V'$};
-\end{tikzpicture}
-\caption{A single root expanding into a 1D-clique in $A(10,5)$. Vertices already in $V'$ form internal defect links, while the remaining empty slots generate the external boundary.}
-\label{fig:fill_example}
-\end{figure}
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v3) at (8, 0.4) {\texttt{[G,B,C,D,E]} $\notin V'$};
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v4) at (8, -0.3) {\texttt{[H,B,C,D,E]} $\notin V'$};
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v5) at (8, -1.0) {\texttt{[I,B,C,D,E]} $\notin V'$};
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v6) at (8, -1.7) {\texttt{[J,B,C,D,E]} $\notin V'$};
+		\end{tikzpicture}
+		\caption{A single root expanding into a 1D-clique in $A(10,5)$. Vertices already in $V'$ form internal defect links, while the remaining empty slots generate the external boundary.}
+		\label{fig:fill_example}
+	\end{figure}
 \end{example}
 
 \begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=1.0, font=\small]
-  % Draw the "Root" (the fixed part)
-  \node[anchor=east] at (-0.5,0.3) {Root $r$:};
-  \draw[thick, fill=gray!10] (0,0) rectangle (4,0.6);
-  \node at (0.5,0.3) {$s_1$}; \node at (1.5,0.3) {$s_2$}; \node at (2.5,0.3) {$\dots$};
-  \draw[fill=white, dashed] (3.1,0.1) rectangle (3.9,0.5);
-  \node at (3.5,0.3) {hole};
+	\centering
+	\begin{tikzpicture}[scale=1.0, font=\small]
+		% Draw the "Root" (the fixed part)
+		\node[anchor=east] at (-0.5,0.3) {Root $r$:};
+		\draw[thick, fill=gray!10] (0,0) rectangle (4,0.6);
+		\node at (0.5,0.3) {$s_1$}; \node at (1.5,0.3) {$s_2$}; \node at (2.5,0.3) {$\dots$};
+		\draw[fill=white, dashed] (3.1,0.1) rectangle (3.9,0.5);
+		\node at (3.5,0.3) {hole};
 
-  % Dimension label
-  \draw[<->, >=Stealth] (0,-0.4) -- (4,-0.4) node[midway, below] {$k-1$ fixed symbols};
+		% Dimension label
+		\draw[<->, >=Stealth] (0,-0.4) -- (4,-0.4) node[midway, below] {$k-1$ fixed symbols};
 
-  % Draw the "Fiber" (the extensions)
-  \node (v1) at (7,1.2) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{A}]$};
-  \node (v2) at (7,0.3) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{B}]$};
-  \node (v3) at (7,-0.6) [draw, rounded corners, fill=white] {$[s_1, s_2, \dots, \mathbf{C}]$};
+		% Draw the "Fiber" (the extensions)
+		\node (v1) at (7,1.2) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{A}]$};
+		\node (v2) at (7,0.3) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{B}]$};
+		\node (v3) at (7,-0.6) [draw, rounded corners, fill=white] {$[s_1, s_2, \dots, \mathbf{C}]$};
 
-  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v1.west);
-  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v2.west);
-  \draw[->, >=Stealth, thick] (4.1,0.3) -- (v3.west);
+		\draw[->, >=Stealth, thick] (4.1,0.3) -- (v1.west);
+		\draw[->, >=Stealth, thick] (4.1,0.3) -- (v2.west);
+		\draw[->, >=Stealth, thick] (4.1,0.3) -- (v3.west);
 
-  \node[anchor=west, text=blue!70!black] at (9, 0.75) {Vertices in $V'$};
-  \node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
-\end{tikzpicture}
-\caption{Two vertices sharing the same root (fixed $k{-}1$ symbols) are adjacent in $A(n,k)$. Each shared root adds one to the defect $D$ instead of exposing a new boundary vertex.}
-\label{fig:fiber}
+		\node[anchor=west, text=blue!70!black] at (9, 0.75) {Vertices in $V'$};
+		\node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
+	\end{tikzpicture}
+	\caption{Two vertices sharing the same root (fixed $k{-}1$ symbols) are adjacent in $A(n,k)$. Each shared root adds one to the defect $D$ instead of exposing a new boundary vertex.}
+	\label{fig:fiber}
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -229,19 +229,19 @@ The number of distinct connected graphs on $R$ labeled vertices grows as $\Omega
 This exhaustive search confirms that the maximum defect for connected subgraphs matches $\Eseq(R)$ (Definition~2.5), identifying the boundary-minimizing subsets as embedded lexicographic Hamming Balls. From these patterns, we developed an $O(R^3 \log R)$ closed-form characterization engine that predicts exact boundaries for arbitrary $R$ and dimensions.
 
 \begin{table}[ht]
-\centering
-\caption{Minimum external boundary for $R$-vertex subsets of $A(n,k)$.}
-\label{tab:engine}
-\begin{tabular}{@{}ccccl@{}}
-\toprule
-$R$ & $\Eseq(R)$ & $\Cconst(R)$ & Exact Boundary Formula & Verification \\
-\midrule
-2  & 1  & 1  & $(2k-1)(n-k)-1$    & Cheng et al. \cite{cheng2022extraconnectivity} \\
-4  & 4  & 4  & $(4k-4)(n-k)-4$    & Cheng et al. \cite{cheng2022extraconnectivity} \\
-8  & 12 & 12 & $(8k-12)(n-k)-12$  & \textbf{New (Engine / Lean 4)} \\
-16 & 32 & 32 & $(16k-32)(n-k)-32$ & \textbf{New (Engine / Lean 4)} \\
-\bottomrule
-\end{tabular}
+	\centering
+	\caption{Minimum external boundary for $R$-vertex subsets of $A(n,k)$.}
+	\label{tab:engine}
+	\begin{tabular}{@{}ccccl@{}}
+		\toprule
+		$R$ & $\Eseq(R)$ & $\Cconst(R)$ & Exact Boundary Formula & Verification                                   \\
+		\midrule
+		2   & 1          & 1            & $(2k-1)(n-k)-1$        & Cheng et al. \cite{cheng2022extraconnectivity} \\
+		4   & 4          & 4            & $(4k-4)(n-k)-4$        & Cheng et al. \cite{cheng2022extraconnectivity} \\
+		8   & 12         & 12           & $(8k-12)(n-k)-12$      & \textbf{New (Engine / Lean 4)}                 \\
+		16  & 32         & 32           & $(16k-32)(n-k)-32$     & \textbf{New (Engine / Lean 4)}                 \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 \noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the defect mirrors the external shadow collision constant, yielding $\Eseq(2^d) = \Cconst(2^d) = d 2^{d-1}$.}
@@ -255,70 +255,70 @@ $R$ & $\Eseq(R)$ & $\Cconst(R)$ & Exact Boundary Formula & Verification \\
 In the Boolean hypercube $\{0,1\}^d$, shifting a vertex to use a smaller symbol $a < b$ provably reduces (or preserves) the boundary. In arrangement graphs, this geometric tool fundamentally fails.
 
 \begin{theorem}[Failure of Geometric Compression]\label{them:nogo}
-There exists a subset $V' \subseteq V(A(4,2))$ such that shifting symbol $3 \to 1$ strictly \emph{increases} the external boundary from 5 to 7.
+	There exists a subset $V' \subseteq V(A(4,2))$ such that shifting symbol $3 \to 1$ strictly \emph{increases} the external boundary from 5 to 7.
 \end{theorem}
 
 \begin{proof}
-Let $V' = \{[4,3], [1,3]\}$. Before the shift, the external boundary consists of adjacent vertices not in $V'$:
-\begin{equation*}
-\extbd(V') = \{[2,3], [4,1], [4,2], [1,2], [1,4]\} \implies \left| \extbd(V') \right| = 5
-\end{equation*}
+	Let $V' = \{[4,3], [1,3]\}$. Before the shift, the external boundary consists of adjacent vertices not in $V'$:
+	\begin{equation*}
+		\extbd(V') = \{[2,3], [4,1], [4,2], [1,2], [1,4]\} \implies \left| \extbd(V') \right| = 5
+	\end{equation*}
 
-Applying a shift $(3 \to 1)$: Vertex $[4,3]$ uses symbol 3 but not 1, successfully shifting to $[4,1]$. However, vertex $[1,3]$ already uses 1; shifting it would create $[1,1]$, violating permutation injectivity. Thus, it remains unchanged. The new compressed set is $C(V') = \{[4,1], [1,3]\}$.
+	Applying a shift $(3 \to 1)$: Vertex $[4,3]$ uses symbol 3 but not 1, successfully shifting to $[4,1]$. However, vertex $[1,3]$ already uses 1; shifting it would create $[1,1]$, violating permutation injectivity. Thus, it remains unchanged. The new compressed set is $C(V') = \{[4,1], [1,3]\}$.
 
-The new external boundary becomes:
-\begin{equation*}
-\extbd(C(V')) = \{[2,1], [3,1], [4,2], [4,3], [2,3], [1,2], [1,4]\} \implies \left| \extbd(C(V')) \right| = 7
-\end{equation*}
+	The new external boundary becomes:
+	\begin{equation*}
+		\extbd(C(V')) = \{[2,1], [3,1], [4,2], [4,3], [2,3], [1,2], [1,4]\} \implies \left| \extbd(C(V')) \right| = 7
+	\end{equation*}
 
-Because the defect link between $[4,3]$ and $[1,3]$ was severed, the boundary strictly increased.
+	Because the defect link between $[4,3]$ and $[1,3]$ was severed, the boundary strictly increased.
 \end{proof}
 
 \begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=1.1, node distance=2.5cm, auto, font=\small]
-  % Initial Set V'
-  \node at (0,3.2) {\textbf{Initial Set} $V'$};
-  \node (v1) at (0,1.2) [draw, circle, fill=blue!20, thick] {$[4,3]$};
-  \node (v2) at (0,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
-  \draw[blue, ultra thick] (v1) -- (v2) node[midway, right=0.2cm, align=center] {Defect\\Link};
+	\centering
+	\begin{tikzpicture}[scale=1.1, node distance=2.5cm, auto, font=\small]
+		% Initial Set V'
+		\node at (0,3.2) {\textbf{Initial Set} $V'$};
+		\node (v1) at (0,1.2) [draw, circle, fill=blue!20, thick] {$[4,3]$};
+		\node (v2) at (0,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
+		\draw[blue, ultra thick] (v1) -- (v2) node[midway, right=0.2cm, align=center] {Defect\\Link};
 
-  \node (n1) at (-2.5,0) [draw, circle, dashed] {$[2,3]$};
-  \node (n2) at (2.2,1.2) [draw, circle, dashed] {$[4,1]$};
-  \node (n3) at (2.2,0.4) [draw, circle, dashed] {$[4,2]$};
-  \node (n4) at (2.2,-0.4) [draw, circle, dashed] {$[1,2]$};
-  \node (n5) at (2.2,-1.2) [draw, circle, dashed] {$[1,4]$};
+		\node (n1) at (-2.5,0) [draw, circle, dashed] {$[2,3]$};
+		\node (n2) at (2.2,1.2) [draw, circle, dashed] {$[4,1]$};
+		\node (n3) at (2.2,0.4) [draw, circle, dashed] {$[4,2]$};
+		\node (n4) at (2.2,-0.4) [draw, circle, dashed] {$[1,2]$};
+		\node (n5) at (2.2,-1.2) [draw, circle, dashed] {$[1,4]$};
 
-  \draw (v1) -- (n1); \draw (v2) -- (n1);
-  \draw (v1) -- (n2); \draw (v1) -- (n3);
-  \draw (v2) -- (n4); \draw (v2) -- (n5);
-  \node at (0,-2.2) {$|\extbd| = 5$};
+		\draw (v1) -- (n1); \draw (v2) -- (n1);
+		\draw (v1) -- (n2); \draw (v1) -- (n3);
+		\draw (v2) -- (n4); \draw (v2) -- (n5);
+		\node at (0,-2.2) {$|\extbd| = 5$};
 
-  % Transformation Arrow - CENTERED
-  \draw[->, arrows={-Stealth[scale=1.5]}, ultra thick] (3.25,0) -- (5.25,0) node[midway, above=0.35cm] {Shift $3 \to 1$};
+		% Transformation Arrow - CENTERED
+		\draw[->, arrows={-Stealth[scale=1.5]}, ultra thick] (3.25,0) -- (5.25,0) node[midway, above=0.35cm] {Shift $3 \to 1$};
 
-  % Compressed Set C(V')
-  \node at (8.5,3.2) {\textbf{Compressed Set} $C(V')$};
-  \node (u1) at (8.5,1.2) [draw, circle, fill=blue!20, thick] {$[4,1]$};
-  \node (u2) at (8.5,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
-  % Edge is broken!
-  \draw[red, dashed, thick] (u1) -- (u2);
-  \node[red!70!black, font=\bfseries, fill=white, inner sep=1pt] at (8.5,0) {BROKEN};
+		% Compressed Set C(V')
+		\node at (8.5,3.2) {\textbf{Compressed Set} $C(V')$};
+		\node (u1) at (8.5,1.2) [draw, circle, fill=blue!20, thick] {$[4,1]$};
+		\node (u2) at (8.5,-1.2) [draw, circle, fill=blue!20, thick] {$[1,3]$};
+		% Edge is broken!
+		\draw[red, dashed, thick] (u1) -- (u2);
+		\node[red!70!black, font=\bfseries, fill=white, inner sep=1pt] at (8.5,0) {BROKEN};
 
-  \node (m1) at (6.3,1.8) [draw, circle, dashed] {$[2,1]$};
-  \node (m2) at (6.3,0.8) [draw, circle, dashed] {$[3,1]$};
-  \node (m3) at (6.3,-0.2) [draw, circle, dashed] {$[4,2]$};
-  \node (m4) at (6.3,-1.2) [draw, circle, dashed] {$[4,3]$};
-  \node (m5) at (10.3,0.6) [draw, circle, dashed] {$[2,3]$};
-  \node (m6) at (10.3,-0.3) [draw, circle, dashed] {$[1,2]$};
-  \node (m7) at (10.3,-1.2) [draw, circle, dashed] {$[1,4]$};
+		\node (m1) at (6.3,1.8) [draw, circle, dashed] {$[2,1]$};
+		\node (m2) at (6.3,0.8) [draw, circle, dashed] {$[3,1]$};
+		\node (m3) at (6.3,-0.2) [draw, circle, dashed] {$[4,2]$};
+		\node (m4) at (6.3,-1.2) [draw, circle, dashed] {$[4,3]$};
+		\node (m5) at (10.3,0.6) [draw, circle, dashed] {$[2,3]$};
+		\node (m6) at (10.3,-0.3) [draw, circle, dashed] {$[1,2]$};
+		\node (m7) at (10.3,-1.2) [draw, circle, dashed] {$[1,4]$};
 
-  \draw (u1) -- (m1); \draw (u1) -- (m2); \draw (u1) -- (m3); \draw (u1) -- (m4);
-  \draw (u2) -- (m5); \draw (u2) -- (m6); \draw (u2) -- (m7);
-  \node at (8.5,-2.2) {$|\extbd| = 7$};
-\end{tikzpicture}
-\caption{Visualization of the Failure of Geometric Compression. Shifting symbol $3 \to 1$ in $A(4,2)$ severs a defect link because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
-\label{fig:nogo}
+		\draw (u1) -- (m1); \draw (u1) -- (m2); \draw (u1) -- (m3); \draw (u1) -- (m4);
+		\draw (u2) -- (m5); \draw (u2) -- (m6); \draw (u2) -- (m7);
+		\node at (8.5,-2.2) {$|\extbd| = 7$};
+	\end{tikzpicture}
+	\caption{Visualization of the Failure of Geometric Compression. Shifting symbol $3 \to 1$ in $A(4,2)$ severs a defect link because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
+	\label{fig:nogo}
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -330,194 +330,194 @@ Concretely, we count global algebraic roots. The sum $U(V')$ represents the tota
 
 The framework utilizes a double-counting correction. By counting the available alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly $(n - k + 1)$ valid vertices in the graph. Subtracting the internal fibers mapping into $V'$ yields the strictly external coordinate edges $E_{\mathrm{cand}}$:
 \begin{align}\label{eq:ecand}
-  E_{\mathrm{cand}} &= \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \nonumber\\
-           &= \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \nonumber\\
-           &= U(V') \cdot (n-k) - D(V').
+	E_{\mathrm{cand}} & = \sum_{p=1}^k \Big( |U_p(V')| \cdot (n - k + 1) \Big) - |V'| \cdot k \nonumber                           \\
+	                  & = \left(\sum_{p=1}^k |U_p(V')|\right)(n-k) - \left(|V'| \cdot k - \sum_{p=1}^k |U_p(V')|\right) \nonumber \\
+	                  & = U(V') \cdot (n-k) - D(V').
 \end{align}
 
 Because external neighbors may be hit by multiple dimensions, we subtract the \emph{Cross-Collisions} $X(V')$ to retrieve the exact boundary of unique vertices. We formally define $X(V')$ as the sum of over-counted boundary adjacencies:
 \begin{equation}\label{eq:cross-collision}
-X(V') = \sum_{v \in \extbd(V')} (\text{deg}_{V'}(v) - 1).
+	X(V') = \sum_{v \in \extbd(V')} (\text{deg}_{V'}(v) - 1).
 \end{equation}
 
 The exact boundary size is then:
 \begin{equation}\label{eq:boundary}
-\left| \extbd(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
+	\left| \extbd(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation}
 The algebraic engine of this framework relies on a fundamental subadditivity inequality for $\Eseq(\cdot)$ (Definition~2.5). While this inequality reflects the classical inductive step in Harper's edge-isoperimetric theorem for Boolean hypercubes \cite{harper1966optimal}, we formally mechanize it here to bound arbitrary fiber partitions in $A(n,k)$.
 
 \begin{lemma}[Subadditivity of A000788]\label{lem:subadditivity}
-For all $x, y \in \mathbb{N}$:
-\begin{equation}\label{eq:subadditivity}
-\Eseq(x) + \Eseq(y) + \min(x, y) \leq \Eseq(x + y).
-\end{equation}
+	For all $x, y \in \mathbb{N}$:
+	\begin{equation}\label{eq:subadditivity}
+		\Eseq(x) + \Eseq(y) + \min(x, y) \leq \Eseq(x + y).
+	\end{equation}
 \end{lemma}
 
 \begin{proof}
-By strong induction on $x + y$: assume \eqref{eq:subadditivity} holds for all pairs summing to less than $x + y$. Case-split on the parity of both $x$ and $y$ (four cases) and expand via the even/odd recurrences $\Eseq(2m) = 2\, \Eseq(m) + m$ and $\Eseq(2m+1) = \Eseq(m) + \Eseq(m+1) + m$. In each case, the recurrences halve the arguments, reducing the inequality to the inductive hypothesis at a strictly smaller sum. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
+	By strong induction on $x + y$: assume \eqref{eq:subadditivity} holds for all pairs summing to less than $x + y$. Case-split on the parity of both $x$ and $y$ (four cases) and expand via the even/odd recurrences $\Eseq(2m) = 2\, \Eseq(m) + m$ and $\Eseq(2m+1) = \Eseq(m) + \Eseq(m+1) + m$. In each case, the recurrences halve the arguments, reducing the inequality to the inductive hypothesis at a strictly smaller sum. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
 \end{proof}
 
 This inequality generalizes from binary splits to arbitrary partitions, yielding the central structural theorem: the Hamming Ball maximizes the defect among all connected subgraphs.
 
 \begin{theorem}[Defect Bound]\label{them:defect}
-For any $R$-element subset $V' \subseteq V(A(n,k))$:
-\begin{equation}\label{eq:defect-bound}
-D(V') \leq \Eseq(R).
-\end{equation}
-Equivalently, $U(V') \geq R \cdot k - \Eseq(R)$.
+	For any $R$-element subset $V' \subseteq V(A(n,k))$:
+	\begin{equation}\label{eq:defect-bound}
+		D(V') \leq \Eseq(R).
+	\end{equation}
+	Equivalently, $U(V') \geq R \cdot k - \Eseq(R)$.
 \end{theorem}
 
 \begin{proof}
-By strong induction on $R$. For $R \ge 2$, choose a coordinate $p$ at which two vertices of $V'$ disagree and partition $V'$ into fibers $\{F_\alpha\}$ by the symbol $\alpha$ at position $p$. Each fiber is strictly smaller than $V'$, so the inductive hypothesis gives $D(F_\alpha) \leq \Eseq(|F_\alpha|)$. The root-disjointness structure at coordinates $q \neq p$ yields the decomposition $D(V') \leq \sum_\alpha D(F_\alpha) + R - y$, where $y = |U_p(V')|$. Applying the generalized partition subadditivity (iterated Lemma~\ref{lem:subadditivity}) closes the induction. Mechanically verified in Lean~4 (\texttt{sum\_unique\_roots\_lower\_bound}).
+	By strong induction on $R$. For $R \ge 2$, choose a coordinate $p$ at which two vertices of $V'$ disagree and partition $V'$ into fibers $\{F_\alpha\}$ by the symbol $\alpha$ at position $p$. Each fiber is strictly smaller than $V'$, so the inductive hypothesis gives $D(F_\alpha) \leq \Eseq(|F_\alpha|)$. The root-disjointness structure at coordinates $q \neq p$ yields the decomposition $D(V') \leq \sum_\alpha D(F_\alpha) + R - y$, where $y = |U_p(V')|$. Applying the generalized partition subadditivity (iterated Lemma~\ref{lem:subadditivity}) closes the induction. Mechanically verified in Lean~4 (\texttt{sum\_unique\_roots\_lower\_bound}).
 \end{proof}
 
 Instead of relying on a dimension-independent bound on the combined waste (which is sensitive to $n-k$ for sub-optimal topologies), the global boundary minimality is captured by the following universal boundary inequality. Together with the evaluation of the Hamming Ball, these two propositions form our extremal framework.
 
 \begin{proposition}[Universal Boundary Inequality]\label{prop:universal}
-For every $R$-element subset $V' \subseteq V(A(n,k))$:
-\begin{equation}\label{eq:universal-bound}
-\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
-\end{equation}
+	For every $R$-element subset $V' \subseteq V(A(n,k))$:
+	\begin{equation}\label{eq:universal-bound}
+		\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
+	\end{equation}
 \end{proposition}
 
 \begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
-The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
-\begin{equation}\label{eq:hb-eval}
-X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R).
-\end{equation}
+	The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
+	\begin{equation}\label{eq:hb-eval}
+		X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R).
+	\end{equation}
 \end{proposition}
 
 \begin{remark}
-These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is computationally verified for all $R \le 260$ by constructing $\mathrm{HB}_R$ and enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}). Proposition~\ref{prop:universal} is verified exhaustively for all $R \le 10$ by enumerating every non-isomorphic connected $R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). Conceptually, Section~\ref{sec:sandwich}'s "Tug-of-War" scaling logic explains why any subset failing to match the optimal defect $\Eseq(R)$ suffers an insurmountable dimensional penalty of at least $(n-k)$ per unit of missing defect, which always crushes any possible savings in cross-collisions. In the Lean 4 formalization, rather than declaring these propositions as global axioms, we express this dependency by parameterizing our main capstone theorems with explicit hypothesis arguments (\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly isolates the classical extremal set theory from the novel algebraic machinery while ensuring that the compiled theorems are completely transparent, verified, and free of raw, uninstantiated axiom commands.
+	These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is computationally verified for all $R \le 260$ by constructing $\mathrm{HB}_R$ and enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}). Proposition~\ref{prop:universal} is verified exhaustively for all $R \le 10$ by enumerating every non-isomorphic connected $R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). Conceptually, Section~\ref{sec:sandwich}'s "Tug-of-War" scaling logic explains why any subset failing to match the optimal defect $\Eseq(R)$ suffers an insurmountable dimensional penalty of at least $(n-k)$ per unit of missing defect, which always crushes any possible savings in cross-collisions. In the Lean 4 formalization, rather than declaring these propositions as global axioms, we express this dependency by parameterizing our main capstone theorems with explicit hypothesis arguments (\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly isolates the classical extremal set theory from the novel algebraic machinery while ensuring that the compiled theorems are completely transparent, verified, and free of raw, uninstantiated axiom commands.
 \end{remark}
 
 Combining these propositions with the boundary decomposition yields our main result:
 
 \begin{theorem}[Main Result]\label{them:main}
-For all $R \ge 2$ and $n \ge k \ge 1$:
-\begin{enumerate}
-\item[\textup{(i)}] \textbf{Universal lower bound.} Every $R$-element subset $V' \subseteq V(A(n,k))$ satisfies
-\begin{equation}\label{eq:lower-bound}
-\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
-\end{equation}
-\item[\textup{(ii)}] \textbf{Achievability.} When $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, the lexicographic Hamming Ball $\mathrm{HB}_R$ achieves this bound with equality, giving
-\begin{equation}\label{eq:extraconnectivity}
-\kappa_{R-1}(A(n,k)) = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R)
-\end{equation}
-where $\Eseq(R)$ and $\Cconst(R)$ are as in Definition~2.5. Writing $d = \lceil \log_2 R \rceil$, the correction constant admits the closed form
-\begin{equation}\label{eq:cconst}
-\Cconst(R) = R(d + 1) - 2^d - \Eseq(R).
-\end{equation}
-\end{enumerate}
-The embedding condition in (ii) ensures the graph is large enough to fit a $d$-dimensional hypercube.
+	For all $R \ge 2$ and $n \ge k \ge 1$:
+	\begin{enumerate}
+		\item[\textup{(i)}] \textbf{Universal lower bound.} Every $R$-element subset $V' \subseteq V(A(n,k))$ satisfies
+		      \begin{equation}\label{eq:lower-bound}
+			      \left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
+		      \end{equation}
+		\item[\textup{(ii)}] \textbf{Achievability.} When $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, the lexicographic Hamming Ball $\mathrm{HB}_R$ achieves this bound with equality, giving
+		      \begin{equation}\label{eq:extraconnectivity}
+			      \kappa_{R-1}(A(n,k)) = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R)
+		      \end{equation}
+		      where $\Eseq(R)$ and $\Cconst(R)$ are as in Definition~2.5. Writing $d = \lceil \log_2 R \rceil$, the correction constant admits the closed form
+		      \begin{equation}\label{eq:cconst}
+			      \Cconst(R) = R(d + 1) - 2^d - \Eseq(R).
+		      \end{equation}
+	\end{enumerate}
+	The embedding condition in (ii) ensures the graph is large enough to fit a $d$-dimensional hypercube.
 \end{theorem}
 
 \begin{remark}[Closed-form evaluation of $\Cconst$]
-The summation $\sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil$ admits a closed form by grouping indices by dimension level. For each $j \ge 1$, exactly $2^{j-1}$ indices satisfy $\lceil \log_2(i+1) \rceil = j$ (those with $2^{j-1} < i+1 \le 2^j$). Summing the complete levels $j = 1, \ldots, d-1$ via the identity $\sum_{j=1}^{m} j \cdot 2^{j-1} = (m-1) 2^m + 1$ and adding the partial level at $j = d$ yields
-\begin{equation}\label{eq:ceillog-sum}
-\sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil = R\,\lceil \log_2 R \rceil - 2^{\lceil \log_2 R \rceil} + 1,
-\end{equation}
-eliminating the last summation from the formula for $\Cconst(R)$.
+	The summation $\sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil$ admits a closed form by grouping indices by dimension level. For each $j \ge 1$, exactly $2^{j-1}$ indices satisfy $\lceil \log_2(i+1) \rceil = j$ (those with $2^{j-1} < i+1 \le 2^j$). Summing the complete levels $j = 1, \ldots, d-1$ via the identity $\sum_{j=1}^{m} j \cdot 2^{j-1} = (m-1) 2^m + 1$ and adding the partial level at $j = d$ yields
+	\begin{equation}\label{eq:ceillog-sum}
+		\sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil = R\,\lceil \log_2 R \rceil - 2^{\lceil \log_2 R \rceil} + 1,
+	\end{equation}
+	eliminating the last summation from the formula for $\Cconst(R)$.
 \end{remark}
 
 \begin{proof}
-\textbf{Part~(i).}  The lower bound is established directly by Proposition~\ref{prop:universal}.
+	\textbf{Part~(i).}  The lower bound is established directly by Proposition~\ref{prop:universal}.
 
-\textbf{Part~(ii).}  Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R)$. Substituting this into the boundary decomposition equation~\eqref{eq:boundary} for $\mathrm{HB}_R$, where $U(\mathrm{HB}_R) = R \cdot k - \Eseq(R)$, yields
-\begin{equation}
-\left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R),
-\end{equation}
-meaning the lexicographic Hamming Ball achieves the universal lower bound with equality. The embedding condition ensures $A(n,k)$ has a large enough alphabet and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
+	\textbf{Part~(ii).}  Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R)$. Substituting this into the boundary decomposition equation~\eqref{eq:boundary} for $\mathrm{HB}_R$, where $U(\mathrm{HB}_R) = R \cdot k - \Eseq(R)$, yields
+	\begin{equation}
+		\left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R),
+	\end{equation}
+	meaning the lexicographic Hamming Ball achieves the universal lower bound with equality. The embedding condition ensures $A(n,k)$ has a large enough alphabet and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
 \end{proof}
 
 \begin{corollary}[System-Level Diagnosability]\label{cor:diagnosis}
-In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ under the PMC and MM* models is directly derived from the $g$-extra connectivity \cite{cheng2023augmented}. By establishing the exact $(R-1)$-extraconnectivity of $A(n,k)$, Theorem~\ref{them:main} analytically unlocks the exact $(R-1)$-extra diagnosability of the arrangement graph, extending recent diagnostic advances (e.g., adaptive local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries. Under standard network size conditions, the diagnosability is exactly $t_{R-1}(A(n,k)) = \kappa_{R-1}(A(n,k)) + R - 1$.
+	In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ under the PMC and MM* models is directly derived from the $g$-extra connectivity \cite{cheng2023augmented}. By establishing the exact $(R-1)$-extraconnectivity of $A(n,k)$, Theorem~\ref{them:main} analytically unlocks the exact $(R-1)$-extra diagnosability of the arrangement graph, extending recent diagnostic advances (e.g., adaptive local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries. Under standard network size conditions, the diagnosability is exactly $t_{R-1}(A(n,k)) = \kappa_{R-1}(A(n,k)) + R - 1$.
 \end{corollary}
 
 \begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.9, font=\small]
-  % Draw 3D-like axes
-  \draw[->, thick] (0,0) -- (5,0) node[anchor=north] {Dim $p$};
-  \draw[->, thick] (0,0) -- (0,5) node[anchor=east] {Dim $q$};
-  \draw[->, thick] (0,0) -- (-1.5,-1.5) node[anchor=north east] {Dim $l$};
+	\centering
+	\begin{tikzpicture}[scale=0.9, font=\small]
+		% Draw 3D-like axes
+		\draw[->, thick] (0,0) -- (5,0) node[anchor=north] {Dim $p$};
+		\draw[->, thick] (0,0) -- (0,5) node[anchor=east] {Dim $q$};
+		\draw[->, thick] (0,0) -- (-1.5,-1.5) node[anchor=north east] {Dim $l$};
 
-  % Draw "Fibers" as lines
-  \draw[blue!60, ultra thick] (0,2) -- (5,2);
-  \node[blue!70!black, anchor=west] at (5.1,2) {Fiber $r_1$};
+		% Draw "Fibers" as lines
+		\draw[blue!60, ultra thick] (0,2) -- (5,2);
+		\node[blue!70!black, anchor=west] at (5.1,2) {Fiber $r_1$};
 
-  \draw[blue!60, ultra thick] (2,0) -- (2,5);
-  \node[blue!70!black, anchor=south] at (2,5.1) {Fiber $r_2$};
+		\draw[blue!60, ultra thick] (2,0) -- (2,5);
+		\node[blue!70!black, anchor=south] at (2,5.1) {Fiber $r_2$};
 
-  % Draw set V' as circles on the fibers
-  \fill[blue] (2,2) circle (0.18) node[above left=0.1cm] {$v \in V'$};
-  \fill[blue] (4.5,2) circle (0.12) node[above right=0.1cm] {$u \in V'$};
+		% Draw set V' as circles on the fibers
+		\fill[blue] (2,2) circle (0.18) node[above left=0.1cm] {$v \in V'$};
+		\fill[blue] (4.5,2) circle (0.12) node[above right=0.1cm] {$u \in V'$};
 
-  % Draw internal edges (Defect)
-  \draw[blue, line width=3.5pt] (2.2,2) -- (4.3,2);
-  \node[blue!70!black, font=\footnotesize, anchor=north] at (3.25,1.8) {Defect Link};
+		% Draw internal edges (Defect)
+		\draw[blue, line width=3.5pt] (2.2,2) -- (4.3,2);
+		\node[blue!70!black, font=\footnotesize, anchor=north] at (3.25,1.8) {Defect Link};
 
-  % Draw boundary vertices
-  \draw[gray, dashed] (2,4) circle (0.12) node[left=0.1cm] {$\extbd$};
-  \draw (2,2.2) -- (2,3.8);
+		% Draw boundary vertices
+		\draw[gray, dashed] (2,4) circle (0.12) node[left=0.1cm] {$\extbd$};
+		\draw (2,2.2) -- (2,3.8);
 
-  % Draw Cross-Collision
-  \fill[red!20, draw=red, thick] (4.5,4.5) circle (0.18);
-  \node[red!70!black, anchor=west] at (4.7,4.5) {\textbf{Cross-Collision!}};
-  \node[red!70!black, font=\footnotesize, anchor=north west] at (4.7,4.3) {(Shared by 2 fibers)};
+		% Draw Cross-Collision
+		\fill[red!20, draw=red, thick] (4.5,4.5) circle (0.18);
+		\node[red!70!black, anchor=west] at (4.7,4.5) {\textbf{Cross-Collision!}};
+		\node[red!70!black, font=\footnotesize, anchor=north west] at (4.7,4.3) {(Shared by 2 fibers)};
 
-  \draw[red, dotted, thick] (2.2,4.5) -- (4.3,4.5);
-  \draw[red, dotted, thick] (4.5,2.2) -- (4.5,4.3);
-\end{tikzpicture}
-\caption{The boundary decomposition $|\extbd(V')| = U(V') \cdot (n-k) - (X(V') + D(V'))$: defect links $D$ shield internal vertices, while cross-collisions $X$ correct for boundary overlaps across coordinates.}
-\label{fig:structure}
+		\draw[red, dotted, thick] (2.2,4.5) -- (4.3,4.5);
+		\draw[red, dotted, thick] (4.5,2.2) -- (4.5,4.3);
+	\end{tikzpicture}
+	\caption{The boundary decomposition $|\extbd(V')| = U(V') \cdot (n-k) - (X(V') + D(V'))$: defect links $D$ shield internal vertices, while cross-collisions $X$ correct for boundary overlaps across coordinates.}
+	\label{fig:structure}
 \end{figure}
 
 \begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.9, font=\small]
-  % Title
-  \node[font=\bfseries] at (4.75, 5.5) {Forbidden Defect Values for $|V'|=8$ in $A(n,k)$};
+	\centering
+	\begin{tikzpicture}[scale=0.9, font=\small]
+		% Title
+		\node[font=\bfseries] at (4.75, 5.5) {Forbidden Defect Values for $|V'|=8$ in $A(n,k)$};
 
-  % Left side: Optimal subset (Hamming Ball)
-  \node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {$V'=\mathrm{HB}_8$ \\ (Hamming Ball)};
-  \node at (1.5, 3.5) {$D = 12$};
+		% Left side: Optimal subset (Hamming Ball)
+		\node[align=center, font=\bfseries, text=blue!80!black] at (1.5, 4.2) {$V'=\mathrm{HB}_8$ \\ (Hamming Ball)};
+		\node at (1.5, 3.5) {$D = 12$};
 
-  \draw[thick, blue!80!black] (0,1) rectangle (3,3);
-  \fill[blue!20] (0,1) rectangle (3,3);
-  \foreach \x in {0,1,2,3} \foreach \y in {1,3} \fill[blue!80!black] (\x,\y) circle (0.1);
-  \foreach \y in {1,2,3} \foreach \x in {0,3} \fill[blue!80!black] (\x,\y) circle (0.1);
-  \draw[blue!80!black, thick] (0,2) -- (3,2);
-  \draw[blue!80!black, thick] (1,1) -- (1,3);
-  \draw[blue!80!black, thick] (2,1) -- (2,3);
-  \fill[blue!80!black] (1,2) circle (0.1);
-  \fill[blue!80!black] (2,2) circle (0.1);
+		\draw[thick, blue!80!black] (0,1) rectangle (3,3);
+		\fill[blue!20] (0,1) rectangle (3,3);
+		\foreach \x in {0,1,2,3} \foreach \y in {1,3} \fill[blue!80!black] (\x,\y) circle (0.1);
+		\foreach \y in {1,2,3} \foreach \x in {0,3} \fill[blue!80!black] (\x,\y) circle (0.1);
+		\draw[blue!80!black, thick] (0,2) -- (3,2);
+		\draw[blue!80!black, thick] (1,1) -- (1,3);
+		\draw[blue!80!black, thick] (2,1) -- (2,3);
+		\fill[blue!80!black] (1,2) circle (0.1);
+		\fill[blue!80!black] (2,2) circle (0.1);
 
-  % Right side: Second Best subset
-  \begin{scope}[xshift=1.5cm]
-  \node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {Next-best $V'$ \\ ($|V'|=8$)};
-  \node at (6.5, 3.5) {$D = 10$};
+		% Right side: Second Best subset
+		\begin{scope}[xshift=1.5cm]
+			\node[align=center, font=\bfseries, text=red!80!black] at (6.5, 4.2) {Next-best $V'$ \\ ($|V'|=8$)};
+			\node at (6.5, 3.5) {$D = 10$};
 
-  \draw[thick, red!80!black] (5,1) rectangle (8,3);
-  \fill[red!10] (5,1) rectangle (8,3);
-  \foreach \x in {5,6,8} \foreach \y in {1,3} \fill[red!80!black] (\x,\y) circle (0.1);
-  \foreach \y in {1,2,3} \foreach \x in {5,8} \fill[red!80!black] (\x,\y) circle (0.1);
-  \draw[red!80!black, thick] (5,2) -- (8,2);
-  \draw[red!80!black, thick] (6,1) -- (6,3);
-  \fill[red!80!black] (6,2) circle (0.1);
-  \fill[red!80!black] (7,2) circle (0.1);
-  \draw[red!80!black, dashed] (7,1) -- (7,3);
-  \node[text=red, font=\bfseries] at (7, 2.5) {X};
-  \node[text=red, font=\bfseries] at (7, 1.5) {X};
-  \node[text=red!70!black, font=\footnotesize, align=center] at (7, 0.5) {both links\\lost};
-  \end{scope}
+			\draw[thick, red!80!black] (5,1) rectangle (8,3);
+			\fill[red!10] (5,1) rectangle (8,3);
+			\foreach \x in {5,6,8} \foreach \y in {1,3} \fill[red!80!black] (\x,\y) circle (0.1);
+			\foreach \y in {1,2,3} \foreach \x in {5,8} \fill[red!80!black] (\x,\y) circle (0.1);
+			\draw[red!80!black, thick] (5,2) -- (8,2);
+			\draw[red!80!black, thick] (6,1) -- (6,3);
+			\fill[red!80!black] (6,2) circle (0.1);
+			\fill[red!80!black] (7,2) circle (0.1);
+			\draw[red!80!black, dashed] (7,1) -- (7,3);
+			\node[text=red, font=\bfseries] at (7, 2.5) {X};
+			\node[text=red, font=\bfseries] at (7, 1.5) {X};
+			\node[text=red!70!black, font=\footnotesize, align=center] at (7, 0.5) {both links\\lost};
+		\end{scope}
 
-  % Connecting arrow with gap label
-  \draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
-  \node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$D=11$\\Impossible};
-\end{tikzpicture}
-\caption{The fracture gap at $R=8$: $\mathrm{HB}_8$ achieves $D=12$. In $A(n,k)$, defect links arise from root-sharing---two vertices that agree on all coordinates but one. Each link therefore has a ``twin'' at the same coordinate, so removing one vertex from a root pair destroys both links simultaneously. This makes $D=11$ impossible; the next achievable value is $D=10$.}
-\label{fig:fracture}
+		% Connecting arrow with gap label
+		\draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
+		\node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$D=11$\\Impossible};
+	\end{tikzpicture}
+	\caption{The fracture gap at $R=8$: $\mathrm{HB}_8$ achieves $D=12$. In $A(n,k)$, defect links arise from root-sharing---two vertices that agree on all coordinates but one. Each link therefore has a ``twin'' at the same coordinate, so removing one vertex from a root pair destroys both links simultaneously. This makes $D=11$ impossible; the next achievable value is $D=10$.}
+	\label{fig:fracture}
 \end{figure}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -526,113 +526,113 @@ In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ 
 The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
-The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is bounded above by the Star Graph $K_{1, R-1}$, yielding a total correction $(X+D) = \binom{R}{2}$:
-\begin{equation}\label{eq:sparse-limit}
-\left| \extbd(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
-\end{equation}
+	The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is bounded above by the Star Graph $K_{1, R-1}$, yielding a total correction $(X+D) = \binom{R}{2}$:
+	\begin{equation}\label{eq:sparse-limit}
+		\left| \extbd(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
+	\end{equation}
 \end{conjecture}
 
 \begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.72, font=\small,
-    vertex/.style={circle, draw, fill=blue!30, inner sep=0pt, minimum size=5pt},
-    hub/.style={circle, draw, fill=red!50, inner sep=0pt, minimum size=7pt}]
+	\centering
+	\begin{tikzpicture}[scale=0.72, font=\small,
+			vertex/.style={circle, draw, fill=blue!30, inner sep=0pt, minimum size=5pt},
+			hub/.style={circle, draw, fill=red!50, inner sep=0pt, minimum size=7pt}]
 
-  % -- R=3: Path P_3 (sparse = dense) --------------------
-  \node[font=\bfseries] at (0, 2.3) {$P_3$};
-  \node[font=\footnotesize, text=gray] at (0, 1.85) {sparse $=$ dense};
-  \node[font=\footnotesize, text=gray] at (0, 1.45) {$D=2$};
+		% -- R=3: Path P_3 (sparse = dense) --------------------
+		\node[font=\bfseries] at (0, 2.3) {$P_3$};
+		\node[font=\footnotesize, text=gray] at (0, 1.85) {sparse $=$ dense};
+		\node[font=\footnotesize, text=gray] at (0, 1.45) {$D=2$};
 
-  \node[vertex] (p0) at (-0.9, 0.3) {};
-  \node[vertex] (p1) at (0,    0.3) {};
-  \node[vertex] (p2) at (0.9,  0.3) {};
+		\node[vertex] (p0) at (-0.9, 0.3) {};
+		\node[vertex] (p1) at (0,    0.3) {};
+		\node[vertex] (p2) at (0.9,  0.3) {};
 
-  \draw[thick] (p0) -- (p1) -- (p2);
+		\draw[thick] (p0) -- (p1) -- (p2);
 
-  % -- K_{1,3}: Star on 4 vertices -----------------------
-  \node[font=\bfseries] at (4, 2.3) {$K_{1,3}$};
-  \node[font=\footnotesize, text=gray] at (4, 1.85) {sparse, $D=3$};
+		% -- K_{1,3}: Star on 4 vertices -----------------------
+		\node[font=\bfseries] at (4, 2.3) {$K_{1,3}$};
+		\node[font=\footnotesize, text=gray] at (4, 1.85) {sparse, $D=3$};
 
-  \node[hub]    (c1) at (4, 0.8) {};
-  \node[vertex] (a1) at (2.9, -0.4) {};
-  \node[vertex] (b1) at (4, -0.7) {};
-  \node[vertex] (d1) at (5.1, -0.4) {};
+		\node[hub]    (c1) at (4, 0.8) {};
+		\node[vertex] (a1) at (2.9, -0.4) {};
+		\node[vertex] (b1) at (4, -0.7) {};
+		\node[vertex] (d1) at (5.1, -0.4) {};
 
-  \draw[thick] (c1) -- (a1);
-  \draw[thick] (c1) -- (b1);
-  \draw[thick] (c1) -- (d1);
+		\draw[thick] (c1) -- (a1);
+		\draw[thick] (c1) -- (b1);
+		\draw[thick] (c1) -- (d1);
 
-  % -- Q_2: Hamming Ball on 4 vertices (square) ----------
-  \node[font=\bfseries] at (7.5, 2.3) {$Q_2$};
-  \node[font=\footnotesize, text=gray] at (7.5, 1.85) {dense, $D=4$};
+		% -- Q_2: Hamming Ball on 4 vertices (square) ----------
+		\node[font=\bfseries] at (7.5, 2.3) {$Q_2$};
+		\node[font=\footnotesize, text=gray] at (7.5, 1.85) {dense, $D=4$};
 
-  \node[vertex] (q0) at (6.7, -0.4) {};
-  \node[vertex] (q1) at (8.3, -0.4) {};
-  \node[vertex] (q2) at (8.3,  1.0) {};
-  \node[vertex] (q3) at (6.7,  1.0) {};
+		\node[vertex] (q0) at (6.7, -0.4) {};
+		\node[vertex] (q1) at (8.3, -0.4) {};
+		\node[vertex] (q2) at (8.3,  1.0) {};
+		\node[vertex] (q3) at (6.7,  1.0) {};
 
-  \draw[thick] (q0) -- (q1) -- (q2) -- (q3) -- (q0);
+		\draw[thick] (q0) -- (q1) -- (q2) -- (q3) -- (q0);
 
-  % Arrow between R=4 pair
-  \draw[->, thick, gray] (5.4, 0.3) -- (6.4, 0.3);
+		% Arrow between R=4 pair
+		\draw[->, thick, gray] (5.4, 0.3) -- (6.4, 0.3);
 
-  % -- K_{1,7}: Star on 8 vertices -----------------------
-  \node[font=\bfseries] at (11.5, 2.3) {$K_{1,7}$};
-  \node[font=\footnotesize, text=gray] at (11.5, 1.85) {sparse, $D=7$};
+		% -- K_{1,7}: Star on 8 vertices -----------------------
+		\node[font=\bfseries] at (11.5, 2.3) {$K_{1,7}$};
+		\node[font=\footnotesize, text=gray] at (11.5, 1.85) {sparse, $D=7$};
 
-  \node[hub] (c2) at (11.5, 0.3) {};
-  \foreach \i/\a in {1/90,2/141,3/193,4/244,5/296,6/347,7/39} {%
-    \node[vertex] (s\i) at ({11.5 + 1.3*cos(\a)}, {0.3 + 1.3*sin(\a)}) {};
-    \draw[thick] (c2) -- (s\i);
-  }
+		\node[hub] (c2) at (11.5, 0.3) {};
+		\foreach \i/\a in {1/90,2/141,3/193,4/244,5/296,6/347,7/39} {%
+				\node[vertex] (s\i) at ({11.5 + 1.3*cos(\a)}, {0.3 + 1.3*sin(\a)}) {};
+				\draw[thick] (c2) -- (s\i);
+			}
 
-  % -- Q_3: Hamming Ball on 8 vertices (cube) ------------
-  \node[font=\bfseries] at (16, 2.3) {$Q_3$};
-  \node[font=\footnotesize, text=gray] at (16, 1.85) {dense, $D=12$};
+		% -- Q_3: Hamming Ball on 8 vertices (cube) ------------
+		\node[font=\bfseries] at (16, 2.3) {$Q_3$};
+		\node[font=\footnotesize, text=gray] at (16, 1.85) {dense, $D=12$};
 
-  % Front face
-  \node[vertex] (f0) at (14.8, -0.5) {};
-  \node[vertex] (f1) at (16.2, -0.5) {};
-  \node[vertex] (f2) at (16.2,  1.0) {};
-  \node[vertex] (f3) at (14.8,  1.0) {};
-  % Back face (offset)
-  \node[vertex] (b0) at (15.4,  0.0) {};
-  \node[vertex] (b1a) at (16.8,  0.0) {};
-  \node[vertex] (b2) at (16.8,  1.5) {};
-  \node[vertex] (b3) at (15.4,  1.5) {};
+		% Front face
+		\node[vertex] (f0) at (14.8, -0.5) {};
+		\node[vertex] (f1) at (16.2, -0.5) {};
+		\node[vertex] (f2) at (16.2,  1.0) {};
+		\node[vertex] (f3) at (14.8,  1.0) {};
+		% Back face (offset)
+		\node[vertex] (b0) at (15.4,  0.0) {};
+		\node[vertex] (b1a) at (16.8,  0.0) {};
+		\node[vertex] (b2) at (16.8,  1.5) {};
+		\node[vertex] (b3) at (15.4,  1.5) {};
 
-  % Front edges
-  \draw[thick] (f0) -- (f1) -- (f2) -- (f3) -- (f0);
-  % Back edges
-  \draw[thick] (b0) -- (b1a) -- (b2) -- (b3) -- (b0);
-  % Connecting edges
-  \draw[thick] (f0) -- (b0);
-  \draw[thick] (f1) -- (b1a);
-  \draw[thick] (f2) -- (b2);
-  \draw[thick] (f3) -- (b3);
+		% Front edges
+		\draw[thick] (f0) -- (f1) -- (f2) -- (f3) -- (f0);
+		% Back edges
+		\draw[thick] (b0) -- (b1a) -- (b2) -- (b3) -- (b0);
+		% Connecting edges
+		\draw[thick] (f0) -- (b0);
+		\draw[thick] (f1) -- (b1a);
+		\draw[thick] (f2) -- (b2);
+		\draw[thick] (f3) -- (b3);
 
-  % Arrow between R=8 pair
-  \draw[->, thick, gray] (13.1, 0.3) -- (14.5, 0.3);
+		% Arrow between R=8 pair
+		\draw[->, thick, gray] (13.1, 0.3) -- (14.5, 0.3);
 
-  % R=3 brace
-  \draw[decorate, decoration={brace, mirror, amplitude=4pt}] (-1.3, -1.2) -- (1.3, -1.2)
-    node[midway, below=5pt, font=\footnotesize] {$R = 3$};
-  % R=4 brace
-  \draw[decorate, decoration={brace, mirror, amplitude=4pt}] (2.5, -1.2) -- (8.8, -1.2)
-    node[midway, below=5pt, font=\footnotesize] {$R = 4$};
-  % R=8 brace
-  \draw[decorate, decoration={brace, mirror, amplitude=4pt}] (9.8, -1.2) -- (17.2, -1.2)
-    node[midway, below=5pt, font=\footnotesize] {$R = 8$};
-\end{tikzpicture}
-\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball coincide (both are $P_3$). At $R=4$ the gap is 1 defect link; at $R=8$ it widens to 5. Arrows connect the sparse limit $K_{1,R-1}$ ($D = R - 1$) to the dense limit $Q_d$ ($D = \Eseq(R)$).}
-\label{fig:limits}
+		% R=3 brace
+		\draw[decorate, decoration={brace, mirror, amplitude=4pt}] (-1.3, -1.2) -- (1.3, -1.2)
+		node[midway, below=5pt, font=\footnotesize] {$R = 3$};
+		% R=4 brace
+		\draw[decorate, decoration={brace, mirror, amplitude=4pt}] (2.5, -1.2) -- (8.8, -1.2)
+		node[midway, below=5pt, font=\footnotesize] {$R = 4$};
+		% R=8 brace
+		\draw[decorate, decoration={brace, mirror, amplitude=4pt}] (9.8, -1.2) -- (17.2, -1.2)
+		node[midway, below=5pt, font=\footnotesize] {$R = 8$};
+	\end{tikzpicture}
+	\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball coincide (both are $P_3$). At $R=4$ the gap is 1 defect link; at $R=8$ it widens to 5. Arrows connect the sparse limit $K_{1,R-1}$ ($D = R - 1$) to the dense limit $Q_d$ ($D = \Eseq(R)$).}
+	\label{fig:limits}
 \end{figure}
 
 \paragraph{Structural Convergence at $R=3$.}
 Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields defect $D = 2$, cross-collisions $X=1$, and a total correction $(X + D) = \binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
-If a subset $V'$ fails to achieve the optimal defect $\Eseq(R)$ by a shortfall $\Delta D = \Eseq(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
+	If a subset $V'$ fails to achieve the optimal defect $\Eseq(R)$ by a shortfall $\Delta D = \Eseq(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
 \end{theorem}
 To understand this mechanism, we return to the exact boundary decomposition~\eqref{eq:boundary}:
 
@@ -640,8 +640,8 @@ Recall that the defect is defined as $D(V') = |V'| \cdot k - U(V')$. If a subset
 
 Substituting this into the boundary equation yields the comparative boundary size:
 \begin{align}\label{eq:penalty-expansion}
-\left| \extbd(V'_{\mathrm{sub}}) \right| &= (U_{\mathrm{opt}} + \Delta D) \cdot (n - k) - (X_{\mathrm{sub}} + D_{\mathrm{sub}}) \nonumber\\
-&= \left| \extbd(V'_{\mathrm{opt}}) \right| + \Delta D \cdot (n - k) + (X_{\mathrm{opt}} + D_{\mathrm{opt}}) - (X_{\mathrm{sub}} + D_{\mathrm{sub}})
+	\left| \extbd(V'_{\mathrm{sub}}) \right| & = (U_{\mathrm{opt}} + \Delta D) \cdot (n - k) - (X_{\mathrm{sub}} + D_{\mathrm{sub}}) \nonumber                                                     \\
+	                                         & = \left| \extbd(V'_{\mathrm{opt}}) \right| + \Delta D \cdot (n - k) + (X_{\mathrm{opt}} + D_{\mathrm{opt}}) - (X_{\mathrm{sub}} + D_{\mathrm{sub}})
 \end{align}
 
 This formulation isolates the asymptotic behavior. The fluctuation in defect and cross-collisions, $(X_{\mathrm{opt}} + D_{\mathrm{opt}}) - (X_{\mathrm{sub}} + D_{\mathrm{sub}})$, is a static constant bounded entirely by the finite cluster size $R$ (specifically, bounded by $\binom{R}{2}$). Conversely, the penalty term $\Delta D \cdot (n-k)$ scales linearly with the global network dimensions. As $n \to \infty$, the dimensional penalty for missing even a single unit of defect ($\Delta D = 1$) grows unboundedly, completely eclipsing any potential secondary savings from cross-collision overlaps.
@@ -651,21 +651,21 @@ This formulation isolates the asymptotic behavior. The fluctuation in defect and
 To visualize the Asymptotic Penalty, we walk through \emph{every} achievable defect value for connected $8$-vertex subgraphs in $A(n,k)$, where $n$ and $k$ are the graph parameters from Definition~2.2.  The Hamming Ball ($Q_3$) achieves $D = 12$; the fracture gap (Theorem~\ref{them:fracture}) forbids $D = 11$; and the Continuity construction (Theorem~\ref{them:continuity}) fills in every integer from $10$ down to $7$. The full achievable spectrum is $\{7,\, 8,\, 9,\, 10,\, 12\}$.
 
 \begin{table}[ht]
-\centering
-\caption{Complete defect walk-through for $R=8$ in $A(n,k)$, valid for any $k \ge 3$.  Each row is verified by exhaustive search over all connected $8$-vertex subgraphs.}
-\label{tab:walkthrough_r8}
-\begin{tabular}{@{}clcl@{}}
-\toprule
-$D(V')$ & Construction & $U$ & Boundary \\
-\midrule
-12 & $Q_3$ (Hamming Ball)   & $8k{-}12$ & $(8k{-}12)(n{-}k) - 12$ \\
-\emph{11} & \emph{forbidden (fracture gap)} & --- & --- \\
-10 & $Q_3 - v + \text{leaf}$ & $8k{-}10$ & $(8k{-}10)(n{-}k) - 16$ \\
-9  & partial connection      & $8k{-}9$  & $(8k{-}9)(n{-}k) - 18$ \\
-8  & partial connection      & $8k{-}8$  & $(8k{-}8)(n{-}k) - 22$ \\
-7  & $K_{1,7}$ (Star Graph)  & $8k{-}7$  & $(8k{-}7)(n{-}k) - 28$ \\
-\bottomrule
-\end{tabular}
+	\centering
+	\caption{Complete defect walk-through for $R=8$ in $A(n,k)$, valid for any $k \ge 3$.  Each row is verified by exhaustive search over all connected $8$-vertex subgraphs.}
+	\label{tab:walkthrough_r8}
+	\begin{tabular}{@{}clcl@{}}
+		\toprule
+		$D(V')$   & Construction                    & $U$       & Boundary                \\
+		\midrule
+		12        & $Q_3$ (Hamming Ball)            & $8k{-}12$ & $(8k{-}12)(n{-}k) - 12$ \\
+		\emph{11} & \emph{forbidden (fracture gap)} & ---       & ---                     \\
+		10        & $Q_3 - v + \text{leaf}$         & $8k{-}10$ & $(8k{-}10)(n{-}k) - 16$ \\
+		9         & partial connection              & $8k{-}9$  & $(8k{-}9)(n{-}k) - 18$  \\
+		8         & partial connection              & $8k{-}8$  & $(8k{-}8)(n{-}k) - 22$  \\
+		7         & $K_{1,7}$ (Star Graph)          & $8k{-}7$  & $(8k{-}7)(n{-}k) - 28$  \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 \noindent Each missing defect link increases $U$ by one, adding $(n{-}k)$ to the boundary. The total correction constants ($12, 16, 18, 22, 28$) are fixed by the graph structure and bounded by $\binom{8}{2} = 28$; as $n \to \infty$, the boundary ranking is determined entirely by $D(V')$.
@@ -674,18 +674,18 @@ $D(V')$ & Construction & $U$ & Boundary \\
 The dominance of the Hamming Ball fluctuates based on how closely $R$ fits a perfect hypercube embedding. At $R=7$, the gap between the optimal ($D=9$) and the 2nd best ($D=8$) is only $1(n-k)$, whereas at $R=8$, the gap jumps to $2(n-k)$ because $D=11$ is unrealizable (Theorem~\ref{them:fracture}). At powers of 2, the optimal solution becomes increasingly stable relative to its nearest competitors as the network dimensions scale.
 
 \begin{table}[ht]
-\centering
-\caption{Defect gap between $R=7$ and $R=8$.}
-\label{tab:gap_jump}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Cluster Size $R$ & Optimal $D$ & 2nd Best $D$ & Gap ($\Delta D$) \\
-\midrule
-7 (Near-Cube) & 9  & 8  & 1 \\
-8 (Perfect Cube) & 12 & 10 & 2 \\
-9 (Over-Cube) & 13 & 12 & 1 \\
-\bottomrule
-\end{tabular}
+	\centering
+	\caption{Defect gap between $R=7$ and $R=8$.}
+	\label{tab:gap_jump}
+	\begin{tabular}{@{}lccc@{}}
+		\toprule
+		Cluster Size $R$ & Optimal $D$ & 2nd Best $D$ & Gap ($\Delta D$) \\
+		\midrule
+		7 (Near-Cube)    & 9           & 8            & 1                \\
+		8 (Perfect Cube) & 12          & 10           & 2                \\
+		9 (Over-Cube)    & 13          & 12           & 1                \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins by 464 vertices against a Star Graph and by 190 vertices against the second-best connected subgraph. In large-scale systems, this linear divergence ensures that the Hamming Ball remains the unique boundary minimizer.
@@ -699,102 +699,102 @@ In recent literature concerning hypercube variants like Augmented Cubes \cite{ch
 The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now characterize \emph{which} defect values are achievable and which are not. Because the defect $D(V')$ serves as an algebraic proxy for internal edges---absorbing clique structure in $A(n,k)$ without over-counting---all classification results in this section are stated in terms of the defect.
 
 \begin{theorem}[The Fracture Gap]\label{them:fracture}
-For $R = 2^d$, the gap between the optimal defect $\Eseq(R) = d\,2^{d-1}$ and the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
+	For $R = 2^d$, the gap between the optimal defect $\Eseq(R) = d\,2^{d-1}$ and the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
 \end{theorem}
 \begin{proof}
-By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Since hypercubes are triangle-free, each shared root corresponds to exactly one edge, so the defect equals the internal edge count exactly. Any other configuration of $2^d$ vertices suffers a loss of at least $d-1$ edges. Because Theorem~\ref{them:defect} restricts the internal defect to obey the hypercube ceiling ($D(V') \le \Eseq(R)$), the arrangement graph perfectly inherits the hypercube's isoperimetric fracture gap.
+	By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum number of internal edges for $2^d$ vertices in a Boolean hypercube is $d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$. Since hypercubes are triangle-free, each shared root corresponds to exactly one edge, so the defect equals the internal edge count exactly. Any other configuration of $2^d$ vertices suffers a loss of at least $d-1$ edges. Because Theorem~\ref{them:defect} restricts the internal defect to obey the hypercube ceiling ($D(V') \le \Eseq(R)$), the arrangement graph perfectly inherits the hypercube's isoperimetric fracture gap.
 
-Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
+	Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$. Let $m = |Q_d  -  S| = |S  -  Q_d| \ge 1$.
 
-\textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d  -  S$ destroys exactly $d$ defect links (the degree of $v$ in $Q_d$). The replacement $v' \in S  -  Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ shares \emph{at most one} root with $Q_d \cap S$. The net change is at most $-d + 1$, giving $D(S) \le d\,2^{d-1} - (d-1)$.
+	\textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d  -  S$ destroys exactly $d$ defect links (the degree of $v$ in $Q_d$). The replacement $v' \in S  -  Q_d$ lies outside $Q_d$ and differs in at least one coordinate that $Q_d$ holds fixed, so $v'$ shares \emph{at most one} root with $Q_d \cap S$. The net change is at most $-d + 1$, giving $D(S) \le d\,2^{d-1} - (d-1)$.
 
-\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ defect links to the remaining vertices (minus links among the removed vertices themselves, which we denote $D_{\mathrm{rem}}$). By Theorem~\ref{them:defect}, the $m$ replacement vertices satisfy $D(\text{replacements}) \le \Eseq(m)$, and each contributes at most 1 shared root back into $Q_d \cap S$. Therefore:
-\begin{equation}\label{eq:case2-bound}
-D(S) \le d\,2^{d-1} - md + D_{\mathrm{rem}} + m + \Eseq(m)
-\end{equation}
-Since $D_{\mathrm{rem}} \le \Eseq(m)$, the gap from the optimum is at least $m(d-1) - 2\Eseq(m)$. For small deviations ($1 \le m < d$), this bound strictly forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the defect strictly faster than single-vertex removal, so the gap only widens.
+	\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices from $Q_d$ destroys at most $md$ defect links to the remaining vertices (minus links among the removed vertices themselves, which we denote $D_{\mathrm{rem}}$). By Theorem~\ref{them:defect}, the $m$ replacement vertices satisfy $D(\text{replacements}) \le \Eseq(m)$, and each contributes at most 1 shared root back into $Q_d \cap S$. Therefore:
+	\begin{equation}\label{eq:case2-bound}
+		D(S) \le d\,2^{d-1} - md + D_{\mathrm{rem}} + m + \Eseq(m)
+	\end{equation}
+	Since $D_{\mathrm{rem}} \le \Eseq(m)$, the gap from the optimum is at least $m(d-1) - 2\Eseq(m)$. For small deviations ($1 \le m < d$), this bound strictly forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the defect strictly faster than single-vertex removal, so the gap only widens.
 
-In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden defect values in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below the optimum.
+	In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden defect values in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below the optimum.
 \end{proof}
 
 \noindent We formalize this as the \emph{fracture gap}:
 \begin{equation}\label{eq:fracture-gap}
-\gamma(R) \;=\; \begin{cases} d - 1 & \text{if } R = 2^d, \\ 0 & \text{otherwise.} \end{cases}
+	\gamma(R) \;=\; \begin{cases} d - 1 & \text{if } R = 2^d, \\ 0 & \text{otherwise.} \end{cases}
 \end{equation}
 
 \begin{theorem}[Defect Continuity]\label{them:continuity}
-For any $R$, every integer defect from $R-1$ (spanning tree) up to the leaf-addition bound $\Eseq(R-1) + 1$ is achievable.
+	For any $R$, every integer defect from $R-1$ (spanning tree) up to the leaf-addition bound $\Eseq(R-1) + 1$ is achievable.
 \end{theorem}
 \begin{proof}
-The minimum defect for a connected graph on $R$ vertices is $R-1$ (a spanning tree). To construct connected subgraphs achieving every intermediate value, we exploit the isometric embedding of the Boolean hypercube $Q_d$ (where $d = \lceil \log_2 R \rceil$) within $A(n,k)$. Because $Q_d$ is triangle-free, each shared root within any hypercube-embedded subset corresponds to exactly one physical edge, meaning the defect equals the internal edge count exactly ($D(V') = |E(V')|$).
+	The minimum defect for a connected graph on $R$ vertices is $R-1$ (a spanning tree). To construct connected subgraphs achieving every intermediate value, we exploit the isometric embedding of the Boolean hypercube $Q_d$ (where $d = \lceil \log_2 R \rceil$) within $A(n,k)$. Because $Q_d$ is triangle-free, each shared root within any hypercube-embedded subset corresponds to exactly one physical edge, meaning the defect equals the internal edge count exactly ($D(V') = |E(V')|$).
 
-It is an established property of Boolean hypercubes that connected subgraphs of size $R$ exist for all intermediate internal edge counts from the spanning tree limit ($R-1$) up to the sub-optimal bounds. This defect continuity is achieved by systematically constructing a sequence of connected induced subgraphs, starting from a spanning tree (such as a path or star) and incrementally adding vertices that maximize their internal degrees (e.g., sequentially building up the lexicographic colexicographic order) or relocating boundary vertices to leaf positions. Since $A(n,k)$ contains this hypercube structure as an isometric induced subgraph, any connected hypercube-embedded configuration of size $R$ with $E$ internal edges corresponds to a connected arrangement-embedded configuration with defect $D = E$. This naturally guarantees a continuous defect spectrum up to the leaf-addition bound.
+	It is an established property of Boolean hypercubes that connected subgraphs of size $R$ exist for all intermediate internal edge counts from the spanning tree limit ($R-1$) up to the sub-optimal bounds. This defect continuity is achieved by systematically constructing a sequence of connected induced subgraphs, starting from a spanning tree (such as a path or star) and incrementally adding vertices that maximize their internal degrees (e.g., sequentially building up the lexicographic colexicographic order) or relocating boundary vertices to leaf positions. Since $A(n,k)$ contains this hypercube structure as an isometric induced subgraph, any connected hypercube-embedded configuration of size $R$ with $E$ internal edges corresponds to a connected arrangement-embedded configuration with defect $D = E$. This naturally guarantees a continuous defect spectrum up to the leaf-addition bound.
 \end{proof}
 
 Together, these results completely characterize the achievable defect values for $R = 2^d$. At $R = 8$ ($d = 3$), the Hamming Ball achieves $D = 12$, the fracture gap forbids $D = 11$, and continuity fills in $\{7, 8, 9, 10\}$. The full set of realizable defects is $\{7, 8, 9, 10, 12\}$.
 
 \begin{theorem}[Secondary Fracture Gaps]\label{them:secondary-gap}
-For $R = 2^d - 1$ with $d \ge 4$, there exists a secondary fracture gap of size $d-3$ just below the optimal defect $\Eseq(R)$. Specifically, the defect values in the interval $(\Eseq(R-1) + 1,\; \Eseq(R))$ are strictly unachievable by any connected $R$-vertex subgraph.
+	For $R = 2^d - 1$ with $d \ge 4$, there exists a secondary fracture gap of size $d-3$ just below the optimal defect $\Eseq(R)$. Specifically, the defect values in the interval $(\Eseq(R-1) + 1,\; \Eseq(R))$ are strictly unachievable by any connected $R$-vertex subgraph.
 \end{theorem}
 \begin{proof}
-Any $R$-vertex subgraph $V'$ in $A(n,k)$ either fits entirely inside a $d$-dimensional embedding hypercube $Q_d$ or it spills outside of it.
-\begin{enumerate}
-\item \textbf{Case 1: $V' \subseteq Q_d$.} Since $R = 2^d - 1$, $V'$ is obtained by removing exactly one vertex $v$ from $Q_d$. Since $Q_d$ is $d$-regular, removing $v$ destroys exactly $d$ defect links (edges). Thus, the defect of any such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$.
-\item \textbf{Case 2: $V' \not\subseteq Q_d$.} If $V'$ contains at least one vertex $v'$ outside of $Q_d$, then at most $R-1$ vertices of $V'$ lie within $Q_d$. By Theorem~\ref{them:defect}, the maximum defect among these $R-1$ vertices is bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses at least one fresh coordinate dimension and therefore can share at most $1$ root with $Q_d \cap V'$. The maximum possible defect for any such spillover configuration is thus bounded by $\Eseq(R-1) + 1$.
-\end{enumerate}
-The difference between the dense configuration defect and the maximum spillover defect is:
-\begin{equation}
-\Eseq(R) - \big(\Eseq(R-1) + 1\big) = d - 2.
-\end{equation}
-For $d \ge 4$, this difference is at least $2$, creating a secondary fracture gap of size $d-3$ consisting of the forbidden defect values $\{\Eseq(R-1) + 2, \ldots, \Eseq(R) - 1\}$. For $R=15$ ($d=4$), the value $27$ is impossible; for $R=31$ ($d=5$), the values $73$ and $74$ are impossible.
+	Any $R$-vertex subgraph $V'$ in $A(n,k)$ either fits entirely inside a $d$-dimensional embedding hypercube $Q_d$ or it spills outside of it.
+	\begin{enumerate}
+		\item \textbf{Case 1: $V' \subseteq Q_d$.} Since $R = 2^d - 1$, $V'$ is obtained by removing exactly one vertex $v$ from $Q_d$. Since $Q_d$ is $d$-regular, removing $v$ destroys exactly $d$ defect links (edges). Thus, the defect of any such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$.
+		\item \textbf{Case 2: $V' \not\subseteq Q_d$.} If $V'$ contains at least one vertex $v'$ outside of $Q_d$, then at most $R-1$ vertices of $V'$ lie within $Q_d$. By Theorem~\ref{them:defect}, the maximum defect among these $R-1$ vertices is bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses at least one fresh coordinate dimension and therefore can share at most $1$ root with $Q_d \cap V'$. The maximum possible defect for any such spillover configuration is thus bounded by $\Eseq(R-1) + 1$.
+	\end{enumerate}
+	The difference between the dense configuration defect and the maximum spillover defect is:
+	\begin{equation}
+		\Eseq(R) - \big(\Eseq(R-1) + 1\big) = d - 2.
+	\end{equation}
+	For $d \ge 4$, this difference is at least $2$, creating a secondary fracture gap of size $d-3$ consisting of the forbidden defect values $\{\Eseq(R-1) + 2, \ldots, \Eseq(R) - 1\}$. For $R=15$ ($d=4$), the value $27$ is impossible; for $R=31$ ($d=5$), the values $73$ and $74$ are impossible.
 \end{proof}
 
 \begin{theorem}[Complete Defect Classification]\label{them:classification}
-For any valid cluster size $R \ge 4$, every integer defect from the spanning tree limit ($R-1$) up to the leaf-addition bound $\Eseq(R-1) + 1$ is achievable. Consequently, the set of achievable defect values for connected $R$-vertex subgraphs is:
-\begin{equation}\label{eq:defect-spectrum}
-\mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; \Eseq(R-1) + 1\} \;\cup\; \mathcal{D}_{\mathrm{dense}}(R)
-\end{equation}
-where $\mathcal{D}_{\mathrm{dense}}(R)$ contains the isolated dense defect values above the leaf-addition bound (such as $\{\Eseq(2^d)\}$ for $R=2^d$, or $\{\Eseq(2^d-1)\}$ for $R=2^d-1$).
+	For any valid cluster size $R \ge 4$, every integer defect from the spanning tree limit ($R-1$) up to the leaf-addition bound $\Eseq(R-1) + 1$ is achievable. Consequently, the set of achievable defect values for connected $R$-vertex subgraphs is:
+	\begin{equation}\label{eq:defect-spectrum}
+		\mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; \Eseq(R-1) + 1\} \;\cup\; \mathcal{D}_{\mathrm{dense}}(R)
+	\end{equation}
+	where $\mathcal{D}_{\mathrm{dense}}(R)$ contains the isolated dense defect values above the leaf-addition bound (such as $\{\Eseq(2^d)\}$ for $R=2^d$, or $\{\Eseq(2^d-1)\}$ for $R=2^d-1$).
 \end{theorem}
 \begin{proof}
-The maximum $\Eseq(R)$ is achieved by the Hamming Ball. The isometric hypercube embedding guarantees continuity from the spanning tree limit up to the leaf-addition bound. The isolated values in $\mathcal{D}_{\mathrm{dense}}(R)$ are achieved by dense embeddings within the $d$-dimensional hypercube (like perfect subcubes or single-vertex deletions from subcubes), while the gaps between these dense states and the leaf-addition bound are dictated by the primary and secondary fracture gaps of Theorems~\ref{them:fracture} and~\ref{them:secondary-gap}.
+	The maximum $\Eseq(R)$ is achieved by the Hamming Ball. The isometric hypercube embedding guarantees continuity from the spanning tree limit up to the leaf-addition bound. The isolated values in $\mathcal{D}_{\mathrm{dense}}(R)$ are achieved by dense embeddings within the $d$-dimensional hypercube (like perfect subcubes or single-vertex deletions from subcubes), while the gaps between these dense states and the leaf-addition bound are dictated by the primary and secondary fracture gaps of Theorems~\ref{them:fracture} and~\ref{them:secondary-gap}.
 \end{proof}
 \noindent Table~\ref{tab:edge_spectrum} illustrates this classification for selected values of $R$.
 
 \begin{table}[ht]
-\centering
-\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of 2 ($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2 ($2^d-1$) exhibit secondary fracture gaps of $d-3$ for $d \ge 4$.}
-\label{tab:edge_spectrum}
-\begin{tabular}{rrrrl}
-\toprule
-$R$ & $\Eseq(R)$ & $\gamma(R)$ & $|\mathcal{D}(R)|$ & Achievable range \\
-\midrule
-$2^2 = 4$   & 4   & 1 & 2   & $\{3\} \cup \{4\}$ \\
-5           & 5   & 0 & 2   & $\{D \in \mathbb{Z} : 4 \le D \le 5\}$ \\
-6           & 7   & 0 & 3   & $\{D \in \mathbb{Z} : 5 \le D \le 7\}$ \\
-7           & 9   & 0 & 4   & $\{D \in \mathbb{Z} : 6 \le D \le 9\}$ \\
-$2^3 = 8$   & 12  & 2 & 5   & $\{D \in \mathbb{Z} : 7 \le D \le 10\} \cup \{12\}$ \\
-9           & 13  & 0 & 6   & $\{D \in \mathbb{Z} : 8 \le D \le 13\}$ \\
-10          & 15  & 0 & 7   & $\{D \in \mathbb{Z} : 9 \le D \le 15\}$ \\
-\midrule
-11          & 17  & 0 & 8   & $\{D \in \mathbb{Z} : 10 \le D \le 17\}$ \\
-12          & 20  & 0 & 10  & $\{D \in \mathbb{Z} : 11 \le D \le 20\}$ \\
-13          & 22  & 0 & 11  & $\{D \in \mathbb{Z} : 12 \le D \le 22\}$ \\
-14          & 25  & 0 & 13  & $\{D \in \mathbb{Z} : 13 \le D \le 25\}$ \\
-15          & 28  & 0 & 14  & $\{D \in \mathbb{Z} : 14 \le D \le 26\} \cup \{28\}$ \\
-$2^4 = 16$  & 32  & 3 & 16  & $\{D \in \mathbb{Z} : 15 \le D \le 29\} \cup \{32\}$ \\
-17          & 33  & 0 & 18  & $\{D \in \mathbb{Z} : 16 \le D \le 33\}$ \\
-18          & 35  & 0 & 19  & $\{D \in \mathbb{Z} : 17 \le D \le 35\}$ \\
-19          & 37  & 0 & 20  & $\{D \in \mathbb{Z} : 18 \le D \le 37\}$ \\
-20          & 40  & 0 & 22  & $\{D \in \mathbb{Z} : 19 \le D \le 40\}$ \\
-\midrule
-24          & 52  & 0 & 30  & $\{D \in \mathbb{Z} : 23 \le D \le 52\}$ \\
-$2^5 = 32$  & 80  & 4 & 47  & $\{D \in \mathbb{Z} : 31 \le D \le 76\} \cup \{80\}$ \\
-48          & 128 & 0 & 82  & $\{D \in \mathbb{Z} : 47 \le D \le 128\}$ \\
-$2^6 = 64$  & 192 & 5 & 126 & $\{D \in \mathbb{Z} : 63 \le D \le 187\} \cup \{192\}$ \\
-$2^7 = 128$ & 448 & 6 & 317 & $\{D \in \mathbb{Z} : 127 \le D \le 442\} \cup \{448\}$ \\
-\bottomrule
-\end{tabular}
+	\centering
+	\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of 2 ($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2 ($2^d-1$) exhibit secondary fracture gaps of $d-3$ for $d \ge 4$.}
+	\label{tab:edge_spectrum}
+	\begin{tabular}{rrrrl}
+		\toprule
+		$R$         & $\Eseq(R)$ & $\gamma(R)$ & $|\mathcal{D}(R)|$ & Achievable range                                        \\
+		\midrule
+		$2^2 = 4$   & 4          & 1           & 2                  & $\{3\} \cup \{4\}$                                      \\
+		5           & 5          & 0           & 2                  & $\{D \in \mathbb{Z} : 4 \le D \le 5\}$                  \\
+		6           & 7          & 0           & 3                  & $\{D \in \mathbb{Z} : 5 \le D \le 7\}$                  \\
+		7           & 9          & 0           & 4                  & $\{D \in \mathbb{Z} : 6 \le D \le 9\}$                  \\
+		$2^3 = 8$   & 12         & 2           & 5                  & $\{D \in \mathbb{Z} : 7 \le D \le 10\} \cup \{12\}$     \\
+		9           & 13         & 0           & 6                  & $\{D \in \mathbb{Z} : 8 \le D \le 13\}$                 \\
+		10          & 15         & 0           & 7                  & $\{D \in \mathbb{Z} : 9 \le D \le 15\}$                 \\
+		\midrule
+		11          & 17         & 0           & 8                  & $\{D \in \mathbb{Z} : 10 \le D \le 17\}$                \\
+		12          & 20         & 0           & 10                 & $\{D \in \mathbb{Z} : 11 \le D \le 20\}$                \\
+		13          & 22         & 0           & 11                 & $\{D \in \mathbb{Z} : 12 \le D \le 22\}$                \\
+		14          & 25         & 0           & 13                 & $\{D \in \mathbb{Z} : 13 \le D \le 25\}$                \\
+		15          & 28         & 0           & 14                 & $\{D \in \mathbb{Z} : 14 \le D \le 26\} \cup \{28\}$    \\
+		$2^4 = 16$  & 32         & 3           & 16                 & $\{D \in \mathbb{Z} : 15 \le D \le 29\} \cup \{32\}$    \\
+		17          & 33         & 0           & 18                 & $\{D \in \mathbb{Z} : 16 \le D \le 33\}$                \\
+		18          & 35         & 0           & 19                 & $\{D \in \mathbb{Z} : 17 \le D \le 35\}$                \\
+		19          & 37         & 0           & 20                 & $\{D \in \mathbb{Z} : 18 \le D \le 37\}$                \\
+		20          & 40         & 0           & 22                 & $\{D \in \mathbb{Z} : 19 \le D \le 40\}$                \\
+		\midrule
+		24          & 52         & 0           & 30                 & $\{D \in \mathbb{Z} : 23 \le D \le 52\}$                \\
+		$2^5 = 32$  & 80         & 4           & 47                 & $\{D \in \mathbb{Z} : 31 \le D \le 76\} \cup \{80\}$    \\
+		48          & 128        & 0           & 82                 & $\{D \in \mathbb{Z} : 47 \le D \le 128\}$               \\
+		$2^6 = 64$  & 192        & 5           & 126                & $\{D \in \mathbb{Z} : 63 \le D \le 187\} \cup \{192\}$  \\
+		$2^7 = 128$ & 448        & 6           & 317                & $\{D \in \mathbb{Z} : 127 \le D \le 442\} \cup \{448\}$ \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -803,11 +803,11 @@ $2^7 = 128$ & 448 & 6 & 317 & $\{D \in \mathbb{Z} : 127 \le D \le 442\} \cup \{4
 Theorem~\ref{them:classification} reveals a striking geometric structure in the space of achievable defect values. At the sparse limit ($D = R-1$), the number of valid connected topologies is the number of non-isomorphic trees on $R$ vertices, which grows exponentially (OEIS A000055). As the defect increases, the geometric constraints imposed by root-sharing progressively tighten the design space, creating a \emph{Topological Funnel} that narrows monotonically until it collapses to a single topology---the Hamming Ball---at the dense limit $D = \Eseq(R)$. At powers of $2$, the funnel exhibits a discrete fracture: the gap $\gamma(R) = d - 1$ excises an entire band of defect values, forcing a discontinuous jump from the second-best topology to the unique optimum. Similar secondary fractures emerge just below near-powers of $2$ (e.g., $R=2^d-1$).
 
 \begin{conjecture}[Multiplicity of Achievable Defects]\label{conj:multiplicity}
-For each $R$ and each achievable defect $D \in \mathcal{D}(R)$, let $M(R, D)$ denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$ with defect exactly $D$. Then:
-\begin{enumerate}
-\item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique maximizer).
-\item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$ toward $R-1$.
-\end{enumerate}
+	For each $R$ and each achievable defect $D \in \mathcal{D}(R)$, let $M(R, D)$ denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$ with defect exactly $D$. Then:
+	\begin{enumerate}
+		\item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique maximizer).
+		\item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$ toward $R-1$.
+	\end{enumerate}
 \end{conjecture}
 
 Our exhaustive enumeration confirms both parts for all $R \le 10$.
@@ -824,81 +824,81 @@ The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n
 Exhaustive enumeration of connected subgraphs becomes intractable beyond $R=7$. Figure~\ref{fig:complexity} illustrates the efficiency of our $O(R^3 \log R)$ characterization engine compared to brute-force search (which grows as $\Omega(R^{R-2})$), enabling exact boundary computation for arbitrary $R$.
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth]{../docs/complexity-curves.pdf}
-\caption{The combinatorial growth of state-space search versus our $O(R^3 \log R)$ engine mapping limits up to and beyond $R=128$.}
-\label{fig:complexity}
+	\centering
+	\includegraphics[width=0.8\textwidth]{../docs/complexity-curves.pdf}
+	\caption{The combinatorial growth of state-space search versus our $O(R^3 \log R)$ engine mapping limits up to and beyond $R=128$.}
+	\label{fig:complexity}
 \end{figure}
 
 Figures~\ref{fig:r9} and~\ref{fig:r10} show the induced subgraph structure of $\mathrm{HB}_R$ for $R = 9$ and $R = 10$. Because the Hamming Ball is defined by binary strings, this structure is independent of the host graph $A(n,k)$ (provided $n-k \ge 4$ and $k \ge 4$). Both extend the perfect $Q_3$ cube ($R=8$) by adding vertices that share the maximum number of roots with the existing ball.
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.5\textwidth]{../assets/out/R9_graph.png}
-\caption{Induced subgraph of $\mathrm{HB}_9$: the $Q_3$ cube plus one vertex, yielding $D = 13$. Valid for any $A(n,k)$ with $n-k \ge 4$, $k \ge 4$.}
-\label{fig:r9}
+	\centering
+	\includegraphics[width=0.5\textwidth]{../assets/out/R9_graph.png}
+	\caption{Induced subgraph of $\mathrm{HB}_9$: the $Q_3$ cube plus one vertex, yielding $D = 13$. Valid for any $A(n,k)$ with $n-k \ge 4$, $k \ge 4$.}
+	\label{fig:r9}
 \end{figure}
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.5\textwidth]{../assets/out/R10_graph.png}
-\caption{Induced subgraph of $\mathrm{HB}_{10}$: the $Q_3$ cube plus two vertices, yielding $D = 15$. Valid for any $A(n,k)$ with $n-k \ge 4$, $k \ge 4$.}
-\label{fig:r10}
+	\centering
+	\includegraphics[width=0.5\textwidth]{../assets/out/R10_graph.png}
+	\caption{Induced subgraph of $\mathrm{HB}_{10}$: the $Q_3$ cube plus two vertices, yielding $D = 15$. Valid for any $A(n,k)$ with $n-k \ge 4$, $k \ge 4$.}
+	\label{fig:r10}
 \end{figure}
 
 \begin{table}[H]
-\centering
-\caption{Exact minimum-cut bounds ($R=2$ to $R=130$)}
-\small
-\begin{tabular}{ccc|ccc|ccc}
-\toprule
-$R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq(R)$ & $\Cconst(R)$ \\
-\midrule
-2 & 1 & 1 & 45 & 115 & 136 & 88 & 268 & 308 \\
-3 & 2 & 3 & 46 & 119 & 139 & 89 & 271 & 313 \\
-4 & 4 & 4 & 47 & 123 & 142 & 90 & 275 & 317 \\
-5 & 5 & 7 & 48 & 128 & 144 & 91 & 279 & 321 \\
-6 & 7 & 9 & 49 & 130 & 149 & 92 & 284 & 324 \\
-7 & 9 & 11 & 50 & 133 & 153 & 93 & 288 & 328 \\
-8 & 12 & 12 & 51 & 136 & 157 & 94 & 293 & 331 \\
-9 & 13 & 16 & 52 & 140 & 160 & 95 & 298 & 334 \\
-10 & 15 & 19 & 53 & 143 & 164 & 96 & 304 & 336 \\
-11 & 17 & 22 & 54 & 147 & 167 & 97 & 306 & 342 \\
-12 & 20 & 24 & 55 & 151 & 170 & 98 & 309 & 347 \\
-13 & 22 & 27 & 56 & 156 & 172 & 99 & 312 & 352 \\
-14 & 25 & 29 & 57 & 159 & 176 & 100 & 316 & 356 \\
-15 & 28 & 31 & 58 & 163 & 179 & 101 & 319 & 361 \\
-16 & 32 & 32 & 59 & 167 & 182 & 102 & 323 & 365 \\
-17 & 33 & 37 & 60 & 172 & 184 & 103 & 327 & 369 \\
-18 & 35 & 41 & 61 & 176 & 187 & 104 & 332 & 372 \\
-19 & 37 & 45 & 62 & 181 & 189 & 105 & 335 & 377 \\
-20 & 40 & 48 & 63 & 186 & 191 & 106 & 339 & 381 \\
-21 & 42 & 52 & 64 & 192 & 192 & 107 & 343 & 385 \\
-22 & 45 & 55 & 65 & 193 & 199 & 108 & 348 & 388 \\
-23 & 48 & 58 & 66 & 195 & 205 & 109 & 352 & 392 \\
-24 & 52 & 60 & 67 & 197 & 211 & 110 & 357 & 395 \\
-25 & 54 & 64 & 68 & 200 & 216 & 111 & 362 & 398 \\
-26 & 57 & 67 & 69 & 202 & 222 & 112 & 368 & 400 \\
-27 & 60 & 70 & 70 & 205 & 227 & 113 & 371 & 405 \\
-28 & 64 & 72 & 71 & 208 & 232 & 114 & 375 & 409 \\
-29 & 67 & 75 & 72 & 212 & 236 & 115 & 379 & 413 \\
-30 & 71 & 77 & 73 & 214 & 242 & 116 & 384 & 416 \\
-31 & 75 & 79 & 74 & 217 & 247 & 117 & 388 & 420 \\
-32 & 80 & 80 & 75 & 220 & 252 & 118 & 393 & 423 \\
-33 & 81 & 86 & 76 & 224 & 256 & 119 & 398 & 426 \\
-34 & 83 & 91 & 77 & 227 & 261 & 120 & 404 & 428 \\
-35 & 85 & 96 & 78 & 231 & 265 & 121 & 408 & 432 \\
-36 & 88 & 100 & 79 & 235 & 269 & 122 & 413 & 435 \\
-37 & 90 & 105 & 80 & 240 & 272 & 123 & 418 & 438 \\
-38 & 93 & 109 & 81 & 242 & 278 & 124 & 424 & 440 \\
-39 & 96 & 113 & 82 & 245 & 283 & 125 & 429 & 443 \\
-40 & 100 & 116 & 83 & 248 & 288 & 126 & 435 & 445 \\
-41 & 102 & 121 & 84 & 252 & 292 & 127 & 441 & 447 \\
-42 & 105 & 125 & 85 & 255 & 297 & 128 & 448 & 448 \\
-43 & 108 & 129 & 86 & 259 & 301 & 129 & 449 & 456 \\
-44 & 112 & 132 & 87 & 263 & 305 & 130 & 451 & 463 \\
-\bottomrule
-\end{tabular}
+	\centering
+	\caption{Exact minimum-cut bounds ($R=2$ to $R=130$)}
+	\small
+	\begin{tabular}{ccc|ccc|ccc}
+		\toprule
+		$R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq(R)$ & $\Cconst(R)$ & $R$ & $\Eseq(R)$ & $\Cconst(R)$ \\
+		\midrule
+		2   & 1          & 1            & 45  & 115        & 136          & 88  & 268        & 308          \\
+		3   & 2          & 3            & 46  & 119        & 139          & 89  & 271        & 313          \\
+		4   & 4          & 4            & 47  & 123        & 142          & 90  & 275        & 317          \\
+		5   & 5          & 7            & 48  & 128        & 144          & 91  & 279        & 321          \\
+		6   & 7          & 9            & 49  & 130        & 149          & 92  & 284        & 324          \\
+		7   & 9          & 11           & 50  & 133        & 153          & 93  & 288        & 328          \\
+		8   & 12         & 12           & 51  & 136        & 157          & 94  & 293        & 331          \\
+		9   & 13         & 16           & 52  & 140        & 160          & 95  & 298        & 334          \\
+		10  & 15         & 19           & 53  & 143        & 164          & 96  & 304        & 336          \\
+		11  & 17         & 22           & 54  & 147        & 167          & 97  & 306        & 342          \\
+		12  & 20         & 24           & 55  & 151        & 170          & 98  & 309        & 347          \\
+		13  & 22         & 27           & 56  & 156        & 172          & 99  & 312        & 352          \\
+		14  & 25         & 29           & 57  & 159        & 176          & 100 & 316        & 356          \\
+		15  & 28         & 31           & 58  & 163        & 179          & 101 & 319        & 361          \\
+		16  & 32         & 32           & 59  & 167        & 182          & 102 & 323        & 365          \\
+		17  & 33         & 37           & 60  & 172        & 184          & 103 & 327        & 369          \\
+		18  & 35         & 41           & 61  & 176        & 187          & 104 & 332        & 372          \\
+		19  & 37         & 45           & 62  & 181        & 189          & 105 & 335        & 377          \\
+		20  & 40         & 48           & 63  & 186        & 191          & 106 & 339        & 381          \\
+		21  & 42         & 52           & 64  & 192        & 192          & 107 & 343        & 385          \\
+		22  & 45         & 55           & 65  & 193        & 199          & 108 & 348        & 388          \\
+		23  & 48         & 58           & 66  & 195        & 205          & 109 & 352        & 392          \\
+		24  & 52         & 60           & 67  & 197        & 211          & 110 & 357        & 395          \\
+		25  & 54         & 64           & 68  & 200        & 216          & 111 & 362        & 398          \\
+		26  & 57         & 67           & 69  & 202        & 222          & 112 & 368        & 400          \\
+		27  & 60         & 70           & 70  & 205        & 227          & 113 & 371        & 405          \\
+		28  & 64         & 72           & 71  & 208        & 232          & 114 & 375        & 409          \\
+		29  & 67         & 75           & 72  & 212        & 236          & 115 & 379        & 413          \\
+		30  & 71         & 77           & 73  & 214        & 242          & 116 & 384        & 416          \\
+		31  & 75         & 79           & 74  & 217        & 247          & 117 & 388        & 420          \\
+		32  & 80         & 80           & 75  & 220        & 252          & 118 & 393        & 423          \\
+		33  & 81         & 86           & 76  & 224        & 256          & 119 & 398        & 426          \\
+		34  & 83         & 91           & 77  & 227        & 261          & 120 & 404        & 428          \\
+		35  & 85         & 96           & 78  & 231        & 265          & 121 & 408        & 432          \\
+		36  & 88         & 100          & 79  & 235        & 269          & 122 & 413        & 435          \\
+		37  & 90         & 105          & 80  & 240        & 272          & 123 & 418        & 438          \\
+		38  & 93         & 109          & 81  & 242        & 278          & 124 & 424        & 440          \\
+		39  & 96         & 113          & 82  & 245        & 283          & 125 & 429        & 443          \\
+		40  & 100        & 116          & 83  & 248        & 288          & 126 & 435        & 445          \\
+		41  & 102        & 121          & 84  & 252        & 292          & 127 & 441        & 447          \\
+		42  & 105        & 125          & 85  & 255        & 297          & 128 & 448        & 448          \\
+		43  & 108        & 129          & 86  & 259        & 301          & 129 & 449        & 456          \\
+		44  & 112        & 132          & 87  & 263        & 305          & 130 & 451        & 463          \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 % ════════════════════════════════════════════════════════════════════════
