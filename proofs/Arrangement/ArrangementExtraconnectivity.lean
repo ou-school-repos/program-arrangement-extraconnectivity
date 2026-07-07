@@ -748,9 +748,7 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   unfold coord_boundary
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
-section Extraconnectivity
-
-/-
+/--
   **Axiom 1 of 2 (Universal Boundary Inequality)**
 
   For ANY R-element subset V' of A(n,k), the external boundary is bounded
@@ -768,8 +766,8 @@ section Extraconnectivity
   - See docs/axiom-equivalence.md for the full duality explanation
   - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/
-variable (lower_bound_all_embeddings : ∀ (R n k : ℕ) (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
+axiom lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 
 /-- The fiber of all ArrVertex sharing a given root r at position p. -/
 def root_fiber {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
@@ -1076,8 +1074,8 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   exact h_sum
 
 -- Bridge Lemma 3 (Collision-Adjusted Bound Axiom)
-variable (external_neighbors_collision_bound : ∀ {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R)
+axiom external_neighbors_collision_bound {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
 def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
@@ -1563,7 +1561,7 @@ lemma hb_total_coord_edges {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
       _ = (R * k - E_seq R) * (n - k) + R * k := by rw [h_sub]
   omega
 
-/- PHASE 3: The Cross-Collision Count.
+/-- PHASE 3: The Cross-Collision Count.
     Cross-collisions happen when an external neighbor is reachable
     via multiple dimensions. In the Hamming Ball, this corresponds exactly to
     swapping two active symbols, yielding C_constant R - E_seq R overlaps.
@@ -1571,13 +1569,12 @@ lemma hb_total_coord_edges {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     This explicitly counts the 4-cycles in the Hamming Ball. It is mathematically
     equivalent to the existential half of the Kruskal-Katona Theorem and requires
     extremal set theory shadow operators to prove formally. -/
-variable (hb_cross_collisions : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
-    (_hd : d = bit_length (R - 1)),
-    cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R)
+axiom hb_cross_collisions {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
+    (hd : d = bit_length (R - 1)) :
+    cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R
 
 /-- THE AXIOM KILLER: We formally prove the Hamming Ball evaluation
     by composing the double-counting identity with Phase 1 and Phase 2. -/
-include hb_cross_collisions in
 lemma hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     (hd : d = bit_length (R - 1)) :
     external_neighbors (hamming_ball_subset R n k d hk hnk) =
@@ -1588,7 +1585,6 @@ lemma hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
   have h_decomp := external_neighbors_decomp _ h_le
   omega
 
-include hb_cross_collisions in
 lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k) :
     ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R := by
@@ -1610,7 +1606,6 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
   of a constructive witness (the Hamming ball), we establish the
   **Full Isoperimetric Profile** of A(n,k) for all natural numbers R.
 -/
-include lower_bound_all_embeddings hb_cross_collisions in
 theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k) : (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧ (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
   exact ⟨exists_optimal_embedding R n k h_cond, fun V' hR => lower_bound_all_embeddings R n k V' hR hnk⟩
@@ -1627,7 +1622,6 @@ theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_
   - IMPLICATION: There is no "hidden" value of R where a non-standard
     configuration (clique, path, etc.) can outperform the Hamming Ball.
 -/
-include lower_bound_all_embeddings hb_cross_collisions in
 theorem globally_optimal_growth_strategy
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
@@ -1650,7 +1644,6 @@ theorem globally_optimal_growth_strategy
   every internal edge you fail to form exposes exactly (n - k) new boundary
   vertices, asymptotically dominating any Kruskal-Katona shadow savings.
 -/
-include external_neighbors_collision_bound in
 theorem sub_optimal_penalty (R n k ΔE : ℕ) (V' : Finset (ArrVertex n k))
     (hR : V'.card = R) (hnk : k ≤ n)
     (h_suboptimal : sum_unique_roots V' = R * k - E_seq R + ΔE) :
@@ -1746,5 +1739,3 @@ def hypercube_fracture_gap_conjecture (n k d : ℕ) : Prop :=
     V'.card = R → is_connected_subgraph V' →
     (R * k - sum_unique_roots V') < E_opt →
     (R * k - sum_unique_roots V') ≤ E_opt - d + 1
-
-end Extraconnectivity
