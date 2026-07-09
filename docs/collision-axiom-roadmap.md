@@ -13,7 +13,10 @@ This document describes what a complete mechanized proof would require.
 
 - **Isolated as explicit Lean hypotheses** in the stable capstone theorem, rather
   than declared as raw global axioms.
-- **Arithmetic & Inductive driver for C_constant(R) proven** in `proofs/Arrangement/unstable/CrossCollisionsResearch.lean` (fully proving the binary reflection arithmetic and strong induction driver, reducing the collision recurrence to three pure combinatorial interface lemmas).
+- **Arithmetic & inductive scaffold for C_constant(R)** lives in
+  `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`. The file now
+  checks standalone, but several unstable binary-reflection/arithmetic
+  placeholders remain explicit `sorry`s while the scaffold is repaired.
 - **Formula values verified** via `predict --verify R` (predict.cpp)
 - **Exhaustive topology search** confirms uniqueness for small R
 - **Mathematically justified** by the Kruskal-Katona theorem
@@ -23,9 +26,9 @@ This document describes what a complete mechanized proof would require.
 1. Finish the three `HBCrossCollisions` interface lemmas in
    `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`:
    `CrossBaseOne`, `CrossDimStable`, and `CrossRecurrence`.
-2. Clean the unstable research file so it compiles standalone. It currently
-   contains older scaffold errors above the interface section, so completed
-   interface proofs cannot yet be validated by compiling only that file.
+2. Discharge the remaining explicit `sorry`s in the unstable scaffold:
+   closed-form arithmetic, binary-reflection half lemmas, the recurrence
+   driver, `CrossDimStable`, and `CrossRecurrence`.
 3. Promote the completed `HBCrossCollisions` proof into the stable proof path
    and remove the corresponding hypothesis parameter from
    `arrangement_extraconnectivity_minimum`.
@@ -33,7 +36,8 @@ This document describes what a complete mechanized proof would require.
    `proofs/Arrangement/unstable/SupportProjection.lean` to attack
    `UniversalLowerBound` through Mathlib's shadow/Kruskal-Katona API.
 
-Started: `CrossBaseOne` now has a local singleton-collision proof skeleton in
+Done mechanically: `CrossCollisionsResearch.lean` now standalone-checks with
+warnings. Started: `CrossBaseOne` now has a local singleton-collision proof in
 `CrossCollisionsResearch.lean`: a singleton has disjoint coordinate-boundary
 pieces, so `total_coord_edges = external_neighbors` and `cross_collisions = 0`.
 

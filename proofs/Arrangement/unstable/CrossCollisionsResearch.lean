@@ -1,5 +1,7 @@
 import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
+import Mathlib.Order.Interval.Finset.Nat
+import Mathlib.Tactic.IntervalCases
 
 open Finset
 
@@ -17,15 +19,20 @@ namespace Arrangement
 
 section PopcountArith
 
+lemma bit_length_eq_size : bit_length = Nat.size := rfl
+
 lemma popcount_zero : popcount 0 = 0 := by
   unfold popcount
   simp
 
 lemma popcount_div_two (n : ℕ) : popcount n = popcount (n / 2) + n % 2 := by
-  unfold popcount
-  split_ifs with h
-  · subst h; rfl
-  · ring
+  have hpop : popcount n = if h : n = 0 then 0 else n % 2 + popcount (n / 2) := by
+    rw [popcount]
+  rw [hpop]
+  by_cases h : n = 0
+  · simp [h]
+  · rw [dif_neg h]
+    omega
 
 /-- Adding `2^j` to `m < 2^j` sets one fresh bit: `popcount (2^j + m) = popcount m + 1`. -/
 lemma popcount_two_pow_add {j m : ℕ} (h : m < 2 ^ j) :
