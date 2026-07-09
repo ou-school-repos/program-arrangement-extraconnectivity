@@ -11,11 +11,31 @@ This document describes what a complete mechanized proof would require.
 
 ## Current Status
 
-- **Axiomatized** in Lean 4 (zero `sorry` blocks)
+- **Isolated as explicit Lean hypotheses** in the stable capstone theorem, rather
+  than declared as raw global axioms.
 - **Arithmetic & Inductive driver for C_constant(R) proven** in `proofs/Arrangement/unstable/CrossCollisionsResearch.lean` (fully proving the binary reflection arithmetic and strong induction driver, reducing the collision recurrence to three pure combinatorial interface lemmas).
 - **Formula values verified** via `predict --verify R` (predict.cpp)
 - **Exhaustive topology search** confirms uniqueness for small R
 - **Mathematically justified** by the Kruskal-Katona theorem
+
+## Immediate Lean Work Queue
+
+1. Finish the three `HBCrossCollisions` interface lemmas in
+   `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`:
+   `CrossBaseOne`, `CrossDimStable`, and `CrossRecurrence`.
+2. Clean the unstable research file so it compiles standalone. It currently
+   contains older scaffold errors above the interface section, so completed
+   interface proofs cannot yet be validated by compiling only that file.
+3. Promote the completed `HBCrossCollisions` proof into the stable proof path
+   and remove the corresponding hypothesis parameter from
+   `arrangement_extraconnectivity_minimum`.
+4. Use the support-projection scaffold in
+   `proofs/Arrangement/unstable/SupportProjection.lean` to attack
+   `UniversalLowerBound` through Mathlib's shadow/Kruskal-Katona API.
+
+Started: `CrossBaseOne` now has a local singleton-collision proof skeleton in
+`CrossCollisionsResearch.lean`: a singleton has disjoint coordinate-boundary
+pieces, so `total_coord_edges = external_neighbors` and `cross_collisions = 0`.
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles
 

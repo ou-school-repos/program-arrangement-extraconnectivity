@@ -10,30 +10,33 @@ make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)
 ```
 
-Current status: **0 errors, 0 sorries, 3 axioms** (the 3 underlying logical gaps in the mechanization).
+Current status: **stable build succeeds with 0 errors and 0 sorries in the main proof path**.
+The capstone theorem is intentionally parameterized by the remaining extremal
+combinatorics hypotheses rather than depending on raw global `axiom`
+declarations.
 
 ## Architecture
 
-| Section                  | Theorem / Definition                                   | Status   |
-| ------------------------ | ------------------------------------------------------ | -------- |
-| Subadditivity of A000788 | `E_add_min_le`: E(x)+E(y)+min(x,y) <= E(x+y)           | PROVEN   |
-| Defect Bound             | `E_seq_list_sum_le`: generalized partition subaddivity | PROVEN   |
-| Hypercube Embedding      | `Cube`, `embed_cube`, `embedding_is_injective`         | PROVEN   |
-| Harper's Theorem         | `harpers_edge_isoperimetry`: cubeEdges(S) <= E(\|S\|)  | PROVEN\* |
-| Graph Definition         | `ArrVertex`, `Fintype`, `DecidableEq`, `arr_adjacent`  | PROVEN   |
-| External Neighbors       | `external_neighbors` (computable definition)           | PROVEN   |
-| Embedding Condition      | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)        | PROVEN   |
-| Defect Bound             | `sum_unique_roots_lower_bound`                         | PROVEN   |
-| Collision-Adjusted Bound | `external_neighbors_collision_bound`                   | AXIOM    |
-| Fiber Identity           | `total_coord_edges_eq` (fiber counting)                | PROVEN   |
-| Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                          | PROVEN   |
-| Construction             | `hamming_ball_subset` (named, explicit)                | PROVEN   |
-| Evaluation               | `hamming_ball_eval` (boundary count)                   | PROVEN   |
-| Evaluation Axiom         | `hb_cross_collisions` (KK shadow, existential)         | AXIOM    |
-| Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`     | PROVEN   |
-| Lower Bound              | `lower_bound_all_embeddings` (universal bound)         | AXIOM    |
-| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)     | PROVEN\* |
-| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)  | PROVEN\* |
+| Section                  | Theorem / Definition                                    | Status     |
+| ------------------------ | ------------------------------------------------------- | ---------- |
+| Subadditivity of A000788 | `E_add_min_le`: E(x)+E(y)+min(x,y) <= E(x+y)            | PROVEN     |
+| Defect Bound             | `E_seq_list_sum_le`: generalized partition subaddivity  | PROVEN     |
+| Hypercube Embedding      | `Cube`, `embed_cube`, `embedding_is_injective`          | PROVEN     |
+| Harper's Theorem         | `harpers_edge_isoperimetry`: cubeEdges(S) <= E(\|S\|)   | PROVEN\*   |
+| Graph Definition         | `ArrVertex`, `Fintype`, `DecidableEq`, `arr_adjacent`   | PROVEN     |
+| External Neighbors       | `external_neighbors` (computable definition)            | PROVEN     |
+| Embedding Condition      | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)         | PROVEN     |
+| Defect Bound             | `sum_unique_roots_lower_bound`                          | PROVEN     |
+| Collision-Adjusted Bound | `CollisionAdjustedBound` / `UniversalLowerBound` bridge | HYPOTHESIS |
+| Fiber Identity           | `total_coord_edges_eq` (fiber counting)                 | PROVEN     |
+| Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                           | PROVEN     |
+| Construction             | `hamming_ball_subset` (named, explicit)                 | PROVEN     |
+| Evaluation               | `hamming_ball_eval` (boundary count)                    | PROVEN     |
+| Evaluation Hypothesis    | `HBCrossCollisions` (KK shadow, existential)            | HYPOTHESIS |
+| Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`      | PROVEN     |
+| Lower Bound              | `UniversalLowerBound` (universal bound)                 | HYPOTHESIS |
+| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)      | PROVEN\*   |
+| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)   | PROVEN\*   |
 
 \*Proven but **conditional on outstanding axioms** (see Axioms section below).
 Harper's Theorem is proven but **not in the dependency chain** of the
@@ -58,9 +61,12 @@ arrangement_extraconnectivity_minimum
   └─ lower_bound_all_embeddings [AXIOM] (universal lower bound)
 ```
 
-## Axioms
+## Remaining Hypothesis Interfaces
 
-### 1. Universal Boundary Inequality (`lower_bound_all_embeddings`)
+The remaining mathematical gaps are isolated as explicit theorem parameters in
+`arrangement_extraconnectivity_minimum`, not as raw `axiom` commands.
+
+### 1. Universal Boundary Inequality (`UniversalLowerBound`)
 
 **What it says**: `external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R`.
 
@@ -69,7 +75,7 @@ arrangement_extraconnectivity_minimum
 - Conceptually justified by Section 6's Tug-of-War scaling logic: any sub-optimal defect is penalized by at least (n-k) boundary nodes, which eventually eclipses any cross-collision differences.
 - Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ and exhaustively for $R \le 10$ using `arrangement`.
 
-### 2. Collision-Adjusted Bound (`external_neighbors_collision_bound`)
+### 2. Collision-Adjusted Bound (`CollisionAdjustedBound`)
 
 **What it says**: `external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R`.
 
@@ -77,7 +83,7 @@ arrangement_extraconnectivity_minimum
 
 - Core isoperimetric inequality bounding external neighbors by unique roots and the maximal collision constant.
 
-### 3. Existential Shadow Bound (`hb_cross_collisions`)
+### 3. Existential Shadow Bound (`HBCrossCollisions`)
 
 **What it says**: The cross collisions of the Hamming Ball is exactly `C_constant R - E_seq R`.
 

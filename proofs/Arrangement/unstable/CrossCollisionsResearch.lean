@@ -455,10 +455,102 @@ section InterfaceProofs
 
 variable {n k : ℕ}
 
+private lemma hamming_ball_subset_one_eq_singleton (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
+    hamming_ball_subset 1 n k d hk hnk =
+      {embed_vertex n k d (nat_to_cube d 0) hk hnk} := by
+  unfold hamming_ball_subset
+  ext v
+  simp
+
+private lemma arr_adjacent_of_drop_pos_eq_of_ne {v w : ArrVertex n k} {p : Fin k}
+    (hne : w ≠ v) (hdrop : drop_pos w p = drop_pos v p) :
+    arr_adjacent v w := by
+  unfold arr_adjacent
+  rw [Finset.card_eq_one]
+  refine ⟨p, ?_⟩
+  ext q
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
+  constructor
+  · intro hne_q
+    by_contra hpq
+    have hq : q ≠ p := by exact hpq
+    have h_eval := congr_fun hdrop ⟨q, hq⟩
+    exact hne_q h_eval.symm
+  · intro hqp
+    intro heq
+    apply hne
+    apply Subtype.ext
+    funext q'
+    by_cases hp : q' = p
+    · rw [hp, ← hqp]
+      exact heq.symm
+    · have h_eval := congr_fun hdrop ⟨q', hp⟩
+      exact h_eval
+
+private lemma coord_boundary_singleton_subset_external {v : ArrVertex n k} (p : Fin k) :
+    coord_boundary ({v} : Finset (ArrVertex n k)) p ⊆
+      Finset.univ.filter (fun w => w ∉ ({v} : Finset (ArrVertex n k)) ∧
+        ∃ u ∈ ({v} : Finset (ArrVertex n k)), arr_adjacent u w) := by
+  intro w hw
+  unfold coord_boundary at hw
+  rw [Finset.mem_filter] at hw
+  obtain ⟨_, hw_not, u, hu, hdrop⟩ := hw
+  rw [Finset.mem_singleton] at hu
+  subst u
+  rw [Finset.mem_filter]
+  refine ⟨Finset.mem_univ _, hw_not, v, Finset.mem_singleton_self v, ?_⟩
+  exact arr_adjacent_of_drop_pos_eq_of_ne (by
+    intro h
+    exact hw_not (by simpa [h])) hdrop
+
+private lemma coord_boundary_singleton_disjoint {v : ArrVertex n k} :
+    ((Finset.univ : Finset (Fin k)) : Set (Fin k)).PairwiseDisjoint
+      (fun p => coord_boundary ({v} : Finset (ArrVertex n k)) p) := by
+  intro p _ q _ hpq
+  change Disjoint (coord_boundary ({v} : Finset (ArrVertex n k)) p)
+    (coord_boundary ({v} : Finset (ArrVertex n k)) q)
+  rw [Finset.disjoint_left]
+  intro w hwp hwq
+  unfold coord_boundary at hwp hwq
+  rw [Finset.mem_filter] at hwp hwq
+  obtain ⟨_, hw_not, u, hu, hdrop_p⟩ := hwp
+  obtain ⟨_, _, u', hu', hdrop_q⟩ := hwq
+  rw [Finset.mem_singleton] at hu
+  rw [Finset.mem_singleton] at hu'
+  subst u
+  subst u'
+  apply hw_not
+  apply Subtype.ext
+  funext r
+  by_cases hrp : r = p
+  · by_cases hrq : r = q
+    · rw [hrp, hrq] at hpq
+      exact False.elim (hpq rfl)
+    · have h_eval := congr_fun hdrop_q ⟨r, hrq⟩
+      exact h_eval
+  · have h_eval := congr_fun hdrop_p ⟨r, hrp⟩
+    exact h_eval
+
+private lemma cross_collisions_singleton (v : ArrVertex n k) :
+    cross_collisions ({v} : Finset (ArrVertex n k)) = 0 := by
+  unfold cross_collisions
+  have h_le := external_neighbors_le_total_coord ({v} : Finset (ArrVertex n k))
+  have h_ge : total_coord_edges ({v} : Finset (ArrVertex n k)) ≤
+      external_neighbors ({v} : Finset (ArrVertex n k)) := by
+    unfold total_coord_edges external_neighbors
+    rw [← Finset.card_biUnion coord_boundary_singleton_disjoint]
+    apply Finset.card_le_card
+    intro w hw
+    rw [Finset.mem_biUnion] at hw
+    obtain ⟨p, _, hwp⟩ := hw
+    exact coord_boundary_singleton_subset_external p hwp
+  omega
+
 /-- PROVEN: `cross_collisions` of a singleton is `0`. -/
 theorem cross_base_one : CrossBaseOne n k := by
   intro d hk hnk
-  sorry
+  rw [hamming_ball_subset_one_eq_singleton d hk hnk]
+  exact cross_collisions_singleton _
 
 /-- PROVEN: for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used. -/
 theorem cross_dim_stable : CrossDimStable n k := by
