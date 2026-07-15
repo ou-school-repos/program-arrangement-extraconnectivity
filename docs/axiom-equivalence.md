@@ -99,21 +99,29 @@ This provides independent verification that:
 - No R-vertex subset has fewer external neighbors than the formula (validates Axiom 1)
 - The Hamming Ball subset achieves exactly the formula value (validates Axiom 2)
 
-## C_constant(R) Values
+## C_constant(R) and cross_collisions(HB(R)) Values
 
-| R   | E_seq(R) | C_constant(R) | Meaning                                     |
-| --- | -------- | ------------- | ------------------------------------------- |
-| 2   | 1        | 0             | No collisions possible (2 vertices)         |
-| 3   | 2        | 0             | No collisions (triangle has none in A(n,k)) |
-| 4   | 4        | 1             | First collision at the 4-cycle (square)     |
-| 5   | 5        | 1             | Same square, one extra leaf                 |
-| 6   | 7        | 2             | Two independent squares                     |
-| 7   | 8        | 2             | Two squares, one extra leaf                 |
-| 8   | 11       | 4             | Three-dimensional cube: four squares        |
+`C_constant(R)` is defined in Lean as `(R - 1) + sum_bit_length R - E_seq R`.
+The Hamming Ball's cross-collision count is `cross_collisions(HB(R)) = C_constant(R) - E_seq(R)`.
 
-The pattern: C_constant(R) counts the maximum number of "shielding 4-cycles"
-the Hamming Ball creates at size R. Each 4-cycle eliminates one external
-neighbor that would otherwise be counted twice.
+| R   | E_seq(R) | C_constant(R) | cross_collisions(HB(R)) | Meaning                                     |
+| --- | -------- | ------------- | ----------------------- | ------------------------------------------- |
+| 2   | 1        | 1             | 0                       | No shielding cycles (two adjacent vertices) |
+| 3   | 2        | 3             | 1                       | One external rectangle                      |
+| 4   | 4        | 4             | 0                       | Full Q₂: all boundary shared internally     |
+| 5   | 5        | 7             | 2                       | One external rectangle from the extra leaf  |
+| 6   | 7        | 9             | 2                       | Two independent external rectangles         |
+| 7   | 9        | 11            | 2                       | Two rectangles plus one extra leaf          |
+| 8   | 12       | 12            | 0                       | Full Q₃: all boundary shared internally     |
+
+**Note:** Powers of two (`R = 2^d`) always have `cross_collisions(HB(R)) = 0`,
+because the full hypercube `Q_d` has no external rectangles — every
+distance-2 pair in `Q_d` has both completions inside `Q_d`.
+
+The pattern: `C_constant(R)` equals `E_seq(R)` at each power of two.
+Between powers, `cross_collisions(HB(R)) = C_constant(R) - E_seq(R) ≥ 0`
+counts the shielding 4-cycles: each eliminates one external neighbor
+that would otherwise be counted twice.
 
 ## Why They Cannot Be Merged
 

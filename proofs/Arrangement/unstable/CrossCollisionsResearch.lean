@@ -557,12 +557,22 @@ theorem cross_base_one : CrossBaseOne n k := by
   rw [hamming_ball_subset_one_eq_singleton d hk hnk]
   exact cross_collisions_singleton _
 
-/-- PROVEN: for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used. -/
+/-- TODO: for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used by the
+    Hamming ball of size `t`, so `cross_collisions (hamming_ball_subset t n k d hk hnk)`
+    equals `cross_collisions (hamming_ball_subset t n k (d-1) hk' hnk')`.
+    Key lemma needed: `Nat.testBit i (d-1) = false` for all `i < 2^(d-1)`,
+    from which the embedded vertex sets are equal by a Finset.image congr argument. -/
 theorem cross_dim_stable : CrossDimStable n k := by
   intro t d ht hd hk hnk
   sorry
 
-/-- PROVEN: Corrected binary-reflection recurrence. -/
+/-- TODO: Binary-reflection recurrence for `cross_collisions`.
+    Strategy: use `hb_decomposition` (splits HB(R) = half0 ∪ half1),
+    `hb_disjoint` (the halves are disjoint),
+    and `hb_half1_eq_image_shifted` (half1 is a shifted copy of HB(m)).
+    The recurrence then follows by counting cross terms between the two halves:
+    external neighbors shared between half0 and half1 correspond exactly
+    to the `ext_cube d m` term in the `C_constant` recurrence. -/
 theorem cross_recurrence : CrossRecurrence n k := by
   intro R d m hd hR hm_pos hm hk hnk
   sorry
