@@ -104,7 +104,9 @@ def cubeEdges : {d : ℕ} → Finset (Cube d) → ℕ
     cubeEdges s0 + cubeEdges s1 + (s0 ∩ s1).card
 
 -- ── HARPER'S EDGE ISOPERIMETRIC THEOREM ──────────────────────────────────────
--- No compression operators, no Kruskal-Katona — pure arithmetic induction!
+-- TODO(review): this slogan is now misleading; the proof chain still relies on
+-- the remaining combinatorial interface lemmas and should not be described as
+-- "pure arithmetic induction" yet.
 
 -- We need popcount/E_seq lemmas for the proof. Since we can't import from
 -- ArrangementExtraconnectivity without circular deps, we use E_seq' here.

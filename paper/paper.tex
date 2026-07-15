@@ -96,6 +96,8 @@
 \maketitle
 
 \begin{abstract}
+	% TODO(review): the Asymptotic Penalty and "unique boundary-minimizing"
+	% language here still reads stronger than the current Lean hypotheses justify.
 	We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. For all $R \ge 2$, the lexicographic Hamming Ball is the unique boundary-minimizing subset (up to isomorphism), whose defect matches the cumulative binary weight sequence (OEIS A000788); notably, at $R=3$ the sparse and dense limits coincide. To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We establish the Asymptotic Penalty Theorem: any sub-optimal topology suffers a linear penalty of at least $(n-k)$ boundary nodes, ensuring the Hamming Ball dominates as the network scales. Finally, we completely classify the achievable defect spectrum, proving that it forms a ``Topological Funnel'' that exhibits primary and secondary fractures near powers of 2, while maintaining a continuous spectrum at lower defect densities. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), with Proposition~\ref{prop:hb-eval} computationally verified up to $R=260$ and Proposition~\ref{prop:universal} verified exhaustively for $R \le 10$.
 \end{abstract}
 
@@ -112,7 +114,7 @@ Our approach proceeds in three steps:
 \begin{itemize}
 	\item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In $A(n,k)$, the target symbol may already appear at another coordinate of the same vertex, so the shift can either violate injectivity ($1324 \xrightarrow{4\to 1} 1321$) or sever defect links ($\{13,\,23,\,43\}$ form a clique along root $\_3$; shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies).
 	\item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving vertices geometrically, we count the coordinate-aligned lines (roots) that the subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary factors cleanly into a term proportional to $(n-k)$ minus a correction that depends only on the subset's internal defect and cross-collisions---not on $n$ or $k$.
-	\item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} Every missing unit of defect costs at least $(n-k)$ boundary nodes, so the Hamming Ball's boundary advantage over any competitor grows linearly with $(n-k)$.
+		\item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} TODO(review): every missing unit of defect costs at least $(n-k)$ boundary nodes is the stronger claim that still needs to be rewritten in the conditional form.
 \end{itemize}
 
 The exact $(R-1)$-extraconnectivity established in Theorem~\ref{them:main} has immediate consequences for the design and reliability analysis of fault-tolerant distributed systems. In multiprocessor interconnects and data center network architectures, our closed-form boundary formula provides system designers with the precise redundancy requirements needed to guarantee that any $R$-node workgroup survives catastrophic link failures, eliminating the wasted capacity inherent to looser bounds. Furthermore, within distributed consensus protocols, this exact boundary quantifies the minimum threshold of faulty nodes required to partition a Byzantine fault-tolerant (BFT) quorum. Beyond these practical systems applications, our Algebraic Defect Framework successfully extends Harper's classical edge-isoperimetric machinery~\cite{harper1966optimal} into permutation-constrained spaces, offering a new analytical baseline for combinatorial optimization and coding theory on Cayley graphs.
@@ -388,6 +390,8 @@ Instead of relying on a dimension-independent bound on the combined waste (which
 \end{proposition}
 
 \begin{remark}
+	% TODO(review): this paragraph still asserts the false/unsupported tug-of-war
+	% narrative too strongly for the current proof state.
 	These propositions encode the extremal content of the Kruskal-Katona shadow theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is computationally verified for all $R \le 260$ by constructing $\mathrm{HB}_R$ and enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}). Proposition~\ref{prop:universal} is verified exhaustively for all $R \le 10$ by enumerating every non-isomorphic connected $R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). Conceptually, Section~\ref{sec:sandwich}'s "Tug-of-War" scaling logic explains why any subset failing to match the optimal defect $\Eseq(R)$ suffers an insurmountable dimensional penalty of at least $(n-k)$ per unit of missing defect, which always crushes any possible savings in cross-collisions. In the Lean 4 formalization, rather than declaring these propositions as global axioms, we express this dependency by parameterizing our main capstone theorems with explicit hypothesis arguments (\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly isolates the classical extremal set theory from the novel algebraic machinery while ensuring that the compiled theorems are completely transparent, verified, and free of raw, uninstantiated axiom commands.
 \end{remark}
 
@@ -522,6 +526,8 @@ Combining these propositions with the boundary decomposition yields our main res
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Asymptotic Penalty}\label{sec:sandwich}
+% TODO(review): this section still needs to be rewritten around the weaker,
+% conditional penalty statement; the current theorem wording is too strong.
 
 The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
 
@@ -632,6 +638,8 @@ The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the d
 Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields defect $D = 2$, cross-collisions $X=1$, and a total correction $(X + D) = \binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
 
 \begin{theorem}[Asymptotic Penalty]\label{them:penalty}
+	% TODO(review): the current theorem statement is the false stronger version
+	% flagged in review; keep this marker until it is replaced.
 	If a subset $V'$ fails to achieve the optimal defect $\Eseq(R)$ by a shortfall $\Delta D = \Eseq(R) - D(V')$, the boundary unconditionally grows by at least $\Delta D \cdot (n-k)$.
 \end{theorem}
 To understand this mechanism, we return to the exact boundary decomposition~\eqref{eq:boundary}:
@@ -696,6 +704,8 @@ In recent literature concerning hypercube variants like Augmented Cubes \cite{ch
 % ════════════════════════════════════════════════════════════════════════
 \section{The Fracture Gap and Defect Continuity}\label{sec:fracture}
 
+% TODO(review): the "Asymptotic Penalty tells us" framing should be softened
+% once the theorem is restated.
 The Asymptotic Penalty tells us \emph{how much} sub-optimal subsets lose. We now characterize \emph{which} defect values are achievable and which are not. Because the defect $D(V')$ serves as an algebraic proxy for internal edges---absorbing clique structure in $A(n,k)$ without over-counting---all classification results in this section are stated in terms of the defect.
 
 \begin{theorem}[The Fracture Gap]\label{them:fracture}
@@ -904,6 +914,9 @@ Figures~\ref{fig:r9} and~\ref{fig:r10} show the induced subgraph structure of $\
 % ════════════════════════════════════════════════════════════════════════
 \section{Formal Verification in Lean 4}\label{app:lean}
 
+% TODO(review): remove the claim that the Asymptotic Penalty Theorem is
+% mechanically verified; the theorem currently encodes the stronger statement
+% that the review says is false.
 The Algebraic Defect Framework, the dimensional scaling bijections, and the Asymptotic Penalty Theorem are mechanically verified in the Lean 4 proof assistant \cite{leanprover}. The entire graph theory of $A(n,k)$ is formalized from first principles; rather than declaring the unproved bounds as global axioms, we express this dependency by parameterizing our main capstone theorems with explicit hypothesis arguments (\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly isolates the classical extremal set theory from the novel algebraic machinery while ensuring that the compiled theorems are completely transparent, verified, and free of raw, uninstantiated axiom commands.
 
 The capstone theorem verifies both the universal lower bound and the constructive existence of the Hamming Ball minimum cut. \emph{Note:} In the Lean source, the code variables \texttt{E\_seq} and \texttt{C\_constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively.

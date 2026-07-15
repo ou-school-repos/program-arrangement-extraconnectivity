@@ -19,7 +19,9 @@ This document describes what a complete mechanized proof would require.
   placeholders remain explicit `sorry`s while the scaffold is repaired.
 - **Formula values verified** via `predict --verify R` (predict.cpp)
 - **Exhaustive topology search** confirms uniqueness for small R
-- **Mathematically justified** by the Kruskal-Katona theorem
+- TODO(review): the Kruskal-Katona justification is still a roadmap claim; the
+  support-projection bridge below is not validated and should not be read as a
+  completed proof.
 
 ## Immediate Lean Work Queue
 
@@ -32,9 +34,8 @@ This document describes what a complete mechanized proof would require.
 3. Promote the completed `HBCrossCollisions` proof into the stable proof path
    and remove the corresponding hypothesis parameter from
    `arrangement_extraconnectivity_minimum`.
-4. Use the support-projection scaffold in
-   `proofs/Arrangement/unstable/SupportProjection.lean` to attack
-   `UniversalLowerBound` through Mathlib's shadow/Kruskal-Katona API.
+4. TODO(review): delete or relabel the support-projection path; it does not
+   currently attack `UniversalLowerBound` as claimed.
 
 Done mechanically: `CrossCollisionsResearch.lean` now standalone-checks with
 warnings. Started: `CrossBaseOne` now has a local singleton-collision proof in
@@ -116,6 +117,10 @@ A(n,k) ⊆ H(k,n)  as graphs (isometric embedding)
 ⟹ |N_A(S)| ≥ |N_H(S)|
 ```
 
+TODO(review): the boundary inequality chain is the one the review says is
+directionally invalid; keep this section marked as stale until the lemma is
+rederived or removed.
+
 ### Estimated effort
 
 ~100-150 lines (mostly boilerplate connecting the two graph definitions)
@@ -172,6 +177,9 @@ This remains an open question for future work.
 
 Previously, it was assumed that formalizing the Kruskal-Katona shadow bounds in $A(n,k)$ would require developing custom, coordinate-aware compression operators on the ordered, injective sequences of $A(n,k)$ from scratch. This was considered a high-barrier task because standard UV-compressions fail to preserve the sequence-level injectivity constraints without complex set-wise conditional guards.
 
+TODO(review): the claimed breakthrough is not validated. The support
+projection is a scaffold, not a completed reduction to Mathlib's KK theorem.
+
 We have discovered a mathematical breakthrough that **bypasses custom sequence compressions entirely** by projecting subsets of $A(n,k)$ directly into the Boolean hypercube, where we can apply Mathlib's standard, built-in Kruskal-Katona theorem (`Mathlib.Combinatorics.SetFamily.KruskalKatona`) **as-is**!
 
 ### 1. The Support Projection to k-Subsets
@@ -192,6 +200,9 @@ By definition, our `unique_roots` counts are coordinate-wise projections. The ke
 
 $$\text{sum\_unique\_roots}(V') \le k \cdot |\phi(V')| - |\partial(\phi(V'))|$$
 
+TODO(review): the singleton counterexample flags this inequality as false in its
+current form.
+
 Since the size of the external boundary is inversely proportional to the number of collisions, minimizing the external boundary of $V'$ is mathematically equivalent to maximizing the cardinality of the shadow $|\partial(\phi(V'))|$ for a given subset size.
 
 ### 3. Applying Mathlib's Kruskal-Katona As-Is
@@ -206,7 +217,9 @@ theorem Finset.kruskal_katona {n r : ℕ} {𝒜 𝒞 : Finset (Finset (Fin n))}
 
 This establishes that among all families of $k$-sets of a given size, the shadow is minimized (meaning collisions are maximized) when the family is an initial segment of the colexicographical order:
 
-- The colexicographical initial segment in the Boolean cube corresponds **exactly** to the image of our lexicographical Hamming Ball $HB(R)$!
-- By pulling this inequality back through the support projection, we prove that the Hamming Ball universally minimizes the external boundary in $A(n,k)$ under zero axioms!
+- TODO(review): the colex correspondence is not established; do not present it
+  as exact until the support projection is repaired.
+- TODO(review): the pullback claim is currently unsupported and should be
+  rewritten as an open direction rather than a proof.
 
 This elegant injection strategy completely eliminates the "factorial trap" and the "set-wise injectivity trap," allowing us to mechanize the complete proof of `lower_bound_all_embeddings` and `external_neighbors_collision_bound` using Mathlib's existing, stable combinatorics infrastructure!

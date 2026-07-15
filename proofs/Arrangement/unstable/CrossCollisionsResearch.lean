@@ -210,6 +210,9 @@ theorem C_constant_recurrence' (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 
   rcases Nat.eq_zero_or_pos d with rfl | hd
   · have hm1 : m = 1 := by simpa using le_antisymm hm hm_pos
     subst hm1
+    -- TODO(review): `native_decide` keeps this branch outside the kernel-
+    -- checked path; replace it with a kernel-checked proof before trusting the
+    -- recurrence chain.
     native_decide
   · have hE := E_seq_sum_decomposition d m hm
     have hL := sum_bit_length_sum_decomposition d m hd hm
@@ -361,6 +364,8 @@ theorem hb_cross_collisions_of_recurrence
         simpa using Nat.size_zero
       subst hd0
       have hb := hbase 0 hk hnk
+      -- TODO(review): these `native_decide` calls reintroduce the `ofReduceBool`
+      -- axiom into the trusted path.
       have hE1 : E_seq 1 = 0 := by native_decide
       have hC1 : C_constant 1 = 0 := by native_decide
       omega
@@ -557,7 +562,7 @@ theorem cross_base_one : CrossBaseOne n k := by
   rw [hamming_ball_subset_one_eq_singleton d hk hnk]
   exact cross_collisions_singleton _
 
-/-- TODO: for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used by the
+/-- TODO(review): for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used by the
     Hamming ball of size `t`, so `cross_collisions (hamming_ball_subset t n k d hk hnk)`
     equals `cross_collisions (hamming_ball_subset t n k (d-1) hk' hnk')`.
     Key lemma needed: `Nat.testBit i (d-1) = false` for all `i < 2^(d-1)`,
@@ -566,7 +571,7 @@ theorem cross_dim_stable : CrossDimStable n k := by
   intro t d ht hd hk hnk
   sorry
 
-/-- TODO: Binary-reflection recurrence for `cross_collisions`.
+/-- TODO(review): Binary-reflection recurrence for `cross_collisions`.
     Strategy: use `hb_decomposition` (splits HB(R) = half0 ∪ half1),
     `hb_disjoint` (the halves are disjoint),
     and `hb_half1_eq_image_shifted` (half1 is a shifted copy of HB(m)).

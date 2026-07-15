@@ -18,7 +18,10 @@ and computer-asssted findings.
 ### ✓ Axiomatized (computationally verified via `predict --verify R`)
 
 1.  **Collision Bound** (`external_neighbors_collision_bound`): Each unique root extends to $(n-k)$ distinct external neighbors, with $C_{constant}(R)$ bounding maximum overlaps. Justified by Kruskal-Katona; see [collision-axiom-roadmap.md](collision-axiom-roadmap.md).
-2.  **Hamming Ball Upper Bound** (`hamming_ball_achieves_bound`): The constructive Hamming Ball achieves the formula exactly. Partially formalized (`nat_to_cube`, `nat_to_cube_injective`); exact evaluation axiomatized.
+    TODO(review): this is still a roadmap claim, not a discharged theorem.
+2.  TODO(review): the coefficient/constant match is still only computationally
+    checked here, not fully formalized.
+    **Hamming Ball Upper Bound** (`hamming_ball_achieves_bound`): The constructive Hamming Ball achieves the formula exactly. Partially formalized (`nat_to_cube`, `nat_to_cube_injective`); exact evaluation axiomatized.
 
 ### ✓ Proven by Computer-Assisted Search
 
@@ -46,6 +49,8 @@ This is advantageous because:
 ### Collision Constant $C(R)$ (Axiomatized)
 
 The constant $C(R) = (R-1) + \sum_{i=1}^{R-1} \text{bit\_length}(i) - A000788(R)$ bounds symbol collisions. Proving its minimality requires Kruskal-Katona shadow operators not yet in Mathlib. See [collision-axiom-roadmap.md](collision-axiom-roadmap.md).
+TODO(review): do not present the shadow-operator reduction as completed until
+the support-projection bridge is repaired or removed.
 
 ### Uniqueness (Open Problem)
 
@@ -56,6 +61,8 @@ The theorem pins the exact extraconnectivity value but does not prove the Hammin
 ## Corollary: Globally Optimal Growth Strategy
 
 The "Squeeze" proof establishes that the Hamming Ball ordering is the **Globally Optimal Growth Strategy** for subgraphs in $A(n,k)$.
+TODO(review): this section still inherits the false stronger penalty narrative;
+it needs a conditional restatement.
 
 This provides the **Full Isoperimetric Profile** for the graph:
 
@@ -66,5 +73,8 @@ This provides the **Full Isoperimetric Profile** for the graph:
 ---
 
 ## Conclusion
+
+TODO(review): the concluding summary still overstates the final status of the
+penalty story; keep it marked until the theorem wording is corrected.
 
 The combination of **Lean 4 formalization** (0 sorry, 4 explicit axioms) and **exhaustive C++ search** (verified via `predict --verify`) provides the strongest evidence to date for the Hamming Ball's optimality. The novel Algebraic Defect Squeeze is fully mechanized, while standard extremal combinatorics results are isolated as explicit, documented axioms.

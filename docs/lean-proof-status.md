@@ -42,6 +42,9 @@ declarations.
 Harper's Theorem is proven but **not in the dependency chain** of the
 capstone theorem. The defect-based proof bypasses it entirely via algebraic
 subadditivity of E_seq.
+TODO(review): the `sub_optimal_penalty` row and the prose below still advertise
+the stronger linear penalty statement; rewrite this to the weaker conditional
+form once the false theorem is removed.
 
 ## Dependency Graph
 
@@ -74,6 +77,9 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 
 - Conceptually justified by Section 6's Tug-of-War scaling logic: any sub-optimal defect is penalized by at least (n-k) boundary nodes, which eventually eclipses any cross-collision differences.
 - Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ and exhaustively for $R \le 10$ using `arrangement`.
+  TODO(review): this section still reads as if the universal lower bound were
+  fully validated; keep the hypothesis framing explicit until the Lean proof is
+  actually closed.
 
 ### 2. Collision-Adjusted Bound (`CollisionAdjustedBound`)
 
@@ -82,6 +88,8 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 **Justification**:
 
 - Core isoperimetric inequality bounding external neighbors by unique roots and the maximal collision constant.
+  TODO(review): this bridge statement is the one the review flags as false; do
+  not present it as an active theorem until it is either deleted or restated.
 
 ### 3. Existential Shadow Bound (`HBCrossCollisions`)
 
@@ -91,6 +99,8 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 
 - Computationally verified alongside Axiom 1.
 - Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
+  TODO(review): the current driver uses this as a hypothesis interface, but the
+  doc should make clear that the combinatorial bridge lemmas are still open.
 
 ## Embedding Condition
 
@@ -119,6 +129,8 @@ The core algebra, bijections, and isoperimetric defect inequalities of the **Alg
 The following high-level results are **mechanically proven inside Lean**, but remain conditional on the three axioms above:
 
 - **Asymptotic Penalty** (`sub_optimal_penalty`): Proving that topologies with a defect shortfall $\Delta E$ are unconditionally penalized by at least $\Delta E(n-k)$ boundary nodes (conditional on Axiom 2).
+  TODO(review): this is the false stronger theorem the review calls out; keep it
+  only as a historical note if you need the dependency graph.
 - **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor showing that the Hamming Ball achieves the exact optimal boundary (conditional on Axiom 3).
 - **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines existence and lower bound to squeeze the exact minimum cut (conditional on Axiom 1 and Axiom 3).
 
@@ -127,7 +139,8 @@ The following high-level results are **mechanically proven inside Lean**, but re
 - **A000788 Discovery**: The maximum internal edges for R vertices in A(n,k) equals the cumulative popcount sequence (OEIS A000788).
 - **Pareto Spectrum**: The full topology-boundary tradeoff between the Star graph and the Hamming Ball.
 - **Compression No-Go Theorem**: The standard Kruskal-Katona/Harper compression technique provably FAILS for arrangement graphs due to "coordinate tangling". Documented in `IsoperimetricPartialPermutation.lean`.
-- **Asymptotic Penalty Theorem**: Sub-optimal subgraphs suffer a linear $(n-k)$ penalty per missing internal edge.
+- **Asymptotic Penalty Theorem**: TODO(review): remove or restate this claim;
+  the current theorem name is misleading if the stronger penalty is not proven.
 - **Sandwich Conjecture & Hypercube Fracture Gap**: Formalized topological phase transitions and bounds.
 
 ## Open Conjectures

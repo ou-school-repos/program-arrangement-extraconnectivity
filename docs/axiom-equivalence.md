@@ -27,6 +27,8 @@ subset (the Hamming Ball) that achieves the formula exactly.
 ## The Mathematical Correction and Duality
 
 In previous versions of the framework, Axiom 1 was formulated as a dimension-independent bound on the combined waste: `cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`. However, this statement is **provably false** for sub-optimal topologies.
+TODO(review): keep this historical note, but do not let later prose drift back
+into the same combined-waste formulation.
 
 ### The Star Graph Counterexample
 
@@ -34,6 +36,8 @@ For the Star Graph $K_{1, R-1}$ at $R=8$ in $A(15, 7)$ (where $n-k = 8$), the de
 $$X = \binom{7}{2} = 21 \text{ cross-collisions}$$
 $$X + D = 21 + 7 = 28$$
 But $C_{constant}(8) = 12$. Since $28 \not\le 12$, the combined waste bound is violated.
+TODO(review): this counterexample is the reason the support-projection and
+collision-adjusted bridge should stay marked as abandoned until repaired.
 
 ### Why the Hamming Ball Still Wins ("Tug-of-War" Scaling)
 
@@ -140,6 +144,8 @@ via a conjunction: `⟨exists_optimal_embedding, lower_bound_all_embeddings⟩`.
 Merging them into a single axiom would obscure the proof architecture and
 lose the clean separation between the universal bound and the constructive
 witness.
+TODO(review): the support-projection/colex narrative is still unresolved, so
+keep it out of any section that claims a proof.
 
 ## Formalization Path (if pursued)
 

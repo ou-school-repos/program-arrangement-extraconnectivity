@@ -1074,7 +1074,8 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   rw [h_rhs] at h_sum
   exact h_sum
 
--- Bridge Lemma 3 (Collision-Adjusted Bound Proposition)
+-- TODO(review): this bridge lemma is the false combined-waste statement from
+-- the review; keep it marked until the theorem is removed or restated.
 def CollisionAdjustedBound {n k : ℕ} (R : ℕ) : Prop :=
   ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
     external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R
@@ -1661,6 +1662,8 @@ theorem sub_optimal_penalty (R n k ΔE : ℕ) (V' : Finset (ArrVertex n k))
     (h_suboptimal : sum_unique_roots V' = R * k - E_seq R + ΔE)
     (h_coll_bound : @CollisionAdjustedBound n k R) :
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) + ΔE * (n - k) - C_constant R := by
+  -- TODO(review): this theorem inherits the false stronger penalty claim from
+  -- `CollisionAdjustedBound`; it should not be advertised as proven.
   have h1 := h_coll_bound V' hR hnk
   have h2 : sum_unique_roots V' * (n - k) = (R * k - E_seq R) * (n - k) + ΔE * (n - k) := by
     calc sum_unique_roots V' * (n - k)
@@ -1739,6 +1742,10 @@ def sandwich_upper_bound_conjecture (R n k : ℕ) : Prop :=
     external_neighbors V' ≤ (R * k - (R - 1)) * (n - k) - (R * (R - 1)) / 2
 
 /--
+  TODO(review): this conjecture currently depends on the fracture-gap reading
+  flagged in review; keep it marked as tentative until the statement is
+  rechecked against counterexamples.
+
   CONJECTURE 3: The Hypercube Fracture Gap.
 
   For any connected subgraph of size R=2^d in A(n,k), the maximum internal edges

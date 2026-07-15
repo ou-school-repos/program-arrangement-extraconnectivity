@@ -33,6 +33,8 @@ def support_proj {n k : ℕ} (V' : Finset (ArrVertex n k)) : Finset (Finset (Fin
 
 /--
   The support projection is a uniform set family of size `k` (Sized k).
+  TODO(review): this file is only a scaffold; it does not establish the shadow
+  inequality or colex correspondence claimed in the roadmap.
 -/
 lemma support_proj_sized {n k : ℕ} (V' : Finset (ArrVertex n k)) :
     Set.Sized k (support_proj V' : Set (Finset (Fin n))) := by
