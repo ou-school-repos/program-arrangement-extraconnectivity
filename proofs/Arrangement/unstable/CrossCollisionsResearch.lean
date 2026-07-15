@@ -31,6 +31,7 @@ lemma popcount_div_two (n : ℕ) : popcount n = popcount (n / 2) + n % 2 := by
   rw [hpop]
   by_cases h : n = 0
   · simp [h]
+    exact popcount_zero.symm
   · rw [dif_neg h]
     omega
 
@@ -121,7 +122,7 @@ lemma sum_bit_length_sum_decomposition (d m : ℕ) (hd : 1 ≤ d)
     (hm : m ≤ 2 ^ (d - 1)) :
     sum_bit_length (2 ^ (d - 1) + m) = sum_bit_length (2 ^ (d - 1)) + m * d := by
   induction m with
-  | zero => simp [sum_bit_length]
+  | zero => simp
   | succ m' ih =>
     have h_le : m' ≤ 2 ^ (d - 1) := by omega
     have h_lt : m' < 2 ^ (d - 1) := by omega
@@ -160,11 +161,8 @@ lemma sum_bit_length_pow (j : ℕ) :
       simpa using this
     have e1 : (2 : ℕ) ^ (j + 1) = 2 ^ j + 2 ^ j := by
       rw [pow_succ]; ring
-    have e2 : (j + 1) * 2 ^ (j + 1) = 2 * (j * 2 ^ j) + 2 * 2 ^ j := by
-      rw [e1]; ring
-    have e3 : 2 ^ j * (j + 1) = j * 2 ^ j + 2 ^ j := by ring
     rw [e1, hsplit]
-    omega
+    nlinarith [ih]
 
 /-- The cube boundary term is nonnegative: `(m-1) + sum_bit_length m ≤ m*j` for `m ≤ 2^j`. -/
 lemma boundary_term_nonneg (j : ℕ) :
@@ -182,7 +180,7 @@ lemma boundary_term_nonneg (j : ℕ) :
     by_cases hsmall : m ≤ 2 ^ j
     · calc (m - 1) + sum_bit_length m ≤ m * j := ih m hsmall
         _ ≤ m * (j + 1) := Nat.mul_le_mul_left m (Nat.le_succ j)
-    · push_neg at hsmall
+    · push Not at hsmall
       have hp : (2 : ℕ) ^ (j + 1) = 2 ^ j + 2 ^ j := by rw [pow_succ]; ring
       obtain ⟨t, rfl⟩ : ∃ t, m = 2 ^ j + t := ⟨m - 2 ^ j, by omega⟩
       have ht1 : 1 ≤ t := by omega
@@ -212,7 +210,7 @@ theorem C_constant_recurrence' (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 
   rcases Nat.eq_zero_or_pos d with rfl | hd
   · have hm1 : m = 1 := by simpa using le_antisymm hm hm_pos
     subst hm1
-    decide
+    native_decide
   · have hE := E_seq_sum_decomposition d m hm
     have hL := sum_bit_length_sum_decomposition d m hd hm
     have hEL_P : E_seq (2 ^ (d - 1)) ≤ sum_bit_length (2 ^ (d - 1)) :=
@@ -363,8 +361,8 @@ theorem hb_cross_collisions_of_recurrence
         simpa using Nat.size_zero
       subst hd0
       have hb := hbase 0 hk hnk
-      have hE1 : E_seq 1 = 0 := by decide
-      have hC1 : C_constant 1 = 0 := by decide
+      have hE1 : E_seq 1 = 0 := by native_decide
+      have hC1 : C_constant 1 = 0 := by native_decide
       omega
     · have hdsize : d = Nat.size (R - 1) := by rw [hd, bit_length_eq_size]
       have hd1 : 1 ≤ d := by
@@ -527,12 +525,12 @@ private lemma coord_boundary_singleton_disjoint {v : ArrVertex n k} :
   subst u
   subst u'
   apply hw_not
+  rw [Finset.mem_singleton]
   apply Subtype.ext
   funext r
   by_cases hrp : r = p
   · by_cases hrq : r = q
-    · rw [hrp, hrq] at hpq
-      exact False.elim (hpq rfl)
+    · exact False.elim (hpq (hrp.symm.trans hrq))
     · have h_eval := congr_fun hdrop_q ⟨r, hrq⟩
       exact h_eval
   · have h_eval := congr_fun hdrop_p ⟨r, hrp⟩
