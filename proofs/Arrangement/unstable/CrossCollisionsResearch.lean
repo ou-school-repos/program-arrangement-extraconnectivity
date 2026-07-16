@@ -562,11 +562,10 @@ theorem cross_base_one : CrossBaseOne n k := by
   rw [hamming_ball_subset_one_eq_singleton d hk hnk]
   exact cross_collisions_singleton _
 
-/-- TODO(review): for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used by the
-    Hamming ball of size `t`, so `cross_collisions (hamming_ball_subset t n k d hk hnk)`
-    equals `cross_collisions (hamming_ball_subset t n k (d-1) hk' hnk')`.
-    Key lemma needed: `Nat.testBit i (d-1) = false` for all `i < 2^(d-1)`,
-    from which the embedded vertex sets are equal by a Finset.image congr argument. -/
+/-- PROVEN: for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used by the
+    Hamming ball of size `t` (bit `d-1` of every `i < t` is `0`), so the two
+    `hamming_ball_subset` Finsets are literally equal, hence so are their
+    `cross_collisions`. -/
 theorem cross_dim_stable : CrossDimStable n k := by
   intro t d ht hd hk hnk
   have hk' : d - 1 ≤ k := by omega
@@ -576,7 +575,7 @@ theorem cross_dim_stable : CrossDimStable n k := by
     unfold hamming_ball_subset
     apply Finset.image_congr
     intro i hi
-    rw [Finset.mem_range] at hi
+    rw [Finset.mem_coe, Finset.mem_range] at hi
     have hi' : i < 2 ^ (d - 1) := lt_of_lt_of_le hi ht
     apply Subtype.ext
     funext p
@@ -588,8 +587,8 @@ theorem cross_dim_stable : CrossDimStable n k := by
       · have hpeq : p.val = d - 1 := by omega
         have htb : i.testBit p.val = false := by
           rw [hpeq]; exact Nat.testBit_eq_false_of_lt hi'
-        simp only [hp1, hp2, htb, dif_neg, dif_pos, not_false_eq_true, if_false]
-      · simp only [hp1, hp2, dif_neg]
+        simp [hp1, hp2, htb]
+      · simp [hp1, hp2]
   rw [hset]
 
 /-- TODO(review): Binary-reflection recurrence for `cross_collisions`.
