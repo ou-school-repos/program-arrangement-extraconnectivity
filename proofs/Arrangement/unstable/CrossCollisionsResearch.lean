@@ -569,7 +569,28 @@ theorem cross_base_one : CrossBaseOne n k := by
     from which the embedded vertex sets are equal by a Finset.image congr argument. -/
 theorem cross_dim_stable : CrossDimStable n k := by
   intro t d ht hd hk hnk
-  sorry
+  have hk' : d - 1 ≤ k := by omega
+  have hnk' : k + (d - 1) ≤ n := by omega
+  have hset : hamming_ball_subset t n k d hk hnk =
+      hamming_ball_subset t n k (d - 1) hk' hnk' := by
+    unfold hamming_ball_subset
+    apply Finset.image_congr
+    intro i hi
+    rw [Finset.mem_range] at hi
+    have hi' : i < 2 ^ (d - 1) := lt_of_lt_of_le hi ht
+    apply Subtype.ext
+    funext p
+    unfold embed_vertex embed_cube nat_to_cube
+    by_cases hp1 : p.val < d - 1
+    · have hp1' : p.val < d := by omega
+      simp only [hp1, hp1', dif_pos]
+    · by_cases hp2 : p.val < d
+      · have hpeq : p.val = d - 1 := by omega
+        have htb : i.testBit p.val = false := by
+          rw [hpeq]; exact Nat.testBit_eq_false_of_lt hi'
+        simp only [hp1, hp2, htb, dif_neg, dif_pos, not_false_eq_true, if_false]
+      · simp only [hp1, hp2, dif_neg]
+  rw [hset]
 
 /-- TODO(review): Binary-reflection recurrence for `cross_collisions`.
     Strategy: use `hb_decomposition` (splits HB(R) = half0 ∪ half1),
