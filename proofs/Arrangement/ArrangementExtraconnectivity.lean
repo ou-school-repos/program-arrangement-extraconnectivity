@@ -1110,7 +1110,7 @@ private lemma le_pow_bit_length (R : ℕ) : R ≤ 2 ^ bit_length (R - 1) := by
   omega
 
 /-- embed_vertex is injective in the cube argument -/
-private lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
+lemma embed_vertex_injective_cube (n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) :
     Function.Injective (fun v => embed_vertex n k d v hk hnk) := by
   intro v1 v2 heq
   have hval : embed_cube n k d hk hnk v1 = embed_cube n k d hk hnk v2 :=
