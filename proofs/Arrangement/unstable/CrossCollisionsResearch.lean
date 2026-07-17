@@ -290,6 +290,41 @@ section CConstantRecurrence
     Both subtractions are exact by `boundary_term_nonneg` (given `m ≤ 2^(d-1)`). -/
 def ext_cube (d m : ℕ) : ℕ := (m * (d - 1) - E_seq m) - C_constant m
 
+/-- Small closed values, proved structurally (keeps `native_decide` out of the
+    trusted chain; see open_issues.md #3). -/
+lemma popcount_one : popcount 1 = 1 := by
+  have h := popcount_div_two 1
+  simpa [popcount_zero] using h
+
+lemma bit_length_zero : bit_length 0 = 0 := by
+  rw [bit_length_eq_size]; exact Nat.size_zero
+
+lemma bit_length_one : bit_length 1 = 1 := by
+  have h := bit_length_two_pow_add (d := 1) (m := 0) (by omega) (by omega)
+  simpa using h
+
+lemma E_seq_one : E_seq 1 = 0 := by
+  have h : E_seq 1 = E_seq 0 + popcount 0 := rfl
+  simp [h, popcount_zero, E_seq]
+
+lemma E_seq_two : E_seq 2 = 1 := by
+  have h : E_seq 2 = E_seq 1 + popcount 1 := rfl
+  rw [h, E_seq_one, popcount_one]
+
+lemma sum_bit_length_one : sum_bit_length 1 = 0 := by
+  have h : sum_bit_length 1 = sum_bit_length 0 + bit_length 0 := rfl
+  simp [h, bit_length_zero, sum_bit_length]
+
+lemma sum_bit_length_two : sum_bit_length 2 = 1 := by
+  have h : sum_bit_length 2 = sum_bit_length 1 + bit_length 1 := rfl
+  rw [h, sum_bit_length_one, bit_length_one]
+
+lemma C_constant_one : C_constant 1 = 0 := by
+  rw [C_constant_def, sum_bit_length_one, E_seq_one]
+
+lemma C_constant_two : C_constant 2 = 1 := by
+  rw [C_constant_def, sum_bit_length_two, E_seq_two]
+
 /-- Core form of the recurrence, no `let` binders (easier to apply). -/
 theorem C_constant_recurrence' (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 < m) :
     C_constant (2 ^ (d - 1) + m)
@@ -298,7 +333,11 @@ theorem C_constant_recurrence' (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 
   · -- d = 0 forces m = 1 (since 2^(0-1) = 2^0 = 1); a closed computation.
     have hm1 : m = 1 := by simpa using le_antisymm hm hm_pos
     subst hm1
-    native_decide
+    have hext : ext_cube 0 1 = 0 := by
+      show (1 * (0 - 1) - E_seq 1) - C_constant 1 = 0
+      rw [E_seq_one, C_constant_one]
+    have h2 : (2 : ℕ) ^ (0 - 1) = 1 := by norm_num
+    rw [h2, hext, C_constant_one, C_constant_two]
   · -- Main case, 1 ≤ d.  Reduce everything to linear ℕ-arithmetic with
     -- truncated subtraction; `omega` case-splits the truncations, and the
     -- inequalities below pin every split to the exact branch.
@@ -491,8 +530,8 @@ theorem hb_cross_collisions_of_recurrence
         simpa using Nat.size_zero
       subst hd0
       have hb := hbase 0 hk hnk
-      have hE1 : E_seq 1 = 0 := by native_decide
-      have hC1 : C_constant 1 = 0 := by native_decide
+      have hE1 : E_seq 1 = 0 := E_seq_one
+      have hC1 : C_constant 1 = 0 := C_constant_one
       omega
     · -- R ≥ 2: split R = 2^(d-1) + m with 1 ≤ m ≤ 2^(d-1), recurse on both halves.
       have hdsize : d = Nat.size (R - 1) := by rw [hd, bit_length_eq_size]
