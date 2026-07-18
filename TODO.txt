@@ -1,3 +1,36 @@
+7/18/2026
+
+• Next highest-value work is:
+
+  1. Rebuild Lean locally with writable .lake/build
+     Run cd proofs && lake build.
+     I couldn’t complete that here because this environment hit a read-only artifact-removal failure, not a type error.
+
+  2. Clean the remaining stale status docs
+     Best targets:
+      - docs/collision-axiom-roadmap.md
+      - advisor_bundle/current_state.md
+      - TODO.txt
+        These still contradict the current PenaltyExact / proof status story.
+
+  3. Re-verify the predictor range claim after the reserve fix
+     Run predict --verify-range 2 260 locally and record:
+      - whether it completes
+      - runtime
+      - machine/RAM
+        Then update docs that currently claim verification up to 260.
+
+  4. Tighten README/paper wording around the search output block
+     The sample block is from arrangement, while the quickstart above it is run/predict.
+
+  5. Optionally remove the global R from predict.cpp
+     Not urgent, but it would improve maintainability.
+
+  My recommendation: do 1, then I’ll handle 2 and 4, and if 3 succeeds we can update the verification claims cleanly.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 7/16/2026
 
 All the native_decide sites compile clean now — only the pre-existing (already-known, pre-dating this session) omega gap in the driver assembly and the intentional cross_recurrence sorry remain.
