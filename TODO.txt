@@ -17,7 +17,7 @@ Analytically (Lean 4 side) — still open:
 - HBCrossCollisions — blocked specifically on the CrossRecurrence lemma (CrossBaseOne/CrossDimStable are already proven).
 - Two standing conjectures in the paper remain open: Sparse Limit Upper Bound (Star Graph as sparse extremizer) and Multiplicity of Achievable Defects (Topological Funnel section).
 - lake build hasn't been confirmed clean end-to-end locally since a prior read-only artifact-removal failure (TODO item 1) — worth retrying now that ArrangementExtraconnectivity.lean's docstring changed today.
-- docs/collision-axiom-roadmap.md — flagged as stale (TODO item 2) but not yet touched; still needs a pass to match the current PenaltyExact story. I did TODO.txt and README (items 2's TODO.txt part, and item 4) but not the roadmap doc itself.
+- docs/collision-axiom-roadmap.md — rewritten to match the current PenaltyExact story (TODO item 2 done); README also updated (item 4).
 
 Paper-wise — still open:
 - The R≤260 full sweep + timing record (in progress — your commands above).
@@ -54,7 +54,6 @@ see docs/lean-proof-status.md's "Superseded" note.
      Best targets:
       - docs/collision-axiom-roadmap.md
       - advisor_bundle/current_state.md
-      - TODO.txt
         These still contradict the current PenaltyExact / proof status story.
 
   3. Re-verify the predictor range claim after the reserve fix

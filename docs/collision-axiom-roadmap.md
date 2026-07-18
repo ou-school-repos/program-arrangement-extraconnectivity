@@ -142,12 +142,20 @@ Proving `CrossRecurrence` over the definitions of `cross_collisions` and
 
 ## Total Remaining Estimated Effort
 
-**~400-650 lines of Lean 4** for `HBCrossCollisions` (with the arithmetic and
-inductive structure of Step 4 now fully completed, leaving only
-`CrossRecurrence` and the other steps' combinatorial interface logic), plus a
-currently-unscoped amount of work for `UniversalLowerBound`, which has no
-working strategy and would need Kruskal-Katona shadow infrastructure not yet
-connected to `A(n,k)`.
+**`HBCrossCollisions`**: only `CrossRecurrence` remains to plug into the
+already-completed induction driver (Step 4's arithmetic/inductive scaffold is
+done; `CrossBaseOne` and `CrossDimStable` are proven) — a comparatively small,
+focused proof, not a large undertaking.
+
+**`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
+above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares,
+transfer to arrangement graphs) sketch what a Kruskal-Katona-based approach to
+_this_ hypothesis would need (~450-650 lines combined), but the specific
+version of that approach explored so far was abandoned after a counterexample
+refuted its central inequality (see
+`docs/archive/collision-axiom-support-projection-abandoned.md`); a corrected
+approach would need to be found before any effort estimate is reliable, so
+this remains currently unscoped.
 
 ## Uniqueness (Open Problem)
 

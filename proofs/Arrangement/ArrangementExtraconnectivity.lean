@@ -685,7 +685,7 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
     omega
 
 /-!
-## The Collision-Adjusted Bound
+## Fiber Double-Counting: `total_coord_edges`
 
 The double-counting argument:
 1. For each coordinate p and unique root r at p, there are exactly
@@ -694,10 +694,17 @@ The double-counting argument:
 3. But `external_neighbors` counts UNIQUE vertices, not edges.
    The overcounting (`cross_collisions`) measures how many external neighbors
    are reachable through multiple coordinates.
-4. The remaining axiom bounds: cross_collisions + defect ≤ C_constant(R)
+4. `total_coord_edges_eq` below is an unconditional PROVED identity relating
+   `total_coord_edges`, `sum_unique_roots`, and the dimension factor
+   `(n − k)` — it is not a bound and requires no hypothesis. (An earlier
+   "Collision-Adjusted Bound" hypothesis that instead attempted a
+   dimension-independent bound `cross_collisions + defect ≤ C_constant(R)`
+   was refuted by the Star Graph counterexample and has been removed; see
+   `docs/lean-proof-status.md`'s "Superseded" note and the module docstring
+   above.)
 
-This mechanizes the (n−k) scaling factor and isolates the finite
-Kruskal-Katona shadow bound to a pure R-dependent constant.
+This mechanizes the (n−k) scaling factor; combined with `HBCrossCollisions`
+it yields the exact penalty identities in `Arrangement/PenaltyExact.lean`.
 -/
 
 

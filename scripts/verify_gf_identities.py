@@ -1,12 +1,15 @@
 """Finite-range consistency checks for the generating-function/Mahler-equation
 identities (Props ogf, mahler) and the closed-form/density decomposition of
 paper Section: Analytic Structure of the Boundary Coefficients (gf-section.tex).
-Series identities checked to order 600; closed forms and density decomposition
-checked for R < 2^16. This script only checks finitely many instances of each
-algebraic identity: it does not (and cannot) establish the section's analytic
-claims that depend on unbounded R or continuity/differentiability — e.g.
-Theorem them:delange's nowhere-differentiability, Corollary cor:transcend's
-transcendence argument, or the exact supremum in Remark rem:extremal.
+Ranges checked (see the code for exact loop bounds): closed forms A1/A2 for
+R < 4097, A3 for powers of two up to 2^12, A4 for R < 2049; OGF/Mahler series
+identities to truncation order 600; the Delange density decomposition (Prop D)
+for R < 2^16. This script only checks finitely many instances of each
+algebraic identity, over the ranges above: it does not (and cannot) establish
+the section's analytic claims that depend on unbounded R or continuity/
+differentiability — e.g. Theorem them:delange's nowhere-differentiability,
+Corollary cor:transcend's transcendence argument, or the exact supremum in
+Remark rem:extremal.
 Run: python3 verify_gf_identities.py  — all lines must print True."""
 
 import math

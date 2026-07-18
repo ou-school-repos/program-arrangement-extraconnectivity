@@ -15,7 +15,7 @@ for f in "$@"; do
     # concurrent invocations (or interrupted runs) sharing fixed filenames
     # in the current directory.
     TMPDIR_PDD="$(mktemp -d)"
-    trap 'rm -rf "$TMPDIR_PDD"' EXIT
+    trap 'rm -rf -- "$TMPDIR_PDD"' EXIT
     TEMP_XMP="$TMPDIR_PDD/temp_clean.xmp"
     TEMP_META="$TMPDIR_PDD/temp_meta.txt"
 
@@ -48,6 +48,6 @@ for f in "$@"; do
     touch -r "$f" "$OUT"
 
     # Cleanup
-    rm -rf "$TMPDIR_PDD"
+    rm -rf -- "$TMPDIR_PDD"
     trap - EXIT
 done
