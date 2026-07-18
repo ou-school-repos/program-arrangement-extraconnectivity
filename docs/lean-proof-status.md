@@ -72,7 +72,7 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 **Justification**:
 
 - Conceptually justified by Section 6's Tug-of-War scaling logic: any sub-optimal defect is penalized by at least (n-k) boundary nodes, which eventually eclipses any cross-collision differences.
-- Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ and exhaustively for $R \le 10$ using `arrangement`.
+- Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ (the tool's enforced ceiling — brute-force verification memory is Theta(R^3 \cdot K); see docs/verifications.csv) and exhaustively for $R \le 10$ using `arrangement`.
   TODO(review): this section still reads as if the universal lower bound were
   fully validated; keep the hypothesis framing explicit until the Lean proof is
   actually closed.

@@ -3,7 +3,7 @@ import math
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: E402
 
 maxexp = 20
 E_running = 0

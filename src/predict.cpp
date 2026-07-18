@@ -4,7 +4,24 @@
 //   1. O(R)         — analytical: A000788 coefficient + cumulative-zeros
 //   constant
 //   2. O(R^3)       — construction: Hamming ball + formula computation
-//   3. O(R^3 log R) — verification: brute-force neighbor enumeration (R ≤ 512)
+//   3. O(R^3 log R) — verification: brute-force neighbor enumeration (R ≤ 260)
+//
+// Note on the R ≤ 260 verification cap: brute_force_neighbors's final
+// deduplicated neighbor count is itself Theta(R^3) (see
+// |N(V')| = coeff*R - constant), and each Vertex<K,SymT> costs a fixed
+// K*sizeof(SymT) bytes regardless of the actual R being verified — so peak
+// memory is Theta(R^3 * K), not just Theta(R^3). K is chosen per tier as the
+// smallest power-of-two-ish bound at least R, EXCEPT that reusing a single
+// K=512 tier for the whole 257..512 range (as this file previously did)
+// makes R=260 pay for K=512 (~18 GiB) when a right-sized K=260 tier needs
+// only ~9 GiB. R=512 itself is a different story regardless of tier sizing:
+// at K=512 that is upwards of 137 GiB, which exhausts typical machines
+// (16-32 GiB RAM) well before sorting/dedup can even run, and no reserve()/
+// streaming trick fixes it — the *final* answer set is that large. So 260
+// (matching the range historically verified for this project; see
+// docs/verifications.csv and paper.tex) is the enforced ceiling for
+// --verify / --verify-range, served by a right-sized K=260 tier rather than
+// the old oversized K=512 one.
 //
 // Usage: ./predict [R]       Single R prediction
 //        ./predict --csv N   CSV output for R=2..N
@@ -232,6 +249,15 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
     std::vector<Vertex<K, SymT>> nbrs;
+    // Tight upper bound on pre-dedup pushes: for each of the k ball vertices
+    // and each of its k positions, exactly (n-k) of the n symbols are absent
+    // from that vertex and can trigger a push. size_t arithmetic avoids
+    // overflow for large R; this still does not bound the post-dedup size,
+    // which is the actual memory driver (see header comment).
+    const size_t reserve_hint = static_cast<size_t>(k) *
+                                static_cast<size_t>(k) *
+                                static_cast<size_t>(n - k);
+    nbrs.reserve(reserve_hint);
     Vertex<K, SymT> nbr;
     for (int i = 0; i < k; i++) {
         for (int p = 0; p < k; p++) {
@@ -340,9 +366,11 @@ int main(int argc, const char *argv[]) {
                 return 1;
             }
         }
-        if (start_r < 2 || end_r < start_r || end_r > 512) {
+        if (start_r < 2 || end_r < start_r || end_r > 260) {
             std::cerr
-                << "Error: --verify-range requires 2 <= start <= end <= 512\n";
+                << "Error: --verify-range requires 2 <= start <= end <= 260 "
+                   "(brute-force verification memory is Theta(R^3 * K); "
+                   "R > 260 needs a larger tier and can require 100+ GiB)\n";
             return 1;
         }
     } else if (csv_mode && !positional.empty()) {
@@ -408,7 +436,7 @@ int main(int argc, const char *argv[]) {
                 else if (R <= 256)
                     rc = run_verify<256, uint16_t>(nk1, cst, true);
                 else
-                    rc = run_verify<512, uint16_t>(nk1, cst, true);
+                    rc = run_verify<260, uint16_t>(nk1, cst, true);
 
                 if (rc != 0) {
                     std::cerr << "FAILED at R=" << R << "\n";
@@ -443,8 +471,10 @@ int main(int argc, const char *argv[]) {
     std::cerr << "  [analytical] constant = " << expected_const << "\n";
 
     if (verify_mode) {
-        if (R > 512) {
-            std::cerr << "Error: --verify requires R <= 512\n";
+        if (R > 260) {
+            std::cerr << "Error: --verify requires R <= 260 (brute-force "
+                         "verification memory is Theta(R^3 * K); R > 260 "
+                         "needs a larger tier and can require 100+ GiB)\n";
             return 1;
         }
         int rc;
@@ -459,7 +489,7 @@ int main(int argc, const char *argv[]) {
         else if (R <= 256)
             rc = run_verify<256, uint16_t>(expected_nk1, expected_const);
         else
-            rc = run_verify<512, uint16_t>(expected_nk1, expected_const);
+            rc = run_verify<260, uint16_t>(expected_nk1, expected_const);
 
         if (rc != 0)
             return rc;
