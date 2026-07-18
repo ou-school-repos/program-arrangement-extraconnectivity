@@ -1,6 +1,34 @@
-
-
 7/18/2026
+
+❯ commit.
+
+  give me the commands to run the sweep, and let me now what else is left analytically or paper wise
+
+  Committed 96084d5, ran 3 shell commands
+
+Committed as 96084d5. Working tree clean.
+
+Sweep commands (run in your own terminal, one at a time):
+
+  Read 1 file
+
+Analytically (Lean 4 side) — still open:
+- UniversalLowerBound — unproven; verified only exhaustively to R≤10 (nauty) and computationally to R≤260 (predictor), not mechanized.
+- HBCrossCollisions — blocked specifically on the CrossRecurrence lemma (CrossBaseOne/CrossDimStable are already proven).
+- Two standing conjectures in the paper remain open: Sparse Limit Upper Bound (Star Graph as sparse extremizer) and Multiplicity of Achievable Defects (Topological Funnel section).
+- lake build hasn't been confirmed clean end-to-end locally since a prior read-only artifact-removal failure (TODO item 1) — worth retrying now that ArrangementExtraconnectivity.lean's docstring changed today.
+- docs/collision-axiom-roadmap.md — flagged as stale (TODO item 2) but not yet touched; still needs a pass to match the current PenaltyExact story. I did TODO.txt and README (items 2's TODO.txt part, and item 4) but not the roadmap doc itself.
+
+Paper-wise — still open:
+- The R≤260 full sweep + timing record (in progress — your commands above).
+- Once that completes, paper.tex's "computationally verified for all R ≤ 260" claims (lines 391, 948, abstract) should get a timing/machine footnote if you want that level of rigor, though the claim itself is already accurate.
+- Item 5 from TODO.txt (remove the global R variable in predict.cpp) — explicitly marked not urgent, purely a maintainability nit.
+- Everything from the earlier code-review batch (bib metadata, the transcendence proof, the bounded-oscillation remark, the Lean docstring, the predict.cpp tier fix) is now fixed and committed — no known open findings there.
+
+Want me to take docs/collision-axiom-roadmap.md next?
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The two open hypotheses tracked in docs/lean-proof-status.md are:
 

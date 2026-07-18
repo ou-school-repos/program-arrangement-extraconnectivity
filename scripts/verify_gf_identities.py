@@ -1,6 +1,12 @@
-"""Machine verification of every identity in paper Section: Analytic
-Structure of the Boundary Coefficients (gf-section.tex).
-Series identities to order 600; closed forms and density decomposition to R < 2^16.
+"""Finite-range consistency checks for the generating-function/Mahler-equation
+identities (Props ogf, mahler) and the closed-form/density decomposition of
+paper Section: Analytic Structure of the Boundary Coefficients (gf-section.tex).
+Series identities checked to order 600; closed forms and density decomposition
+checked for R < 2^16. This script only checks finitely many instances of each
+algebraic identity: it does not (and cannot) establish the section's analytic
+claims that depend on unbounded R or continuity/differentiability — e.g.
+Theorem them:delange's nowhere-differentiability, Corollary cor:transcend's
+transcendence argument, or the exact supremum in Remark rem:extremal.
 Run: python3 verify_gf_identities.py  — all lines must print True."""
 
 import math

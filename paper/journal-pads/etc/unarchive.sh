@@ -19,14 +19,18 @@ fi
 
 echo "$QUERY_PATH"
 
-mapfile -d '' XML_FILES < <(
-	find "$QUERY_PATH" \
-		-regextype posix-extended -type f -regex '.*/out/xml/[^/]+[.]xml' \
-		! -path '*/out/xml/out/*' \
-		! -path '*/.junk-dupes/*' \
-		! -path '*/exam[1-2]/*' \
-		-print0
-)
+FIND_TMP="$(mktemp)"
+trap 'rm -f "$FIND_TMP"' EXIT
+if ! find "$QUERY_PATH" \
+	-regextype posix-extended -type f -regex '.*/out/xml/[^/]+[.]xml' \
+	! -path '*/out/xml/out/*' \
+	! -path '*/.junk-dupes/*' \
+	! -path '*/exam[1-2]/*' \
+	-print0 >"$FIND_TMP"; then
+	echo "Error: find failed while searching $QUERY_PATH" >&2
+	exit 1
+fi
+mapfile -d '' XML_FILES <"$FIND_TMP"
 
 if [ "${#XML_FILES[@]}" -eq 0 ]; then
 	echo "No archived XML files found under $QUERY_PATH" >&2

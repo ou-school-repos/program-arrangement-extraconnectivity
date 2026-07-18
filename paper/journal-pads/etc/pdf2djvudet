@@ -11,6 +11,14 @@ for f in "$@"; do
     echo "Processing: $f"
     OUT="${f%.pdf}.djvu"
 
+    # Private per-invocation scratch dir: avoids collisions between
+    # concurrent invocations (or interrupted runs) sharing fixed filenames
+    # in the current directory.
+    TMPDIR_PDD="$(mktemp -d)"
+    trap 'rm -rf "$TMPDIR_PDD"' EXIT
+    TEMP_XMP="$TMPDIR_PDD/temp_clean.xmp"
+    TEMP_META="$TMPDIR_PDD/temp_meta.txt"
+
     # 1. Capture the TRUE modification time from the source PDF
     # (Requires 'pdfinfo' from poppler-utils)
     # We clean it to a simple string to avoid format headaches
@@ -22,23 +30,24 @@ for f in "$@"; do
     # 3. SANITIZE XMP (The "Kill List")
     # We kill the volatile XMP data as before
     djvused "$OUT" -e 'print-xmp' | \
-        sed -E '/xmp:MetadataDate|xmpMM:DocumentID|xmpMM:InstanceID|stEvt:instanceID|stEvt:when|xmp:CreatorTool/d' > temp_clean.xmp
+        sed -E '/xmp:MetadataDate|xmpMM:DocumentID|xmpMM:InstanceID|stEvt:instanceID|stEvt:when|xmp:CreatorTool/d' > "$TEMP_XMP"
 
-    djvused "$OUT" -e 'set-xmp temp_clean.xmp' -s
+    djvused "$OUT" -e "set-xmp $TEMP_XMP" -s
 
     # 4. INJECT THE CANARY (Standard Metadata)
     # We pull the existing metadata, and force our PDF_MOD_DATE into a "source_mod" field.
     # This ensures that if the PDF changes, this line changes.
     djvused "$OUT" -e 'select 1; print-meta' | \
         grep -v '(source_mod' | \
-        sed "s/)$/ (source_mod \"$PDF_MOD_DATE\"))/" > temp_meta.txt
+        sed "s/)$/ (source_mod \"$PDF_MOD_DATE\"))/" > "$TEMP_META"
 
-    djvused "$OUT" -e 'set-meta temp_meta.txt' -s
+    djvused "$OUT" -e "set-meta $TEMP_META" -s
 
     # 5. SYNC FILESYSTEM MODIFIED DATE
     # This makes the .djvu match the .pdf on the disk level
     touch -r "$f" "$OUT"
 
     # Cleanup
-    rm -f temp_clean.xmp temp_meta.txt
+    rm -rf "$TMPDIR_PDD"
+    trap - EXIT
 done

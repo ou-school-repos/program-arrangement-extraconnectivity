@@ -23,16 +23,20 @@ echo "$QUERY_PATH"
 # Input variables
 PNG_DPI="${dpi:-72}"
 
-mapfile -d '' XOPP_FILES < <(
-	find "$QUERY_PATH" \
-		\( -type d -name out -o -type d -name .git \) -prune -o \
-		-type f -name '*.xopp' \
-		! -path '*.autosave*' \
-		! -path '*.archive*' \
-		! -path '*/.junk-dupes/*' \
-		! -path '*/exam[1-2]/*' \
-		-print0
-)
+FIND_TMP="$(mktemp)"
+trap 'rm -f "$FIND_TMP"' EXIT
+if ! find "$QUERY_PATH" \
+	\( -type d -name out -o -type d -name .git \) -prune -o \
+	-type f -name '*.xopp' \
+	! -path '*.autosave*' \
+	! -path '*.archive*' \
+	! -path '*/.junk-dupes/*' \
+	! -path '*/exam[1-2]/*' \
+	-print0 >"$FIND_TMP"; then
+	echo "Error: find failed while searching $QUERY_PATH" >&2
+	exit 1
+fi
+mapfile -d '' XOPP_FILES <"$FIND_TMP"
 
 if [ "${#XOPP_FILES[@]}" -eq 0 ]; then
 	echo "No source .xopp files found under $QUERY_PATH" >&2

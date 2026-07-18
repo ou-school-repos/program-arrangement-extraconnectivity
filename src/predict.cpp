@@ -28,7 +28,7 @@
 //
 // Vertex representation: stack-allocated SymT[MaxK] with memcmp ordering.
 // SymT = uint8_t when R ≤ 127, uint16_t for R ≥ 128.
-// Vertex storage is inline; verification still allocates large neighbor vectors.
+// Vertex storage is inline; verify still allocates large neighbor vectors.
 
 #include <algorithm>
 #include <charconv>

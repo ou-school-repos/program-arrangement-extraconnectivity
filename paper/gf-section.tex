@@ -8,8 +8,14 @@
 % New bib entries: see references-additions.bib (trollope1968explicit,
 % delange1975somme, allouche1992ring, allouche2003automatic,
 % adamczewski2017problem, wilf2006generatingfunctionology).
-% Every identity stated below is machine-verified to order 600 (series) /
-% R < 2^16 (closed forms) by scripts/verify_gf_identities.py.
+% The generating-function/Mahler identities (Props ogf, mahler) and the
+% closed-form/density decomposition are checked by
+% scripts/verify_gf_identities.py for finitely many R (series to order 600;
+% closed forms and density decomposition for R < 2^16). This is a finite
+% consistency check, not a proof: it does not (and cannot) establish the
+% section's genuinely analytic claims (nowhere-differentiability in
+% Theorem them:delange, transcendence in Corollary cor:transcend, the exact
+% supremum in Remark rem:extremal), which rest on their own arguments/citations.
 % ============================================================================
 
 \section{Analytic Structure of the Boundary Coefficients}\label{sec:analytic}
@@ -103,9 +109,14 @@ divide-and-conquer sequences.
 	is~\eqref{eq:mahler}; the $F$-form follows from
 	$F(x) = \frac{x}{1-x} S(x)$. Regularity of $s_2$ is the textbook example
 	in~\cite{allouche1992ring}; the ring of $2$-regular sequences is closed
-	under running sums (giving $\Eseq$) and under addition with
-	quasi-polynomial sequences such as $R(d{+}1) - 2^d$
-	(giving $\Cconst$ by~\eqref{eq:cconst}).
+	under running sums (giving $\Eseq$). For $\Cconst$, write
+	$d = \lceil \log_2 R \rceil$: the bit-length sequence $d$ is itself a
+	standard $2$-regular sequence~\cite{allouche1992ring}, as is
+	$2^{d} = 2^{\lceil \log_2 R \rceil}$ (the round-up-to-a-power-of-$2$
+	sequence), and $R$ is $2$-regular as a polynomial sequence; since the
+	$2$-regular sequences form a ring (closed under both sums and products),
+	$R(d{+}1) - 2^d$ is $2$-regular, and hence so is
+	$\Cconst = R(d{+}1) - 2^d - \Eseq$ by~\eqref{eq:cconst}.
 \end{proof}
 
 The $2$-regular matrix representation is exactly what the characterization
@@ -133,7 +144,15 @@ operational form of Proposition~\ref{prop:mahler}.
 	$\infty$ for $k = 1$ and to $0$ for $k = 2$, and $\Eseq(R)/R^k$ cannot
 	tend to a nonzero constant for any $\rho \ne 1$ since $\Eseq(R)$ is
 	subexponential; so no integer $k$ and real $\rho$ match this growth,
-	and $\Eseq$ is not $C$-finite, i.e.\ $F$ is not rational. A Mahler
+	and $\Eseq$ is not $C$-finite, i.e.\ $F$ is not rational. The same
+	conclusion holds for $\Cconst$: writing $d = \lceil \log_2 R \rceil$,
+	\eqref{eq:cconst} gives $\Cconst(R) = R(d{+}1) - 2^d - \Eseq(R)$, and
+	since $2^{d-1} < R \le 2^d$ we have $2^d = \Theta(R)$, so
+	$R(d{+}1) - 2^d = R\log_2 R + O(R)$; combined with
+	$\Eseq(R) = \tfrac{1}{2}R\log_2 R + O(R)$ this gives
+	$\Cconst(R) = \tfrac{1}{2}R\log_2 R + O(R)$, the same growth class ruled
+	out above, so $\Cconst$ is not $C$-finite either by the identical
+	argument. A Mahler
 	function that is algebraic over $\mathbb{Q}(x)$ is rational by the
 	theorem of Adamczewski and Bell~\cite{adamczewski2017problem}; since $F$
 	satisfies~\eqref{eq:mahler} and is irrational, it is transcendental.
@@ -209,11 +228,12 @@ operational form of Proposition~\ref{prop:mahler}.
 \end{figure}
 
 \begin{remark}[Extremal densities]\label{rem:extremal}
-	Numerically, $\sup_R X(\mathrm{HB}_R)/R = \tfrac{1}{2}$, approached along
-	the alternating-binary integers $R = \lceil 2^{d+1}/3\rceil$
-	(Figure~\ref{fig:delange}); these are precisely the classical extremizers
-	of the Delange fluctuation. We record the exact supremum as a (routine
-	but unpursued) consequence of the Trollope--Delange expansion. The
+	Numerically, $\sup_R X(\mathrm{HB}_R)/R = \tfrac{1}{2}$ for all sampled
+	$R < 2^{16}$ (Figure~\ref{fig:delange}), approached along the
+	alternating-binary integers $R = \lceil 2^{d+1}/3\rceil$, which are the
+	classical extremizers of the Delange fluctuation; we record this as
+	numerical evidence rather than a proven exact supremum, since we have
+	not derived it from the Trollope--Delange expansion. The
 	graph-theoretic reading is pleasing: the Hamming ball's shielding
 	$4$-cycles never exceed one per two vertices, are densest midway between
 	consecutive hypercube completions, and disappear entirely when the ball

@@ -128,8 +128,8 @@ The core algebra, bijections, and isoperimetric defect inequalities of the **Alg
 
 The following high-level results are **mechanically proven inside Lean**, but remain conditional on the remaining extremal-combinatorics hypotheses above:
 
-- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor showing that the Hamming Ball achieves the exact optimal boundary (conditional on Axiom 3).
-- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines existence and lower bound to squeeze the exact minimum cut (conditional on Axiom 1 and Axiom 3).
+- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor showing that the Hamming Ball achieves the exact optimal boundary (conditional on `HBCrossCollisions`).
+- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines existence and lower bound to squeeze the exact minimum cut (conditional on `HBCrossCollisions` and `UniversalLowerBound`).
 
 ## Novel Contributions
 

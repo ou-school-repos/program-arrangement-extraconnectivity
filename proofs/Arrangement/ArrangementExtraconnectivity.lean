@@ -1661,9 +1661,9 @@ theorem globally_optimal_growth_strategy
   Consequently `ΔD = 0` (i.e. matching `E_seq(R)`) is necessary only for a
   topology to remain tied with the Hamming Ball for ALL sufficiently large
   `(n-k)` — it is not a consequence of `penalty_defect` for an individual,
-  fixed `(n,k)`. The uniqueness conjecture below should be read in that
-  discussion above is asymptotic; the uniqueness conjecture below remains a stronger,
-  pointwise statement for each fixed `(R,n,k)`.
+  fixed `(n,k)`. The discussion above is asymptotic; the uniqueness
+  conjecture below remains a stronger, pointwise statement for each fixed
+  `(R,n,k)`.
 
   However, the exact boundary formula is `|N(V')| = U*(n-k) - X(V')`. If two graphs
   tie in unique roots `U`, the one that maximizes cross-collisions `X(V')` wins.
