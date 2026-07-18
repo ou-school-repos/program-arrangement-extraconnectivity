@@ -699,6 +699,9 @@ The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins b
 In recent literature concerning hypercube variants like Augmented Cubes \cite{cheng2023augmented}, the optimal boundary-minimizing cut is frequently constructed using the Star Graph $K_{1, R-1}$. Why does the Star Graph represent the global optimum in hypercubes, but the absolute worst-case Sparse Limit in arrangement graphs? Our framework provides the exact mathematical mechanism for this \emph{structural inversion}. In hypercubes, the penalty for missing a unit of defect is a static constant. The Star Graph produces cross-collisions that scale quadratically as $\binom{R-1}{2}$, quickly overpowering the static penalty and minimizing the boundary. In $A(n,k)$, however, the penalty for each missing unit of defect is $(n-k)$ (Theorem~\ref{them:penalty}). Because $(n-k)$ scales with the network dimensions, it completely obliterates the static $\binom{R-1}{2}$ savings of the Star Graph. Thus, the optimal structure permanently inverts: in hypercubes, the minimum cut is the Sparse Limit, but in arrangement graphs, the minimum cut is the Dense Limit.
 
 % ════════════════════════════════════════════════════════════════════════
+\input{gf-section}
+
+% ════════════════════════════════════════════════════════════════════════
 \section{The Fracture Gap and Defect Continuity}\label{sec:fracture}
 
 The Asymptotic Penalty tells us that, eventually, sub-optimal subsets lose and by how much their shortfall costs per unit of $(n-k)$. We now characterize \emph{which} defect values are achievable and which are not. Because the defect $D(V')$ serves as an algebraic proxy for internal edges---absorbing clique structure in $A(n,k)$ without over-counting---all classification results in this section are stated in terms of the defect. The theorems in this section are proven on paper from Harper's edge-isoperimetric theorem~\cite{harper1966optimal} and are not yet mechanized in Lean.
