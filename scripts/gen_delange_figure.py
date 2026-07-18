@@ -1,9 +1,9 @@
 import math
 
 import matplotlib
-import matplotlib.pyplot as plt
 
 matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 maxexp = 20
 E_running = 0
@@ -56,6 +56,6 @@ ax.set_title(r"Bounded oscillation of the correction densities")
 ax.legend(fontsize=9.5, loc="lower right")
 ax.grid(alpha=0.25)
 plt.tight_layout()
-plt.savefig("delange-structure.pdf", dpi=200)
-plt.savefig("delange-structure.png", dpi=140)
+plt.savefig("assets/out/delange-structure.pdf", dpi=200)
+plt.savefig("assets/out/delange-structure.png", dpi=140)
 print("ok")
