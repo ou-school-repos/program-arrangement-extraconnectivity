@@ -89,6 +89,19 @@ To provide a foundation for future combinatorics research, we have formally defi
 make run/predict R=10
 ```
 
+<details>
+<summary><strong>Sample Output (predict, R=10)</strong></summary>
+
+```text
+Hamming ball prediction for R=10
+  [analytical] nk1 = A000788(10) = 15
+  [analytical] constant = 19
+(10nk-15) (n-k)-19, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ KLCDEFGHIJ ABMDEFGHIJ KBMDEFGHIJ ALMDEFGHIJ KLMDEFGHIJ ABCNEFGHIJ KBCNEFGHIJ
+  formula(n=20,k=10): |N(V')| = 85·10 - 19 = 831
+```
+
+</details>
+
 **Verify the Lean 4 Proofs:**
 
 ```bash
@@ -97,7 +110,7 @@ make lean
 ```
 
 <details>
-<summary><strong>Sample Output (R=2 through R=10)</strong></summary>
+<summary><strong>Sample Output (arrangement, exhaustive nauty search, <code>make benchmark R=10</code>, R=2 through R=10)</strong></summary>
 
 ```text
 Searching R=2 (nauty limit: 3)

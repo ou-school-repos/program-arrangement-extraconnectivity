@@ -35,6 +35,21 @@ see docs/lean-proof-status.md's "Superseded" note.
       - machine/RAM
         Then update docs that currently claim verification up to 260.
 
+     Partial data so far (machine: coffeelake, 31 GiB RAM, per `free -h`):
+      - `--verify-range 2 260` run to completion was NOT confirmed; the run
+        was interrupted (Ctrl-C) at R=160 after reaching R=159.
+      - Cumulative real time for R=2..159: 2m12.400s (user 1m59.432s,
+        sys 0m12.419s).
+      - Standalone spot check `--verify-range 159 160`: 9.824s real
+        (user 9.016s, sys 0.774s) for just those two R values — consistent
+        with per-R cost growing sharply near the top of the range, since
+        R^3*K*log(R) dominates as R approaches the K=256 tier ceiling.
+      - Conclusion so far: correctness confirmed for all R up to 159
+        (matches docs/verifications.csv row-for-row); the full 2..260 sweep
+        completing end-to-end with a timing/RAM record is still open.
+        Re-run in segments (2-64, 65-128, 129-192, 193-260) to get full
+        coverage without a single long-lived uninterruptible process.
+
   4. Tighten README/paper wording around the search output block
      The sample block is from arrangement, while the quickstart above it is run/predict.
 
