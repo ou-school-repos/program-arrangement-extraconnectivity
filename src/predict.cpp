@@ -44,8 +44,6 @@
 __extension__ typedef __int128 int128_t;
 static inline int128_t widen(int64_t x) { return x; }
 
-static int R = 10;
-
 #include <array>
 
 // -- Vertex type: dynamic-size stack struct, templatized on size and symbol
@@ -280,7 +278,7 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
 // -- Verify runner — templated on symbol type -------------------------
 
 template <int K, typename SymT>
-static int run_verify(int64_t expected_nk1, int64_t expected_const,
+static int run_verify(int R, int64_t expected_nk1, int64_t expected_const,
                       bool quiet = false) {
     auto verts = build_hamming_ball<K, SymT>(R);
 
@@ -335,6 +333,7 @@ int main(int argc, const char *argv[]) {
     bool range_mode = false;
     bool no_header = false;
     int start_r = 2, end_r = 0;
+    int R = 10;
 
     std::vector<std::string> positional;
     for (int i = 1; i < argc; i++) {
@@ -426,17 +425,17 @@ int main(int argc, const char *argv[]) {
                 std::cerr << "R=" << R << " ... ";
                 int rc;
                 if (R <= 16)
-                    rc = run_verify<16, uint8_t>(nk1, cst, true);
+                    rc = run_verify<16, uint8_t>(R, nk1, cst, true);
                 else if (R <= 32)
-                    rc = run_verify<32, uint8_t>(nk1, cst, true);
+                    rc = run_verify<32, uint8_t>(R, nk1, cst, true);
                 else if (R <= 64)
-                    rc = run_verify<64, uint8_t>(nk1, cst, true);
+                    rc = run_verify<64, uint8_t>(R, nk1, cst, true);
                 else if (R <= 127)
-                    rc = run_verify<128, uint8_t>(nk1, cst, true);
+                    rc = run_verify<128, uint8_t>(R, nk1, cst, true);
                 else if (R <= 256)
-                    rc = run_verify<256, uint16_t>(nk1, cst, true);
+                    rc = run_verify<256, uint16_t>(R, nk1, cst, true);
                 else
-                    rc = run_verify<260, uint16_t>(nk1, cst, true);
+                    rc = run_verify<260, uint16_t>(R, nk1, cst, true);
 
                 if (rc != 0) {
                     std::cerr << "FAILED at R=" << R << "\n";
@@ -479,17 +478,17 @@ int main(int argc, const char *argv[]) {
         }
         int rc;
         if (R <= 16)
-            rc = run_verify<16, uint8_t>(expected_nk1, expected_const);
+            rc = run_verify<16, uint8_t>(R, expected_nk1, expected_const);
         else if (R <= 32)
-            rc = run_verify<32, uint8_t>(expected_nk1, expected_const);
+            rc = run_verify<32, uint8_t>(R, expected_nk1, expected_const);
         else if (R <= 64)
-            rc = run_verify<64, uint8_t>(expected_nk1, expected_const);
+            rc = run_verify<64, uint8_t>(R, expected_nk1, expected_const);
         else if (R <= 127)
-            rc = run_verify<128, uint8_t>(expected_nk1, expected_const);
+            rc = run_verify<128, uint8_t>(R, expected_nk1, expected_const);
         else if (R <= 256)
-            rc = run_verify<256, uint16_t>(expected_nk1, expected_const);
+            rc = run_verify<256, uint16_t>(R, expected_nk1, expected_const);
         else
-            rc = run_verify<260, uint16_t>(expected_nk1, expected_const);
+            rc = run_verify<260, uint16_t>(R, expected_nk1, expected_const);
 
         if (rc != 0)
             return rc;
