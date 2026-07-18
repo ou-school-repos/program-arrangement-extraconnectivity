@@ -32,7 +32,10 @@ jobs:
           make docs
 
       - name: Unarchive Xournalpp handwritten notes
-        run: cd paper/journal-pads && make unarchive
+        run: |
+          cd paper/journal-pads
+          make unarchive loc=out/xml/2026-05-01-Note-22-41.xml
+          make archive
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
