@@ -53,7 +53,10 @@ for f in "${XOPP_FILES[@]}"; do
 	touch -d @$fmoddate "$fbase.pdf"
 	"$SCRIPT_DIR/pdfdet" "$fbase.pdf"
 
-	"$SCRIPT_DIR/pdf2djvudet" "$fbase.pdf"
+	if ! "$SCRIPT_DIR/pdf2djvudet" "$fbase.pdf"; then
+		echo "Warning: failed to create $fbase.djvu; continuing without DjVu output" >&2
+		rm -f "$fbase.djvu"
+	fi
 
 	if [ -e "$fbase.djvu" ]; then
 		touch -d @$fmoddate "$fbase.djvu"

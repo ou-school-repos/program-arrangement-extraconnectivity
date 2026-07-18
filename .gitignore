@@ -44,6 +44,7 @@ Thumbs.db
 .tmp/
 *.log
 *.pdf
+*.djvu
 *.zip
 *.tar.*
 
