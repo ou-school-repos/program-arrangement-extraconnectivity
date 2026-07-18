@@ -4,9 +4,9 @@
 //   1. O(R)         — analytical: A000788 coefficient + cumulative-zeros
 //   constant
 //   2. O(R^3)       — construction: Hamming ball + formula computation
-//   3. O(R^3 log R) — verification: brute-force neighbor enumeration (R ≤ 40)
+//   3. O(R^3 log R) — verification: brute-force neighbor enumeration (R ≤ 512)
 //
-// Usage: ./predict [R]       Single R prediction (R ≤ 64)
+// Usage: ./predict [R]       Single R prediction
 //        ./predict --csv N   CSV output for R=2..N
 //
 // Vertex representation: stack-allocated SymT[MaxK] with memcmp ordering.
@@ -14,6 +14,7 @@
 // Zero heap allocation in the hot path enables instant verification.
 
 #include <algorithm>
+#include <charconv>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -116,6 +117,13 @@ static int64_t constant_analytical(int64_t R_val) {
     return (R_val - 1) + L - nk1;
 }
 
+static bool parse_int_arg(const std::string &arg, int &out) {
+    const char *begin = arg.data();
+    const char *end = begin + arg.size();
+    auto [ptr, ec] = std::from_chars(begin, end, out);
+    return ec == std::errc{} && ptr == end;
+}
+
 // -- Hamming ball construction ----------------------------------------
 
 template <int K, typename SymT>
@@ -186,7 +194,10 @@ static FormulaResult compute_formula(const std::vector<Vertex<K, SymT>> &verts,
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
     std::vector<Vertex<K, SymT>> named_nbrs;
-    named_nbrs.reserve(width * width * M);
+    const size_t reserve_hint = static_cast<size_t>(width) *
+                                static_cast<size_t>(width) *
+                                static_cast<size_t>(M - width);
+    named_nbrs.reserve(reserve_hint);
     for (int i = 0; i < width; i++) {
         for (int p = 0; p < width; p++) {
             for (auto s : used_syms) {
@@ -317,13 +328,17 @@ int main(int argc, const char *argv[]) {
     // Parse positional args based on mode
     if (range_mode) {
         if (positional.size() == 1) {
-            end_r = static_cast<int>(
-                std::strtol(positional[0].c_str(), nullptr, 10));
+            if (!parse_int_arg(positional[0], end_r)) {
+                std::cerr << "Error: invalid integer argument '"
+                          << positional[0] << "'\n";
+                return 1;
+            }
         } else if (positional.size() >= 2) {
-            start_r = static_cast<int>(
-                std::strtol(positional[0].c_str(), nullptr, 10));
-            end_r = static_cast<int>(
-                std::strtol(positional[1].c_str(), nullptr, 10));
+            if (!parse_int_arg(positional[0], start_r) ||
+                !parse_int_arg(positional[1], end_r)) {
+                std::cerr << "Error: invalid integer argument\n";
+                return 1;
+            }
         }
         if (start_r < 2 || end_r < start_r || end_r > 512) {
             std::cerr
@@ -331,12 +346,25 @@ int main(int argc, const char *argv[]) {
             return 1;
         }
     } else if (csv_mode && !positional.empty()) {
-        end_r =
-            static_cast<int>(std::strtol(positional[0].c_str(), nullptr, 10));
+        if (!parse_int_arg(positional[0], end_r)) {
+            std::cerr << "Error: invalid integer argument '" << positional[0]
+                      << "'\n";
+            return 1;
+        }
         if (end_r < 2)
             end_r = 2;
     } else if (!positional.empty()) {
-        R = static_cast<int>(std::strtol(positional[0].c_str(), nullptr, 10));
+        if (!parse_int_arg(positional[0], R)) {
+            std::cerr << "Error: invalid integer argument '" << positional[0]
+                      << "'\n";
+            return 1;
+        }
+    }
+
+    if (csv_mode && verify_mode && !range_mode) {
+        std::cerr << "Error: --verify is only valid in single-R mode or with "
+                     "--verify-range\n";
+        return 1;
     }
 
     // -- Usage ----------------------------------------------------------

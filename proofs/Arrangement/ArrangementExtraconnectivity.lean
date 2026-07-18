@@ -1074,12 +1074,6 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   rw [h_rhs] at h_sum
   exact h_sum
 
--- TODO(review): this bridge lemma is the false combined-waste statement from
--- the review; keep it marked until the theorem is removed or restated.
-def CollisionAdjustedBound {n k : ℕ} (R : ℕ) : Prop :=
-  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R
-
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
 def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
   fun p => i.testBit p.val
@@ -1643,45 +1637,16 @@ theorem globally_optimal_growth_strategy
   ⟨h_univ, h_exists⟩
 
 /-!
-## Sub-Optimal Topologies and The Asymptotic Penalty
--/
-
-/--
-  THE ASYMPTOTIC PENALTY THEOREM (The Cost of Sub-Optimality)
-
-  If a topology fails to achieve the optimal defect E_seq(R), let the shortfall
-  (missed internal edges / extra unique roots) be ΔE. This theorem proves that
-  the external boundary unconditionally grows by AT LEAST ΔE * (n - k).
-
-  This formally characterizes the 2nd, 3rd, and j-th best solutions:
-  every internal edge you fail to form exposes exactly (n - k) new boundary
-  vertices, asymptotically dominating any Kruskal-Katona shadow savings.
--/
-theorem sub_optimal_penalty (R n k ΔE : ℕ) (V' : Finset (ArrVertex n k))
-    (hR : V'.card = R) (hnk : k ≤ n)
-    (h_suboptimal : sum_unique_roots V' = R * k - E_seq R + ΔE)
-    (h_coll_bound : @CollisionAdjustedBound n k R) :
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) + ΔE * (n - k) - C_constant R := by
-  -- TODO(review): this theorem inherits the false stronger penalty claim from
-  -- `CollisionAdjustedBound`; it should not be advertised as proven.
-  have h1 := h_coll_bound V' hR hnk
-  have h2 : sum_unique_roots V' * (n - k) = (R * k - E_seq R) * (n - k) + ΔE * (n - k) := by
-    calc sum_unique_roots V' * (n - k)
-      _ = (R * k - E_seq R + ΔE) * (n - k) := by rw [h_suboptimal]
-      _ = (R * k - E_seq R) * (n - k) + ΔE * (n - k) := by rw [Nat.add_mul]
-  omega
-
-/-!
 ## Open Problems
 -/
 
 /--
   CONJECTURE 1: Uniqueness of the Hamming Ball Minimizer.
 
-  The `sub_optimal_penalty` theorem proves that any graph with fewer
-  internal edges than the Hamming Ball is strictly sub-optimal due to the (n-k)
-  scaling factor. Therefore, any potential rival for the minimum cut MUST
-  tie the Hamming Ball's internal edge count: E_seq(R).
+  The exact penalty identities in `Arrangement/PenaltyExact.lean` show that any
+  graph with fewer internal edges than the Hamming Ball eventually pays a linear
+  price in the `(n-k)` scaling factor. Therefore, any potential rival for the
+  minimum cut MUST tie the Hamming Ball's internal edge count: E_seq(R).
 
   However, the exact boundary formula is `|N(V')| = U*(n-k) - X(V')`. If two graphs
   tie in unique roots `U`, the one that maximizes cross-collisions `X(V')` wins.
