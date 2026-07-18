@@ -1,2 +1,8 @@
+[default.extend-words]
+somme = "somme"
+classe = "classe"
+sur = "sur"
+fonction = "fonction"
+
 [type.lean.extend-words]
 hpe = "hpe"

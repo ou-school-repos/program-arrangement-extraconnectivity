@@ -4,6 +4,7 @@ Series identities to order 600; closed forms and density decomposition to R < 2^
 Run: python3 verify_gf_identities.py  — all lines must print True."""
 
 import math
+
 # import statistics
 
 
@@ -76,7 +77,8 @@ def geom(period_start, step):  # x^a/(1-x^b)
     return c
 
 
-# S(x) = sum_j x^{2^j}/((1-x)(1+x^{2^j}))  -> use x^{2^j}/(1+x^{2^j}) = sum_{t odd} (-1)^{t-1}...
+# S(x) = sum_j x^{2^j}/((1-x)(1+x^{2^j}))
+#      -> use x^{2^j}/(1+x^{2^j}) = sum_{t odd} (-1)^{t-1}...
 # easier: x^{2^j}/(1+x^{2^j}) = x^{2^j} - x^{2*2^j} + x^{3*2^j} - ...
 def alt(pow2):
     c = [0] * (M + 1)

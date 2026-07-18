@@ -88,6 +88,19 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
   TODO(review): the current driver uses this as a hypothesis interface, but the
   doc should make clear that the combinatorial bridge lemmas are still open.
 
+### Superseded: `CollisionAdjustedBound` / `sub_optimal_penalty`
+
+An earlier draft of the Asymptotic Penalty argument depended on a hypothesis
+interface `CollisionAdjustedBound` (and a companion `sub_optimal_penalty`).
+That hypothesis is **provably false**: the exact identity
+`external_neighbors + cross_collisions + R*k = U(n-k+1)` (from
+`total_coord_edges_eq`) makes it equivalent to `X + D ≤ C(R)`, which the Star
+Graph refutes directly. It has been replaced by the unconditional identities
+in `Arrangement/PenaltyExact.lean` (`boundary_identity`, `penalty_exact`,
+`penalty_defect`, `penalty_ge`), which require no hypothesis beyond equal
+cardinality and `k ≤ n`. Do not reintroduce `CollisionAdjustedBound` as a live
+hypothesis interface in future status writeups.
+
 ## Embedding Condition
 
 ```lean

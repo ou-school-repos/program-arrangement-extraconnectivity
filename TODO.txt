@@ -1,4 +1,15 @@
+
+
 7/18/2026
+
+The two open hypotheses in advisor_bundle/current_state.md are:
+
+1. UniversalLowerBound — still an unproven hypothesis (this is the Lean-side stand-in for prop:universal in the paper).
+2. HBCrossCollisions — still a hypothesis interface; it's now blocked on just one remaining piece, CrossRecurrence (its siblings CrossBaseOne and CrossDimStable are both proven).
+
+Note also CollisionAdjustedBound and sub_optimal_penalty are flagged as "not safe to advertise as true in their current form" — not exactly hypotheses, but a caveat sitting alongside the two.
+
+---
 
 • Next highest-value work is:
 
