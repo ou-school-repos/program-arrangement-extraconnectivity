@@ -130,7 +130,7 @@ We have formally proved the entire arithmetic and inductive backbone for the $C\
 
 - Verified the binary reflection arithmetic decompositions of `E_seq` and `sum_bit_length` on the natural numbers, handling all exact subtractions on $\mathbb{N}$ safely without truncation.
 - Formally proved the exact recurrence $C(R) = C(2^{d-1}) + C(m) + ext\_cube(d, m) + m$ where $R = 2^{d-1} + m$ and $0 < m \le 2^{d-1}$.
-- Implemented a complete strong induction driver `hb_cross_collisions_of_recurrence` using `Nat.strong_induction_on` which derives the final target statement `HBCrossCollisions` for all $R \ge 1$ unconditionally, reducing the entire collision hypothesis to three pure combinatorial interface lemmas:
+- Implemented a complete strong induction driver `hb_cross_collisions_of_recurrence` using `Nat.strong_induction_on` which derives the final target statement `HBCrossCollisions` for all $R \ge 1$ from three pure combinatorial interface lemmas:
   1. `CrossBaseOne` (single-vertex ball has 0 collisions) — proven
   2. `CrossDimStable` (fresh dimensions don't change the set) — proven
   3. `CrossRecurrence` (the corrected combinatorial split) — remaining

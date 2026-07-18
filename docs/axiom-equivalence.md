@@ -1,6 +1,7 @@
-# Hypothesis Interface Equivalence: The Duality of UniversalLowerBound and hamming_ball_eval
+# Hypothesis Interface Duality: UniversalLowerBound and hamming_ball_eval
 
-Both interfaces below are Lean `def ... : Prop` hypothesis parameters threaded
+The two hypothesis interfaces used below, `UniversalLowerBound` and
+`HBCrossCollisions`, are Lean `def ... : Prop` parameters threaded
 explicitly through the capstone theorem, not raw `axiom` declarations — see
 `docs/lean-proof-status.md` for the current build status of each.
 
@@ -87,7 +88,7 @@ Kruskal-Katona Shadow Theorem + Tug-of-War Scaling
 
 ## Computational Verification
 
-Both hypothesis interfaces have been verified computationally at two independent levels:
+The Hamming-ball formula has been verified computationally at two independent levels; the universal bound is tested only by the small-R topology search:
 
 ### Level 1: Formula Engine (`predict.cpp`)
 
@@ -140,7 +141,7 @@ that would otherwise be counted twice.
 
 ## Why They Cannot Be Merged
 
-Although both hypothesis interfaces follow from KK and Tug-of-War scaling, they serve structurally different roles
+Although a future proof may connect both hypothesis interfaces to KK and Tug-of-War scaling, they serve structurally different roles
 in the proof:
 
 1. **`UniversalLowerBound`** is a ∀-statement over all V'.

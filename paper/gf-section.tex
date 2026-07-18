@@ -11,7 +11,7 @@
 % The generating-function/Mahler identities (Props ogf, mahler) and the
 % closed-form/density decomposition are checked by
 % scripts/verify_gf_identities.py for finitely many R (series to order 600;
-% closed forms and density decomposition for R < 2^16). This is a finite
+% density decomposition for R < 2^16; closed forms over their scripted ranges).
 % consistency check, not a proof: it does not (and cannot) establish the
 % section's genuinely analytic claims (nowhere-differentiability in
 % Theorem them:delange, transcendence in Corollary cor:transcend, the exact
@@ -110,7 +110,7 @@ divide-and-conquer sequences.
 	$F(x) = \frac{x}{1-x} S(x)$. Regularity of $s_2$ is the textbook example
 	in~\cite{allouche1992ring}; the ring of $2$-regular sequences is closed
 	under running sums (giving $\Eseq$). For $\Cconst$, write
-	$d = \lceil \log_2 R \rceil$: the bit-length sequence $d$ is itself a
+	$d = \lceil \log_2 R \rceil$, the bit length of $R-1$ (for $R \ge 1$); it is a
 	standard $2$-regular sequence~\cite{allouche1992ring}, as is
 	$2^{d} = 2^{\lceil \log_2 R \rceil}$ (the round-up-to-a-power-of-$2$
 	sequence), and $R$ is $2$-regular as a polynomial sequence; since the

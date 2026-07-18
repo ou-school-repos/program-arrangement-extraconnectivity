@@ -13,7 +13,7 @@ Sweep commands (run in your own terminal, one at a time):
   Read 1 file
 
 Analytically (Lean 4 side) — still open:
-- UniversalLowerBound — unproven; verified only exhaustively to R≤10 (nauty) and computationally to R≤260 (predictor), not mechanized.
+- UniversalLowerBound — unproven; verified exhaustively only to R≤10 (nauty), not computationally verified beyond that range and not mechanized.
 - HBCrossCollisions — blocked specifically on the CrossRecurrence lemma (CrossBaseOne/CrossDimStable are already proven).
 - Two standing conjectures in the paper remain open: Sparse Limit Upper Bound (Star Graph as sparse extremizer) and Multiplicity of Achievable Defects (Topological Funnel section).
 - lake build hasn't been confirmed clean end-to-end locally since a prior read-only artifact-removal failure (TODO item 1) — worth retrying now that ArrangementExtraconnectivity.lean's docstring changed today.
