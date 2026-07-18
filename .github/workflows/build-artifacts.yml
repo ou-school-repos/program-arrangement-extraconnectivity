@@ -18,8 +18,8 @@ jobs:
       # Required Local Dependencies (pre-installed on the runner):
       # - System: texlive-latex-recommended, texlive-pictures,
       #           texlive-latex-extra, texlive-xetex, lmodern,
-      #           texlive-fonts-recommended, graphviz, pandoc, xournalpp,
-      #           libimage-exiftool-perl, qpdf
+      #           texlive-fonts-recommended, graphviz, pandoc,
+      #           libimage-exiftool-perl, qpdf, xournalpp
       # - Python: matplotlib, pandas, scipy
 
       - name: Generate Assets (Conditional/Optional)
@@ -35,7 +35,7 @@ jobs:
       - name: Unarchive Xournalpp handwritten notes
         run: |
           cd paper/journal-pads
-          make unarchive loc=out/xml/2026-05-01-Note-22-41.xml
+          make unarchive loc=out/xml/handwritten-defense-2026-05-01-Note-22-41.xml
           make archive
 
       - name: Upload Artifacts
