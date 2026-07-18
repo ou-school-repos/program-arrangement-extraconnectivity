@@ -1,6 +1,6 @@
 # The Extraconnectivity of Arrangement Graphs: An Algebraic Defect Framework
 
-This repository contains the high-performance C++ engine, data assets, and complete Lean 4 formalization solving the $(R-1)$-extraconnectivity problem for Arrangement Graphs $A(n,k)$ for all $R$. This work generalizes and formally verifies the foundational case-by-case results established by Cheng, Lipták, and Tian (2022).
+This repository contains the high-performance C++ engine, data assets, and an in-progress Lean 4 formalization for the $(R-1)$-extraconnectivity program on Arrangement Graphs $A(n,k)$. The computational side is implemented end to end; the stable Lean proof path verifies the algebraic defect framework and explicit Hamming-ball construction, while the final extremal combinatorics step remains isolated behind explicit hypothesis interfaces.
 
 ## The Core Theoretical Breakthroughs
 
@@ -16,9 +16,9 @@ Classical hypercube isoperimetry relies on geometric sequence compression (Harpe
 
 To address the limitations of geometric compression, we developed a novel algebraic invariant. Instead of tracing geometric boundaries, we count global algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$ (where $U_p$ are unique roots at coordinate $p$), we established an exact double-counting equivalence that isolates the $(n-k)$ dimensional scaling factor from the finite network topology. This allows our $O(R^4)$ engine to characterize the isoperimetrically optimal frontier for any $R$ in polynomial time.
 
-### The Asymptotic Penalty Theorem
+### Asymptotic Penalty Status
 
-We formally proved that any topology failing to achieve the optimal defect $E_{seq}(R)$ is penalized by at least $\Delta E \cdot (n-k)$ boundary nodes. This demonstrates that the choice of topology dominates any potential secondary shadow-overlap savings as the network scales.
+The current Lean development contains a conditional `sub_optimal_penalty` theorem, but the stronger linear-penalty claim is not safe to advertise as an unconditional result yet. The open gap is documented in `docs/lean-proof-status.md` and `docs/collision-axiom-roadmap.md`.
 
 ## The Topological Spectrum
 
@@ -35,18 +35,24 @@ Remarkably, these explicit bounds coincide structurally at exactly $R=3$. For th
 
 Perfect hypercubes ($R=2^d$) exhibit structural rigidity, creating mathematically provable "isoperimetric gaps." (e.g., at $R=8$, achieving 11 internal edges is geometrically impossible; the topology transitions directly from 12 edges down to 10).
 
-### The Uniqueness Tie-Breaker
+### Uniqueness Status
 
-While hypercubes feature degenerate isomorphisms for internal edge counts, the Arrangement Graph boundary formula relies on a subtractive collision constant $C$ that tracks 4-cycles. Because the lexicographic Hamming Ball uniquely maximizes 4-cycle density, $C$ acts as a geometric tie-breaker, isolating the Hamming Ball as the strictly unique minimum cut.
+Computational search supports a unique Hamming-ball minimizer in the tested range, but uniqueness is not part of the stable formalized theorem. It remains an explicit open conjecture in the Lean development.
 
 ## Lean 4 Formal Verification
 
-The Algebraic Defect Framework and the Asymptotic Penalty Theorem are mechanically verified in **Lean 4**.
+The stable Lean 4 build mechanically verifies the algebraic defect framework, the core arithmetic, the root/fiber identities, and the explicit Hamming-ball construction.
 
-We have established a strict logical separation: Lean 4 verifies 100% of the graph theory, dimensional scaling, bitwise arithmetic, and boundary projections from first principles. We isolate classical extremal bounds to exactly two explicit axioms:
+The capstone extraconnectivity theorem is present in the stable proof path, but it is intentionally parameterized by outstanding extremal-combinatorics hypotheses rather than closed unconditionally. The remaining stable hypothesis interfaces are:
 
-- `lower_bound_all_embeddings`: The universal boundary lower bound for all $R$-element subsets.
-- `hb_cross_collisions`: The exact 4-cycle shadow overlap count of the explicitly constructed Hamming Ball.
+- `UniversalLowerBound`: the universal boundary lower bound for all $R$-element subsets.
+- `HBCrossCollisions`: the exact 4-cycle shadow overlap count of the explicitly constructed Hamming Ball.
+
+Current stable status:
+
+- `make lean` succeeds with 0 errors and 0 `sorry`s in the main proof path.
+- The unstable collision work lives under `proofs/Arrangement/unstable/`.
+- `docs/lean-proof-status.md` is the source of truth for what is proven unconditionally versus conditionally.
 
 ### Open Conjectures (Mechanized as `Prop`s)
 
@@ -54,7 +60,7 @@ To provide a foundation for future combinatorics research, we have formally defi
 
 - `uniqueness_conjecture`
 - `sandwich_upper_bound_conjecture`
-- `isoperimetric_gap_conjecture`
+- `hypercube_fracture_gap_conjecture`
 
 ## Repository Architecture
 
@@ -65,10 +71,10 @@ To provide a foundation for future combinatorics research, we have formally defi
 │   └── predict.cpp                          # O(R^4) Extraconnectivity Engine and Pareto Analyzer
 ├── proofs/
 │   ├── Arrangement/
-│   │   ├── ArrangementExtraconnectivity.lean # Main theorem: Algebraic Defect Framework & Asymptotic Penalty
-│   │   ├── IsoperimetricPartialPermutation.lean # The Failure of Geometric Compression
+│   │   ├── ArrangementExtraconnectivity.lean # Stable conditional capstone theorem
+│   │   ├── ArrDefs.lean                      # Core graph definitions
 │   │   ├── HypercubeEdges.lean               # OEIS A000788 combinatorics
-│   │   └── ArrDefs.lean                      # Core Definitions
+│   │   └── unstable/                         # Ongoing collision / compression proof work
 │   └── PredictorComplexity.lean             # Complexity analysis
 ├── scripts/                                 # Python generation for SVGs, GIFs, and DOT graphs
 └── assets/out/                              # Rendered visual counterexamples and complexity curves

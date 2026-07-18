@@ -10,8 +10,10 @@ brute-force neighbor enumeration.
 
 **Key result:** The search discovered that the published linear extrapolation
 breaks at R=8, where the optimal vertex cut locks into a 3-dimensional hypercube
-with 12 internal edges instead of the predicted 7. This discovery is formalized
-in a machine-verified Lean 4 proof.
+with 12 internal edges instead of the predicted 7. The stable Lean development
+formalizes the supporting algebraic defect machinery and the explicit
+Hamming-ball construction; the final extremal-combinatorics step remains
+conditional on explicit hypothesis interfaces.
 
 ## Search Algorithm
 

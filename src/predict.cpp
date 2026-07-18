@@ -41,17 +41,17 @@ template <int K, typename SymT> struct Vertex {
 };
 
 template <int K, typename SymT>
-static bool contains_sym(const Vertex<K, SymT> &v, int sym) {
-    for (int i = 0; i < R; i++)
+static bool contains_sym(const Vertex<K, SymT> &v, int sym, int width) {
+    for (int i = 0; i < width; i++)
         if (v.syms[i] == static_cast<SymT>(sym))
             return true;
     return false;
 }
 
 template <int K, typename SymT>
-static std::string vertex_to_string(const Vertex<K, SymT> &v) {
-    std::string str(R, ' ');
-    for (int i = 0; i < R; i++) {
+static std::string vertex_to_string(const Vertex<K, SymT> &v, int width) {
+    std::string str(width, ' ');
+    for (int i = 0; i < width; i++) {
         int s = static_cast<int>(v.syms[i]);
         if (s < 26)
             str[i] = static_cast<char>('A' + s);
@@ -119,18 +119,26 @@ static int64_t constant_analytical(int64_t R_val) {
 // -- Hamming ball construction ----------------------------------------
 
 template <int K, typename SymT>
-static std::vector<Vertex<K, SymT>> build_hamming_ball() {
+static std::vector<Vertex<K, SymT>> build_hamming_ball(int width) {
+    if (width > K) {
+        std::cerr << "Internal error: width exceeds vertex capacity\n";
+        std::abort();
+    }
+    const int active_width = std::min(width, K);
+
     int dims = 0;
-    while ((1 << dims) < R)
+    while ((1 << dims) < active_width)
         dims++;
 
-    std::vector<Vertex<K, SymT>> verts(R);
-    for (int i = 0; i < R; i++) {
-        for (int p = 0; p < R; p++)
+    std::vector<Vertex<K, SymT>> verts(active_width);
+    for (int i = 0; i < active_width; i++) {
+        std::fill(verts[i].syms.begin(), verts[i].syms.end(),
+                  Vertex<K, SymT>::SENTINEL);
+        for (int p = 0; p < active_width; p++)
             verts[i].syms[p] = static_cast<SymT>(p);
         for (int d = 0; d < dims; d++) {
             if (i & (1 << d))
-                verts[i].syms[d] = static_cast<SymT>(R + d);
+                verts[i].syms[d] = static_cast<SymT>(active_width + d);
         }
     }
     return verts;
@@ -144,12 +152,12 @@ struct FormulaResult {
 };
 
 template <int K, typename SymT>
-static FormulaResult
-compute_formula(const std::vector<Vertex<K, SymT>> &verts) {
+static FormulaResult compute_formula(const std::vector<Vertex<K, SymT>> &verts,
+                                     int width) {
     // Collect used symbols
     std::vector<SymT> used_syms;
     for (const auto &v : verts) {
-        for (int p = 0; p < R; p++) {
+        for (int p = 0; p < width; p++) {
             SymT s = v.syms[p];
             if (!std::any_of(used_syms.begin(), used_syms.end(),
                              [s](SymT u) { return u == s; }))
@@ -160,9 +168,9 @@ compute_formula(const std::vector<Vertex<K, SymT>> &verts) {
 
     // Anonymous coefficient: distinct groups per position
     int anon_coeff = 0;
-    for (int p = 0; p < R; p++) {
+    for (int p = 0; p < width; p++) {
         std::vector<Vertex<K, SymT>> group_keys;
-        for (int i = 0; i < R; i++) {
+        for (int i = 0; i < width; i++) {
             Vertex<K, SymT> key = verts[i];
             key.syms[p] = Vertex<K, SymT>::SENTINEL;
             if (!std::any_of(
@@ -178,11 +186,11 @@ compute_formula(const std::vector<Vertex<K, SymT>> &verts) {
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
     std::vector<Vertex<K, SymT>> named_nbrs;
-    named_nbrs.reserve(R * R * M);
-    for (int i = 0; i < R; i++) {
-        for (int p = 0; p < R; p++) {
+    named_nbrs.reserve(width * width * M);
+    for (int i = 0; i < width; i++) {
+        for (int p = 0; p < width; p++) {
             for (auto s : used_syms) {
-                if (!contains_sym(verts[i], s)) {
+                if (!contains_sym(verts[i], s, width)) {
                     Vertex<K, SymT> vtx = verts[i];
                     vtx.syms[p] = s;
                     if (!std::binary_search(sorted_verts.begin(),
@@ -196,10 +204,10 @@ compute_formula(const std::vector<Vertex<K, SymT>> &verts) {
     named_nbrs.erase(std::unique(named_nbrs.begin(), named_nbrs.end()),
                      named_nbrs.end());
 
-    const int64_t nk1 = R * R - anon_coeff;
+    const int64_t nk1 = static_cast<int64_t>(width) * width - anon_coeff;
     const int64_t named_sz = static_cast<int64_t>(named_nbrs.size());
     const int64_t constant =
-        static_cast<int64_t>(anon_coeff) * (M - R) - named_sz;
+        static_cast<int64_t>(anon_coeff) * (M - width) - named_sz;
 
     return {nk1, constant};
 }
@@ -214,10 +222,10 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
 
     std::vector<Vertex<K, SymT>> nbrs;
     Vertex<K, SymT> nbr;
-    for (int i = 0; i < R; i++) {
+    for (int i = 0; i < k; i++) {
         for (int p = 0; p < k; p++) {
             for (int s = 0; s < n; s++) {
-                if (contains_sym(verts[i], s))
+                if (contains_sym(verts[i], s, k))
                     continue;
                 nbr.syms = verts[i].syms;
                 nbr.syms[p] = static_cast<SymT>(s);
@@ -237,16 +245,16 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
 template <int K, typename SymT>
 static int run_verify(int64_t expected_nk1, int64_t expected_const,
                       bool quiet = false) {
-    auto verts = build_hamming_ball<K, SymT>();
+    auto verts = build_hamming_ball<K, SymT>(R);
 
     if (!quiet && R <= 12) {
         std::cerr << "  vertex set:";
         for (int i = 0; i < R; i++)
-            std::cerr << " " << vertex_to_string(verts[i]);
+            std::cerr << " " << vertex_to_string(verts[i], R);
         std::cerr << "\n";
     }
 
-    auto [nk1, constant] = compute_formula(verts);
+    auto [nk1, constant] = compute_formula(verts, R);
 
     if (nk1 != expected_nk1) {
         std::cerr << "nk1 MISMATCH: got " << nk1 << " expected " << expected_nk1
@@ -435,9 +443,9 @@ int main(int argc, const char *argv[]) {
     std::cout << "(" << R << "nk-" << expected_nk1 << ") (n-k)-"
               << expected_const << ", EX:";
     if (R <= 12) {
-        auto verts = build_hamming_ball<16, uint8_t>();
+        auto verts = build_hamming_ball<16, uint8_t>(R);
         for (int i = 0; i < R; i++)
-            std::cout << " " << vertex_to_string(verts[i]);
+            std::cout << " " << vertex_to_string(verts[i], R);
     } else {
         std::cout << " [" << R << " vertices]";
     }
