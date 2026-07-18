@@ -3,6 +3,7 @@ somme = "somme"
 classe = "classe"
 sur = "sur"
 fonction = "fonction"
+normale = "normale"
 
 [type.lean.extend-words]
 hpe = "hpe"
