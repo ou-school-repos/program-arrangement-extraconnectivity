@@ -38,8 +38,8 @@ for f in "$@"; do
     # We pull the existing metadata, and force our PDF_MOD_DATE into a "source_mod" field.
     # This ensures that if the PDF changes, this line changes.
     djvused "$OUT" -e 'select 1; print-meta' | \
-        grep -v '(source_mod' | \
-        sed "s/)$/ (source_mod \"$PDF_MOD_DATE\"))/" > "$TEMP_META"
+        grep -v $'^source_mod\t' > "$TEMP_META"
+    printf 'source_mod\t"%s"\n' "$PDF_MOD_DATE" >> "$TEMP_META"
 
     djvused "$OUT" -e "set-meta $TEMP_META" -s
 

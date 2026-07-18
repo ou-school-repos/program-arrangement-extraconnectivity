@@ -2,7 +2,7 @@
 
 for pdf in "$@"; do
   timestamp="$(stat -c "%Y" "$pdf")"
-  pdf_date="$(date -d "@$timestamp" '+%Y:%m:%d %H:%M:%S%:z')"
+  pdf_date="$(date -u -d "@$timestamp" '+%Y:%m:%d %H:%M:%S+00:00')"
   tmp="$(mktemp --tmpdir="$(dirname "$pdf")" ".$(basename "$pdf").XXXXXX")"
 
   exiftool -overwrite_original \

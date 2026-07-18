@@ -62,10 +62,6 @@ for f in "${XOPP_FILES[@]}"; do
 		rm -f "$fbase.djvu" "out/djvu/$fbase.djvu"
 	fi
 
-	if [ -e "$fbase.djvu" ]; then
-		touch -d @$fmoddate "$fbase.djvu"
-	fi
-
 	# Move binaries to folders in out/*/
 	mkdir -p out/pdf/
 	mv "$fbase.pdf" out/pdf/
