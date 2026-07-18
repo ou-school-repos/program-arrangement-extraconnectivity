@@ -35,21 +35,29 @@ achieved uniquely by the Hamming Ball embedding.
 3. **The Defect Bound** — `sum_unique_roots_lower_bound`: D(V') ≤ E(|V'|) where
    D(V') = |V'|·k − sum_unique_roots(V') measures root duplication.
 
-4. **The Collision-Adjusted Bound** — `external_neighbors_collision_bound`:
-   Uses fiber decomposition and coordinate-wise boundary counting.
+4. **Total Coordinate Edges** — `total_coord_edges_eq`: the unconditional fiber-counting
+   identity `external_neighbors V' + cross_collisions V' + R·k = U(V')·(n−k+1)`, from
+   which the exact penalty identities in `Arrangement/PenaltyExact.lean` follow with no
+   further hypotheses. (An earlier "Collision-Adjusted Bound" hypothesis that attempted
+   a dimension-independent bound on combined waste was refuted by the Star Graph
+   counterexample and has been removed; see `docs/lean-proof-status.md`'s "Superseded"
+   note.)
 
 5. **The Capstone** — Sandwich of lower bound (∀ V') and upper bound (∃ Hamming Ball).
 
-## Axiom Inventory (2 isoperimetric axioms)
+## Remaining Hypothesis Interfaces (2, not raw axioms)
 
-| Axiom | Role | Status |
+| Interface | Role | Status |
 |-------|------|--------|
-| `lower_bound_all_embeddings` | Universal boundary inequality | Computationally verified |
-| `hb_cross_collisions` | KK shadow bound (existential) | Computationally verified |
+| `UniversalLowerBound` | Universal boundary inequality (∀ V') | Computationally verified for R ≤ 260; not mechanized |
+| `HBCrossCollisions` | Hamming Ball's exact cross-collision count (∃ witness) | Computationally verified; mechanization blocked on `CrossRecurrence` |
 
-The boundary inequality depends on (n, k) dynamically, while hb_cross_collisions remains independent of (n, k).
-Run `predict --verify R` for brute-force cross-check at any R.
-See `docs/axiom-equivalence.md` for the full duality explanation.
+Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
+`arrangement_extraconnectivity_minimum`, not raw `axiom` declarations.
+`UniversalLowerBound` depends on (n, k) dynamically, while `HBCrossCollisions`
+is independent of (n, k). Run `predict --verify R` for brute-force cross-check
+at any R ≤ 260. See `docs/lean-proof-status.md` for full status and
+`docs/collision-axiom-roadmap.md` for the formalization path.
 
 ## References
 

@@ -1,32 +1,43 @@
-# Axiom Equivalence: The Duality of lower_bound_all_embeddings and hamming_ball_eval
+# Hypothesis Interface Equivalence: The Duality of UniversalLowerBound and hamming_ball_eval
 
-## The Two Axioms
+Both interfaces below are Lean `def ... : Prop` hypothesis parameters threaded
+explicitly through the capstone theorem, not raw `axiom` declarations — see
+`docs/lean-proof-status.md` for the current build status of each.
 
-### Axiom 1: `lower_bound_all_embeddings` (Lower Bound Engine)
+## The Two Hypothesis Interfaces
+
+### Hypothesis 1: `UniversalLowerBound` (Lower Bound Engine)
 
 ```lean
-axiom lower_bound_all_embeddings (R n k : ℕ) (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (hnk : k ≤ n) :
+def UniversalLowerBound (R n k : ℕ) : Prop :=
+  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 ```
 
 **Role:** Supplies the _universally quantified lower bound_. For **every**
-R-vertex subset V', the external boundary is bounded below by the predicted boundary.
+R-vertex subset V', the external boundary is bounded below by the predicted
+boundary. Still unproven in Lean (no formalization strategy currently active;
+see `docs/collision-axiom-roadmap.md`).
 
-### Axiom 2: `hamming_ball_eval` (Upper Bound Witness)
+### Lemma: `hamming_ball_eval` (Upper Bound Witness)
 
 ```lean
-axiom hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
-    (hd : d = bit_length (R - 1)) :
+lemma hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
+    (hd : d = bit_length (R - 1)) (h_cross : HBCrossCollisions R n k d hk hnk) :
     external_neighbors (hamming_ball_subset R n k d hk hnk) =
       (R * k - E_seq R) * (n - k) - C_constant R
 ```
 
 **Role:** Supplies the _existential upper bound_. There **exists** a specific
-subset (the Hamming Ball) that achieves the formula exactly.
+subset (the Hamming Ball) that achieves the formula exactly. This lemma is
+**proven** — it is conditional only on the `HBCrossCollisions` hypothesis
+parameter (`h_cross`), which is itself a separate, still-open hypothesis
+interface (mechanization blocked on `CrossRecurrence`; see
+`docs/collision-axiom-roadmap.md`).
 
 ## The Mathematical Correction and Duality
 
-In previous versions of the framework, Axiom 1 was formulated as a dimension-independent bound on the combined waste: `cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`. However, this statement is **provably false** for sub-optimal topologies.
+In previous versions of the framework, `UniversalLowerBound` was formulated as a dimension-independent bound on the combined waste: `cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`. However, this statement is **provably false** for sub-optimal topologies.
 TODO(review): keep this historical note, but do not let later prose drift back
 into the same combined-waste formulation.
 
@@ -47,10 +58,10 @@ This linear dimensional penalty of 35 easily outpaces the 16 additional cross-co
 
 Therefore, the true universal bound must be stated as the final boundary inequality directly.
 
-Together, these two axioms form the "sandwich" that pins the isoperimetric profile to a single value:
+Together, these two hypothesis interfaces form the "sandwich" that pins the isoperimetric profile to a single value:
 
 ```
-∀ V', |N(V')| ≥ formula(R)      ← from lower_bound_all_embeddings
+∀ V', |N(V')| ≥ formula(R)      ← from UniversalLowerBound
 ∃ V*, |N(V*)| = formula(R)      ← from hamming_ball_eval
 ────────────────────────────────
 ∴ min_{|V'|=R} |N(V')| = formula(R)
@@ -63,7 +74,7 @@ Kruskal-Katona Shadow Theorem + Tug-of-War Scaling
   │
   ├──► "Hamming Ball maximizes internal shielding/minimizes boundary"
   │        │
-  │        ├──► lower_bound_all_embeddings
+  │        ├──► UniversalLowerBound
   │        │      (boundary ≥ HB boundary)
   │        │
   │        └──► hamming_ball_eval
@@ -76,7 +87,7 @@ Kruskal-Katona Shadow Theorem + Tug-of-War Scaling
 
 ## Computational Verification
 
-Both axioms have been verified computationally at two independent levels:
+Both hypothesis interfaces have been verified computationally at two independent levels:
 
 ### Level 1: Formula Engine (`predict.cpp`)
 
@@ -100,8 +111,8 @@ For small R, the search engine:
 
 This provides independent verification that:
 
-- No R-vertex subset has fewer external neighbors than the formula (validates Axiom 1)
-- The Hamming Ball subset achieves exactly the formula value (validates Axiom 2)
+- No R-vertex subset has fewer external neighbors than the formula (validates `UniversalLowerBound`)
+- The Hamming Ball subset achieves exactly the formula value (validates `hamming_ball_eval`, conditional on `HBCrossCollisions`)
 
 ## C_constant(R) and cross_collisions(HB(R)) Values
 
@@ -129,36 +140,44 @@ that would otherwise be counted twice.
 
 ## Why They Cannot Be Merged
 
-Although both axioms follow from KK and Tug-of-War scaling, they serve structurally different roles
+Although both hypothesis interfaces follow from KK and Tug-of-War scaling, they serve structurally different roles
 in the proof:
 
-1. **`lower_bound_all_embeddings`** is a ∀-statement over all V'.
+1. **`UniversalLowerBound`** is a ∀-statement over all V'.
    It provides the universal lower bound.
 
 2. **`hamming_ball_eval`** is an ∃-statement about a specific V\*.
    It flows into `exists_optimal_embedding`.
 
-The capstone theorem (`arrangement_extraconnectivity_minimum`) combines both
-via a conjunction: `⟨exists_optimal_embedding, lower_bound_all_embeddings⟩`.
+The capstone theorem (`arrangement_extraconnectivity_minimum`) takes both as
+explicit hypothesis parameters (`h_lower : ∀ R n k, UniversalLowerBound R n k`
+and `h_cross`, threading into `HBCrossCollisions`) and combines their
+_results_ — `exists_optimal_embedding ... h_cross` and `h_lower R n k V' hR
+hnk` — into the final `∧` pair, rather than merging them into one hypothesis.
 
-Merging them into a single axiom would obscure the proof architecture and
+Merging them into a single hypothesis would obscure the proof architecture and
 lose the clean separation between the universal bound and the constructive
 witness.
-TODO(review): the support-projection/colex narrative is still unresolved, so
-keep it out of any section that claims a proof.
 
 ## Formalization Path (if pursued)
 
-Both axioms would be closed by a single formalization effort:
+These two interfaces are at very different stages, not a single remaining
+effort:
 
-1. **Define sequence compression** on `ArrVertex n k` (~50 lines)
-2. **Prove compression preserves cardinality** (~100 lines)
-3. **Prove compression does not increase boundary** (~200 lines)
-4. **Prove convergence to Hamming Ball** (~100 lines)
-5. **Evaluate C_constant at the Hamming Ball** (~100 lines)
-
-Total: ~550 lines of Lean 4, requiring Kruskal-Katona shadow operators
-that are not yet in Mathlib for sequence (ordered, injective) families.
+- **`HBCrossCollisions`** is closest: its arithmetic/inductive backbone is
+  fully proven (`hb_cross_collisions_of_recurrence`), reducing it to three
+  combinatorial interface lemmas, two of which (`CrossBaseOne`,
+  `CrossDimStable`) are done. Only `CrossRecurrence` remains — see
+  `docs/collision-axiom-roadmap.md`.
+- **`UniversalLowerBound`** has no active formalization strategy. An earlier
+  attempt via support-projection into the Boolean hypercube (to reuse
+  Mathlib's `Mathlib.Combinatorics.SetFamily.KruskalKatona`, which does
+  exist in Mathlib) was abandoned after a counterexample refuted its central
+  inequality; see
+  `docs/archive/collision-axiom-support-projection-abandoned.md`. A working
+  approach would need, at minimum, a corrected shadow-count inequality, a
+  proven colex correspondence, and a proven pullback to
+  `sum_unique_roots`/`external_neighbors` — none of which currently exist.
 
 See [collision-axiom-roadmap.md](collision-axiom-roadmap.md) for the
 detailed step-by-step plan.
