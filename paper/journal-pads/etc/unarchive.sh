@@ -58,8 +58,8 @@ for f in "${XML_FILES[@]}"; do
 	# .xopp is just gzip-compressed XML.
 	dest="$dest_dir/$fbase.xopp"
 	tmp="$(mktemp --tmpdir="$dest_dir" ".$fbase.xopp.XXXXXX")"
-	chmod --reference="$f" "$tmp"
 	gzip -c "$f" >"$tmp"
+	chmod --reference="$f" "$tmp"
 	touch -d "@$fmoddate" "$tmp"
 
 	if [ -e "$dest" ] && [ "${overwrite:-ask}" != "1" ]; then

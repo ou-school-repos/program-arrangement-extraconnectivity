@@ -59,7 +59,7 @@ for f in "${XOPP_FILES[@]}"; do
 
 	if ! "$SCRIPT_DIR/pdf2djvudet" "$fbase.pdf"; then
 		echo "Warning: failed to create $fbase.djvu; continuing without DjVu output" >&2
-		rm -f "$fbase.djvu"
+		rm -f "$fbase.djvu" "out/djvu/$fbase.djvu"
 	fi
 
 	if [ -e "$fbase.djvu" ]; then

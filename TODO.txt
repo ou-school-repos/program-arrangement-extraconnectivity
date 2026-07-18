@@ -73,7 +73,7 @@ see docs/lean-proof-status.md's "Superseded" note.
         (user 9.016s, sys 0.774s) for just those two R values — consistent
         with per-R cost growing sharply near the top of the range, since
         R^3*K*log(R) dominates as R approaches the K=256 tier ceiling.
-      - Conclusion so far: correctness confirmed for all R up to 159
+      - Conclusion so far: correctness confirmed for all R up to 160
         (matches docs/verifications.csv row-for-row); the full 2..260 sweep
         completing end-to-end with a timing/RAM record is still open.
         Re-run in segments (2-64, 65-128, 129-192, 193-260) to get full

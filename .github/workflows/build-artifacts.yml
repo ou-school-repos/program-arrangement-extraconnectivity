@@ -18,7 +18,8 @@ jobs:
       # Required Local Dependencies (pre-installed on the runner):
       # - System: texlive-latex-recommended, texlive-pictures,
       #           texlive-latex-extra, texlive-xetex, lmodern,
-      #           texlive-fonts-recommended, graphviz, pandoc
+      #           texlive-fonts-recommended, graphviz, pandoc, xournalpp,
+      #           libimage-exiftool-perl, qpdf
       # - Python: matplotlib, pandas, scipy
 
       - name: Generate Assets (Conditional/Optional)
