@@ -1643,10 +1643,26 @@ theorem globally_optimal_growth_strategy
 /--
   CONJECTURE 1: Uniqueness of the Hamming Ball Minimizer.
 
-  The exact penalty identities in `Arrangement/PenaltyExact.lean` show that any
-  graph with fewer internal edges than the Hamming Ball eventually pays a linear
-  price in the `(n-k)` scaling factor. Therefore, any potential rival for the
-  minimum cut MUST tie the Hamming Ball's internal edge count: E_seq(R).
+  `penalty_defect` (in `Arrangement/PenaltyExact.lean`) gives the *exact*,
+  unconditional identity `|∂V₁| + (X₁+D₁) = |∂V₂| + (X₂+D₂) + ΔD·(n−k)` for any
+  two same-size subsets, where `ΔD = D₁ − D₂` is the defect gap. This identity
+  alone does NOT force a defect tie: for a fixed `(n,k)`, a topology with
+  `ΔD > 0` (fewer internal edges than the Hamming Ball) can still match or beat
+  its boundary, provided its cross-collision/defect offset
+  `(X_sub + D_sub) − (X_opt + D_opt)` is at least `ΔD·(n-k)`. Since `X` and `D`
+  are combinatorial constants fixed by the abstract topology alone (they do not
+  grow with `(n-k)`, see paper eq:penalty-expansion), that offset is bounded
+  while `ΔD·(n-k)` grows without bound, so this compensation can only work for
+  finitely many `(n-k)`.
+
+  What is forced, per the paper's Theorem `them:penalty`, is the asymptotic
+  reading: every topology with `ΔD > 0` has a topology-dependent threshold
+  `(n-k)_0` beyond which it strictly LOSES (a genuine inequality, not a tie).
+  Consequently `ΔD = 0` (i.e. matching `E_seq(R)`) is necessary only for a
+  topology to remain tied with the Hamming Ball for ALL sufficiently large
+  `(n-k)` — it is not a consequence of `penalty_defect` for an individual,
+  fixed `(n,k)`. The uniqueness conjecture below should be read in that
+  asymptotic sense.
 
   However, the exact boundary formula is `|N(V')| = U*(n-k) - X(V')`. If two graphs
   tie in unique roots `U`, the one that maximizes cross-collisions `X(V')` wins.

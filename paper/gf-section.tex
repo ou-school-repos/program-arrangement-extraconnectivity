@@ -123,15 +123,20 @@ operational form of Proposition~\ref{prop:mahler}.
 
 \begin{proof}
 	If $F$ were rational, its coefficients would eventually satisfy a linear
-	recurrence with constant coefficients and hence have the
-	polynomial-exponential form $\Eseq(R) = \sum_i p_i(R)\lambda_i^R$; but
-	$\Eseq(R) = \tfrac{1}{2}R\log_2 R + O(R)$
-	(Theorem~\ref{them:delange} below) grows faster than every polynomial and
-	slower than every exponential with $|\lambda| > 1$, which no such form
-	achieves. A Mahler function that is algebraic over $\mathbb{Q}(x)$ is
-	rational by the theorem of Adamczewski and
-	Bell~\cite{adamczewski2017problem}; since $F$ satisfies~\eqref{eq:mahler}
-	and is irrational, it is transcendental.
+	recurrence with constant coefficients, i.e.\ $\Eseq$ would be a
+	$C$-finite sequence $\Eseq(R) = \sum_i p_i(R)\lambda_i^R$ for finitely
+	many algebraic constants $\lambda_i$ and polynomials $p_i$; every such
+	sequence grows as $\Theta(R^k\rho^R)$ for some integer $k \ge 0$ and real
+	$\rho \ge 0$ (the modulus of a dominant root), up to a bounded
+	oscillatory factor. But $\Eseq(R) = \tfrac{1}{2}R\log_2 R + O(R)$
+	(Theorem~\ref{them:delange} below): the ratio $\Eseq(R)/R^k$ tends to
+	$\infty$ for $k = 1$ and to $0$ for $k = 2$, and $\Eseq(R)/R^k$ cannot
+	tend to a nonzero constant for any $\rho \ne 1$ since $\Eseq(R)$ is
+	subexponential; so no integer $k$ and real $\rho$ match this growth,
+	and $\Eseq$ is not $C$-finite, i.e.\ $F$ is not rational. A Mahler
+	function that is algebraic over $\mathbb{Q}(x)$ is rational by the
+	theorem of Adamczewski and Bell~\cite{adamczewski2017problem}; since $F$
+	satisfies~\eqref{eq:mahler} and is irrational, it is transcendental.
 \end{proof}
 
 \subsection{Exact asymptotics: the Trollope--Delange fluctuation}
@@ -219,8 +224,11 @@ operational form of Proposition~\ref{prop:mahler}.
 	Corollary~\ref{cor:densities} quantifies exactly the $O_R(1)$ terms of
 	Theorem~\ref{them:penalty}: in the boundary
 	formula~\eqref{eq:extraconnectivity}, the dimension scaling contributes
-	the exact linear term in $(n-k)$, while the entire $R$-dependence of the
-	correction is the bounded oscillation~\eqref{eq:C-density}. Readers
+	the exact linear term in $(n-k)$, while the correction density
+	$\Cconst(R)/R$ splits, per~\eqref{eq:C-density}, into a logarithmic trend
+	$\tfrac{1}{2}\log_2 R$ plus the bounded oscillation $\Psi(u) -
+	\Phi(\log_2 R)$ that carries its entire remaining $R$-dependence.
+	Readers
 	familiar with analytic
 	combinatorics~\cite{wilf2006generatingfunctionology} may recognize the
 	division of labor: as in singularity analysis, where a dominant pole
