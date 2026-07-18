@@ -184,6 +184,7 @@ format:	##H @Dev Format C++ sources (clang-format)
 	-black $$(git ls-files '*.py')
 	-isort $$(git ls-files '*.py')
 	-pre-commit run --all-files
+	-shfmt -w $$(git ls-files '*.sh')
 	clang-format -i $(SRCS)
 	@$(call print_success,Format complete.)
 

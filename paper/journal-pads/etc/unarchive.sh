@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+set -e
+
 # for debugging
 # set -x
 

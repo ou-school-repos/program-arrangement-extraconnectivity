@@ -1,11 +1,14 @@
 #!/bin/bash -e
 
+set -e
+
 # for debugging
 # set -x
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"
 NESTED_DIR="paper/journal-pads"
 JOURNAL_ROOT="$PROJECT_ROOT/$NESTED_DIR"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$JOURNAL_ROOT"
 
 # User supplied directory path (otherwise default to journal-pads root)
@@ -47,16 +50,22 @@ for f in "${XOPP_FILES[@]}"; do
 
 	# Create PDF and DJVU (binaries)
 	xournalpp "$f" -p "$fbase.pdf"
-	# pdf2djvu "$fbase.pdf" -o "$fbase.djvu"
-
 	touch -d @$fmoddate "$fbase.pdf"
-	# touch -d @$fmoddate "$fbase.djvu"
+	"$SCRIPT_DIR/pdfdet" "$fbase.pdf"
+
+	"$SCRIPT_DIR/pdf2djvudet" "$fbase.pdf"
+
+	if [ -e "$fbase.djvu" ]; then
+		touch -d @$fmoddate "$fbase.djvu"
+	fi
 
 	# Move binaries to folders in out/*/
 	mkdir -p out/pdf/
-	# mkdir -p out/djvu/
 	mv "$fbase.pdf" out/pdf/
-	# mv "$fbase.djvu" out/djvu/
+	if [ -e "$fbase.djvu" ]; then
+		mkdir -p out/djvu/
+		mv "$fbase.djvu" out/djvu/
+	fi
 
 	# Create PNG binaries
 	xournalpp "$f" --export-png-dpi=${PNG_DPI} -i "$fbase".png

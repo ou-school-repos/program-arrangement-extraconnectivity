@@ -1,0 +1,16 @@
+#!/bin/bash -e
+
+for pdf in "$@"; do
+  timestamp="$(stat -c "%Y" "$pdf")"
+  pdf_date="$(date -d "@$timestamp" '+%Y:%m:%d %H:%M:%S%:z')"
+  tmp="$(mktemp --tmpdir="$(dirname "$pdf")" ".$(basename "$pdf").XXXXXX")"
+
+  exiftool -overwrite_original \
+    -CreateDate="$pdf_date" \
+    -ModifyDate="$pdf_date" \
+    "$pdf" >/dev/null
+
+  qpdf --deterministic-id "$pdf" "$tmp"
+  mv -f "$tmp" "$pdf"
+  touch -d "@$timestamp" "$pdf"
+done
