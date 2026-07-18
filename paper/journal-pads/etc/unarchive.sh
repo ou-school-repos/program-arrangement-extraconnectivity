@@ -21,7 +21,7 @@ echo "$QUERY_PATH"
 
 mapfile -d '' XML_FILES < <(
 	find "$QUERY_PATH" \
-		-type f -path '*/out/xml/*.xml' \
+		-regextype posix-extended -type f -regex '.*/out/xml/[^/]+[.]xml' \
 		! -path '*/out/xml/out/*' \
 		! -path '*/.junk-dupes/*' \
 		! -path '*/exam[1-2]/*' \
@@ -54,6 +54,7 @@ for f in "${XML_FILES[@]}"; do
 	# .xopp is just gzip-compressed XML.
 	dest="$dest_dir/$fbase.xopp"
 	tmp="$(mktemp --tmpdir="$dest_dir" ".$fbase.xopp.XXXXXX")"
+	chmod --reference="$f" "$tmp"
 	gzip -c "$f" >"$tmp"
 	touch -d "@$fmoddate" "$tmp"
 

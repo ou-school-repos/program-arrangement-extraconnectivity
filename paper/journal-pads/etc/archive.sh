@@ -27,8 +27,8 @@ mapfile -d '' XOPP_FILES < <(
 	find "$QUERY_PATH" \
 		\( -type d -name out -o -type d -name .git \) -prune -o \
 		-type f -name '*.xopp' \
-		! -name '*.autosave*' \
-		! -name '*.archive*' \
+		! -path '*.autosave*' \
+		! -path '*.archive*' \
 		! -path '*/.junk-dupes/*' \
 		! -path '*/exam[1-2]/*' \
 		-print0

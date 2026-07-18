@@ -1645,7 +1645,7 @@ theorem globally_optimal_growth_strategy
 
   `penalty_defect` (in `Arrangement/PenaltyExact.lean`) gives the *exact*,
   unconditional identity `|∂V₁| + (X₁+D₁) = |∂V₂| + (X₂+D₂) + ΔD·(n−k)` for any
-  two same-size subsets, where `ΔD = D₁ − D₂` is the defect gap. This identity
+  two same-size subsets, where `ΔD = D₂ − D₁` is the defect gap. This identity
   alone does NOT force a defect tie: for a fixed `(n,k)`, a topology with
   `ΔD > 0` (fewer internal edges than the Hamming Ball) can still match or beat
   its boundary, provided its cross-collision/defect offset
@@ -1662,7 +1662,8 @@ theorem globally_optimal_growth_strategy
   topology to remain tied with the Hamming Ball for ALL sufficiently large
   `(n-k)` — it is not a consequence of `penalty_defect` for an individual,
   fixed `(n,k)`. The uniqueness conjecture below should be read in that
-  asymptotic sense.
+  discussion above is asymptotic; the uniqueness conjecture below remains a stronger,
+  pointwise statement for each fixed `(R,n,k)`.
 
   However, the exact boundary formula is `|N(V')| = U*(n-k) - X(V')`. If two graphs
   tie in unique roots `U`, the one that maximizes cross-collisions `X(V')` wins.

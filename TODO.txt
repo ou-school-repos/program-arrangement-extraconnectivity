@@ -7,9 +7,10 @@ The two open hypotheses tracked in docs/lean-proof-status.md are:
 1. UniversalLowerBound — still an unproven hypothesis (this is the Lean-side stand-in for prop:universal in the paper).
 2. HBCrossCollisions — still a hypothesis interface; it's now blocked on just one remaining piece, CrossRecurrence (its siblings CrossBaseOne and CrossDimStable are both proven).
 
-Note also CollisionAdjustedBound and sub_optimal_penalty are refuted and superseded:
-they are provably false (the star graph is a direct counterexample) and have been
-replaced by the unconditional identities in Arrangement/PenaltyExact.lean. They are
+Note also CollisionAdjustedBound is refuted and superseded, while
+sub_optimal_penalty is vacuously sound but depends on that false hypothesis and
+should not be advertised. The star graph directly refutes CollisionAdjustedBound;
+both have been replaced by the unconditional identities in Arrangement/PenaltyExact.lean. They are
 not live hypothesis interfaces and should not be presented as plausible open ones —
 see docs/lean-proof-status.md's "Superseded" note.
 
