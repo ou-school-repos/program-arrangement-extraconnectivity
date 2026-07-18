@@ -4,27 +4,31 @@
 # set -x
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"
-cd "$PROJECT_ROOT"
+NESTED_DIR="paper/journal-pads"
+cd "$PROJECT_ROOT/$NESTED_DIR"
 
 # User supplied directory path (otherwise default to PROJECT_ROOT)
 if [ -z "$1" ]; then
-	QUERY_PATH="$PROJECT_ROOT"
+	QUERY_PATH="$PROJECT_ROOT/$NESTED_DIR"
 else
 	QUERY_PATH="$(realpath "$1")"
 fi
+
+echo $QUERY_PATH
 
 # Input variables
 PNG_DPI="${dpi:-72}"
 
 XOPP_FILES=$(
 	find "$QUERY_PATH" -name \*.xopp |
-	grep -v "\\.autosave" | grep -v "\\.archive" | grep -v "\\.junk-dupes" | grep -v "/exam[1-2]/"
+		grep -v "\\.autosave" | grep -v "\\.archive" | grep -v "\\.junk-dupes" | grep -v "/exam[1-2]/"
 )
 test "$XOPP_FILES"
 
 # Perform archiving operations
 for f in $XOPP_FILES; do
 	echo "$f"
+	continue
 	fmoddate=$(stat -c "%Y" $f)
 	fbase="$(basename $f .xopp)"
 
@@ -57,5 +61,5 @@ for f in $XOPP_FILES; do
 	touch -d @$fmoddate out/xml/$fbase.xml
 
 	# cd back to original directory, for good measure
-	cd "$PROJECT_ROOT"
+	cd "$PROJECT_ROOT/$NESTED_DIR"
 done

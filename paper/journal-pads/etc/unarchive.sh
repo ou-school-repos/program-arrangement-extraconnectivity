@@ -4,11 +4,12 @@
 set -x
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"
-cd "$PROJECT_ROOT"
+NESTED_DIR="paper/journal-pads"
+cd "$PROJECT_ROOT/$NESTED_DIR"
 
 # User supplied directory path (otherwise default to PROJECT_ROOT)
 if [ -z "$1" ]; then
-	QUERY_PATH="$PROJECT_ROOT"
+	QUERY_PATH="$PROJECT_ROOT/$NESTED_DIR"
 else
 	QUERY_PATH="$(realpath "$1")"
 fi
