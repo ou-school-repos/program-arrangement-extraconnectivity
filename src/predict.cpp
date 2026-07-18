@@ -252,8 +252,8 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
     // Tight upper bound on pre-dedup pushes: for each of the k ball vertices
     // and each of its k positions, exactly (n-k) of the n symbols are absent
     // from that vertex and can trigger a push. size_t arithmetic avoids
-    // overflow for large R; this still does not bound the post-dedup size,
-    // which is the actual memory driver (see header comment).
+    // overflow at supported R; it therefore also bounds post-dedup size,
+    // which is asymptotically close to this allocation (see header comment).
     const size_t reserve_hint = static_cast<size_t>(k) *
                                 static_cast<size_t>(k) *
                                 static_cast<size_t>(n - k);
