@@ -357,7 +357,7 @@ The algebraic engine of this framework relies on a fundamental subadditivity ine
 	By strong induction on $x + y$: assume \eqref{eq:subadditivity} holds for all pairs summing to less than $x + y$. Case-split on the parity of both $x$ and $y$ (four cases) and expand via the even/odd recurrences $\Eseq(2m) = 2\, \Eseq(m) + m$ and $\Eseq(2m+1) = \Eseq(m) + \Eseq(m+1) + m$. In each case, the recurrences halve the arguments, reducing the inequality to the inductive hypothesis at a strictly smaller sum. Mechanically verified in Lean~4 (\texttt{E\_add\_min\_le}).
 \end{proof}
 
-By iterating Lemma~\ref{lem:subadditivity} pairwise across the fibers of $V'$ induced by a coordinate, the two-part bound extends to the arbitrary multi-way partitions used below, yielding the central structural theorem: the Hamming Ball maximizes the defect among all connected subgraphs.
+For fiber sizes $c_1,\ldots,c_m$, write $y=|U_p(V')|$. Injectivity of the coordinate projection gives $\max_i c_i\le y$, and iterating Lemma~\ref{lem:subadditivity} while tracking this maximum yields $\sum_i \Eseq(c_i)+R-y\le\Eseq(R)$, the multi-way bound used below; consequently, the Hamming Ball maximizes the defect among all connected subgraphs.
 
 \begin{theorem}[Defect Bound]\label{them:defect}
 	For any $R$-element subset $V' \subseteq V(A(n,k))$:
