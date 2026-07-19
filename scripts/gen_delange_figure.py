@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+"""
+Render the Delange fluctuation and correction-density figure (delange-structure.pdf).
+"""
+
 import math
 
 import matplotlib

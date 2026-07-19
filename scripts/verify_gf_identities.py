@@ -25,28 +25,34 @@ all_ok = True
 
 
 def check(label, ok):
+    """Record and print the pass/fail result of a single identity check."""
     global all_ok
     all_ok = all_ok and ok
     print(label, ok)
 
 
 def popcount(x):
+    """Binary digit sum (number of set bits) of x."""
     return bin(x).count("1")
 
 
 def bl(x):
+    """Bit length of x."""
     return x.bit_length()
 
 
 def E(N):
+    """Cumulative popcount sum(popcount(i) for i in range(N)) (OEIS A000788)."""
     return sum(popcount(i) for i in range(N))
 
 
 def sbl(N):
+    """Cumulative bit-length sum sum(bl(i) for i in range(N))."""
     return sum(bl(i) for i in range(N))
 
 
 def C(R):
+    """Correction constant C(R) = (R-1) + sbl(R) - E(R)."""
     return 0 if R == 0 else (R - 1) + sbl(R) - E(R)
 
 
@@ -79,6 +85,7 @@ M = 600
 
 
 def series_mul(a, b):
+    """Multiply two power series a, b truncated to degree M."""
     c = [0] * (M + 1)
     for i, ai in enumerate(a):
         if ai:
@@ -91,6 +98,7 @@ one_minus_x_inv = [1] * (M + 1)  # 1/(1-x)
 
 
 def geom(period_start, step):  # x^a/(1-x^b)
+    """Truncated series for x^period_start / (1 - x^step)."""
     c = [0] * (M + 1)
     t = period_start
     while t <= M:
@@ -103,6 +111,7 @@ def geom(period_start, step):  # x^a/(1-x^b)
 #      -> use x^{2^j}/(1+x^{2^j}) = sum_{t odd} (-1)^{t-1}...
 # easier: x^{2^j}/(1+x^{2^j}) = x^{2^j} - x^{2*2^j} + x^{3*2^j} - ...
 def alt(pow2):
+    """Truncated series for x^pow2 / (1 + x^pow2) as an alternating sum."""
     c = [0] * (M + 1)
     t = pow2
     s = 1
@@ -218,6 +227,7 @@ for n in range(1, 1 << 16):
 
 
 def C(R):
+    """Correction constant C(R), recomputed from the cumulative table Ev for Prop D."""
     d = (R - 1).bit_length()
     return R * (d + 1) - 2**d - Ev[R]
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+"""Encode small example graphs (R=9, R=10 minimum-cut sets) as graph6 strings."""
 
 
 def to_graph6(N, edges):
+    """Encode an N-vertex graph given as an edge set into graph6 format."""
     n_char = chr(N + 63)
 
     bits = ""

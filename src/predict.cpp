@@ -26,9 +26,9 @@
 // Usage: ./predict [R]       Single R prediction
 //        ./predict --csv N   CSV output for R=2..N
 //
-// Vertex representation: inline std::array<SymT, K> with lexicographical ordering.
-// SymT = uint8_t when R ≤ 127, uint16_t for R ≥ 128.
-// Vertex storage is inline; verify still allocates large neighbor vectors.
+// Vertex representation: inline std::array<SymT, K> with lexicographical
+// ordering. SymT = uint8_t when R ≤ 127, uint16_t for R ≥ 128. Vertex storage
+// is inline; verify still allocates large neighbor vectors.
 
 #include <algorithm>
 #include <charconv>
@@ -49,6 +49,8 @@ static inline int128_t widen(int64_t x) { return x; }
 // -- Vertex type: dynamic-size stack struct, templatized on size and symbol
 // type --
 
+/// Stack-allocated fixed-capacity vertex: K symbols of type SymT,
+/// memcmp-ordered.
 template <int K, typename SymT> struct Vertex {
     static constexpr SymT SENTINEL = static_cast<SymT>(~SymT{0}); // max value
     std::array<SymT, K> syms = {};
@@ -56,6 +58,7 @@ template <int K, typename SymT> struct Vertex {
     bool operator==(const Vertex &o) const { return syms == o.syms; }
 };
 
+/// True if sym appears among the first `width` symbols of vertex v.
 template <int K, typename SymT>
 static bool contains_sym(const Vertex<K, SymT> &v, int sym, int width) {
     for (int i = 0; i < width; i++)
@@ -64,6 +67,8 @@ static bool contains_sym(const Vertex<K, SymT> &v, int sym, int width) {
     return false;
 }
 
+/// Render the first `width` symbols of v as letters (A-Z, a-z; '?' beyond
+/// that).
 template <int K, typename SymT>
 static std::string vertex_to_string(const Vertex<K, SymT> &v, int width) {
     std::string str(width, ' ');
@@ -80,6 +85,7 @@ static std::string vertex_to_string(const Vertex<K, SymT> &v, int width) {
 }
 
 // -- 128-bit integer printing (for large R where coeff*R > 2^63) ----
+/// Decimal string representation of a (possibly negative) 128-bit integer.
 static std::string i128_to_string(int128_t x) {
     if (x == 0)
         return "0";
@@ -99,14 +105,18 @@ static std::string i128_to_string(int128_t x) {
 
 // -- A000788: cumulative popcount — O(log R) ------------------------
 
+/// Number of set bits in n.
 static uint64_t popcount_u(uint64_t n) {
     return static_cast<uint64_t>(__builtin_popcountll(n));
 }
 
+/// Bit length of n (0 for n == 0).
 static uint64_t bit_length_u(uint64_t n) {
     return n == 0 ? 0 : 64 - static_cast<uint64_t>(__builtin_clzll(n));
 }
 
+/// Cumulative binary weight sum_{i<n} popcount(i) (OEIS A000788), via radix-2
+/// recursion.
 static int64_t A000788(int64_t n) {
     if (n <= 0)
         return 0;
@@ -122,6 +132,8 @@ static int64_t A000788(int64_t n) {
 // C(R) = (R-1) + Σ_{x=1}^{R-1} bit_length(x) - E(R)
 // Equivalently: (R-1) + Σ zero-bits in binary(1..R-1)
 
+/// The correction constant C(R) = (R-1) + sum of bit_length(1..R-1) -
+/// A000788(R).
 static int64_t constant_analytical(int64_t R_val) {
     if (R_val <= 0)
         return 0;
@@ -132,6 +144,8 @@ static int64_t constant_analytical(int64_t R_val) {
     return (R_val - 1) + L - nk1;
 }
 
+/// Parse arg as a base-10 int into out; returns false if arg is not a valid
+/// integer.
 static bool parse_int_arg(const std::string &arg, int &out) {
     const char *begin = arg.data();
     const char *end = begin + arg.size();
@@ -141,6 +155,8 @@ static bool parse_int_arg(const std::string &arg, int &out) {
 
 // -- Hamming ball construction ----------------------------------------
 
+/// Build the `width`-vertex lexicographic Hamming ball as a vector of Vertex<K,
+/// SymT>.
 template <int K, typename SymT>
 static std::vector<Vertex<K, SymT>> build_hamming_ball(int width) {
     if (width > K) {
@@ -174,6 +190,8 @@ struct FormulaResult {
     int64_t constant;
 };
 
+/// Compute (nk1, constant) for a Hamming-ball vertex set by direct
+/// construction, O(R^3).
 template <int K, typename SymT>
 static FormulaResult compute_formula(const std::vector<Vertex<K, SymT>> &verts,
                                      int width) {
@@ -240,6 +258,8 @@ static FormulaResult compute_formula(const std::vector<Vertex<K, SymT>> &verts,
 
 // -- Brute-force verification — O(R^3 * log R) -------------------------
 
+/// Brute-force |N(V')| by explicit neighbor enumeration and dedup, O(R^3 log
+/// R).
 template <int K, typename SymT>
 static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
                                      int n, int k) {
@@ -277,6 +297,9 @@ static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
 
 // -- Verify runner — templated on symbol type -------------------------
 
+/// Build a Hamming ball at R, check it against the analytical predictions, and
+/// cross-check the brute-force neighbor count against the formula. Returns 0 on
+/// success.
 template <int K, typename SymT>
 static int run_verify(int R, int64_t expected_nk1, int64_t expected_const,
                       bool quiet = false) {
@@ -326,6 +349,8 @@ static int run_verify(int R, int64_t expected_nk1, int64_t expected_const,
 
 // -- Main -------------------------------------------------------------
 
+/// CLI entry point: single-R prediction, --verify, --verify-range, and --csv
+/// modes.
 int main(int argc, const char *argv[]) {
     // -- Flag parsing -------------------------------------------------
     bool csv_mode = false;

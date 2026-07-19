@@ -12,6 +12,7 @@
 // ── Formatting helpers ─────────────────────────────────────────────────────
 inline constexpr const char* PRUNE_SEP = "   ";
 
+/// Format an integer with thousands separators, e.g. 1234567 -> "1,234,567".
 inline std::string fcom(uint64_t n) {
     std::string s = std::to_string(n);
     for (int i = (int)s.length() - 3; i > 0; i -= 3)
@@ -19,6 +20,7 @@ inline std::string fcom(uint64_t n) {
     return s;
 }
 
+/// Format a floating-point value with thousands separators and fixed precision.
 inline std::string fcom(double n, int precision = 1) {
     std::ostringstream out;
     out << std::fixed << std::setprecision(precision) << n;
