@@ -703,8 +703,8 @@ The double-counting argument:
    `docs/lean-proof-status.md`'s "Superseded" note and the module docstring
    above.)
 
-This mechanizes the (n−k) scaling factor; combined with `HBCrossCollisions`
-it yields the exact penalty identities in `Arrangement/PenaltyExact.lean`.
+This mechanizes the (n−k) scaling factor, from which the exact penalty identities
+in `Arrangement/PenaltyExact.lean` follow unconditionally.
 -/
 
 
