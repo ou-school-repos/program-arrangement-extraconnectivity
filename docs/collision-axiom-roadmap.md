@@ -144,8 +144,9 @@ Proving `CrossRecurrence` over the definitions of `cross_collisions` and
 
 **`HBCrossCollisions`**: only `CrossRecurrence` remains to plug into the
 already-completed induction driver (Step 4's arithmetic/inductive scaffold is
-done; `CrossBaseOne` and `CrossDimStable` are proven) — a comparatively small,
-focused proof, not a large undertaking.
+done; `CrossBaseOne` and `CrossDimStable` are proven). The proof source still
+records an open circularity concern between this interface and the driver, so
+the remaining effort is unscoped until that concern is resolved.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares,
