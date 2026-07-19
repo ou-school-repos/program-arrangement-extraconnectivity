@@ -1,16 +1,23 @@
 #!/bin/bash -e
 
+cleanup() {
+  [[ -n "${tmp:-}" && -e "$tmp" ]] && rm -f -- "$tmp"
+}
+trap cleanup EXIT
+
 for pdf in "$@"; do
   timestamp="$(stat -c "%Y" "$pdf")"
   pdf_date="$(date -u -d "@$timestamp" '+%Y:%m:%d %H:%M:%S+00:00')"
   tmp="$(mktemp --tmpdir="$(dirname "$pdf")" ".$(basename "$pdf").XXXXXX")"
 
+  qpdf --deterministic-id "$pdf" "$tmp"
+
   exiftool -overwrite_original \
     -CreateDate="$pdf_date" \
     -ModifyDate="$pdf_date" \
-    "$pdf" >/dev/null
+    "$tmp" >/dev/null
 
-  qpdf --deterministic-id "$pdf" "$tmp"
   mv -f "$tmp" "$pdf"
   touch -d "@$timestamp" "$pdf"
+  tmp=""
 done

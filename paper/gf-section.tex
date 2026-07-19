@@ -140,14 +140,20 @@ operational form of Proposition~\ref{prop:mahler}.
 	By Cauchy--Hadamard applied to the ordinary generating function of $a$,
 	its radius of convergence is $1/\rho$ with $\rho = \max_i |\lambda_i|$,
 	and $a(R)^{1/R} \to 1$ since $a(R) = \Theta(R\log R)$; hence $\rho = 1$,
-	so every $|\lambda_i| \le 1$. Let $K \ge 0$ be the largest degree of
+	so every $|\lambda_i| \le 1$. Combine terms sharing the same $\lambda_i$
+	(adding their polynomial coefficients) so that the $\lambda_i$ occurring
+	in the sum are pairwise distinct. Let $K \ge 0$ be the largest degree of
 	$p_i$ among indices with $|\lambda_i| = 1$ (such indices exist, else
-	$a(R) \to 0$), and let $h(R) = \sum_{|\lambda_i|=1} \mathrm{lead}(p_i)
-	\lambda_i^R$ collect the corresponding leading coefficients; every other
-	term is $o(R^K)$, so $a(R)/R^K - h(R) \to 0$. As $h$ is a nonzero finite
-	sum of unit-modulus exponentials, orthogonality of distinct characters
-	gives $\frac{1}{N}\sum_{R<N} |h(R)|^2 \to \sum_{|\lambda_i|=1}
-	|\mathrm{lead}(p_i)|^2 > 0$, so $h$ is bounded (a finite trigonometric
+	$a(R) \to 0$); let $I = \{i : |\lambda_i| = 1,\ \deg p_i = K\}$
+	(nonempty by choice of $K$), and let $h(R) = \sum_{i \in I} c_i
+	\lambda_i^R$, where $c_i$ is the coefficient of $R^K$ in $p_i$. Every
+	term with $i \notin I$ is $o(R^K)$ --- either $|\lambda_i| < 1$, so it
+	decays exponentially, or $|\lambda_i| = 1$ with $\deg p_i < K$, so it is
+	$O(R^{\deg p_i}) = o(R^K)$ --- so $a(R)/R^K - h(R) \to 0$. As $h$ is a
+	nonzero finite sum of unit-modulus exponentials with pairwise distinct
+	$\lambda_i$ ($i \in I$), orthogonality of distinct characters
+	gives $\frac{1}{N}\sum_{R<N} |h(R)|^2 \to \sum_{i \in I}
+	|c_i|^2 > 0$, so $h$ is bounded (a finite trigonometric
 	sum) but does not tend to $0$ in mean square; in particular $a(R)/R^K$
 	is bounded and $\limsup_R |a(R)|/R^K > 0$. But $a(R)/R^K =
 	\tfrac{1}{2}R^{1-K}\log_2 R + O(R^{1-K})$ tends to $\infty$ for $K \le 1$

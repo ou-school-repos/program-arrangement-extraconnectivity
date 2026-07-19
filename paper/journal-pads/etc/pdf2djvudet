@@ -6,6 +6,7 @@
 #   *.djvu diff=djvu
 
 set -e
+set -o pipefail
 
 for f in "$@"; do
     echo "Processing: $f"
@@ -29,19 +30,23 @@ for f in "$@"; do
 
     # 3. SANITIZE XMP (The "Kill List")
     # We kill the volatile XMP data as before
-    djvused "$OUT" -e 'print-xmp' | \
-        sed -E '/xmp:MetadataDate|xmpMM:DocumentID|xmpMM:InstanceID|stEvt:instanceID|stEvt:when|xmp:CreatorTool/d' > "$TEMP_XMP"
+    TEMP_XMP_RAW="$TMPDIR_PDD/temp_xmp_raw.txt"
+    djvused "$OUT" -e 'print-xmp' > "$TEMP_XMP_RAW"
+    sed -E '/xmp:MetadataDate|xmpMM:DocumentID|xmpMM:InstanceID|stEvt:instanceID|stEvt:when|xmp:CreatorTool/d' "$TEMP_XMP_RAW" > "$TEMP_XMP"
 
-    djvused "$OUT" -e "set-xmp $TEMP_XMP" -s
+    djvused "$OUT" -e "set-xmp \"$TEMP_XMP\"" -s
 
     # 4. INJECT THE CANARY (Standard Metadata)
     # We pull the existing metadata, and force our PDF_MOD_DATE into a "source_mod" field.
     # This ensures that if the PDF changes, this line changes.
-    djvused "$OUT" -e 'select 1; print-meta' | \
-        grep -v $'^source_mod\t' > "$TEMP_META"
+    TEMP_META_RAW="$TMPDIR_PDD/temp_meta_raw.txt"
+    djvused "$OUT" -e 'select 1; print-meta' > "$TEMP_META_RAW"
+    # grep -v exits 1 (with pipefail) when every line matched the filter
+    # (i.e. nothing was removed) -- an expected outcome, not a failure.
+    grep -v $'^source_mod\t' "$TEMP_META_RAW" > "$TEMP_META" || true
     printf 'source_mod\t"%s"\n' "$PDF_MOD_DATE" >> "$TEMP_META"
 
-    djvused "$OUT" -e "set-meta $TEMP_META" -s
+    djvused "$OUT" -e "set-meta \"$TEMP_META\"" -s
 
     # 5. SYNC FILESYSTEM MODIFIED DATE
     # This makes the .djvu match the .pdf on the disk level
