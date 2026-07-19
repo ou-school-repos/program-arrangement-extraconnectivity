@@ -20,7 +20,7 @@ declarations.
 | Section                  | Theorem / Definition                                                 | Status     |
 | ------------------------ | -------------------------------------------------------------------- | ---------- |
 | Subadditivity of A000788 | `E_add_min_le`: E(x)+E(y)+min(x,y) <= E(x+y)                         | PROVEN     |
-| Defect Bound             | `E_seq_list_sum_le`: generalized partition subaddivity               | PROVEN     |
+| Defect Bound             | `E_seq_list_sum_le`: generalized partition subadditivity               | PROVEN     |
 | Hypercube Embedding      | `Cube`, `embed_cube`, `embedding_is_injective`                       | PROVEN     |
 | Harper's Theorem         | `harpers_edge_isoperimetry`: cubeEdges(S) <= E(\|S\|)                | PROVEN\*   |
 | Graph Definition         | `ArrVertex`, `Fintype`, `DecidableEq`, `arr_adjacent`                | PROVEN     |

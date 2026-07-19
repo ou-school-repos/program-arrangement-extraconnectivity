@@ -2,7 +2,7 @@
 
 ❯ commit.
 
-  give me the commands to run the sweep, and let me now what else is left analytically or paper wise
+  give me the commands to run the sweep, and let me know what else is left analytically or paper wise
 
   Committed 96084d5, ran 3 shell commands
 

@@ -26,7 +26,7 @@
 // Usage: ./predict [R]       Single R prediction
 //        ./predict --csv N   CSV output for R=2..N
 //
-// Vertex representation: stack-allocated SymT[MaxK] with memcmp ordering.
+// Vertex representation: inline std::array<SymT, K> with lexicographical ordering.
 // SymT = uint8_t when R ≤ 127, uint16_t for R ≥ 128.
 // Vertex storage is inline; verify still allocates large neighbor vectors.
 
