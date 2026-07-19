@@ -43,7 +43,14 @@ for f in "$@"; do
     djvused "$OUT" -e 'select 1; print-meta' > "$TEMP_META_RAW"
     # grep -v exits 1 (with pipefail) when every line matched the filter
     # (i.e. nothing was removed) -- an expected outcome, not a failure.
-    grep -v $'^source_mod\t' "$TEMP_META_RAW" > "$TEMP_META" || true
+    if grep -v $'^source_mod\t' "$TEMP_META_RAW" > "$TEMP_META"; then
+        :
+    else
+        rc=$?
+        if (( rc != 1 )); then
+            exit "$rc"
+        fi
+    fi
     printf 'source_mod\t"%s"\n' "$PDF_MOD_DATE" >> "$TEMP_META"
 
     djvused "$OUT" -e "set-meta \"$TEMP_META\"" -s
