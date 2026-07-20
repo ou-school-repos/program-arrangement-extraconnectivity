@@ -1,180 +1,237 @@
+import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
--- NOTE: also needs the arithmetic layer already proven in
--- CrossCollisionsResearch.lean (E_seq_sum_decomposition, sum_bit_length_pow,
--- sum_bit_length_sum_decomposition, E_seq_le_sum_bit_length, popcount lemmas).
--- Either import that file or move those lemmas here / into a shared file.
+import Arrangement.unstable.CrossCollisionsResearch
+-- ^ adjust the last module name if the lakefile maps `unstable/` differently.
+-- This file consumes (all verified present in the current sources):
+--   CrossCollisionsResearch.lean: popcount_zero, popcount_div_two,
+--     bit_length_eq_size, C_constant_def, E_seq_sum_decomposition,
+--     sum_bit_length_sum_decomposition, E_seq_le_sum_bit_length,
+--     sum_bit_length_pow, CrossBaseOne, cross_base_one.
+--   ArrangementExtraconnectivity.lean: popcount_even, popcount_odd,
+--     coord_boundary, total_coord_edges, cross_collisions, external_neighbors,
+--     external_neighbors_le_total_coord, drop_pos, embed_vertex, embed_cube,
+--     nat_to_cube, nat_to_cube_injective, embed_vertex_injective_cube,
+--     hamming_ball_subset, HBCrossCollisions, E_seq, sum_bit_length, C_constant.
 
 open Finset
 
 /-!
-# CrossTop: an unconditional closed form for the Hamming-ball cross-collision count
+# CrossTop: unconditional closed form for the Hamming-ball cross-collision count
 
-## Why this file exists (read before proving `CrossRecurrence`)
+**Revision note (2026-07-19):** this supersedes the prior version of this file
+(16 `sorry` tactics) with a cleaner bit-toolbox layer, a sorry-free
+`hpow`/`hfull` inside `cross_top`, and a self-contained `hb_cross_collisions_closed`
+(no longer takes `CrossBaseOne` as an external hypothesis parameter). Net
+result: 13 `sorry` tactics, down from 16. This has **not** been checked by
+`lake build` in this environment (no Mathlib build cache available); treat
+every lemma below, including ones without a literal `sorry`, as unverified
+until it compiles.
+The four Bridge lemmas (`embed_mem_coord_boundary_iff`,
+`bd_mult_embed_eq_ball_deg`, `mem_two_boundaries_is_cube`,
+`cross_collisions_eq_cube_sum`) are the actual remaining combinatorial
+content and are unproven here exactly as they were in the prior revision.
 
-`CrossRecurrence` as currently stated in `CrossCollisionsResearch.lean` is TRUE
-but is the wrong interface. It asserts, unconditionally,
+## Why this file exists (the circularity in `CrossRecurrence`)
 
-  cross(HB R, d) = cross(HB 2^(d-1), d) + cross(HB m, d) + ext_cube d m .
+`CrossRecurrence` (§7 of CrossCollisionsResearch.lean) is TRUE but is the wrong
+interface. Unfolding its three terms:
 
-One can show (see the analysis below) that
-  cross(HB 2^(d-1), d) = 0,
-  cross(HB m, d)        = edge_boundary(m, d-1) - vertex_boundary(m, d-1),
-  cross(HB R, d)        = edge_boundary(m, d-1),
-so `CrossRecurrence` reduces to `ext_cube d m = vertex_boundary(m, d-1)`, which
-is *equivalent to `HBCrossCollisions m` itself*. The strong-induction driver
-hands its induction hypotheses only to itself — the Prop `CrossRecurrence`
-receives none — so any direct proof of `cross_recurrence : CrossRecurrence n k`
-must re-derive the whole target theorem for `m` from scratch. The interface is
-circular in practice.
+  cross(HB 2^(d-1), d) = 0                                (bottom half is a full subcube)
+  cross(HB m, d)       = edge_bd(m, d-1) - vertex_bd(m, d-1)
+  cross(HB R, d)       = edge_bd(m, d-1)                  (this file's `cross_top`)
 
-The fix: prove the closed form directly. For `R = 2^(d-1) + m`, `0 < m ≤ 2^(d-1)`:
+so `CrossRecurrence` reduces to `ext_cube d m = vertex_bd(m, d-1)`, which holds
+iff `HBCrossCollisions m` holds. The strong-induction driver keeps its
+induction hypotheses to itself — the Prop `CrossRecurrence` receives none — so
+a direct proof of `cross_recurrence` must re-derive the target theorem at `m`
+from scratch. (Verified numerically: scripts/verify_crosstop.py, check 7.)
 
-  **CrossTop:  cross_collisions (HB R, d) + 2 * E_seq m = m * (d - 1)**
+## The replacement
 
-i.e. the cross-collision count of the top-heavy ball is *exactly the edge
-boundary of HB(m) inside Q_(d-1)*. This is unconditional, needs no recursion,
-and makes the strong-induction driver (and even `CrossDimStable`) unnecessary:
-`HBCrossCollisions R` for `R ≥ 2` follows from CrossTop by pure arithmetic.
+  **cross_top :  cross_collisions (HB (2^(d-1) + m)) + 2 * E_seq m = m * (d-1)**
 
-## Why CrossTop is true (the combinatorial argument)
+for `1 ≤ d`, `0 < m ≤ 2^(d-1)`, `d ≤ k`, `k + d ≤ n`. Unconditional; kills the
+strong-induction driver AND removes `CrossDimStable` from the main path
+(`cross_dim_stable` stays valid and useful, just no longer load-bearing).
+`HBCrossCollisions R` for all `R ≥ 1` then follows by pure arithmetic
+(`hb_cross_collisions_closed` at the bottom), with `cross_base_one` as the
+only other combinatorial input.
 
-Work in the ball `V = embed '' (range R)` inside the d-subcube of A(n,k).
+Every lemma below, including each `sorry`-marked one individually, is verified
+by exhaustive brute force in scripts/verify_crosstop.py (checks 0-7) against a
+model that reproduces `HBCrossCollisions` exactly on A(7,3), A(8,4), A(9,4).
 
-1. (Collisions are cube vertices.) If an external vertex `w` lies in
-   `coord_boundary V p ∩ coord_boundary V q` with `p ≠ q`, take witnesses
-   `v = embed i` (w agrees with v off p) and `v' = embed i'` (agrees off q).
-   Then `w` agrees with `v` everywhere except position `p`, and
-   `w p = v' p`, which is one of the two cube symbols at `p`. Since `w ≠ v`,
-   `w p` is the *other* cube symbol, forcing `p < d` and
-   `w = embed (i ^^^ 2^p)`. So only vertices of the form `embed j`,
-   `j ∈ Ico R (2^d)`, can be counted more than once; every other external
-   vertex contributes multiplicity exactly 1.
+## Proof status map
 
-2. (Multiplicity of a cube vertex.) For `j ∈ Ico R (2^d)`,
-   `embed j ∈ coord_boundary V p ↔ p < d ∧ j ^^^ 2^p < R`.
-   Hence `mult (embed j) = ball_deg R d j` (defined below).
-
-3. (Everyone in the top half is hit.) For `j ∈ Ico R (2^d)` we have
-   `testBit j (d-1) = true`, so its partner `j ^^^ 2^(d-1) = j - 2^(d-1)`
-   lies in `range (2^(d-1)) ⊆ range R`. Hence `ball_deg R d j ≥ 1` for ALL
-   top external vertices, and
-
-     cross(HB R) = Σ_{j ∈ Ico R (2^d)} (ball_deg R d j - 1).
-
-4. (Reindex to the small ball.) Writing `j = 2^(d-1) + j'`, `j' ∈ Ico m (2^(d-1))`:
-     ball_deg R d (2^(d-1) + j') = 1 + ball_deg m (d-1) j',
-   so cross(HB R) = Σ_{j' ∈ Ico m (2^(d-1))} ball_deg m (d-1) j'
-                  = edge boundary of HB(m) in Q_(d-1)
-                  = m * (d-1) - 2 * E_seq m.
-
-All four steps, the final arithmetic, and CrossTop itself have been verified
-by exhaustive brute force on A(8,4), A(9,4), A(11,5), A(12,5) for all feasible R
-(see verify_crosstop.py in the same directory as this file's delivery bundle).
-
-## What is fully proven here vs. left as `sorry`
-
-Layer A (pure ℕ / cube counting) is written out in full in the repo's style
-(omega-heavy, additive statements to dodge truncated subtraction) and should
-compile with at most cosmetic fixes. Layer B (the Finset bridge to
-`cross_collisions`) is stated precisely with detailed proof plans but left as
-`sorry`, because it manipulates repo definitions (`coord_boundary`,
-`total_coord_edges`, `external_neighbors`, `cross_collisions`, `drop_pos`,
-`embed_vertex`) whose exact normal forms I could only infer from the diff
-context — those proofs need to be finished interactively against the real
-definitions. Layer C (assembly + the new driver) is arithmetic and written in
-full modulo the Layer B inputs.
+  PROVEN (modulo compile shake-out): xor_two_pow_involutive,
+    testBit_xor_two_pow, xor_two_pow_lt_of_testBit_true,
+    lt_xor_two_pow_of_testBit_false, xor_two_pow_lt_iff, xor_two_pow_lt_cube,
+    ball_deg_self, sum_ball_deg (given its two helper sorries),
+    arr_adjacent_of_drop_pos_eq_of_ne', cross_top (given Layer B),
+    E_seq_pow, C_constant_add_E_seq, hb_cross_collisions_closed.
+  SORRY, small/mechanical (est. 10-40 interactive lines each):
+    testBit_two_pow_add, popcount_eq_card_testBit, sum_Ico_shift_reindex,
+    the Bool-normalization step inside sum_ball_deg, one_le_bd_mult_of_external,
+    one_le_ball_deg_top, ball_deg_top.
+  SORRY, the real Finset work (est. 40-120 lines each):
+    sum_ball_deg_grow, total_eq_sum_mult, embed_mem_coord_boundary_iff,
+    bd_mult_embed_eq_ball_deg, mem_two_boundaries_is_cube,
+    cross_collisions_eq_cube_sum.
 -/
 
 namespace Arrangement
 
-/-! ### Layer A0: XOR-with-a-power-of-two toolbox -/
+/-! ### Layer A0: bit toolbox
 
-section XorTwoPow
+Mathlib names relied on in this section (each long-standing; if renamed in the
+pinned toolchain the fix is local): `Nat.testBit_xor`,
+`Nat.testBit_two_pow_self`, `Nat.testBit_two_pow_of_ne`, `Nat.lt_of_testBit`,
+`Nat.eq_of_testBit_eq` (already used in this repo),
+`Nat.testBit_eq_false_of_lt` (already used in this repo), `Nat.xor_assoc`,
+`Nat.xor_self`, `Nat.xor_zero`, `Nat.pow_lt_pow_right`. -/
 
-/-- Flipping a set bit subtracts that power of two (stated additively). -/
-lemma xor_two_pow_of_testBit_true {j p : ℕ} (h : j.testBit p = true) :
-    j ^^^ 2 ^ p + 2 ^ p = j := by
-  -- Proof plan: `Nat.eq_of_testBit_eq` on both sides, or induction on `p`
-  -- generalizing `j` with the div/mod peeling used in `popcount_two_pow_add`.
-  -- Mathlib candidates: `Nat.testBit_xor`, `Nat.testBit_two_pow`,
-  -- `Nat.xor_two_pow` (if present in the pinned Mathlib).
-  sorry
+section BitToolbox
 
-/-- Flipping a clear bit adds that power of two. -/
-lemma xor_two_pow_of_testBit_false {j p : ℕ} (h : j.testBit p = false) :
-    j ^^^ 2 ^ p = j + 2 ^ p := by
-  sorry
+/-- Flipping bit `p` twice is the identity. -/
+lemma xor_two_pow_involutive (j p : ℕ) : (j ^^^ 2 ^ p) ^^^ 2 ^ p = j := by
+  rw [Nat.xor_assoc, Nat.xor_self, Nat.xor_zero]
 
-/-- XOR does not leave the cube: `j < 2^D → p < D → j ^^^ 2^p < 2^D`.
-    (Mathlib: `Nat.xor_lt_two_pow` should close this directly.) -/
-lemma xor_two_pow_lt {j p D : ℕ} (hj : j < 2 ^ D) (hp : p < D) :
+/-- `j ^^^ 2^p` flips bit `p` and agrees with `j` elsewhere. -/
+lemma testBit_xor_two_pow (j p q : ℕ) :
+    (j ^^^ 2 ^ p).testBit q = ((j.testBit q) != decide (p = q)) := by
+  rw [Nat.testBit_xor]
+  by_cases h : p = q
+  · subst h; simp [Nat.testBit_two_pow_self]
+  · simp [Nat.testBit_two_pow_of_ne h, h]
+
+/-- Flipping a set bit strictly decreases the number. -/
+lemma xor_two_pow_lt_of_testBit_true {j p : ℕ} (h : j.testBit p = true) :
+    j ^^^ 2 ^ p < j := by
+  apply Nat.lt_of_testBit p
+  · rw [testBit_xor_two_pow]; simp [h]
+  · exact h
+  · intro q hq
+    rw [testBit_xor_two_pow]
+    simp [show p ≠ q by omega]
+
+/-- Flipping a clear bit strictly increases the number. -/
+lemma lt_xor_two_pow_of_testBit_false {j p : ℕ} (h : j.testBit p = false) :
+    j < j ^^^ 2 ^ p := by
+  apply Nat.lt_of_testBit p
+  · exact h
+  · rw [testBit_xor_two_pow]; simp [h]
+  · intro q hq
+    rw [testBit_xor_two_pow]
+    simp [show p ≠ q by omega]
+
+/-- The strict comparison characterizes the bit. -/
+lemma xor_two_pow_lt_iff {j p : ℕ} :
+    j ^^^ 2 ^ p < j ↔ j.testBit p = true := by
+  constructor
+  · intro hlt
+    by_contra hb
+    have hf : j.testBit p = false := by
+      cases h : j.testBit p with
+      | false => rfl
+      | true => exact absurd h hb
+    have := lt_xor_two_pow_of_testBit_false hf
+    omega
+  · exact xor_two_pow_lt_of_testBit_true
+
+/-- XOR stays inside the cube. (Mathlib's `Nat.xor_lt_two_pow` closes this in
+    one step if present in the pinned version; the bitwise proof below avoids
+    the dependency.) -/
+lemma xor_two_pow_lt_cube {j p D : ℕ} (hj : j < 2 ^ D) (hp : p < D) :
     j ^^^ 2 ^ p < 2 ^ D := by
   have h2 : (2 : ℕ) ^ p < 2 ^ D := Nat.pow_lt_pow_right (by omega) hp
-  exact Nat.xor_lt_two_pow hj h2
+  apply Nat.lt_of_testBit D
+  · rw [Nat.testBit_xor, Nat.testBit_eq_false_of_lt hj,
+      Nat.testBit_eq_false_of_lt h2]
+    rfl
+  · exact Nat.testBit_two_pow_self D
+  · intro q hq
+    have hjq : j < 2 ^ q :=
+      lt_of_lt_of_le hj (Nat.pow_le_pow_right (by omega) (by omega))
+    have hpq : (2 : ℕ) ^ p < 2 ^ q :=
+      lt_of_lt_of_le h2 (Nat.pow_le_pow_right (by omega) (by omega))
+    rw [Nat.testBit_xor, Nat.testBit_eq_false_of_lt hjq,
+      Nat.testBit_eq_false_of_lt hpq,
+      Nat.testBit_two_pow_of_ne (by omega)]
+    rfl
 
-/-- `popcount` as a filter-card over the bit positions, for `m < 2^D`. -/
+/-- Adding `2^D` to `y < 2^D` sets exactly the fresh top bit.
+    Proof plan: three cases on `q` vs `D` via `Nat.testBit_to_div_mod`:
+    `q = D`: `(2^D + y) / 2^D = 1 + y / 2^D = 1` (odd);
+    `q < D`: `(2^D + y) / 2^q = 2^(D-q) + y / 2^q` (the first term is exactly
+    divisible), and `2^(D-q)` is even for `q < D`, so parity is `y`'s;
+    `q > D`: both sides `< 2^q`, so both bits false
+    (`Nat.testBit_eq_false_of_lt`). Verified numerically (check 5). -/
+lemma testBit_two_pow_add {D y : ℕ} (hy : y < 2 ^ D) (q : ℕ) :
+    (2 ^ D + y).testBit q = if q = D then true else y.testBit q := by
+  sorry
+
+/-- `popcount` as a filter-card over bit positions (for `m < 2^D`).
+    Proof plan: induction on `D` peeling the TOP bit:
+    `range (D+1) = insert D (range D)` (`Finset.range_succ`), split on
+    `m < 2^D` (top bit false, apply ih directly) vs `2^D ≤ m < 2^(D+1)`
+    (write `m = 2^D + y`, top bit true by `testBit_two_pow_add`, lower bits
+    equal those of `y` by `testBit_two_pow_add`, and
+    `popcount m = popcount y + 1` is exactly `popcount_two_pow_add` from
+    CrossCollisionsResearch.lean). Verified numerically (check 3b). -/
 lemma popcount_eq_card_testBit {D : ℕ} :
     ∀ {m : ℕ}, m < 2 ^ D →
       popcount m = ((range D).filter (fun p => m.testBit p)).card := by
-  -- Induction on D. Base: m = 0, both sides 0.
-  -- Step: split m = 2 * (m / 2) + m % 2; use `popcount_div_two`,
-  -- `Nat.testBit_succ`-style reindexing of `range (D+1)` via
-  -- `Finset.range_succ` / `Finset.filter_insert`, testBit 0 = decide (m % 2 = 1).
   sorry
 
-end XorTwoPow
+end BitToolbox
 
 /-! ### Layer A: pure cube counting -/
 
 section CubeCounting
 
-/-- Number of `Q_D`-neighbours of `j` lying in the initial segment `{0, …, m-1}`. -/
+/-- Number of `Q_D`-neighbours of `j` lying in the initial segment `{0,…,m-1}`. -/
 def ball_deg (m D j : ℕ) : ℕ :=
   ((range D).filter (fun p => j ^^^ 2 ^ p < m)).card
 
-/-- The vertex `m` itself has exactly `popcount m` neighbours below it:
-    flipping a set bit lands `< m`, flipping a clear bit lands `> m`. -/
+/-- The vertex `m` has exactly `popcount m` neighbours below itself. -/
 lemma ball_deg_self {m D : ℕ} (hm : m < 2 ^ D) :
     ball_deg m D m = popcount m := by
   unfold ball_deg
   rw [popcount_eq_card_testBit hm]
   congr 1
   apply Finset.filter_congr
-  intro p hp
-  rw [mem_range] at hp
-  constructor
-  · intro hlt
-    by_contra hbit
-    have hf : m.testBit p = false := by
-      cases h : m.testBit p with
-      | false => rfl
-      | true => exact absurd h hbit
-    have := xor_two_pow_of_testBit_false hf
-    omega
-  · intro hbit
-    have := xor_two_pow_of_testBit_true (by simpa using hbit)
-    have hpow : 0 < 2 ^ p := Nat.two_pow_pos p
-    omega
+  intro p _
+  simp [xor_two_pow_lt_iff]
 
-/-- The number of `Q_D`-neighbours of `m` lying strictly above it is
-    `D - popcount m` (stated additively). -/
-lemma card_up_neighbors {m D : ℕ} (hm : m < 2 ^ D) :
-    ((range D).filter (fun p => ¬ m.testBit p)).card + popcount m = D := by
-  rw [popcount_eq_card_testBit hm]
-  have := Finset.filter_card_add_filter_neg_card_eq_card
-    (s := range D) (p := fun p => m.testBit p)
-  simp only [card_range] at this
-  omega
+/-- Growth of the strip sum when the ball absorbs `m`: the new into-ball edges
+    are exactly the up-edges of `m`.
 
-/-- **Layer A main lemma.** The (directed, into-the-ball) edge count from the
-    outside of the initial segment equals its edge boundary:
+    Proof plan (verified numerically, check 3):
+    (a) pointwise, for `j ∈ Ico (m+1) (2^D)`:
+        `ball_deg (m+1) D j = ball_deg m D j
+           + ((range D).filter (fun p => j ^^^ 2^p = m)).card`
+        since `{p : j^^^2^p < m+1} = {p : j^^^2^p < m} ⊎ {p : j^^^2^p = m}`
+        (`Nat.lt_succ_iff_lt_or_eq`, `Finset.filter_or`,
+        `Finset.card_union_of_disjoint`);
+    (b) sum the correction and swap the double count
+        (`Finset.sum_comm'` on the filtered product, or `Finset.sum_boole`):
+        `Σ_{j ∈ Ico (m+1) (2^D)} #{p < D : j ^^^ 2^p = m}
+           = #{p < D : m ^^^ 2^p ∈ Ico (m+1) (2^D)}`
+        using `j ^^^ 2^p = m ↔ j = m ^^^ 2^p` (`xor_two_pow_involutive`);
+    (c) evaluate: `m < m ^^^ 2^p ↔ m.testBit p = false`
+        (`lt_xor_two_pow_of_testBit_false` / `xor_two_pow_lt_iff` + trichotomy)
+        and `m ^^^ 2^p < 2^D` always (`xor_two_pow_lt_cube`). -/
+private lemma sum_ball_deg_grow {m D : ℕ} (hm : m < 2 ^ D) :
+    (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg (m + 1) D j)
+      = (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg m D j)
+        + ((range D).filter (fun p => m.testBit p = false)).card := by
+  sorry
 
-      Σ_{j ∈ [m, 2^D)} ball_deg m D j + 2 * E_seq m = m * D.
-
-    Proof: induction on `m`. Moving `m → m+1` removes vertex `m` from the
-    outside (killing its `popcount m` into-ball edges) and adds it to the ball
-    (creating `D - popcount m` new into-ball edges from its upper neighbours);
-    meanwhile `2 * E_seq` grows by `2 * popcount m`. Net change: `+D`. -/
+/-- **Layer A main lemma.**  `Σ_{j ∈ [m, 2^D)} ball_deg m D j + 2·E_seq m = m·D`.
+    Induction on `m`: absorbing `m` into the ball removes its `popcount m`
+    down-edges from the strip sum (`ball_deg_self`) and adds its
+    `D - popcount m` up-edges (`sum_ball_deg_grow`), while `2·E_seq` grows by
+    `2·popcount m`; net `+D` per step. Verified numerically (check 3). -/
 lemma sum_ball_deg (D : ℕ) :
     ∀ m, m ≤ 2 ^ D →
       (∑ j ∈ Ico m (2 ^ D), ball_deg m D j) + 2 * E_seq m = m * D := by
@@ -185,49 +242,33 @@ lemma sum_ball_deg (D : ℕ) :
     have hz : ∀ j ∈ Ico 0 (2 ^ D), ball_deg 0 D j = 0 := by
       intro j _
       unfold ball_deg
-      simp [Finset.filter_false_of_mem, Nat.not_lt_zero]
-    simp [Finset.sum_congr rfl hz, E_seq]
+      simp
+    rw [Finset.sum_congr rfl hz]
+    simp [E_seq]
   | succ m ih =>
     intro hm1
     have hm : m < 2 ^ D := by omega
-    -- Split off j = m from the old sum.
-    have hsplit :
-        (∑ j ∈ Ico m (2 ^ D), ball_deg m D j)
-          = ball_deg m D m + ∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg m D j := by
-      rw [← Finset.sum_Ico_eq_sum_range]  -- placeholder; the clean route is:
-      sorry
-      -- Clean route: `Finset.sum_eq_sum_Ico_succ_bot hm` (Mathlib) or
-      -- `Finset.Ico_succ_left`-style peel:
-      --   rw [Finset.sum_Ico_eq_sum_range] is NOT it; use
-      --   `Finset.sum_eq_sum_Ico_succ_bot : m < n → ∑ i in Ico m n, f i = f m + ∑ i in Ico (m+1) n, f i`.
-    -- Pointwise growth of ball_deg on the remaining range:
-    -- for j ∈ Ico (m+1) (2^D),
-    --   ball_deg (m+1) D j = ball_deg m D j + (if j is a Q_D-neighbour of m then 1 else 0),
-    -- because {p : j ^^^ 2^p < m+1} \ {p : j ^^^ 2^p < m} = {p : j ^^^ 2^p = m}.
-    have hgrow :
-        (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg (m + 1) D j)
-          = (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg m D j)
-            + ((range D).filter (fun p => ¬ m.testBit p)).card := by
-      -- Proof plan:
-      --  (a) pointwise: ball_deg (m+1) D j = ball_deg m D j
-      --        + ((range D).filter (fun p => j ^^^ 2^p = m)).card
-      --      via `Finset.filter_or`-style split of `_ < m + 1` into `_ < m ∨ _ = m`
-      --      and `Finset.card_union_of_disjoint`.
-      --  (b) swap the double sum:
-      --      Σ_{j ∈ Ico (m+1) (2^D)} #{p < D : j ^^^ 2^p = m}
-      --        = #{p < D : m ^^^ 2^p ∈ Ico (m+1) (2^D)}       (j := m ^^^ 2^p is forced)
-      --        = #{p < D : ¬ m.testBit p}
-      --      using `xor_two_pow_of_testBit_false` (lands at m + 2^p > m, < 2^D by
-      --      `xor_two_pow_lt`) and `xor_two_pow_of_testBit_true` (lands < m, excluded).
-      sorry
+    -- Peel j = m off the old strip.  Mathlib:
+    -- `Finset.sum_eq_sum_Ico_succ_bot : a < b → ∑ i ∈ Ico a b, f i = f a + ∑ i ∈ Ico (a+1) b, f i`
+    have hpeel : (∑ j ∈ Ico m (2 ^ D), ball_deg m D j)
+        = ball_deg m D m + ∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg m D j :=
+      Finset.sum_eq_sum_Ico_succ_bot hm _
+    have hgrow := sum_ball_deg_grow (m := m) (D := D) hm
     have hself := ball_deg_self hm
-    have hup := card_up_neighbors hm
+    have hup : ((range D).filter (fun p => m.testBit p = false)).card
+        + popcount m = D := by
+      rw [popcount_eq_card_testBit hm]
+      have hne : (range D).filter (fun p => m.testBit p = false)
+          = (range D).filter (fun p => ¬ m.testBit p) := by
+        apply Finset.filter_congr
+        intro p _
+        simp [Bool.not_eq_true]
+      rw [hne]
+      have := Finset.filter_card_add_filter_neg_card_eq_card
+        (s := range D) (p := fun p => m.testBit p)
+      simpa using this
+    have hprev := ih (by omega)
     have hE : E_seq (m + 1) = E_seq m + popcount m := rfl
-    -- Assemble: new_sum = old_tail + (D - popcount m)
-    --                   = (old_sum - popcount m) + (D - popcount m); all additive:
-    have := ih (by omega)
-    -- goal: (∑ j ∈ Ico (m+1) (2^D), ball_deg (m+1) D j) + 2 * E_seq (m+1) = (m+1) * D
-    rw [hgrow, hE]
     have hmul : (m + 1) * D = m * D + D := by ring
     omega
 
@@ -235,107 +276,159 @@ end CubeCounting
 
 /-! ### Layer B: bridge from `cross_collisions` to `ball_deg`
 
-These are the only lemmas that touch the arrangement graph. Signatures are
-written against the definitions inferred from `ArrangementExtraconnectivity.lean`
-(`coord_boundary`, `total_coord_edges = Σ_p card (coord_boundary · p)`,
-`external_neighbors`, `cross_collisions = total - external`); adjust names /
-argument order to the real ones when wiring in. -/
+Stated against the exact repo definitions:
+  `coord_boundary V p  = univ.filter (fun w => w ∉ V ∧ ∃ v ∈ V, drop_pos w p = drop_pos v p)`
+  `total_coord_edges V = Σ_p (coord_boundary V p).card`
+  `cross_collisions V  = total_coord_edges V - external_neighbors V`
+with the external set `univ.filter (fun w => w ∉ V ∧ ∃ v ∈ V, arr_adjacent v w)`
+equal to `⋃_p coord_boundary V p` (⊆ is the core step of
+`external_neighbors_le_total_coord`; ⊇ needs the root-sharing→adjacency helper,
+re-proved below because the copy in CrossCollisionsResearch.lean is `private`). -/
 
 section Bridge
 
 variable {n k : ℕ}
 
-/-- The external-neighbour set is exactly the union of the coordinate
-    boundaries, and `cross_collisions` is the excess multiplicity:
-
-      cross_collisions V + external_neighbors V = total_coord_edges V
-
-    with `total_coord_edges V = Σ_{w ∈ U} mult V w`, where
-    `mult V w := ((univ : Finset (Fin k)).filter (fun p => w ∈ coord_boundary V p)).card`.
-
-    Proof plan: this is the generic inclusion–multiplicity identity
-    Σ_p |B_p| = Σ_{w ∈ ⋃ B_p} #{p : w ∈ B_p}: rewrite each `card` as
-    `Finset.sum_boole`/indicator and apply `Finset.sum_comm`. -/
-def mult (V : Finset (ArrVertex n k)) (w : ArrVertex n k) : ℕ :=
+/-- Multiplicity of a vertex across the coordinate boundaries. -/
+def bd_mult (V : Finset (ArrVertex n k)) (w : ArrVertex n k) : ℕ :=
   ((Finset.univ : Finset (Fin k)).filter (fun p => w ∈ coord_boundary V p)).card
 
+/-- Re-proof of the `private` helper `arr_adjacent_of_drop_pos_eq_of_ne`:
+    sharing a root at `p` while distinct means adjacency.  (Copied verbatim
+    from CrossCollisionsResearch.lean §8, minus `private`; delete this and use
+    the original if it is de-privatized.) -/
+lemma arr_adjacent_of_drop_pos_eq_of_ne' {v w : ArrVertex n k} {p : Fin k}
+    (hne : w ≠ v) (hdrop : drop_pos w p = drop_pos v p) :
+    arr_adjacent v w := by
+  unfold arr_adjacent
+  rw [Finset.card_eq_one]
+  refine ⟨p, ?_⟩
+  ext q
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
+  constructor
+  · intro hne_q
+    by_contra hpq
+    exact hne_q (congr_fun hdrop ⟨q, hpq⟩).symm
+  · rintro rfl heq
+    apply hne
+    apply Subtype.ext
+    funext q'
+    by_cases hp : q' = p
+    · rw [hp]; exact heq.symm
+    · exact congr_fun hdrop ⟨q', hp⟩
+
+/-- Generic inclusion-multiplicity identity:
+    `total_coord_edges V = Σ_{w ∈ U} bd_mult V w`.
+    Proof plan: rewrite each `(coord_boundary V p).card` as
+    `Σ_{w ∈ univ} if w ∈ coord_boundary V p then 1 else 0`
+    (`Finset.sum_boole` / `Finset.card_eq_sum_ones` + `Finset.sum_filter`),
+    swap with `Finset.sum_comm`, and restrict the outer sum to `U`
+    (`Finset.sum_subset`: for `w ∉ U` every summand vanishes, because
+    `w ∈ coord_boundary V p → w ∈ U` via `arr_adjacent_of_drop_pos_eq_of_ne'`,
+    handling the `w = v` degenerate case by `w ∉ V`). -/
 lemma total_eq_sum_mult (V : Finset (ArrVertex n k)) :
     total_coord_edges V
       = ∑ w ∈ (Finset.univ.filter (fun w =>
-          w ∉ V ∧ ∃ v ∈ V, arr_adjacent v w)), mult V w := by
+          w ∉ V ∧ ∃ v ∈ V, arr_adjacent v w)), bd_mult V w := by
   sorry
 
-/-- **B1 (membership).** For `t ≤ 2^d`, `j ∈ Ico t (2^d)`, and `p : Fin k`:
+/-- Every external vertex has multiplicity ≥ 1.
+    Proof plan: adjacency yields the single differing coordinate `p₀` with the
+    root equality (the argument of the `private` `adj_implies_drop_pos_eq` in
+    ArrangementExtraconnectivity.lean — re-derive inline, it is 10 lines), so
+    `w ∈ coord_boundary V p₀` and the `bd_mult` filter is nonempty
+    (`Finset.card_pos`). -/
+lemma one_le_bd_mult_of_external (V : Finset (ArrVertex n k))
+    {w : ArrVertex n k} (hw : w ∉ V) {v : ArrVertex n k} (hv : v ∈ V)
+    (hadj : arr_adjacent v w) : 1 ≤ bd_mult V w := by
+  sorry
 
-      embed_vertex n k d (nat_to_cube d j) hk hnk ∈
-        coord_boundary (hamming_ball_subset t n k d hk hnk) p
-      ↔ p.val < d ∧ j ^^^ 2 ^ p.val < t.
+/-- **B1 (membership).**  For `t ≤ 2^d` and `t ≤ j < 2^d`:
+    `embed j ∈ coord_boundary (HB t) p  ↔  p.val < d ∧ j ^^^ 2^(p.val) < t`.
 
-    Proof plan (⇐): witness `i := j ^^^ 2^(p.val) < t`; `drop_pos` agrees off `p`
-    because `nat_to_cube d i` and `nat_to_cube d j` differ exactly in bit `p`
-    (`Nat.testBit_xor`, `Nat.testBit_two_pow`), and `embed_cube` is coordinatewise;
-    non-membership in the ball from `embed_vertex` injectivity (`embed_vertex
-    _injective_cube` + `nat_to_cube_injective`) and `j ≥ t`.
-    (⇒): a witness `embed i`, `i < t`, agreeing off `p` forces (coordinatewise,
-    by the two-symbol coding being injective at each position `< d`, and
-    positions `≥ d` being constant) `testBit i q = testBit j q` for all `q ≠ p.val`
-    with `q < d`; hence `i = j ∨ i = j ^^^ 2^(p.val)` by `Nat.eq_of_testBit_eq`;
-    `i = j` is impossible (`i < t ≤ j`); if `p.val ≥ d` all bits agree, forcing
-    `i = j`, contradiction — which also yields the `p.val < d` conjunct. -/
+    (⇐) witness `i := j ^^^ 2^(p.val)`; `nat_to_cube d i` and `nat_to_cube d j`
+    differ exactly at index `p` (`testBit_xor_two_pow`), so the embedded
+    vertices differ exactly at position `p` — the `drop_pos` equality is a
+    `funext` over `q ≠ p` with the coordinatewise `by_cases q.val < d`
+    unfolding already used verbatim in `cross_dim_stable`; non-membership in
+    the ball from `embed_vertex_injective_cube` + `nat_to_cube_injective` +
+    `t ≤ j`.
+    (⇒) a witness `embed i`, `i < t`, sharing the root at `p` pins
+    `testBit i q = testBit j q` for all `q ≠ p.val`, `q < d` (injectivity of
+    the two-symbol coding at each position: the `Fin.val` equations
+    `q vs k + q` resolve by omega since `k + d ≤ n` and `q < d ≤ k`), and bits
+    `≥ d` agree since both are `< 2^d` (`Nat.testBit_eq_false_of_lt`); hence
+    `i = j ∨ i = j ^^^ 2^(p.val)` by `Nat.eq_of_testBit_eq`; `i = j`
+    contradicts `i < t ≤ j`. If `p.val ≥ d` every position is pinned, forcing
+    `i = j` — contradiction; this yields the left conjunct. -/
 lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
-    (ht : t ≤ 2 ^ d) (hj : j ∈ Ico t (2 ^ d)) (p : Fin k) :
+    (ht : t ≤ 2 ^ d) (hjt : t ≤ j) (hjd : j < 2 ^ d) (p : Fin k) :
     embed_vertex n k d (nat_to_cube d j) hk hnk ∈
         coord_boundary (hamming_ball_subset t n k d hk hnk) p
       ↔ p.val < d ∧ j ^^^ 2 ^ p.val < t := by
   sorry
 
-/-- **B2 (multiplicity of a cube vertex).** Immediate from B1 by transporting the
-    filter along `Fin k ↪ ℕ` (`Fin.val`), using `p.val < d ≤ k`. -/
-lemma mult_embed_eq_ball_deg {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
-    (ht : t ≤ 2 ^ d) (hj : j ∈ Ico t (2 ^ d)) :
-    mult (hamming_ball_subset t n k d hk hnk)
+/-- **B2.**  Multiplicity of a cube vertex is its ball-degree.
+    Proof plan: rewrite the `bd_mult` filter with B1, then transport the card
+    along `Fin.val` (`Finset.card_nbij` with `Fin.val`, or
+    `Finset.card_bij' ⟨·.val, …⟩ ⟨(⟨·, lt_of_lt_of_le · hk⟩), …⟩`): the filter
+    is supported on `p.val < d ≤ k`, matching the `range d` filter of
+    `ball_deg`. -/
+lemma bd_mult_embed_eq_ball_deg {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
+    (ht : t ≤ 2 ^ d) (hjt : t ≤ j) (hjd : j < 2 ^ d) :
+    bd_mult (hamming_ball_subset t n k d hk hnk)
         (embed_vertex n k d (nat_to_cube d j) hk hnk)
       = ball_deg t d j := by
   sorry
 
-/-- **B3 (collisions live on the cube).** If `w` lies in two distinct coordinate
-    boundaries of the ball, then `w = embed j` for some `j ∈ Ico t (2^d)`.
+/-- **B3 (collisions live on the cube).**  Membership in two distinct
+    coordinate boundaries forces the vertex to be a cube vertex.
 
-    Proof plan: witnesses `v = embed i` (agrees with `w` off `p`) and
-    `v' = embed i'` (agrees off `q`), `p ≠ q`. Then `w r = v r` for `r ≠ p` and
-    `w p = v' p`. If `p.val ≥ d` then `v' p = v p` (both are the constant
-    symbol), so `w = v ∈ V`, contradiction; hence `p.val < d`, `w p` is a cube
-    symbol at `p` distinct from `v p` (else `w = v`), so
-    `w = embed (i ^^^ 2^(p.val))` by funext + the coordinatewise unfolding used
-    in `cross_dim_stable`. Set `j := i ^^^ 2^(p.val)`; `j < 2^d` by
-    `xor_two_pow_lt`, and `j ≥ t` because `w ∉ V` + injectivity. -/
+    Proof plan (no bit-set reconstruction needed): take witnesses
+    `v = embed (nat_to_cube d i)`, `i < t` (agrees with `w` off `p`) and
+    `v' = embed (nat_to_cube d i')`, `i' < t` (agrees off `q`).  Then
+    `w r = v r` for `r ≠ p`, and `w p = v' p`.  If `p.val ≥ d` then
+    `v' p = ⟨p.val, _⟩ = v p` (both take the else-branch of `embed_cube`), so
+    `w = v ∈ HB t` — contradicting `w ∉ HB t` from the boundary membership;
+    hence `p.val < d`.  Now `w p = v' p ∈ {⟨p.val,_⟩, ⟨k+p.val,_⟩}` and
+    `w p ≠ v p` (else `w = v` again), so `w p` is the OTHER cube symbol at `p`
+    and `w` is coordinatewise the embedding of `i` with bit `p.val` flipped:
+    `w = embed (nat_to_cube d (i ^^^ 2^(p.val)))` by `Subtype.ext` + `funext`
+    + the `cross_dim_stable`-style case unfolding, with `testBit_xor_two_pow`
+    supplying the bit values.  Finally `i ^^^ 2^(p.val) < 2^d` by
+    `xor_two_pow_lt_cube`, and `t ≤ i ^^^ 2^(p.val)` because otherwise
+    `w ∈ HB t`. -/
 lemma mem_two_boundaries_is_cube {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     (ht : t ≤ 2 ^ d) {w : ArrVertex n k} {p q : Fin k} (hpq : p ≠ q)
     (hp : w ∈ coord_boundary (hamming_ball_subset t n k d hk hnk) p)
     (hq : w ∈ coord_boundary (hamming_ball_subset t n k d hk hnk) q) :
-    ∃ j ∈ Ico t (2 ^ d),
+    ∃ j, t ≤ j ∧ j < 2 ^ d ∧
       w = embed_vertex n k d (nat_to_cube d j) hk hnk := by
   sorry
 
-/-- **B4 (bridge, assembled).** For any `t ≤ 2^d`:
-
-      cross_collisions (HB t)
-        = Σ_{j ∈ Ico t (2^d), ball_deg t d j ≥ 1} (ball_deg t d j - 1),
-
-    stated additively to stay in ℕ:
+/-- **B4 (assembled bridge).**  Additive form, valid for every `t ≤ 2^d`:
 
       cross_collisions (HB t) + card {j ∈ Ico t (2^d) | 1 ≤ ball_deg t d j}
         = Σ_{j ∈ Ico t (2^d)} ball_deg t d j.
 
-    Proof plan: start from `total_eq_sum_mult` and the definition
-    `cross_collisions = total_coord_edges - external_neighbors`
-    (exact via `external_neighbors_le_total_coord`). Split the external set `U`
-    into `U_cube = U ∩ embed '' (Ico t (2^d))` and its complement.
-    By B3, `mult = 1` on the complement (mult ≥ 1 since `w ∈ U` means some
-    boundary contains it; mult ≤ 1 since two boundaries would force cube-ness).
-    By B2, `Σ_{U_cube} mult = Σ_{j : ball_deg ≥ 1} ball_deg` after transporting
-    along the (injective) embedding — note `embed j ∈ U ↔ ball_deg t d j ≥ 1`.
-    Cancel `|U|` against the two pieces. -/
+    Proof plan: `cross_collisions = total - external` is exact
+    (`external_neighbors_le_total_coord` + `external_neighbors_decomp`), so it
+    suffices to show
+      `total = Σ_{Ico} ball_deg + (external − #{j : 1 ≤ ball_deg})` additively.
+    Start from `total_eq_sum_mult`; split `U` into
+    `U_cube := (Ico t (2^d)).filter (1 ≤ ball_deg t d ·) |>.image (embed ∘ nat_to_cube d)`
+    and its complement inside `U`:
+    * `U_cube ⊆ U` and `embed j ∈ U ↔ 1 ≤ ball_deg t d j` for strip `j`
+      (B1 + `arr_adjacent_of_drop_pos_eq_of_ne'` one way,
+      `one_le_bd_mult_of_external` + B2 the other);
+    * on `U \ U_cube`, `bd_mult = 1`: ≥ 1 by `one_le_bd_mult_of_external`,
+      ≤ 1 because two distinct coordinates would make it a cube vertex (B3),
+      and every cube vertex of the strip with positive degree is in `U_cube`;
+    * on `U_cube`, `Finset.sum_image` over the injective embedding
+      (`embed_vertex_injective_cube` ∘ `nat_to_cube_injective`) plus B2 turns
+      the block into `Σ ball_deg` over the filtered strip, which extends to the
+      full strip since `ball_deg = 0` off the filter.
+    Cancel `|U| = |U_cube| + |U \ U_cube|` and close with omega. -/
 lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     (ht : t ≤ 2 ^ d) :
     cross_collisions (hamming_ball_subset t n k d hk hnk)
@@ -345,147 +438,191 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
 
 end Bridge
 
-/-! ### Layer C: the closed form and the new (induction-free) driver -/
+/-! ### Layer C: the closed form and the induction-free endgame -/
 
-section CrossTop
+section CrossTopMain
 
 variable {n k : ℕ}
 
-/-- Top-half vertices always see their bottom partner: for
-    `R = 2^(d-1) + m`, `0 < m ≤ 2^(d-1)`, and `j ∈ Ico R (2^d)`,
-    bit `d-1` of `j` is set and `j ^^^ 2^(d-1) = j - 2^(d-1) < 2^(d-1) < R`,
-    plus the reindexing identity down to dimension `d-1`. -/
-lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m) (hm' : m ≤ 2 ^ (d - 1))
-    (hj' : j' ∈ Ico m (2 ^ (d - 1))) :
+/-- Reindex the top strip: for `m ≤ j' < 2^(d-1)`,
+    `ball_deg (2^(d-1)+m) d (2^(d-1)+j') = 1 + ball_deg m (d-1) j'`.
+    Proof plan: split `range d = insert (d-1) (range (d-1))`
+    (`Finset.range_succ` after `d = (d-1)+1`).  At `p = d-1`: bit set
+    (`testBit_two_pow_add` at `q = D`), flip lands at `j' < 2^(d-1) < 2^(d-1)+m`
+    — flipping the set top bit of `2^(d-1)+j'` gives `j'` by
+    `Nat.eq_of_testBit_eq` (`testBit_xor_two_pow` + `testBit_two_pow_add`) —
+    contributing the `1`.  For `p < d-1`:
+    `(2^(d-1)+j') ^^^ 2^p = 2^(d-1) + (j' ^^^ 2^p)` (bitwise identical:
+    `testBit_xor_two_pow` + `testBit_two_pow_add` + `xor_two_pow_lt_cube` +
+    `Nat.eq_of_testBit_eq`), and `2^(d-1)+x < 2^(d-1)+m ↔ x < m`.
+    Verified numerically (check 5). -/
+lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
+    (hm' : m ≤ 2 ^ (d - 1)) (hj'm : m ≤ j') (hj' : j' < 2 ^ (d - 1)) :
     ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j')
       = 1 + ball_deg m (d - 1) j' := by
-  -- Proof plan: split `range d = range (d-1) ∪ {d-1}`.
-  --  * p = d-1: bit is set (`j = 2^(d-1) + j'`, `j' < 2^(d-1)`), and
-  --    `j ^^^ 2^(d-1) = j' < 2^(d-1) < 2^(d-1) + m` — contributes the `1`.
-  --  * p < d-1: `(2^(d-1) + j') ^^^ 2^p = 2^(d-1) + (j' ^^^ 2^p)`
-  --    (low-bit XOR doesn't touch bit d-1; via testBit extensionality or the
-  --    additive xor lemmas), and `2^(d-1) + x < 2^(d-1) + m ↔ x < m`.
   sorry
 
-/-- **CrossTop.** The unconditional closed form: for `d ≥ 1`, `0 < m ≤ 2^(d-1)`,
-    `R = 2^(d-1) + m`, `d ≤ k`, `k + d ≤ n`:
+/-- Every vertex of the top strip sees its bottom partner.
+    Proof plan: `2^(d-1) ≤ j < 2^d` gives `testBit j (d-1) = true` (write
+    `j = 2^(d-1) + y`, `y < 2^(d-1)`, apply `testBit_two_pow_add`), so
+    `j ^^^ 2^(d-1) = y < 2^(d-1) < 2^(d-1)+m` (same bitwise-identity as in
+    `ball_deg_top`); then `d-1 ∈ range d` witnesses `Finset.card_pos`. -/
+lemma one_le_ball_deg_top {d m j : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
+    (hm' : m ≤ 2 ^ (d - 1)) (hjR : 2 ^ (d - 1) + m ≤ j) (hjd : j < 2 ^ d) :
+    1 ≤ ball_deg (2 ^ (d - 1) + m) d j := by
+  sorry
 
-      cross_collisions (HB R) + 2 * E_seq m = m * (d - 1).
+/-- Shift-reindex of the strip sum (the `Ico`-map idiom of
+    `hb_half1_eq_image_shifted`, applied to a sum instead of an image):
+    `Σ_{j ∈ Ico (P+a) (P+b)} f j = Σ_{j' ∈ Ico a b} f (P + j')`. -/
+private lemma sum_Ico_shift_reindex (P a b : ℕ) (f : ℕ → ℕ) :
+    (∑ j ∈ Ico (P + a) (P + b), f j) = ∑ j' ∈ Ico a b, f (P + j') := by
+  -- `Ico (P+a) (P+b) = (Ico a b).map ⟨(P + ·), fun _ _ h => by omega⟩`
+  -- (same `ext`/`omega` argument as `h_bij` in `hb_half1_eq_image_shifted`),
+  -- then `Finset.sum_map`.
+  sorry
 
-    This replaces `CrossRecurrence` (and obviates `CrossDimStable` and the
-    strong-induction driver). -/
+/-- **CrossTop.**  The unconditional closed form:
+    `cross_collisions (HB (2^(d-1)+m)) + 2·E_seq m = m·(d-1)`.
+    Verified numerically (check 2). -/
 theorem cross_top {d m : ℕ} (hd : 1 ≤ d) (hm : 0 < m) (hm' : m ≤ 2 ^ (d - 1))
     (hk : d ≤ k) (hnk : k + d ≤ n) :
     cross_collisions
         (hamming_ball_subset (2 ^ (d - 1) + m) n k d hk hnk)
       + 2 * E_seq m = m * (d - 1) := by
-  set R := 2 ^ (d - 1) + m with hR
   have hpow : (2 : ℕ) ^ d = 2 ^ (d - 1) + 2 ^ (d - 1) := by
-    conv_lhs => rw [← Nat.sub_add_cancel hd]; rw [pow_succ]; ring_nf
-    sorry -- cosmetic: same manipulation as in the existing driver, `omega`-close
-  have hRle : R ≤ 2 ^ d := by omega
-  have hbridge := cross_collisions_eq_cube_sum (t := R) hk hnk hRle
-  -- Reindex the top strip Ico R (2^d) by j = 2^(d-1) + j', j' ∈ Ico m (2^(d-1)):
-  have hreindex :
-      (∑ j ∈ Ico R (2 ^ d), ball_deg R d j)
-        = ∑ j' ∈ Ico m (2 ^ (d - 1)), (1 + ball_deg m (d - 1) j') := by
-    -- `Finset.sum_Ico_eq_sum_Ico_add`-style shift (or `Finset.sum_map` with the
-    -- embedding `j' ↦ 2^(d-1) + j'`, as in `hb_half1_eq_image_shifted`),
-    -- then pointwise `ball_deg_top`.
-    sorry
+    conv_lhs => rw [← Nat.sub_add_cancel hd]
+    rw [pow_succ]; ring
+  have hRle : 2 ^ (d - 1) + m ≤ 2 ^ d := by omega
+  have hbridge := cross_collisions_eq_cube_sum
+    (t := 2 ^ (d - 1) + m) hk hnk hRle
+  -- The bridge's filter is the whole strip:
   have hfull :
-      ((Ico R (2 ^ d)).filter (fun j => 1 ≤ ball_deg R d j)).card
-        = 2 ^ (d - 1) - m := by
-    -- Every j in the strip has ball_deg ≥ 1 (its partner), so the filter is
-    -- the whole Ico; `Nat.card_Ico` gives `2^d - R = 2^(d-1) - m`.
+      ((Ico (2 ^ (d - 1) + m) (2 ^ d)).filter
+          (fun j => 1 ≤ ball_deg (2 ^ (d - 1) + m) d j))
+        = Ico (2 ^ (d - 1) + m) (2 ^ d) := by
+    apply Finset.filter_true_of_mem
+    intro j hj
+    rw [mem_Ico] at hj
+    exact one_le_ball_deg_top hd hm hm' hj.1 hj.2
+  -- Reindex the strip sum down one dimension:
+  have hshift :
+      (∑ j ∈ Ico (2 ^ (d - 1) + m) (2 ^ d),
+          ball_deg (2 ^ (d - 1) + m) d j)
+        = ∑ j' ∈ Ico m (2 ^ (d - 1)),
+            ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j') := by
+    have := sum_Ico_shift_reindex (2 ^ (d - 1)) m (2 ^ (d - 1))
+      (ball_deg (2 ^ (d - 1) + m) d)
+    rw [← hpow] at this ⊢
+    -- `2^(d-1) + 2^(d-1) = 2^d` rewrites the upper endpoint.
     sorry
+  have hpoint :
+      (∑ j' ∈ Ico m (2 ^ (d - 1)),
+          ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j'))
+        = ∑ j' ∈ Ico m (2 ^ (d - 1)), (1 + ball_deg m (d - 1) j') :=
+    Finset.sum_congr rfl (fun j' hj' => by
+      rw [mem_Ico] at hj'
+      exact ball_deg_top hd hm hm' hj'.1 hj'.2)
   have hA := sum_ball_deg (d - 1) m hm'
-  have hcard : (Ico m (2 ^ (d - 1))).card = 2 ^ (d - 1) - m := Nat.card_Ico _ _
-  rw [Finset.sum_add_distrib, Finset.sum_const, hcard, smul_eq_mul, mul_one]
-    at hreindex
+  have hcards : (Ico m (2 ^ (d - 1))).card = 2 ^ (d - 1) - m :=
+    Nat.card_Ico _ _
+  have hcardR : (Ico (2 ^ (d - 1) + m) (2 ^ d)).card = 2 ^ (d - 1) - m := by
+    rw [Nat.card_Ico]; omega
+  rw [hfull, hcardR, hshift, hpoint, Finset.sum_add_distrib,
+    Finset.sum_const, hcards, smul_eq_mul, mul_one] at hbridge
   omega
 
-/-- `2 * E_seq (2^j) = j * 2^j` — the exact value at powers of two, additive.
-    Induction via `E_seq_sum_decomposition` at `m = 2^j`. -/
+/-- Exact value of `E_seq` at powers of two, additive: `2·E_seq(2^j) = j·2^j`.
+    One-line induction from `E_seq_sum_decomposition`. -/
 lemma E_seq_pow (j : ℕ) : 2 * E_seq (2 ^ j) = j * 2 ^ j := by
   induction j with
-  | zero => simp [E_seq, popcount]
+  | zero =>
+    show 2 * E_seq 1 = 0 * 2 ^ 0
+    have h1 : E_seq 1 = E_seq 0 + popcount 0 := rfl
+    rw [h1, popcount_zero]
+    rfl
   | succ j ih =>
-    have hsplit : E_seq (2 ^ j + 2 ^ j) = E_seq (2 ^ j) + E_seq (2 ^ j) + 2 ^ j := by
+    have hsplit : E_seq (2 ^ j + 2 ^ j)
+        = E_seq (2 ^ j) + E_seq (2 ^ j) + 2 ^ j := by
       have := E_seq_sum_decomposition (j + 1) (2 ^ j) (by simp)
       simpa using this
     have e1 : (2 : ℕ) ^ (j + 1) = 2 ^ j + 2 ^ j := by rw [pow_succ]; ring
+    have e2 : (j + 1) * 2 ^ (j + 1) = 2 * (j * 2 ^ j) + 2 * 2 ^ j := by
+      rw [e1]; ring
     rw [e1, hsplit]
-    have e2 : (j + 1) * (2 ^ j + 2 ^ j) = 2 * (j * 2 ^ j) + 2 * 2 ^ j := by ring
     omega
 
-/-- `C_constant` de-truncated: `C_constant R + E_seq R = (R - 1) + sum_bit_length R`,
-    valid because `E_seq R ≤ sum_bit_length R`. -/
+/-- `C_constant` de-truncated (exact by `E_seq_le_sum_bit_length`). -/
 lemma C_constant_add_E_seq (R : ℕ) :
     C_constant R + E_seq R = (R - 1) + sum_bit_length R := by
   have h := E_seq_le_sum_bit_length R
-  unfold C_constant
+  rw [C_constant_def]
   omega
 
-/-- **The new driver: `HBCrossCollisions` for every `R ≥ 1`, no induction,
-    no `CrossDimStable`, no `CrossRecurrence`.**
-
-    Case `R = 1` is `cross_base_one`. For `R ≥ 2`, with `d = bit_length (R-1)`
-    and `m = R - 2^(d-1)`, combine `cross_top` with the arithmetic identities;
-    everything closes by `omega`. -/
+/-- **The endgame: `HBCrossCollisions` for every `R ≥ 1`, with no strong
+    induction, no `CrossDimStable`, no `CrossRecurrence`.**  The only
+    combinatorial inputs are `cross_top` and `cross_base_one`. -/
 theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
-    (hbase : CrossBaseOne n k)
     (d : ℕ) (hd : d = bit_length (R - 1)) (hk : d ≤ k) (hnk : k + d ≤ n) :
     HBCrossCollisions R n k d hk hnk := by
   unfold HBCrossCollisions
   rcases Nat.lt_or_ge R 2 with hR2 | hR2
-  · -- R = 1: as in the existing driver.
+  · -- R = 1: base case, exactly as in the existing driver (minus native_decide).
     have hR : R = 1 := by omega
     subst hR
     have hd0 : d = 0 := by
-      rw [hd, bit_length_eq_size]; simpa using Nat.size_zero
+      rw [hd, bit_length_eq_size]
+      simpa using Nat.size_zero
     subst hd0
-    have hb := hbase 0 hk hnk
-    have hE1 : E_seq 1 = 0 := by decide
-    have hC1 : C_constant 1 = 0 := by decide
+    have hb := cross_base_one (n := n) (k := k) 0 hk hnk
+    have hE1 : E_seq 1 = 0 := by
+      show E_seq 0 + popcount 0 = 0
+      rw [popcount_zero]
+    have hC1 : C_constant 1 = 0 := by
+      have hb0 : bit_length 0 = 0 := by
+        rw [bit_length_eq_size]; exact Nat.size_zero
+      have hL1 : sum_bit_length 1 = 0 := by
+        show sum_bit_length 0 + bit_length 0 = 0
+        rw [hb0]
+      rw [C_constant_def, hL1, hE1]
     omega
-  · -- R ≥ 2: locate R in (2^(d-1), 2^d] exactly as the old driver does.
+  · -- R ≥ 2: locate R ∈ (2^(d-1), 2^d]; arithmetic reused from the old driver.
     have hdsize : d = Nat.size (R - 1) := by rw [hd, bit_length_eq_size]
     have hd1 : 1 ≤ d := by
       rw [hdsize]
       have : (0 : ℕ) < Nat.size (R - 1) := Nat.size_pos.mpr (by omega)
       omega
-    have hup : R - 1 < 2 ^ d := by rw [hdsize]; exact Nat.lt_size_self (R - 1)
+    have hup : R - 1 < 2 ^ d := by
+      rw [hdsize]; exact Nat.lt_size_self (R - 1)
     have hlow : 2 ^ (d - 1) ≤ R - 1 := by
-      have : d - 1 < Nat.size (R - 1) := by omega
-      rw [hdsize] at this ⊢
+      rw [hdsize]
       exact Nat.lt_size.mp (by omega)
+    have hpow : (2 : ℕ) ^ d = 2 ^ (d - 1) + 2 ^ (d - 1) := by
+      conv_lhs => rw [← Nat.sub_add_cancel hd1]
+      rw [pow_succ]; ring
     set m := R - 2 ^ (d - 1) with hm_def
     have hR_eq : R = 2 ^ (d - 1) + m := by omega
     have hm_pos : 0 < m := by omega
-    have hm_le : m ≤ 2 ^ (d - 1) := by
-      have hpow : (2 : ℕ) ^ d = 2 ^ (d - 1) + 2 ^ (d - 1) := by
-        conv_lhs => rw [← Nat.sub_add_cancel hd1]
-        rw [pow_succ]; ring
-      omega
-    -- The five arithmetic facts + CrossTop; omega closes.
-    have htop := by
-      rw [hR_eq]
-      exact cross_top (n := n) (k := k) hd1 hm_pos hm_le hk hnk
+    have hm_le : m ≤ 2 ^ (d - 1) := by omega
+    -- The arithmetic facts + CrossTop; omega closes.
     have hE_split := E_seq_sum_decomposition d m hm_le
     have hL_split := sum_bit_length_sum_decomposition d m hd1 hm_le
     have hL_pow := sum_bit_length_pow (d - 1)
     have hE_pow := E_seq_pow (d - 1)
     have hCE := C_constant_add_E_seq R
     have hmul : m * d = m * (d - 1) + m := by
-      conv_lhs => rw [← Nat.sub_add_cancel hd1]; ring
+      conv_lhs => rw [← Nat.sub_add_cancel hd1]
+      ring
+    have htop : cross_collisions
+          (hamming_ball_subset (2 ^ (d - 1) + m) n k d hk hnk)
+        + 2 * E_seq m = m * (d - 1) := by
+      have := cross_top (n := n) (k := k) hd1 hm_pos hm_le hk hnk
+      exact this
     rw [hR_eq] at hCE hE_split hL_split ⊢
-    -- Target: cross + E_seq (P + m) = C_constant (P + m).
-    -- LHS = m(d-1) - 2E_m + E_P + E_m + m = m*d - E_m + E_P.
-    -- RHS = (P + m - 1) + sbl P + m*d - E_P - E_m - m, and
-    --   sbl P + P = (d-1)P + 1,  2E_P = (d-1)P   close the gap.
+    -- LHS = m(d-1) − 2E_m + (E_P + E_m + m) = m·d − E_m + E_P;
+    -- RHS closes via  sbl P + P = (d-1)P + 1  and  2E_P = (d-1)P.
     omega
 
-end CrossTop
+end CrossTopMain
 
 end Arrangement

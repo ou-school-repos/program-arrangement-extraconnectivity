@@ -18,13 +18,35 @@ require.
 
 - **Isolated as explicit Lean hypotheses** in the stable capstone theorem, rather
   than declared as raw global axioms.
-- **Arithmetic & inductive scaffold for `HBCrossCollisions`** lives in
-  `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`. The file now
-  checks standalone. The full induction driver
-  (`hb_cross_collisions_of_recurrence`) is complete and reduces the entire
-  hypothesis to three combinatorial interface lemmas (see below); several
-  unrelated unstable arithmetic placeholders in the same file remain explicit
-  `sorry`s while that scaffold is repaired independently.
+- **The active route to `HBCrossCollisions` is `proofs/Arrangement/unstable/CrossTop.lean`**,
+  not the strong-induction driver in `CrossCollisionsResearch.lean` (superseded,
+  see below). `CrossTop.lean` proves the unconditional closed form
+  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` directly — no
+  recursion, no `CrossDimStable`, no driver — from which `HBCrossCollisions`
+  follows for every `R ≥ 1` by pure arithmetic (`hb_cross_collisions_closed`).
+  As of 2026-07-19 the file has 13 `sorry`s: a small bit-toolbox layer (a few
+  mechanical `testBit`/`popcount` facts) and four "Bridge" lemmas connecting
+  `cross_collisions` to the cube-counting function `ball_deg` — the latter are
+  the real remaining combinatorial content. **Not yet checked by `lake build`**
+  (no Mathlib cache was available when this file was last edited); treat it as
+  reviewed-but-uncompiled.
+- **Why the driver route is superseded, not just alternative.** The strong
+  induction driver `hb_cross_collisions_of_recurrence` in
+  `CrossCollisionsResearch.lean` is complete and reduces `HBCrossCollisions` to
+  three interface lemmas — `CrossBaseOne` and `CrossDimStable` are proven, but
+  the third, `CrossRecurrence`, is genuinely circular as an induction step: its
+  `ext_cube(d,m)` term is not an arithmetic quantity but is _equivalent to_
+  `HBCrossCollisions(m)` itself (the RHS of `CrossRecurrence` is a set
+  cardinality whose evaluation _is_ the theorem at the smaller size `m`), so
+  the driver would be handing itself its own conclusion as a hypothesis with
+  nothing new supplied. `CrossTop` sidesteps this: it is a direct,
+  non-recursive closed-form identity with its own combinatorial proof (a
+  vertex is double-counted in the top-heavy ball's boundary iff it is a cube
+  vertex; every top-strip cube vertex has multiplicity ≥ 1 via its "bottom
+  partner"; summing the excess multiplicity reduces to a plain edge-boundary
+  count in one lower dimension). `CrossRecurrence` and its driver are kept in
+  `CrossCollisionsResearch.lean` for reference but should be treated as
+  deprecated, not as the live path — do not invest further proof effort there.
 - **Formula values verified** via `predict --verify R` (predict.cpp) for
   `R ≤ 260`, and exhaustively via the `arrangement` nauty-based search for
   `R ≤ 10`.
@@ -38,15 +60,24 @@ require.
 
 ## Immediate Lean Work Queue
 
-1. Finish the three `HBCrossCollisions` interface lemmas in
-   `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`:
-   `CrossBaseOne` and `CrossDimStable` are proven; `CrossRecurrence` remains.
-2. Discharge the remaining explicit `sorry`s in the unstable scaffold
-   (closed-form arithmetic, binary-reflection half lemmas, the recurrence
-   driver) — these predate and are independent of `CrossRecurrence`.
-3. Promote the completed `HBCrossCollisions` proof into the stable proof path
-   and remove the corresponding hypothesis parameter from
-   `arrangement_extraconnectivity_minimum`.
+1. Get `proofs/Arrangement/unstable/CrossTop.lean` compiling: first the
+   bit-toolbox `sorry`s (`testBit_two_pow_add`, `popcount_eq_card_testBit`,
+   `sum_Ico_shift_reindex`, `sum_ball_deg_grow` — mechanical, each with a
+   proof plan already written inline), then `ball_deg_top` /
+   `one_le_ball_deg_top` (same difficulty tier).
+2. Prove the four Bridge lemmas (`total_eq_sum_mult`,
+   `embed_mem_coord_boundary_iff`, `bd_mult_embed_eq_ball_deg`,
+   `mem_two_boundaries_is_cube`, `cross_collisions_eq_cube_sum`) — this is the
+   real remaining combinatorial content, connecting `cross_collisions` to the
+   pure-arithmetic `ball_deg` function. Detailed proof plans are inline in the
+   file; each needs to be finished interactively against the exact
+   definitions in `ArrangementExtraconnectivity.lean`.
+3. Once `CrossTop.lean` is `sorry`-free, promote `hb_cross_collisions_closed`
+   into the stable proof path and remove the `HBCrossCollisions` hypothesis
+   parameter from `arrangement_extraconnectivity_minimum`. At that point
+   `CrossDimStable`/`CrossRecurrence`/the strong-induction driver in
+   `CrossCollisionsResearch.lean` become dead code and can be deleted rather
+   than repaired (see "Current Status" above for why).
 4. `UniversalLowerBound` needs a formalization strategy from scratch (see
    "Current Status" above) — this is not close to done and has no
    in-progress Lean work.
@@ -124,29 +155,39 @@ plus whatever it costs to find a valid version of the transfer inequality.
 
 ## Step 4: Deriving C_constant(R)
 
-### Status: COMPLETED (Arithmetic & Inductive Driver)
+### Status: SUPERSEDED (see `CrossTop.lean`, "Current Status" above)
 
-We have formally proved the entire arithmetic and inductive backbone for the $C\_constant(R)$ recurrence in `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`:
+`proofs/Arrangement/unstable/CrossCollisionsResearch.lean` formally proves the
+entire arithmetic and inductive backbone for a _recursive_ form of the
+`C_constant(R)` identity:
 
 - Verified the binary reflection arithmetic decompositions of `E_seq` and `sum_bit_length` on the natural numbers, handling all exact subtractions on $\mathbb{N}$ safely without truncation.
 - Formally proved the exact recurrence $C(R) = C(2^{d-1}) + C(m) + ext\_cube(d, m) + m$ where $R = 2^{d-1} + m$ and $0 < m \le 2^{d-1}$.
-- Implemented a complete strong induction driver `hb_cross_collisions_of_recurrence` using `Nat.strong_induction_on` which derives the final target statement `HBCrossCollisions` for all $R \ge 1$ from three pure combinatorial interface lemmas:
+- Implemented a complete strong induction driver `hb_cross_collisions_of_recurrence` using `Nat.strong_induction_on` which reduces the final target statement `HBCrossCollisions` for all $R \ge 1$ to three pure combinatorial interface lemmas:
   1. `CrossBaseOne` (single-vertex ball has 0 collisions) — proven
   2. `CrossDimStable` (fresh dimensions don't change the set) — proven
-  3. `CrossRecurrence` (the corrected combinatorial split) — remaining
+  3. `CrossRecurrence` (the corrected combinatorial split) — genuinely circular as a proof target (see "Current Status"), not merely unfinished
+
+This arithmetic work is not wasted — `E_seq_sum_decomposition`,
+`sum_bit_length_sum_decomposition`, `sum_bit_length_pow`, and
+`E_seq_le_sum_bit_length` are reused directly by `CrossTop.lean`'s closed-form
+route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 ### What remains
 
-Proving `CrossRecurrence` over the definitions of `cross_collisions` and
-`hamming_ball_subset` to cleanly plug into the proven induction driver.
+Finishing `CrossTop.lean` (see "Immediate Lean Work Queue" above): the
+bit-toolbox `sorry`s, then the four Bridge lemmas connecting
+`cross_collisions` to `ball_deg`.
 
 ## Total Remaining Estimated Effort
 
-**`HBCrossCollisions`**: only `CrossRecurrence` remains to plug into the
-already-completed induction driver (Step 4's arithmetic/inductive scaffold is
-done; `CrossBaseOne` and `CrossDimStable` are proven). The proof source still
-records an open circularity concern between this interface and the driver, so
-the remaining effort is unscoped until that concern is resolved.
+**`HBCrossCollisions`**: `CrossTop.lean`'s closed form is proven modulo 13
+`sorry`s (as of 2026-07-19) — a handful of mechanical bit/cube-counting
+lemmas plus the four Bridge lemmas, which are the real remaining
+combinatorial content (est. 40-120 interactive lines each per the inline
+proof plans). No circularity concern applies to this route: `cross_top` is a
+direct, non-recursive identity, not an induction step that could smuggle in
+its own conclusion.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares,

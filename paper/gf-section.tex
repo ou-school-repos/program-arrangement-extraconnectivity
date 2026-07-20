@@ -15,8 +15,8 @@
 % consistency check, not a proof: it does not (and cannot) establish the
 % section's genuinely analytic claims — nowhere-differentiability in
 % Theorem them:delange and transcendence in Corollary cor:transcend rest on
-% their own arguments/citations; the supremum in Remark rem:extremal is not
-% proven at all, and is presented there only as numerical evidence.
+% their own arguments/citations; the supremum of the cross-collision
+% density is now PROVEN (Proposition prop:sup-density, elementary induction).
 % ============================================================================
 
 \section{Analytic Structure of the Boundary Coefficients}\label{sec:analytic}
@@ -175,6 +175,18 @@ operational form of Proposition~\ref{prop:mahler}.
 	and is irrational, it is transcendental.
 \end{proof}
 
+\begin{remark}[A second proof via Skolem--Mahler--Lech]\label{rem:sml}
+	Non-$C$-finiteness of $\Eseq$ also follows without any asymptotic
+	analysis: if $F$ were rational then $S(x) = \frac{1-x}{x} F(x)$ would be
+	rational, making $s_2$ itself $C$-finite; by the Skolem--Mahler--Lech
+	theorem~\cite{everest2003recurrence} the level set
+	$\{R : s_2(R) = 1\}$ would then be, up to a finite set, a finite union
+	of infinite arithmetic progressions. But that set is
+	$\{2^t : t \ge 0\}$, which is infinite with unbounded gaps and hence
+	contains no infinite arithmetic progression. This argument is
+	independent of Theorem~\ref{them:delange}.
+\end{remark}
+
 \subsection{Exact asymptotics: the Trollope--Delange fluctuation}
 
 \begin{theorem}[Trollope~\cite{trollope1968explicit};
@@ -237,24 +249,88 @@ operational form of Proposition~\ref{prop:mahler}.
 		$X(\mathrm{HB}_R)/R$ of Corollary~\ref{cor:densities} for
 		$2 \le R \le 2^{15}$; both are bounded oscillations in $\log_2 R$,
 		vanishing at every power of two (gridlines). The dashed line marks the
-		empirical supremum $1/2$ of the cross-collision density, approached
+		supremum $1/2$ of the cross-collision density (Proposition~\ref{prop:sup-density}), approached
 		along the alternating-binary integers
 		$R = \lceil 2^{d+1}/3 \rceil$ (e.g.\ $R = 43691 =
 			(1010101010101011)_2$ attains $X/R > 0.49998$).}
 	\label{fig:delange}
 \end{figure}
 
-\begin{remark}[Extremal densities]\label{rem:extremal}
-	Numerically, $\sup_R X(\mathrm{HB}_R)/R = \tfrac{1}{2}$ for all sampled
-	$R < 2^{16}$ (Figure~\ref{fig:delange}), approached along the
-	alternating-binary integers $R = \lceil 2^{d+1}/3\rceil$, which are the
-	classical extremizers of the Delange fluctuation; we record this as
-	numerical evidence rather than a proven exact supremum, since we have
-	not derived it from the Trollope--Delange expansion. The
-	graph-theoretic reading is pleasing: the Hamming ball's shielding
-	$4$-cycles appear, in this numerical range, to never exceed one per two
-	vertices; the largest observed densities occur along the
-	alternating-binary integers described above, and they disappear entirely when the ball
+\begin{proposition}[Exact supremum of the cross-collision density]\label{prop:sup-density}
+	For $R \ge 1$ let $d = \lceil \log_2 R \rceil$ and define
+	\begin{equation*}
+		f(R) \;=\; 4\,\Eseq(R) \;-\; R\,(2d+1) \;+\; 2^{d+1},
+		\qquad\text{so that}\qquad
+		X(\mathrm{HB}_R) \;=\; \frac{R - f(R)}{2}
+	\end{equation*}
+	by the closed form~\eqref{eq:cconst}. Then $f(R) \ge 1$ for every
+	$R \ge 1$; consequently
+	\begin{equation*}
+		\frac{X(\mathrm{HB}_R)}{R} \;\le\; \frac{1}{2} - \frac{1}{2R}
+		\;<\; \frac{1}{2} \quad\text{for all } R,
+	\end{equation*}
+	while $f(R_t) = 1$ along the alternating-binary sequence $R_0 = 3$,
+	$R_{t+1} = 4R_t - 1$ (binary $(10)^t 11$), so that
+	$X(\mathrm{HB}_{R_t})/R_t = \tfrac12 - \tfrac{1}{2R_t} \to \tfrac12$.
+	Hence
+	\begin{equation*}
+		\sup_{R \ge 1} \frac{X(\mathrm{HB}_R)}{R} \;=\; \frac{1}{2},
+	\end{equation*}
+	approached but never attained.
+\end{proposition}
+
+\begin{proof}
+	The identity $X(\mathrm{HB}_R) = (R - f(R))/2$ is a rearrangement of
+	$X(\mathrm{HB}_R) = \Cconst(R) - \Eseq(R) = R(d+1) - 2^d - 2\Eseq(R)$
+	from~\eqref{eq:cconst}. It remains to prove $f(R) \ge 1$, which we do by
+	strong induction on $R$ using the reflection identity
+	$\Eseq(2^{d-1} + m) = \Eseq(2^{d-1}) + \Eseq(m) + m$ (iterate the radix-$2$
+	recurrences preceding Proposition~\ref{prop:mahler}) together with
+	$\Eseq(2^j) = j\,2^{j-1}$ (immediate induction from the same identity at
+	$m = 2^{j-1}$).
+
+	\emph{Bases.} $f(1) = 1$ and $f(2) = 2$ by direct evaluation.
+
+	\emph{Step.} Let $R \ge 3$ and write $R = 2^{d-1} + m$ with
+	$1 \le m \le 2^{d-1}$ and $d \ge 2$. Substituting the reflection identity
+	and $\Eseq(2^{d-1}) = (d-1)2^{d-2}$ into the definition of $f$ collapses,
+	after cancellation, to
+	\begin{equation*}
+		f(R) \;=\; 2^{d-1} \;+\; 4\,\Eseq(m) \;-\; (2d-3)\,m .
+	\end{equation*}
+	If $m = 1$ this reads $f(R) = 2^{d-1} - 2d + 3 \ge 1$, since
+	$2^{d-2} \ge d - 1$ for all $d \ge 2$ (equality at $d \in \{2,3\}$,
+	i.e.\ $R \in \{3, 5\}$). If $m \ge 2$, let
+	$d' = \lceil \log_2 m \rceil \le d - 1$ and $s = d - 1 - d' \ge 0$, and
+	eliminate $\Eseq(m)$ via the definition of $f(m)$:
+	\begin{equation*}
+		f(R) \;=\; f(m) \;+\; \Delta,
+		\qquad
+		\Delta \;=\; 2^{d-1} - 2^{d-s} + 2m(1 - s).
+	\end{equation*}
+	We claim $\Delta \ge 0$ in every case, so $f(R) \ge f(m) \ge 1$ by
+	induction ($m < R$): for $s = 0$ we have $m > 2^{d-2}$ (by definition of
+	$d' = d-1$), so $\Delta = 2m - 2^{d-1} \ge 2$; for $s = 1$,
+	$\Delta = 0$ identically; and for $s \ge 2$, using $m \le 2^{d'} =
+	2^{d-1-s}$,
+	\begin{equation*}
+		\Delta \;\ge\; 2^{d-1} - 2^{d-s} - 2(s-1)\,2^{d-1-s}
+		\;=\; 2^{d-1-s}\big(2^s - 2s\big) \;\ge\; 0,
+	\end{equation*}
+	since $2^s \ge 2s$ for $s \ge 2$.
+
+	\emph{Equality chain.} Along $R_{t+1} = 4R_t - 1$ each step has
+	$m = R_t$ and $s = 1$ (the binary expansion gains a leading
+	\texttt{10}), so $\Delta = 0$ and $f(R_{t+1}) = f(R_t)$; since
+	$f(R_0) = f(3) = 1$, every $f(R_t) = 1$. The supremum statement follows.
+\end{proof}
+
+\begin{remark}[Graph-theoretic reading]\label{rem:extremal}
+	The Hamming ball's shielding $4$-cycles never reach one per two
+	vertices: the density $X(\mathrm{HB}_R)/R$ is maximized, at
+	$\tfrac12 - \tfrac{1}{2R}$, exactly along the alternating-binary
+	cluster sizes of Proposition~\ref{prop:sup-density} --- the classical
+	extremizers of the Delange fluctuation --- and vanishes when the ball
 	closes into a full subcube.
 \end{remark}
 

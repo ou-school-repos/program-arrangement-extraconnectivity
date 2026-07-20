@@ -85,8 +85,22 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 
 - Computationally verified alongside Axiom 1.
 - Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
-  TODO(review): the current driver uses this as a hypothesis interface, but the
-  doc should make clear that the combinatorial bridge lemmas are still open.
+- **Active Lean route**: `proofs/Arrangement/unstable/CrossTop.lean`, which
+  proves the unconditional closed form
+  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` and derives
+  `HBCrossCollisions` from it by pure arithmetic — no recursion.
+  As of 2026-07-19 it has 13 `sorry`s (a small
+  bit-toolbox layer plus four "Bridge" lemmas connecting `cross_collisions`
+  to cube counting; the latter are the genuine remaining combinatorial
+  content) and has not been checked by `lake build` in this environment.
+- **Superseded route**: `CrossCollisionsResearch.lean`'s strong-induction
+  driver (`hb_cross_collisions_of_recurrence`) is complete and reduces
+  `HBCrossCollisions` to `CrossBaseOne` (proven), `CrossDimStable` (proven),
+  and `CrossRecurrence` (one `sorry`) — but `CrossRecurrence` is circular as
+  stated: its `ext_cube(d,m)` term is equivalent to `HBCrossCollisions(m)`
+  itself, so a direct proof would assume the theorem it's meant to help
+  establish. See `docs/collision-axiom-roadmap.md` for the full argument. Do
+  not invest further proof effort in `CrossRecurrence`.
 
 ### Superseded: `CollisionAdjustedBound` / `sub_optimal_penalty`
 
