@@ -20,7 +20,7 @@ inline std::string fcom(uint64_t n) {
     return s;
 }
 
-/// Format a floating-point value with thousands separators and fixed precision.
+/// Format a non-negative floating-point value with thousands separators and fixed precision.
 inline std::string fcom(double n, int precision = 1) {
     std::ostringstream out;
     out << std::fixed << std::setprecision(precision) << n;
