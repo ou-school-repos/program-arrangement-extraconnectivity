@@ -256,10 +256,10 @@ static FormulaResult compute_formula(const std::vector<Vertex<K, SymT>> &verts,
     return {nk1, constant};
 }
 
-// -- Brute-force verification — O(R^3 * log R) -------------------------
+// -- Brute-force verification — O(R^4 * log R) -------------------------
 
-/// Brute-force |N(V')| by explicit neighbor enumeration and dedup, O(R^3 log
-/// R).
+/// Brute-force |N(V')| by explicit neighbor enumeration and dedup, O(R^4 log
+/// R) accounting for K = Θ(R) vertex comparison cost.
 template <int K, typename SymT>
 static int64_t brute_force_neighbors(const std::vector<Vertex<K, SymT>> &verts,
                                      int n, int k) {
