@@ -22,7 +22,7 @@ Analytically (Lean 4 side) — still open:
 Paper-wise — still open:
 - The R≤260 full sweep + timing record (in progress — your commands above).
 - Once that completes, paper.tex's "computationally verified for all R ≤ 260" claims (lines 391, 948, abstract) should get a timing/machine footnote if you want that level of rigor, though the claim itself is already accurate.
-- Item 5 from TODO.txt (remove the global R variable in predict.cpp) — explicitly marked not urgent, purely a maintainability nit.
+- Item 5 from TODO.txt (remove the global R variable in predict.cpp) — DONE: predict.cpp has no global `R`; `R` is local to `main()` and the vertex type is templated as `Vertex<K, SymT>`.
 - Everything from the earlier code-review batch (bib metadata, the transcendence proof, the bounded-oscillation remark, the Lean docstring, the predict.cpp tier fix) is now fixed and committed — no known open findings there.
 
 Want me to take docs/collision-axiom-roadmap.md next?
@@ -51,10 +51,11 @@ see docs/lean-proof-status.md's "Superseded" note.
      I couldn’t complete that here because this environment hit a read-only artifact-removal failure, not a type error.
 
   2. Clean the remaining stale status docs
-     Best targets:
-      - docs/collision-axiom-roadmap.md
+     docs/collision-axiom-roadmap.md is current (rewritten for PenaltyExact
+     above, and again for the CrossTop.lean route) — no longer a target here.
+     Remaining target:
       - advisor_bundle/current_state.md
-        These still contradict the current PenaltyExact / proof status story.
+        Still contradicts the current PenaltyExact / proof status story.
 
   3. Re-verify the predictor range claim after the reserve fix
      Run predict --verify-range 2 260 locally and record:
@@ -81,8 +82,7 @@ see docs/lean-proof-status.md's "Superseded" note.
   4. Tighten README/paper wording around the search output block
      The sample block is from arrangement, while the quickstart above it is run/predict.
 
-  5. Optionally remove the global R from predict.cpp
-     Not urgent, but it would improve maintainability.
+  5. Optionally remove the global R from predict.cpp — DONE (see above).
 
   My recommendation: do 1, then I’ll handle 2 and 4, and if 3 succeeds we can update the verification claims cleanly.
 

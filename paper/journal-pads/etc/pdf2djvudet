@@ -41,8 +41,10 @@ for f in "$@"; do
     # This ensures that if the PDF changes, this line changes.
     TEMP_META_RAW="$TMPDIR_PDD/temp_meta_raw.txt"
     djvused "$OUT" -e 'select 1; print-meta' > "$TEMP_META_RAW"
-    # grep -v exits 1 (with pipefail) when every line matched the filter
-    # (i.e. nothing was removed) -- an expected outcome, not a failure.
+    # grep -v exits 1 when its output is empty -- i.e. every metadata line
+    # matched (and was excluded), or there was no metadata at all -- which
+    # is an expected outcome here, not a failure; any other nonzero status
+    # (e.g. a read error) is a real failure and should propagate.
     if grep -v $'^source_mod\t' "$TEMP_META_RAW" > "$TEMP_META"; then
         :
     else

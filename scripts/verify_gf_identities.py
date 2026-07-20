@@ -10,12 +10,14 @@ the Delange density decomposition (Prop D) for R < 2^16.
 This script only checks finitely many instances of each algebraic identity,
 over the ranges above: it does not (and cannot) establish the section's
 analytic claims that depend on unbounded R or continuity/differentiability
-— e.g. Theorem them:delange's nowhere-differentiability, Corollary
-`cor:transcend`'s transcendence argument, or the exact supremum in
-Remark `rem:extremal`.
+— e.g. Theorem them:delange's nowhere-differentiability or Corollary
+`cor:transcend`'s transcendence argument. (The exact supremum once recorded
+only as numerical evidence in Remark `rem:extremal` is now proven in
+Proposition `prop:sup-density`, independently of this script.)
 
 Run: `python3 verify_gf_identities.py`
-(all lines must print True)
+(every `check(...)` line must print True; the "D Delange wave" and
+"X/R range" lines are informational diagnostics, not pass/fail checks)
 """
 
 import math

@@ -50,7 +50,7 @@ static inline int128_t widen(int64_t x) { return x; }
 // type --
 
 /// Stack-allocated fixed-capacity vertex: K symbols of type SymT,
-/// memcmp-ordered.
+/// lexicographically ordered.
 template <int K, typename SymT> struct Vertex {
     static constexpr SymT SENTINEL = static_cast<SymT>(~SymT{0}); // max value
     std::array<SymT, K> syms = {};
@@ -183,7 +183,7 @@ static std::vector<Vertex<K, SymT>> build_hamming_ball(int width) {
     return verts;
 }
 
-// -- Formula computation via construction — O(R^3) --------------------
+// -- Formula computation via construction — O(R^4 * log R) ------------
 
 struct FormulaResult {
     int64_t nk1;
@@ -191,7 +191,9 @@ struct FormulaResult {
 };
 
 /// Compute (nk1, constant) for a Hamming-ball vertex set by direct
-/// construction, O(R^3).
+/// construction, O(R^4 log R) accounting for K = Θ(R) vertex comparison
+/// cost (named_nbrs can hold O(R^3) entries, each sorted at O(K) per
+/// comparison).
 template <int K, typename SymT>
 static FormulaResult compute_formula(const std::vector<Vertex<K, SymT>> &verts,
                                      int width) {

@@ -25,10 +25,11 @@ inline std::string fcom(double n, int precision = 1) {
     std::ostringstream out;
     out << std::fixed << std::setprecision(precision) << n;
     std::string s = out.str();
+    int start = (!s.empty() && s[0] == '-') ? 1 : 0;
     size_t pos = s.find('.');
     if (pos == std::string::npos)
         pos = s.length();
-    for (int i = (int)pos - 3; i > 0; i -= 3)
+    for (int i = (int)pos - 3; i > start; i -= 3)
         s.insert(i, ",");
     return s;
 }
