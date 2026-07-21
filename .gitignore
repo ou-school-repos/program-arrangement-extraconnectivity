@@ -53,6 +53,7 @@ Thumbs.db
 
 # Generated graph previews
 docs/*.gif
+paper/archive/
 
 # LaTeX build artifacts
 *.aux
