@@ -282,7 +282,90 @@ private lemma sum_ball_deg_grow {m D : ℕ} (hm : m < 2 ^ D) :
     (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg (m + 1) D j)
       = (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg m D j)
         + ((range D).filter (fun p => m.testBit p = false)).card := by
-  sorry
+  have h_pointwise : ∀ j ∈ Ico (m + 1) (2 ^ D),
+      ball_deg (m + 1) D j = ball_deg m D j + ((range D).filter (fun p => j ^^^ 2 ^ p = m)).card := by
+    intro j _
+    unfold ball_deg
+    have h_or : (range D).filter (fun p => j ^^^ 2 ^ p < m + 1)
+        = (range D).filter (fun p => j ^^^ 2 ^ p < m) ∪ (range D).filter (fun p => j ^^^ 2 ^ p = m) := by
+      ext p
+      simp only [Finset.mem_filter, Finset.mem_union]
+      constructor
+      · rintro ⟨hp, hlt⟩
+        have : j ^^^ 2 ^ p < m ∨ j ^^^ 2 ^ p = m := by omega
+        rcases this with h1 | h2
+        · left; exact ⟨hp, h1⟩
+        · right; exact ⟨hp, h2⟩
+      · rintro (⟨hp, hlt⟩ | ⟨hp, heq⟩)
+        · exact ⟨hp, by omega⟩
+        · exact ⟨hp, by omega⟩
+    rw [h_or]
+    apply Finset.card_union_of_disjoint
+    intro p hp
+    rw [Finset.inf_eq_inter, Finset.mem_inter, Finset.mem_filter, Finset.mem_filter] at hp
+    omega
+  have h_sum1 : (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg (m + 1) D j)
+      = (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg m D j)
+        + ∑ j ∈ Ico (m + 1) (2 ^ D), ((range D).filter (fun p => j ^^^ 2 ^ p = m)).card := by
+    rw [← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    exact h_pointwise
+  rw [h_sum1]
+  congr 1
+  have h_swap : (∑ j ∈ Ico (m + 1) (2 ^ D), ((range D).filter (fun p => j ^^^ 2 ^ p = m)).card)
+      = ((range D).filter (fun p => m ^^^ 2 ^ p ∈ Ico (m + 1) (2 ^ D))).card := by
+    have h_lhs : (∑ j ∈ Ico (m + 1) (2 ^ D), ((range D).filter (fun p => j ^^^ 2 ^ p = m)).card)
+        = ∑ j ∈ Ico (m + 1) (2 ^ D), ∑ p ∈ range D, ite (j ^^^ 2 ^ p = m) 1 0 := by
+      apply Finset.sum_congr rfl
+      intro j _
+      rw [Finset.card_eq_sum_ones]
+      exact Finset.sum_filter _ _
+    have h_rhs : ((range D).filter (fun p => m ^^^ 2 ^ p ∈ Ico (m + 1) (2 ^ D))).card
+        = ∑ p ∈ range D, ite (m ^^^ 2 ^ p ∈ Ico (m + 1) (2 ^ D)) 1 0 := by
+      rw [Finset.card_eq_sum_ones]
+      exact Finset.sum_filter _ _
+    rw [h_lhs, h_rhs, Finset.sum_comm]
+    apply Finset.sum_congr rfl
+    intro p _
+    by_cases hm_in : m ^^^ 2 ^ p ∈ Ico (m + 1) (2 ^ D)
+    · rw [if_pos hm_in]
+      have heq : (m ^^^ 2 ^ p) ^^^ 2 ^ p = m := xor_two_pow_involutive m p
+      apply Finset.sum_eq_single_of_mem (m ^^^ 2 ^ p) hm_in
+      · rw [heq, if_pos rfl]
+      · intro j hj hj_ne
+        have hj_eq : j ^^^ 2 ^ p ≠ m := by
+          intro hc
+          have : (j ^^^ 2 ^ p) ^^^ 2 ^ p = m ^^^ 2 ^ p := by rw [hc]
+          rw [xor_two_pow_involutive] at this
+          exact hj_ne this
+        rw [if_neg hj_eq]
+    · rw [if_neg hm_in]
+      apply Finset.sum_eq_zero
+      intro j hj
+      have hj_eq : j ^^^ 2 ^ p ≠ m := by
+        intro hc
+        have : (j ^^^ 2 ^ p) ^^^ 2 ^ p = m ^^^ 2 ^ p := by rw [hc]
+        rw [xor_two_pow_involutive] at this
+        subst this
+        exact hm_in hj
+      rw [if_neg hj_eq]
+  rw [h_swap]
+  congr 1
+  apply Finset.filter_congr
+  intro p hp
+  rw [Finset.mem_range] at hp
+  rw [Finset.mem_Ico]
+  have h_cube : m ^^^ 2 ^ p < 2 ^ D := xor_two_pow_lt_cube hm hp
+  constructor
+  · intro h
+    have hlt : m < m ^^^ 2 ^ p := by omega
+    by_contra hc
+    have : m.testBit p = true := by cases hm_tb : m.testBit p <;> simp_all
+    have : m ^^^ 2 ^ p < m := xor_two_pow_lt_of_testBit_true this
+    omega
+  · intro ht
+    have hlt : m < m ^^^ 2 ^ p := lt_xor_two_pow_of_testBit_false ht
+    omega
 
 /-- **Layer A main lemma.**  `Σ_{j ∈ [m, 2^D)} ball_deg m D j + 2·E_seq m = m·D`.
     Induction on `m`: absorbing `m` into the ball removes its `popcount m`
@@ -387,7 +470,36 @@ lemma total_eq_sum_mult (V : Finset (ArrVertex n k)) :
     total_coord_edges V
       = ∑ w ∈ (Finset.univ.filter (fun w =>
           w ∉ V ∧ ∃ v ∈ V, arr_adjacent v w)), bd_mult V w := by
-  sorry
+  unfold total_coord_edges bd_mult
+  have h1 : (∑ p : Fin k, (coord_boundary V p).card)
+      = ∑ p : Fin k, ∑ w ∈ Finset.univ, ite (w ∈ coord_boundary V p) 1 0 := by
+    apply Finset.sum_congr rfl
+    intro p _
+    rw [Finset.card_eq_sum_ones]
+    exact Finset.sum_filter _ _
+  have h2 : (∑ p : Fin k, ∑ w ∈ Finset.univ, ite (w ∈ coord_boundary V p) 1 0)
+      = ∑ w ∈ Finset.univ, ∑ p : Fin k, ite (w ∈ coord_boundary V p) 1 0 :=
+    Finset.sum_comm
+  have h3 : (∑ w ∈ Finset.univ, ∑ p : Fin k, ite (w ∈ coord_boundary V p) 1 0)
+      = ∑ w ∈ Finset.univ, (Finset.univ.filter (fun p => w ∈ coord_boundary V p)).card := by
+    apply Finset.sum_congr rfl
+    intro w _
+    rw [Finset.card_eq_sum_ones]
+    exact (Finset.sum_filter _ _).symm
+  rw [h1, h2, h3]
+  apply Finset.sum_subset
+  · intro w hw
+    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hw
+    exact Finset.mem_univ w
+  · intro w _ hwnot
+    rw [Finset.mem_filter, Finset.mem_univ, true_and, not_and] at hwnot
+    rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
+    intro p _ hp_in
+    unfold coord_boundary at hp_in
+    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp_in
+    rcases hp_in with ⟨hw_not_v, v, hv, h_drop⟩
+    have h_adj : arr_adjacent v w := arr_adjacent_of_drop_pos_eq_of_ne' hw_not_v h_drop
+    exact hwnot hw_not_v ⟨v, hv, h_adj⟩
 
 /-- Every external vertex has multiplicity ≥ 1.
     Proof plan: adjacency yields the single differing coordinate `p₀` with the
@@ -456,7 +568,27 @@ lemma bd_mult_embed_eq_ball_deg {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     bd_mult (hamming_ball_subset t n k d hk hnk)
         (embed_vertex n k d (nat_to_cube d j) hk hnk)
       = ball_deg t d j := by
-  sorry
+  unfold bd_mult ball_deg
+  have h_card : (Finset.univ.filter (fun p : Fin k => embed_vertex n k d (nat_to_cube d j) hk hnk ∈ coord_boundary (hamming_ball_subset t n k d hk hnk) p)).card =
+      ((range d).filter (fun p => j ^^^ 2 ^ p < t)).card := by
+    apply Finset.card_congr (fun (p : Fin k) _ => p.val)
+    · intro p hp
+      rw [Finset.mem_filter] at hp
+      have h_iff := embed_mem_coord_boundary_iff hk hnk ht hjt hjd p
+      rw [h_iff] at hp
+      rw [Finset.mem_filter, Finset.mem_range]
+      exact ⟨hp.2.1, hp.2.2⟩
+    · intro p1 hp1 p2 hp2 heq
+      exact Fin.eq_of_val_eq heq
+    · intro q hq
+      rw [Finset.mem_filter, Finset.mem_range] at hq
+      have hk_lt : q < k := by omega
+      use ⟨q, hk_lt⟩
+      rw [Finset.mem_filter, Finset.mem_univ, true_and]
+      have h_iff := embed_mem_coord_boundary_iff hk hnk ht hjt hjd ⟨q, hk_lt⟩
+      rw [h_iff]
+      exact ⟨hq.1, hq.2⟩
+  exact h_card
 
 /-- **B3 (collisions live on the cube).**  Membership in two distinct
     coordinate boundaries forces the vertex to be a cube vertex.
