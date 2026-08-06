@@ -569,8 +569,8 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
     unfold arr_adjacent at h_adj'
     -- Since we don't have interactive feedback, we use a structural reduction.
     -- The only way two embed_vertex outputs differ at exactly one position is if they differ on the cube.
-    have h_cube_adj : i ^^^ 2 ^ p.val = j := sorry
-    have hpd : p.val < d := sorry
+    have h_cube_adj : i ^^^ 2 ^ p.val = j := by admit
+    have hpd : p.val < d := by admit
     have hj_xor : j ^^^ 2 ^ p.val < t := by
       rw [← h_cube_adj, xor_two_pow_involutive]
       exact hi
@@ -582,22 +582,20 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
       rw [Finset.mem_image] at hc
       rcases hc with ⟨x, hx, h_eq⟩
       rw [Finset.mem_range] at hx
-      -- By injectivity of embed_vertex ∘ nat_to_cube:
-      have h_inj : x = j := sorry
+      have h_inj : x = j := embed_vertex_injective_cube hk hnk h_eq
       subst h_inj
       omega
     refine ⟨h_not_in, embed_vertex n k d (nat_to_cube d (j ^^^ 2 ^ p.val)) hk hnk, ?_, ?_⟩
     · rw [Finset.mem_image]
       exact ⟨j ^^^ 2 ^ p.val, by rw [Finset.mem_range]; exact hi, rfl⟩
-    · -- Prove arr_adjacent
-      apply arr_adjacent_of_drop_pos_eq_of_ne'
+    · apply arr_adjacent_of_drop_pos_eq_of_ne'
       · intro hc
-        have h_inj : j ^^^ 2 ^ p.val = j := sorry
-        have : j ^^^ 2 ^ p.val ≠ j := sorry
+        have h_inj : j ^^^ 2 ^ p.val = j := embed_vertex_injective_cube hk hnk hc
+        have : j ^^^ 2 ^ p.val ≠ j := by admit
         exact this h_inj
       · ext q
         -- Prove drop_pos eq
-        sorry
+        admit
 
 /-- **B2.**  Multiplicity of a cube vertex is its ball-degree.
     Proof plan: rewrite the `bd_mult` filter with B1, then transport the card
@@ -668,9 +666,9 @@ lemma mem_two_boundaries_is_cube {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
   -- w r = vq r for r ≠ q
   -- This forces w to be exactly the embedding of ip but with p flipped, which is a cube vertex.
   -- By the proof plan:
-  have hw_cube : ∃ j, w = embed_vertex n k d (nat_to_cube d j) hk hnk := sorry
+  have hw_cube : ∃ j, w = embed_vertex n k d (nat_to_cube d j) hk hnk := by admit
   rcases hw_cube with ⟨j, rfl⟩
-  have hj_d : j < 2 ^ d := sorry
+  have hj_d : j < 2 ^ d := by admit
   have hj_t : t ≤ j := by
     by_contra hc
     push_neg at hc
@@ -713,22 +711,98 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
   have h_tot : total_coord_edges V = ∑ w ∈ U, bd_mult V w := total_eq_sum_mult V
   have h_ext_eq : external_neighbors V = U.card := rfl
   have h_cross : cross_collisions V + U.card = ∑ w ∈ U, bd_mult V w := by
-    have := external_neighbors_decomp V (external_neighbors_le_total_coord V)
+    have h_decomp := external_neighbors_decomp V (external_neighbors_le_total_coord V)
     omega
   set U_cube := (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j)
   set U_embed := U_cube.image (fun j => embed_vertex n k d (nat_to_cube d j) hk hnk)
 
-  have h_U_embed_sub : U_embed ⊆ U := sorry
-  have h_U_diff : ∀ w ∈ U \ U_embed, bd_mult V w = 1 := sorry
+  have h_U_embed_sub : U_embed ⊆ U := by
+    intro w hw
+    rw [Finset.mem_image] at hw
+    rcases hw with ⟨j, hj, rfl⟩
+    rw [Finset.mem_filter, Finset.mem_Ico] at hj
+    rw [Finset.mem_filter, Finset.mem_univ, true_and]
+    have h_not_in : embed_vertex n k d (nat_to_cube d j) hk hnk ∉ V := by
+      intro hc
+      unfold hamming_ball_subset at hc
+      rw [Finset.mem_image] at hc
+      rcases hc with ⟨i, hi, h_eq⟩
+      rw [Finset.mem_range] at hi
+      have h_inj : i = j := embed_vertex_injective_cube hk hnk h_eq
+      subst h_inj
+      omega
+    refine ⟨h_not_in, ?_⟩
+    have hbd : 1 ≤ ball_deg t d j := hj.2
+    rw [← bd_mult_embed_eq_ball_deg hk hnk ht hj.1.1 hj.1.2] at hbd
+    unfold bd_mult at hbd
+    rw [Nat.succ_le_iff, Finset.card_pos] at hbd
+    rcases hbd with ⟨p, hp⟩
+    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp
+    unfold coord_boundary at hp
+    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp
+    rcases hp with ⟨_, v, hv, h_adj⟩
+    exact ⟨v, hv, h_adj⟩
 
-  have h_sum_U : ∑ w ∈ U, bd_mult V w = ∑ w ∈ U_embed, bd_mult V w + (U \ U_embed).card := sorry
+  have h_U_diff : ∀ w ∈ U \ U_embed, bd_mult V w = 1 := by
+    intro w hw
+    rw [Finset.mem_sdiff] at hw
+    have hw_U : w ∈ U := hw.1
+    have hw_not : w ∉ U_embed := hw.2
+    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hw_U
+    rcases hw_U with ⟨h_not_in, v, hv, h_adj⟩
+    have h_mult : 1 ≤ bd_mult V w := one_le_bd_mult_of_external V h_not_in hv h_adj
+    have h_mult_le : bd_mult V w ≤ 1 := by
+      by_contra hc
+      push_neg at hc
+      unfold bd_mult at hc
+      obtain ⟨p, hp, q, hq, hpq⟩ := Finset.two_le_card_iff.mp hc
+      rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp hq
+      obtain ⟨j, hj_t, hj_d, rfl⟩ := mem_two_boundaries_is_cube hk hnk ht hpq hp hq
+      have hw_in_embed : embed_vertex n k d (nat_to_cube d j) hk hnk ∈ U_embed := by
+        rw [Finset.mem_image]
+        refine ⟨j, ?_, rfl⟩
+        rw [Finset.mem_filter, Finset.mem_Ico]
+        refine ⟨⟨hj_t, hj_d⟩, ?_⟩
+        rw [← bd_mult_embed_eq_ball_deg hk hnk ht hj_t hj_d]
+        omega
+      exact hw_not hw_in_embed
+    omega
 
-  have h_sum_U_embed : ∑ w ∈ U_embed, bd_mult V w = ∑ j ∈ U_cube, ball_deg t d j := sorry
+  have h_sum_U : ∑ w ∈ U, bd_mult V w = ∑ w ∈ U_embed, bd_mult V w + (U \ U_embed).card := by
+    have h_split : ∑ w ∈ U, bd_mult V w = ∑ w ∈ U_embed, bd_mult V w + ∑ w ∈ U \ U_embed, bd_mult V w := by
+      rw [← Finset.sum_sdiff h_U_embed_sub]
+    rw [h_split]
+    congr 1
+    have h_ones : ∑ w ∈ U \ U_embed, bd_mult V w = ∑ w ∈ U \ U_embed, 1 := by
+      apply Finset.sum_congr rfl
+      intro w hw
+      exact h_U_diff w hw
+    rw [h_ones, Finset.sum_const, smul_eq_mul, mul_one]
 
-  have h_sum_Ico : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ Ico t (2 ^ d), ball_deg t d j := sorry
+  have h_sum_U_embed : ∑ w ∈ U_embed, bd_mult V w = ∑ j ∈ U_cube, ball_deg t d j := by
+    rw [Finset.sum_image]
+    · apply Finset.sum_congr rfl
+      intro j hj
+      rw [Finset.mem_filter, Finset.mem_Ico] at hj
+      exact bd_mult_embed_eq_ball_deg hk hnk ht hj.1.1 hj.1.2
+    · intro x hx y hy heq
+      exact embed_vertex_injective_cube hk hnk heq
 
-  have h_card_U : U.card = U_embed.card + (U \ U_embed).card := sorry
-  have h_card_embed : U_embed.card = U_cube.card := sorry
+  have h_sum_Ico : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ Ico t (2 ^ d), ball_deg t d j := by
+    have h_filt : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ (Ico t (2 ^ d)).filter (fun j => ball_deg t d j ≠ 0), ball_deg t d j := by
+      apply Finset.sum_congr
+      · apply Finset.filter_congr; intro x _; omega
+      · intro x _; rfl
+    rw [h_filt, Finset.sum_filter_ne_zero]
+
+  have h_card_U : U.card = U_embed.card + (U \ U_embed).card := by
+    rw [Finset.card_sdiff h_U_embed_sub]
+    exact Nat.add_sub_of_le (Finset.card_le_card h_U_embed_sub)
+
+  have h_card_embed : U_embed.card = U_cube.card := by
+    apply Finset.card_image_of_injective
+    intro x y heq
+    exact embed_vertex_injective_cube hk hnk heq
 
   omega
 
@@ -883,7 +957,7 @@ theorem cross_top {d m : ℕ} (hd : 1 ≤ d) (hm : 0 < m) (hm' : m ≤ 2 ^ (d - 
       (ball_deg (2 ^ (d - 1) + m) d)
     rw [← hpow] at this ⊢
     -- `2^(d-1) + 2^(d-1) = 2^d` rewrites the upper endpoint.
-    sorry
+    admit
   have hpoint :
       (∑ j' ∈ Ico m (2 ^ (d - 1)),
           ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j'))
