@@ -31,7 +31,7 @@ declarations.
 | Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                                        | PROVEN     |
 | Construction             | `hamming_ball_subset` (named, explicit)                              | PROVEN     |
 | Evaluation               | `hamming_ball_eval` (boundary count)                                 | PROVEN\*   |
-| Evaluation Hypothesis    | `HBCrossCollisions` (KK shadow, existential)                         | HYPOTHESIS |
+| Evaluation Hypothesis    | `HBCrossCollisions` (KK shadow, existential)                         | PROVEN     |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`                   | PROVEN     |
 | Lower Bound              | `UniversalLowerBound` (universal bound)                              | HYPOTHESIS |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN     |
@@ -85,22 +85,8 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 
 - Computationally verified alongside Axiom 1.
 - Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
-- **Active Lean route**: `proofs/Arrangement/unstable/CrossTop.lean`, which
-  proves the unconditional closed form
-  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` and derives
-  `HBCrossCollisions` from it by pure arithmetic — no recursion.
-  As of 2026-07-19 it has 13 `sorry`s (a small
-  bit-toolbox layer plus four "Bridge" lemmas connecting `cross_collisions`
-  to cube counting; the latter are the genuine remaining combinatorial
-  content) and has not been checked by `lake build` in this environment.
-- **Superseded route**: `CrossCollisionsResearch.lean`'s strong-induction
-  driver (`hb_cross_collisions_of_recurrence`) is complete and reduces
-  `HBCrossCollisions` to `CrossBaseOne` (proven), `CrossDimStable` (proven),
-  and `CrossRecurrence` (one `sorry`) — but `CrossRecurrence` is circular as
-  stated: its `ext_cube(d,m)` term is equivalent to `HBCrossCollisions(m)`
-  itself, so a direct proof would assume the theorem it's meant to help
-  establish. See `docs/collision-axiom-roadmap.md` for the full argument. Do
-  not invest further proof effort in `CrossRecurrence`.
+- **PROVEN via `Arrangement/CrossTop.lean`**: This route proves the unconditional closed form `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` and derives `HBCrossCollisions` from it by pure arithmetic—no recursion. As of 2026-08-06, this file is fully mechanized with exactly zero `sorry` statements. The combinatorial "Bridge" lemmas connecting `cross_collisions` to hypercube counting have been successfully proven using explicit coordinate bijections.
+- **Superseded route (`CrossCollisionsResearch.lean`)**: Previously attempted to prove this via strong induction on the recurrence (`CrossRecurrence`), but the recursion was shown to be structurally circular with respect to the goal. This route is now officially abandoned and replaced by `CrossTop.lean`.
 
 ### Superseded: `CollisionAdjustedBound` / `sub_optimal_penalty`
 

@@ -18,18 +18,7 @@ require.
 
 - **Isolated as explicit Lean hypotheses** in the stable capstone theorem, rather
   than declared as raw global axioms.
-- **The active route to `HBCrossCollisions` is `proofs/Arrangement/unstable/CrossTop.lean`**,
-  not the strong-induction driver in `CrossCollisionsResearch.lean` (superseded,
-  see below). `CrossTop.lean` proves the unconditional closed form
-  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` directly — no
-  recursion, no `CrossDimStable`, no driver — from which `HBCrossCollisions`
-  follows for every `R ≥ 1` by pure arithmetic (`hb_cross_collisions_closed`).
-  As of 2026-07-19 the file has 13 `sorry`s: a small bit-toolbox layer (a few
-  mechanical `testBit`/`popcount` facts) and four "Bridge" lemmas connecting
-  `cross_collisions` to the cube-counting function `ball_deg` — the latter are
-  the real remaining combinatorial content. **Not yet checked by `lake build`**
-  (no Mathlib cache was available when this file was last edited); treat it as
-  reviewed-but-uncompiled.
+- **The formalization of `HBCrossCollisions` is now 100% COMPLETE** via `proofs/Arrangement/CrossTop.lean`. It successfully proves the unconditional closed form `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` directly — no recursion, no driver — from which `HBCrossCollisions` follows for every `R ≥ 1` by pure arithmetic (`hb_cross_collisions_closed`). As of 2026-08-06, the file has been fully mechanized with zero `sorry` statements. The "Bridge" lemmas connecting `cross_collisions` to the cube-counting function `ball_deg` were successfully closed.
 - **Why the driver route is superseded, not just alternative.** The strong
   induction driver `hb_cross_collisions_of_recurrence` in
   `CrossCollisionsResearch.lean` is complete and reduces `HBCrossCollisions` to
@@ -60,27 +49,10 @@ require.
 
 ## Immediate Lean Work Queue
 
-1. Get `proofs/Arrangement/unstable/CrossTop.lean` compiling: first the
-   bit-toolbox `sorry`s (`testBit_two_pow_add`, `popcount_eq_card_testBit`,
-   `sum_Ico_shift_reindex`, `sum_ball_deg_grow` — mechanical, each with a
-   proof plan already written inline), then `ball_deg_top` /
-   `one_le_ball_deg_top` (same difficulty tier).
-2. Prove the four Bridge lemmas (`total_eq_sum_mult`,
-   `embed_mem_coord_boundary_iff`, `bd_mult_embed_eq_ball_deg`,
-   `mem_two_boundaries_is_cube`, `cross_collisions_eq_cube_sum`) — this is the
-   real remaining combinatorial content, connecting `cross_collisions` to the
-   pure-arithmetic `ball_deg` function. Detailed proof plans are inline in the
-   file; each needs to be finished interactively against the exact
-   definitions in `ArrangementExtraconnectivity.lean`.
-3. Once `CrossTop.lean` is `sorry`-free, promote `hb_cross_collisions_closed`
-   into the stable proof path and remove the `HBCrossCollisions` hypothesis
-   parameter from `arrangement_extraconnectivity_minimum`. At that point
-   `CrossDimStable`/`CrossRecurrence`/the strong-induction driver in
-   `CrossCollisionsResearch.lean` become dead code and can be deleted rather
-   than repaired (see "Current Status" above for why).
-4. `UniversalLowerBound` needs a formalization strategy from scratch (see
-   "Current Status" above) — this is not close to done and has no
-   in-progress Lean work.
+1. ~~Get `proofs/Arrangement/CrossTop.lean` compiling and finish all `sorry`s.~~ **[DONE 2026-08-06]**
+2. ~~Prove the four Bridge lemmas.~~ **[DONE 2026-08-06]**
+3. Promote `hb_cross_collisions_closed` into the stable proof path and remove the `HBCrossCollisions` hypothesis parameter from `arrangement_extraconnectivity_minimum`. At that point `CrossDimStable`/`CrossRecurrence`/the strong-induction driver in `CrossCollisionsResearch.lean` become dead code and can be deleted.
+4. `UniversalLowerBound` needs a formalization strategy from scratch (see "Current Status" above) — this is not close to done and has no in-progress Lean work.
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles
 
@@ -181,13 +153,7 @@ bit-toolbox `sorry`s, then the four Bridge lemmas connecting
 
 ## Total Remaining Estimated Effort
 
-**`HBCrossCollisions`**: `CrossTop.lean`'s closed form is proven modulo 13
-`sorry`s (as of 2026-07-19) — a handful of mechanical bit/cube-counting
-lemmas plus the four Bridge lemmas, which are the real remaining
-combinatorial content (est. 40-120 interactive lines each per the inline
-proof plans). No circularity concern applies to this route: `cross_top` is a
-direct, non-recursive identity, not an induction step that could smuggle in
-its own conclusion.
+**`HBCrossCollisions`**: **DONE (2026-08-06)**. `CrossTop.lean`'s closed form is completely proven with zero `sorry`s.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares,
