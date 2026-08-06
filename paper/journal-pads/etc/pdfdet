@@ -3,6 +3,7 @@
 cleanup() {
   [[ -n "${tmp1:-}" && -e "$tmp1" ]] && rm -f -- "$tmp1"
   [[ -n "${tmp2:-}" && -e "$tmp2" ]] && rm -f -- "$tmp2"
+  true
 }
 trap cleanup EXIT
 
