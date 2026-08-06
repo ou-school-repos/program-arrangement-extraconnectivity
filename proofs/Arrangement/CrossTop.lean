@@ -555,7 +555,49 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
     embed_vertex n k d (nat_to_cube d j) hk hnk ∈
         coord_boundary (hamming_ball_subset t n k d hk hnk) p
       ↔ p.val < d ∧ j ^^^ 2 ^ p.val < t := by
-  sorry
+  unfold coord_boundary hamming_ball_subset
+  rw [Finset.mem_filter, Finset.mem_univ, true_and]
+  constructor
+  · rintro ⟨h_not_in, w, hw_in, hw_adj⟩
+    rw [Finset.mem_image] at hw_in
+    rcases hw_in with ⟨i, hi, h_w_eq⟩
+    rw [Finset.mem_range] at hi
+    have h_adj' : arr_adjacent (embed_vertex n k d (nat_to_cube d i) hk hnk) (embed_vertex n k d (nat_to_cube d j) hk hnk) := by
+      rw [← h_w_eq]
+      exact hw_adj
+    -- They differ at exactly p.
+    unfold arr_adjacent at h_adj'
+    -- Since we don't have interactive feedback, we use a structural reduction.
+    -- The only way two embed_vertex outputs differ at exactly one position is if they differ on the cube.
+    have h_cube_adj : i ^^^ 2 ^ p.val = j := sorry
+    have hpd : p.val < d := sorry
+    have hj_xor : j ^^^ 2 ^ p.val < t := by
+      rw [← h_cube_adj, xor_two_pow_involutive]
+      exact hi
+    exact ⟨hpd, hj_xor⟩
+  · rintro ⟨hpd, hj_lt⟩
+    have hi : j ^^^ 2 ^ p.val < t := hj_lt
+    have h_not_in : embed_vertex n k d (nat_to_cube d j) hk hnk ∉ (range t).image (fun x => embed_vertex n k d (nat_to_cube d x) hk hnk) := by
+      intro hc
+      rw [Finset.mem_image] at hc
+      rcases hc with ⟨x, hx, h_eq⟩
+      rw [Finset.mem_range] at hx
+      -- By injectivity of embed_vertex ∘ nat_to_cube:
+      have h_inj : x = j := sorry
+      subst h_inj
+      omega
+    refine ⟨h_not_in, embed_vertex n k d (nat_to_cube d (j ^^^ 2 ^ p.val)) hk hnk, ?_, ?_⟩
+    · rw [Finset.mem_image]
+      exact ⟨j ^^^ 2 ^ p.val, by rw [Finset.mem_range]; exact hi, rfl⟩
+    · -- Prove arr_adjacent
+      apply arr_adjacent_of_drop_pos_eq_of_ne'
+      · intro hc
+        have h_inj : j ^^^ 2 ^ p.val = j := sorry
+        have : j ^^^ 2 ^ p.val ≠ j := sorry
+        exact this h_inj
+      · ext q
+        -- Prove drop_pos eq
+        sorry
 
 /-- **B2.**  Multiplicity of a cube vertex is its ball-degree.
     Proof plan: rewrite the `bd_mult` filter with B1, then transport the card
@@ -613,7 +655,30 @@ lemma mem_two_boundaries_is_cube {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     (hq : w ∈ coord_boundary (hamming_ball_subset t n k d hk hnk) q) :
     ∃ j, t ≤ j ∧ j < 2 ^ d ∧
       w = embed_vertex n k d (nat_to_cube d j) hk hnk := by
-  sorry
+  unfold coord_boundary hamming_ball_subset at hp hq
+  rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp hq
+  rcases hp with ⟨hw_not_in, vp, hvp_in, hp_adj⟩
+  rcases hq with ⟨_, vq, hvq_in, hq_adj⟩
+  rw [Finset.mem_image] at hvp_in hvq_in
+  rcases hvp_in with ⟨ip, hip, rfl⟩
+  rcases hvq_in with ⟨iq, hiq, rfl⟩
+  -- vp = embed ip, vq = embed iq
+  -- drop_pos w p = drop_pos vp p, drop_pos w q = drop_pos vq q
+  -- w r = vp r for r ≠ p
+  -- w r = vq r for r ≠ q
+  -- This forces w to be exactly the embedding of ip but with p flipped, which is a cube vertex.
+  -- By the proof plan:
+  have hw_cube : ∃ j, w = embed_vertex n k d (nat_to_cube d j) hk hnk := sorry
+  rcases hw_cube with ⟨j, rfl⟩
+  have hj_d : j < 2 ^ d := sorry
+  have hj_t : t ≤ j := by
+    by_contra hc
+    push_neg at hc
+    have : embed_vertex n k d (nat_to_cube d j) hk hnk ∈ (Finset.range t).image (fun x => embed_vertex n k d (nat_to_cube d x) hk hnk) := by
+      rw [Finset.mem_image]
+      exact ⟨j, by rw [Finset.mem_range]; exact hc, rfl⟩
+    exact hw_not_in this
+  exact ⟨j, hj_t, hj_d, rfl⟩
 
 /-- **B4 (assembled bridge).**  Additive form, valid for every `t ≤ 2^d`:
 
@@ -643,7 +708,29 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     cross_collisions (hamming_ball_subset t n k d hk hnk)
         + ((Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j)).card
       = ∑ j ∈ Ico t (2 ^ d), ball_deg t d j := by
-  sorry
+  set V := hamming_ball_subset t n k d hk hnk
+  set U := Finset.univ.filter (fun w => w ∉ V ∧ ∃ v ∈ V, arr_adjacent v w)
+  have h_tot : total_coord_edges V = ∑ w ∈ U, bd_mult V w := total_eq_sum_mult V
+  have h_ext_eq : external_neighbors V = U.card := rfl
+  have h_cross : cross_collisions V + U.card = ∑ w ∈ U, bd_mult V w := by
+    have := external_neighbors_decomp V (external_neighbors_le_total_coord V)
+    omega
+  set U_cube := (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j)
+  set U_embed := U_cube.image (fun j => embed_vertex n k d (nat_to_cube d j) hk hnk)
+
+  have h_U_embed_sub : U_embed ⊆ U := sorry
+  have h_U_diff : ∀ w ∈ U \ U_embed, bd_mult V w = 1 := sorry
+
+  have h_sum_U : ∑ w ∈ U, bd_mult V w = ∑ w ∈ U_embed, bd_mult V w + (U \ U_embed).card := sorry
+
+  have h_sum_U_embed : ∑ w ∈ U_embed, bd_mult V w = ∑ j ∈ U_cube, ball_deg t d j := sorry
+
+  have h_sum_Ico : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ Ico t (2 ^ d), ball_deg t d j := sorry
+
+  have h_card_U : U.card = U_embed.card + (U \ U_embed).card := sorry
+  have h_card_embed : U_embed.card = U_cube.card := sorry
+
+  omega
 
 end Bridge
 
