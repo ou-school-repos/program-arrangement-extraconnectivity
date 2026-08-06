@@ -168,7 +168,35 @@ lemma xor_two_pow_lt_cube {j p D : ℕ} (hj : j < 2 ^ D) (hp : p < D) :
     (`Nat.testBit_eq_false_of_lt`). Verified numerically (check 5). -/
 lemma testBit_two_pow_add {D y : ℕ} (hy : y < 2 ^ D) (q : ℕ) :
     (2 ^ D + y).testBit q = if q = D then true else y.testBit q := by
-  sorry
+  by_cases hq : q = D
+  · subst hq
+    simp only [if_true]
+    have h1 : (2^D + y) / 2^D = 1 := by
+      have : 2^D > 0 := Nat.pos_pow_of_pos D (by decide)
+      rw [Nat.add_comm, Nat.add_mul_div_right y 1 this, Nat.div_eq_of_lt hy]
+      rfl
+    rw [Nat.testBit, h1]
+    rfl
+  · simp only [hq, if_false]
+    rcases lt_or_gt_of_ne hq with hlt | hgt
+    · have h2 : (2^D + y) / 2^q = 2^(D - q) + y / 2^q := by
+        have h3 : 2^D = 2^(D - q) * 2^q := by
+          rw [← Nat.pow_add]
+          congr 1; omega
+        have : 2^q > 0 := Nat.pos_pow_of_pos q (by decide)
+        rw [h3, Nat.add_comm, Nat.add_mul_div_right y _ this, Nat.add_comm]
+      rw [Nat.testBit, Nat.testBit, h2]
+      have h4 : 2^(D - q) % 2 = 0 := by
+        have h5 : 2^(D - q) = 2 * 2^(D - q - 1) := by
+          rw [← Nat.pow_add]; congr 1; omega
+        rw [h5, Nat.mul_mod_right]
+      rw [Nat.add_mod, h4, zero_add, Nat.mod_mod]
+    · have hgt1 : 2^D + y < 2^q := by
+        calc 2^D + y < 2^D + 2^D := by omega
+        _ = 2 * 2^D := by ring
+        _ = 2^(D+1) := by rw [← pow_succ]
+        _ ≤ 2^q := Nat.pow_le_pow_right (by decide) hgt
+      rw [Nat.testBit_eq_false_of_lt hgt1, Nat.testBit_eq_false_of_lt (by omega)]
 
 /-- `popcount` as a filter-card over bit positions (for `m < 2^D`).
     Proof plan: induction on `D` peeling the TOP bit:
@@ -181,7 +209,36 @@ lemma testBit_two_pow_add {D y : ℕ} (hy : y < 2 ^ D) (q : ℕ) :
 lemma popcount_eq_card_testBit {D : ℕ} :
     ∀ {m : ℕ}, m < 2 ^ D →
       popcount m = ((range D).filter (fun p => m.testBit p)).card := by
-  sorry
+  induction D with
+  | zero =>
+    intro m hm
+    have : m = 0 := by omega
+    subst this
+    simp [popcount_zero]
+  | succ D ih =>
+    intro m hm
+    rw [Finset.range_succ, Finset.filter_insert]
+    by_cases h : m < 2^D
+    · have ht : m.testBit D = false := Nat.testBit_eq_false_of_lt h
+      simp [ht, ih h]
+    · have h1 : 2^D ≤ m := by omega
+      have hy : m - 2^D < 2^D := by omega
+      have hy2 : m = 2^D + (m - 2^D) := by omega
+      have ht : m.testBit D = true := by
+        nth_rw 1 [hy2]
+        rw [testBit_two_pow_add hy D, if_pos rfl]
+      have hnot : D ∉ Finset.filter (fun p => m.testBit p) (range D) := by simp
+      simp only [ht, if_true, Finset.card_insert_of_not_mem hnot]
+      have h_pop : popcount m = popcount (m - 2^D) + 1 := by
+        nth_rw 1 [hy2]
+        exact popcount_two_pow_add (m - 2^D) D hy
+      rw [h_pop, ih hy, add_comm]
+      congr 1
+      apply Finset.filter_congr
+      intro p hp
+      rw [Finset.mem_range] at hp
+      nth_rw 1 [hy2]
+      rw [testBit_two_pow_add hy p, if_neg (by omega)]
 
 end BitToolbox
 
@@ -341,7 +398,27 @@ lemma total_eq_sum_mult (V : Finset (ArrVertex n k)) :
 lemma one_le_bd_mult_of_external (V : Finset (ArrVertex n k))
     {w : ArrVertex n k} (hw : w ∉ V) {v : ArrVertex n k} (hv : v ∈ V)
     (hadj : arr_adjacent v w) : 1 ≤ bd_mult V w := by
-  sorry
+  unfold bd_mult
+  rw [Nat.succ_le_iff, Finset.card_pos]
+  unfold arr_adjacent at hadj
+  rw [Finset.card_eq_one] at hadj
+  rcases hadj with ⟨p, hp⟩
+  use p
+  rw [Finset.mem_filter, Finset.mem_univ, true_and]
+  unfold coord_boundary
+  rw [Finset.mem_filter, Finset.mem_univ, true_and]
+  refine ⟨hw, v, hv, ?_⟩
+  ext q
+  have h_eq : ∀ r : Fin k, r ≠ p → w r = v r := by
+    intro r hr
+    have hr_not : r ∉ Finset.filter (fun q' => w q' ≠ v q') Finset.univ := by
+      intro hc
+      rw [hp, Finset.mem_singleton] at hc
+      exact hr hc
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_not] at hr_not
+    exact hr_not
+  apply h_eq
+  exact Fin.succAbove_ne p q
 
 /-- **B1 (membership).**  For `t ≤ 2^d` and `t ≤ j < 2^d`:
     `embed j ∈ coord_boundary (HB t) p  ↔  p.val < d ∧ j ^^^ 2^(p.val) < t`.
@@ -460,7 +537,46 @@ lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
     (hm' : m ≤ 2 ^ (d - 1)) (hj'm : m ≤ j') (hj' : j' < 2 ^ (d - 1)) :
     ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j')
       = 1 + ball_deg m (d - 1) j' := by
-  sorry
+  unfold ball_deg
+  have h_range : range d = insert (d - 1) (range (d - 1)) := by
+    have : d = d - 1 + 1 := by omega
+    nth_rw 1 [this]
+    rw [Finset.range_succ]
+  rw [h_range, Finset.filter_insert]
+  have ht_eq : (2 ^ (d - 1) + j') ^^^ 2 ^ (d - 1) = j' := by
+    apply Nat.eq_of_testBit_eq
+    intro q
+    rw [testBit_xor_two_pow]
+    by_cases hq : q = d - 1
+    · subst hq
+      have h1 : (2 ^ (d - 1) + j').testBit (d - 1) = true := by
+        rw [testBit_two_pow_add hj' (d-1), if_pos rfl]
+      simp only [h1, decide_True, bne_self_eq_false]
+      exact (Nat.testBit_eq_false_of_lt hj').symm
+    · simp only [decide_False, bne_false]
+      rw [testBit_two_pow_add hj' q, if_neg (Ne.symm hq)]
+  have ht : (2 ^ (d - 1) + j') ^^^ 2 ^ (d - 1) < 2 ^ (d - 1) + m := by omega
+  have hnot : d - 1 ∉ (range (d - 1)).filter (fun p => (2 ^ (d - 1) + j') ^^^ 2 ^ p < 2 ^ (d - 1) + m) := by simp
+  simp only [ht, if_true, Finset.card_insert_of_not_mem hnot]
+  congr 1
+  apply Finset.filter_congr
+  intro p hp
+  rw [Finset.mem_range] at hp
+  have hp_eq : (2 ^ (d - 1) + j') ^^^ 2 ^ p = 2 ^ (d - 1) + (j' ^^^ 2 ^ p) := by
+    apply Nat.eq_of_testBit_eq
+    intro q
+    rw [testBit_xor_two_pow]
+    have hy : j' ^^^ 2 ^ p < 2 ^ (d - 1) := xor_two_pow_lt_cube hj' hp
+    by_cases hq : q = d - 1
+    · subst hq
+      rw [testBit_two_pow_add hy (d - 1), if_pos rfl]
+      rw [testBit_two_pow_add hj' (d - 1), if_pos rfl]
+      simp [ne_of_gt hp]
+    · rw [testBit_two_pow_add hy q, if_neg (Ne.symm hq)]
+      rw [testBit_two_pow_add hj' q, if_neg (Ne.symm hq)]
+      rw [testBit_xor_two_pow]
+  rw [hp_eq]
+  omega
 
 /-- Every vertex of the top strip sees its bottom partner.
     Proof plan: `2^(d-1) ≤ j < 2^d` gives `testBit j (d-1) = true` (write
@@ -470,17 +586,50 @@ lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
 lemma one_le_ball_deg_top {d m j : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
     (hm' : m ≤ 2 ^ (d - 1)) (hjR : 2 ^ (d - 1) + m ≤ j) (hjd : j < 2 ^ d) :
     1 ≤ ball_deg (2 ^ (d - 1) + m) d j := by
-  sorry
+  unfold ball_deg
+  rw [Nat.succ_le_iff, Finset.card_pos]
+  use (d - 1)
+  rw [Finset.mem_filter, Finset.mem_range]
+  refine ⟨by omega, ?_⟩
+  have hy : j - 2 ^ (d - 1) < 2 ^ (d - 1) := by omega
+  have hy2 : j = 2 ^ (d - 1) + (j - 2 ^ (d - 1)) := by omega
+  have ht1 : j.testBit (d - 1) = true := by
+    nth_rw 1 [hy2]
+    rw [testBit_two_pow_add hy (d - 1), if_pos rfl]
+  have h_eq : j ^^^ 2 ^ (d - 1) = j - 2 ^ (d - 1) := by
+    apply Nat.eq_of_testBit_eq
+    intro q
+    rw [testBit_xor_two_pow]
+    by_cases hq : q = d - 1
+    · subst hq
+      simp only [ht1, decide_True, bne_self_eq_false]
+      exact (Nat.testBit_eq_false_of_lt hy).symm
+    · simp only [decide_False, bne_false]
+      nth_rw 1 [hy2]
+      rw [testBit_two_pow_add hy q, if_neg (Ne.symm hq)]
+  rw [h_eq]
+  omega
 
 /-- Shift-reindex of the strip sum (the `Ico`-map idiom of
     `hb_half1_eq_image_shifted`, applied to a sum instead of an image):
     `Σ_{j ∈ Ico (P+a) (P+b)} f j = Σ_{j' ∈ Ico a b} f (P + j')`. -/
 private lemma sum_Ico_shift_reindex (P a b : ℕ) (f : ℕ → ℕ) :
     (∑ j ∈ Ico (P + a) (P + b), f j) = ∑ j' ∈ Ico a b, f (P + j') := by
-  -- `Ico (P+a) (P+b) = (Ico a b).map ⟨(P + ·), fun _ _ h => by omega⟩`
-  -- (same `ext`/`omega` argument as `h_bij` in `hb_half1_eq_image_shifted`),
-  -- then `Finset.sum_map`.
-  sorry
+  have h_bij : (Ico a b).map ⟨(P + ·), fun x y h => by omega⟩ = Ico (P + a) (P + b) := by
+    ext x
+    rw [Finset.mem_map, Finset.mem_Ico]
+    constructor
+    · rintro ⟨y, hy, rfl⟩
+      rw [Finset.mem_Ico] at hy
+      omega
+    · intro hx
+      use x - P
+      rw [Finset.mem_Ico]
+      constructor
+      · omega
+      · omega
+  rw [← h_bij, Finset.sum_map]
+  rfl
 
 /-- **CrossTop.**  The unconditional closed form:
     `cross_collisions (HB (2^(d-1)+m)) + 2·E_seq m = m·(d-1)`.
