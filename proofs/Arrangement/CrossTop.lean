@@ -1016,9 +1016,8 @@ theorem cross_top {d m : ℕ} (hd : 1 ≤ d) (hm : 0 < m) (hm' : m ≤ 2 ^ (d - 
             ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j') := by
     have := sum_Ico_shift_reindex (2 ^ (d - 1)) m (2 ^ (d - 1))
       (ball_deg (2 ^ (d - 1) + m) d)
-    rw [← hpow] at this ⊢
-    -- `2^(d-1) + 2^(d-1) = 2^d` rewrites the upper endpoint.
-    admit
+    rw [← hpow] at this
+    exact this
   have hpoint :
       (∑ j' ∈ Ico m (2 ^ (d - 1)),
           ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j'))
@@ -1054,7 +1053,7 @@ lemma E_seq_pow (j : ℕ) : 2 * E_seq (2 ^ j) = j * 2 ^ j := by
     have e2 : (j + 1) * 2 ^ (j + 1) = 2 * (j * 2 ^ j) + 2 * 2 ^ j := by
       rw [e1]; ring
     rw [e1, hsplit]
-    omega
+    nlinarith [ih]
 
 /-- `C_constant` de-truncated (exact by `E_seq_le_sum_bit_length`). -/
 lemma C_constant_add_E_seq (R : ℕ) :
@@ -1082,12 +1081,14 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     have hE1 : E_seq 1 = 0 := by
       show E_seq 0 + popcount 0 = 0
       rw [popcount_zero]
+      rfl
     have hC1 : C_constant 1 = 0 := by
       have hb0 : bit_length 0 = 0 := by
         rw [bit_length_eq_size]; exact Nat.size_zero
       have hL1 : sum_bit_length 1 = 0 := by
         show sum_bit_length 0 + bit_length 0 = 0
         rw [hb0]
+        rfl
       rw [C_constant_def, hL1, hE1]
     omega
   · -- R ≥ 2: locate R ∈ (2^(d-1), 2^d]; arithmetic reused from the old driver.
@@ -1122,7 +1123,7 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
         + 2 * E_seq m = m * (d - 1) := by
       have := cross_top (n := n) (k := k) hd1 hm_pos hm_le hk hnk
       exact this
-    rw [hR_eq] at hCE hE_split hL_split ⊢
+    rw [hR_eq] at hCE ⊢
     -- LHS = m(d-1) − 2E_m + (E_P + E_m + m) = m·d − E_m + E_P;
     -- RHS closes via  sbl P + P = (d-1)P + 1  and  2E_P = (d-1)P.
     omega
