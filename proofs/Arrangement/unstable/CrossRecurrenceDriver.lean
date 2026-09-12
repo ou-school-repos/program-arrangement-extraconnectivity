@@ -1,6 +1,6 @@
 import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
-import Arrangement.unstable.CrossCollisionsResearch
+import Arrangement.CrossCollisionsResearch
 
 open Finset
 

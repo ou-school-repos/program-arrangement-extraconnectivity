@@ -16,8 +16,8 @@ lean_lib «Proofs» where
     `Arrangement.PredictorComplexity,
     `Arrangement.ArrangementExtraconnectivity,
     `Arrangement.PenaltyExact,
+    `Arrangement.CrossCollisionsResearch,
+    `Arrangement.CrossTop,
     `Arrangement.unstable.ArrangementGraphUtils,
-    `Arrangement.unstable.SupportProjection,
-    `Arrangement.unstable.CrossCollisionsResearch,
-    `Arrangement.CrossTop
+    `Arrangement.unstable.SupportProjection
   ]

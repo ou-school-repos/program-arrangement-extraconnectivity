@@ -1,6 +1,6 @@
 import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
-import Arrangement.unstable.CrossCollisionsResearch
+import Arrangement.CrossCollisionsResearch
 import Mathlib.Algebra.Order.BigOperators.Group.LocallyFinite
 -- ^ adjust the last module name if the lakefile maps `unstable/` differently.
 -- This file consumes (all verified present in the current sources):
