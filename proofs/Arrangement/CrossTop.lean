@@ -752,10 +752,76 @@ lemma mem_two_boundaries_is_cube {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
   -- w r = vp r for r ≠ p
   -- w r = vq r for r ≠ q
   -- This forces w to be exactly the embedding of ip but with p flipped, which is a cube vertex.
-  -- By the proof plan:
-  have hw_cube : ∃ j, w = embed_vertex n k d (nat_to_cube d j) hk hnk := by admit
-  rcases hw_cube with ⟨j, rfl⟩
-  have hj_d : j < 2 ^ d := by admit
+  have hvp_mem : embed_vertex n k d (nat_to_cube d ip) hk hnk
+      ∈ (Finset.range t).image (fun x => embed_vertex n k d (nat_to_cube d x) hk hnk) := by
+    rw [Finset.mem_image]; exact ⟨ip, hip, rfl⟩
+  have hne_vp : w ≠ embed_vertex n k d (nat_to_cube d ip) hk hnk := by
+    intro heq; exact hw_not_in (heq ▸ hvp_mem)
+  have h_p_ne : w.val p ≠ (embed_vertex n k d (nat_to_cube d ip) hk hnk).val p := by
+    intro heq
+    apply hne_vp
+    apply Subtype.ext
+    funext r
+    by_cases hrp : r = p
+    · rw [hrp]; exact heq
+    · exact congr_fun hp_adj ⟨r, hrp⟩
+  have h_wq_p : w.val p = (embed_vertex n k d (nat_to_cube d iq) hk hnk).val p :=
+    congr_fun hq_adj ⟨p, hpq⟩
+  have hpd : p.val < d := by
+    by_contra hge
+    push Not at hge
+    apply hne_vp
+    apply Subtype.ext
+    funext r
+    by_cases hrp : r = p
+    · rw [hrp]
+      rw [h_wq_p]
+      show embed_cube n k d hk hnk (nat_to_cube d iq) p
+         = embed_cube n k d hk hnk (nat_to_cube d ip) p
+      unfold embed_cube
+      simp [not_lt.mpr hge]
+    · exact congr_fun hp_adj ⟨r, hrp⟩
+  have hj_bit : (ip ^^^ 2 ^ p.val).testBit p.val = !ip.testBit p.val := by
+    rw [testBit_xor_two_pow]; simp
+  have hpq_diff : (embed_vertex n k d (nat_to_cube d iq) hk hnk).val p
+      ≠ (embed_vertex n k d (nat_to_cube d ip) hk hnk).val p := by
+    rw [← h_wq_p]; exact h_p_ne
+  have hbitq : iq.testBit p.val = (ip ^^^ 2 ^ p.val).testBit p.val := by
+    rw [hj_bit]
+    by_contra hne
+    apply hpq_diff
+    show embed_cube n k d hk hnk (nat_to_cube d iq) p
+       = embed_cube n k d hk hnk (nat_to_cube d ip) p
+    unfold embed_cube nat_to_cube
+    simp only [hpd, dif_pos]
+    cases hbi : ip.testBit p.val <;> cases hbj : iq.testBit p.val <;> simp_all
+  have hw_cube : ∃ j, j < 2 ^ d ∧ w = embed_vertex n k d (nat_to_cube d j) hk hnk := by
+    refine ⟨ip ^^^ 2 ^ p.val,
+      xor_two_pow_lt_cube (lt_of_lt_of_le (Finset.mem_range.mp hip) ht) hpd,
+      Subtype.ext (funext fun r => ?_)⟩
+    by_cases hrp : r = p
+    · rw [hrp]
+      rw [h_wq_p]
+      show embed_cube n k d hk hnk (nat_to_cube d iq) p
+         = embed_cube n k d hk hnk (nat_to_cube d (ip ^^^ 2 ^ p.val)) p
+      unfold embed_cube nat_to_cube
+      simp only [hpd, dif_pos]
+      rw [hbitq]
+    · have hcp : w.val r = (embed_vertex n k d (nat_to_cube d ip) hk hnk).val r :=
+        congr_fun hp_adj ⟨r, hrp⟩
+      rw [hcp]
+      show embed_cube n k d hk hnk (nat_to_cube d ip) r
+         = embed_cube n k d hk hnk (nat_to_cube d (ip ^^^ 2 ^ p.val)) r
+      have hrq : r.val ≠ p.val := fun h => hrp (Fin.ext h)
+      by_cases hrd : r.val < d
+      · unfold embed_cube nat_to_cube
+        simp only [hrd, dif_pos]
+        have hbit : ip.testBit r.val = (ip ^^^ 2 ^ p.val).testBit r.val := by
+          rw [testBit_xor_two_pow, decide_eq_false (Ne.symm hrq), Bool.bne_false]
+        rw [hbit]
+      · unfold embed_cube
+        simp [hrd]
+  rcases hw_cube with ⟨j, hj_d, rfl⟩
   have hj_t : t ≤ j := by
     by_contra hc
     push Not at hc
