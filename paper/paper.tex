@@ -12,12 +12,23 @@
 \usepackage{caption}
 
 \usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!70!black,hypertexnames=false]{hyperref}
-\usepackage{accsupp} \usepackage{embedfile} \usepackage{listings} \lstset{
-basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true,
-breaklines=false, frame=none, xleftmargin=0.5em, aboveskip=0.8em,
-belowskip=0.8em, keywordstyle=\color{blue}, commentstyle=\color{green!60!black},
-stringstyle=\color{red}, } \usetikzlibrary{positioning, arrows.meta,
-shapes.geometric, decorations.pathreplacing}
+\usepackage{accsupp}
+\usepackage{embedfile}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=false,
+  frame=none,
+  xleftmargin=0.5em,
+  aboveskip=0.8em,
+  belowskip=0.8em,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{red},
+}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric, decorations.pathreplacing}
 
 % -- Preprint watermark ---------------------------------------------------
 \usepackage{eso-pic}
@@ -62,9 +73,8 @@ shapes.geometric, decorations.pathreplacing}
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
-\textbf{A Conditional Exact Boundary Formula and Fixed-Topology Asymptotic
-Hamming-Ball Dominance for Arrangement Graphs $A(n,k)$:}\\[0.5em] The Algebraic
-Defect Framework\\[0.5em]
+  \textbf{A Conditional Exact Boundary Formula and Fixed-Topology Asymptotic Hamming-Ball Dominance for Arrangement Graphs $A(n,k)$:}\\[0.5em]
+  The Algebraic Defect Framework\\[0.5em]
   % \large \textit{Bachelor's thesis}
 }
 \author{%
@@ -147,9 +157,22 @@ statement appears as Theorem~\ref{thm:main}.
 
 Our approach proceeds in three steps:
 \begin{itemize}
-	\item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In $A(n,k)$, the target symbol may already appear at another coordinate of the same vertex, so the shift can either violate injectivity ($1324 \xrightarrow{4\to 1} 1321$) or sever defect links ($\{13,\,23,\,43\}$ form a clique along root $\_3$; shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies).
-	\item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving vertices geometrically, we count the coordinate-aligned lines (roots) that the subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary factors cleanly into a term proportional to $(n-k)$ minus a correction that depends only on the subset's internal defect and cross-collisions---not on $n$ or $k$.
-		\item \textbf{The Fixed-Topology Asymptotic Penalty (Section~\ref{sec:sandwich}):} For any fixed sub-optimal topology, the defect shortfall contributes a linear-in-$(n-k)$ term while the remaining correction stays topology-dependent but dimension-independent; consequently no sub-optimal topology can catch up once $n-k$ is large enough.
+\item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In
+hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In
+$A(n,k)$, the target symbol may already appear at another coordinate of the same
+vertex, so the shift can either violate injectivity ($1324 \xrightarrow{4\to 1}
+1321$) or sever defect links ($\{13,\,23,\,43\}$ form a clique along root $\_3$;
+shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies). \item \textbf{The
+Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving
+vertices geometrically, we count the coordinate-aligned lines (roots) that the
+subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary
+factors cleanly into a term proportional to $(n-k)$ minus a correction that
+depends only on the subset's internal defect and cross-collisions---not on $n$
+or $k$. \item \textbf{The Fixed-Topology Asymptotic Penalty
+(Section~\ref{sec:sandwich}):} For any fixed sub-optimal topology, the defect
+shortfall contributes a linear-in-$(n-k)$ term while the remaining correction
+stays topology-dependent but dimension-independent; consequently no sub-optimal
+topology can catch up once $n-k$ is large enough.
 \end{itemize}
 
 The conditional exact boundary formula of Theorem~\ref{thm:main} has potential
@@ -380,8 +403,7 @@ remains unchanged. The new compressed set is $C(V') = \{[4,1], [1,3]\}$.
 
 	The new external boundary becomes:
 	\begin{equation*}
-\extbd(C(V')) = \{[2,1], [3,1], [4,2], [4,3], [2,3], [1,2], [1,4]\} \implies
-\left| \extbd(C(V')) \right| = 7
+		\extbd(C(V')) = \{[2,1], [3,1], [4,2], [4,3], [2,3], [1,2], [1,4]\} \implies \left| \extbd(C(V')) \right| = 7
 	\end{equation*}
 
 Because the defect link between $[4,3]$ and $[1,3]$ was severed, the boundary
@@ -589,11 +611,14 @@ result:
 and~\ref{prop:hb-eval}; see the remark following them for their verification
 status.)} For all $R \ge 2$ and $n \ge k \ge 1$:
 	\begin{enumerate}
-		\item[\textup{(i)}] \textbf{Universal lower bound.} Every $R$-element subset $V' \subseteq V(A(n,k))$ satisfies
+\item[\textup{(i)}] \textbf{Universal lower bound.} Every $R$-element subset $V'
+\subseteq V(A(n,k))$ satisfies
 		      \begin{equation}\label{eq:lower-bound}
 			      \left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 		      \end{equation}
-		\item[\textup{(ii)}] \textbf{Achievability.} When $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, the lexicographic Hamming Ball $\mathrm{HB}_R$ achieves this bound with equality:
+\item[\textup{(ii)}] \textbf{Achievability.} When $n - k \ge \lceil \log_2 R
+\rceil$ and $k \ge \lceil \log_2 R \rceil$, the lexicographic Hamming Ball
+$\mathrm{HB}_R$ achieves this bound with equality:
 		      \begin{equation}\label{eq:hb-boundary}
 			      \left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R)
 		      \end{equation}
@@ -631,7 +656,8 @@ $j = d$ yields
 \end{remark}
 
 \begin{proof}
-	\textbf{Part~(i).}  The lower bound is established directly by Proposition~\ref{prop:universal}.
+\textbf{Part~(i).} The lower bound is established directly by
+Proposition~\ref{prop:universal}.
 
 \textbf{Part~(ii).} Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) +
 \Eseq(R) = \Cconst(R)$. Substituting this into the boundary decomposition
@@ -922,9 +948,7 @@ in every integer from $10$ down to $7$. The full achievable spectrum is $\{7,\,
 
 \begin{table}[ht]
 	\centering
-\caption{Complete defect walk-through for $R=8$ in $A(n,k)$, valid for any $k
-\ge 3$. Each row is verified by exhaustive search over all connected $8$-vertex
-subgraphs.}
+	\caption{Complete defect walk-through for $R=8$ in $A(n,k)$, valid for any $k \ge 3$.  Each row is verified by exhaustive search over all connected $8$-vertex subgraphs.}
 	\label{tab:walkthrough_r8}
 	\begin{tabular}{@{}clcl@{}}
 		\toprule
@@ -1109,8 +1133,17 @@ connected $R$-vertex subgraph.
 Any $R$-vertex subgraph $V'$ in $A(n,k)$ either fits entirely inside a
 $d$-dimensional embedding hypercube $Q_d$ or it spills outside of it.
 	\begin{enumerate}
-		\item \textbf{Case 1: $V' \subseteq Q_d$.} Since $R = 2^d - 1$, $V'$ is obtained by removing exactly one vertex $v$ from $Q_d$. Since $Q_d$ is $d$-regular, removing $v$ destroys exactly $d$ defect links (edges). Thus, the defect of any such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$.
-		\item \textbf{Case 2: $V' \not\subseteq Q_d$.} If $V'$ contains at least one vertex $v'$ outside of $Q_d$, then at most $R-1$ vertices of $V'$ lie within $Q_d$. By Theorem~\ref{thm:defect}, the maximum defect among these $R-1$ vertices is bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses at least one fresh coordinate dimension and therefore can share at most $1$ root with $Q_d \cap V'$. The maximum possible defect for any such spillover configuration is thus bounded by $\Eseq(R-1) + 1$.
+\item \textbf{Case 1: $V' \subseteq Q_d$.} Since $R = 2^d - 1$, $V'$ is obtained
+by removing exactly one vertex $v$ from $Q_d$. Since $Q_d$ is $d$-regular,
+removing $v$ destroys exactly $d$ defect links (edges). Thus, the defect of any
+such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$. \item \textbf{Case 2: $V'
+\not\subseteq Q_d$.} If $V'$ contains at least one vertex $v'$ outside of $Q_d$,
+then at most $R-1$ vertices of $V'$ lie within $Q_d$. By
+Theorem~\ref{thm:defect}, the maximum defect among these $R-1$ vertices is
+bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses at least one
+fresh coordinate dimension and therefore can share at most $1$ root with $Q_d
+\cap V'$. The maximum possible defect for any such spillover configuration is
+thus bounded by $\Eseq(R-1) + 1$.
 	\end{enumerate}
 The difference between the dense configuration defect and the maximum spillover
 defect is:
@@ -1145,13 +1178,12 @@ between these dense states and the leaf-addition bound are dictated by the
 primary and secondary fracture gaps of Theorems~\ref{thm:fracture}
 and~\ref{thm:secondary-gap}.
 \end{proof}
-\noindent Table~\ref{tab:edge_spectrum} illustrates this classification for selected values of $R$.
+\noindent Table~\ref{tab:edge_spectrum} illustrates this classification for
+selected values of $R$.
 
 \begin{table}[ht]
 	\centering
-\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of 2
-($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2 ($2^d-1$)
-exhibit secondary fracture gaps of $d-3$ for $d \ge 4$.}
+	\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of 2 ($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2 ($2^d-1$) exhibit secondary fracture gaps of $d-3$ for $d \ge 4$.}
 	\label{tab:edge_spectrum}
 	\begin{tabular}{rrrrl}
 		\toprule
@@ -1205,8 +1237,9 @@ For each $R$ and each achievable defect $D \in \mathcal{D}(R)$, let $M(R, D)$
 denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$
 with defect exactly $D$. Then:
 	\begin{enumerate}
-		\item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique maximizer).
-		\item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$ toward $R-1$.
+\item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique
+maximizer). \item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$
+toward $R-1$.
 	\end{enumerate}
 \end{conjecture}
 
@@ -1385,15 +1418,17 @@ Sorting and deduplication use the lexicographical comparison operators of
 
 \lstinputlisting[language=C++]{predict_core_sample.cpp}
 
-\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This engine checks Proposition~\ref{prop:hb-eval} by verifying \\
-\texttt{brute\_force\_neighbors(verts, 2 * R, R) == (R * R - nk1) * R - constant} \\
-for all $R \le 260$, giving strong numerical evidence that the Hamming Ball
-achieves the exact boundary predicted by Theorem~\ref{thm:main}. Because the
-Algebraic Defect Framework decouples the network dimensions from the subset
-structure, this paper leverages a property of $A(n,k)$, that the constants
-$\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$; thus,
-verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient to
-guarantee the formula's exactness for all valid dimensions.
+\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and
+\texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This
+engine checks Proposition~\ref{prop:hb-eval} by verifying \\
+\texttt{brute\_force\_neighbors(verts, 2 * R, R) == (R * R - nk1) * R -
+constant} \\ for all $R \le 260$, giving strong numerical evidence that the
+Hamming Ball achieves the exact boundary predicted by Theorem~\ref{thm:main}.
+Because the Algebraic Defect Framework decouples the network dimensions from the
+subset structure, this paper leverages a property of $A(n,k)$, that the
+constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$;
+thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient
+to guarantee the formula's exactness for all valid dimensions.
 Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets)
 is verified separately by exhaustive enumeration for $R \le 10$.
 
