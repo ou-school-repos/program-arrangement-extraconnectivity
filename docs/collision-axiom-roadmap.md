@@ -38,7 +38,8 @@ require.
   `CrossRecurrenceDriver.lean` for reference but should be treated as
   deprecated, not as the live path — do not invest further proof effort there.
 - **Formula values verified** via `predict --verify R` (predict.cpp) for
-  `R ≤ 260`, and exhaustively via the `arrangement` nauty-based search for
+  `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
+  `arrangement` nauty-based search covers
   `R ≤ 10`.
 - **`UniversalLowerBound` has no active Lean formalization strategy right
   now.** An earlier support-projection/Boolean-cube-injection approach was

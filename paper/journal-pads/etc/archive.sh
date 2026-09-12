@@ -47,7 +47,9 @@ fi
 for f in "${XOPP_FILES[@]}"; do
 	echo "$f"
 	fmoddate=$(stat -c "%Y" "$f")
-	fbase="$(basename "$f" .xopp)"
+	# Keep generated basenames from being parsed as command-line options when a
+	# source file itself begins with `-`.
+	fbase="./$(basename "$f" .xopp)"
 
 	# cd to file's directory
 	cd "$(dirname "$f")"

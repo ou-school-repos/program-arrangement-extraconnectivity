@@ -18,8 +18,7 @@
 // at K=512 that is upwards of 137 GiB, which exhausts typical machines
 // (16-32 GiB RAM) well before sorting/dedup can even run, and no reserve()/
 // streaming trick fixes it — the *final* answer set is that large. So 260
-// (matching the range historically verified for this project; see
-// docs/verifications.csv and paper.tex) is the enforced ceiling for
+// is the enforced ceiling for
 // --verify / --verify-range, served by a right-sized K=260 tier rather than
 // the old oversized K=512 one.
 //

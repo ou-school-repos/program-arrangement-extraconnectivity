@@ -586,7 +586,7 @@ extremal framework.
 These propositions encode the extremal content of the Kruskal-Katona shadow
 theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to
 the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is
-computationally verified for all $R \le 260$ by constructing $\mathrm{HB}_R$ and
+computationally verified through $R \le 160$ by constructing $\mathrm{HB}_R$ and
 enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}).
 Proposition~\ref{prop:universal} is tested exhaustively over connected
 $R$-vertex subsets for $R \le 10$ by enumerating every non-isomorphic connected
@@ -609,9 +609,10 @@ cut---without increasing the cut. This reduction is not addressed in the Lean
 formalization, whose capstone proves only a statement about external-neighbor
 sets of $R$-element subsets. In the Lean 4 formalization, rather than declaring
 these propositions as global axioms, we express this dependency by
-parameterizing our main capstone theorems with explicit hypothesis arguments
-(\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly
-isolates the classical extremal set theory from the novel algebraic machinery
+parameterizing the public capstone theorem with the explicit
+\texttt{UniversalLowerBound} hypothesis. The Hamming-ball collision evaluation
+is supplied by the direct Lean proof. This cleanly isolates the classical
+extremal set theory from the novel algebraic machinery
 while ensuring that the compiled theorems are completely transparent, verified,
 and free of raw, uninstantiated axiom commands.
 \end{remark}
@@ -1401,23 +1402,22 @@ Section~\ref{sec:fracture} are proven on paper from Harper's edge-isoperimetric
 theorem but are not yet mechanized. The entire graph theory of $A(n,k)$ is
 formalized from first principles; rather than declaring the unproved bounds as
 global axioms, we express the remaining capstone dependency by parameterizing
-the final exact minimum-cut theorems with explicit hypothesis arguments
-(\texttt{UniversalLowerBound} and \texttt{HBCrossCollisions}). This cleanly
-isolates the classical extremal set theory from the novel algebraic machinery
+the final exact minimum-cut theorem with the explicit
+\texttt{UniversalLowerBound} hypothesis. The direct proof supplies
+\texttt{HBCrossCollisions}. This cleanly isolates the classical extremal set
+theory from the novel algebraic machinery
 while ensuring that the compiled theorems are completely transparent, verified,
 and free of raw, uninstantiated axiom commands.
 
-The capstone theorem conditionally combines a supplied universal lower bound
-with the Hamming-ball construction. \emph{Note:} In the Lean source, the code
+The capstone theorem conditionally combines the supplied universal lower bound
+with the internally verified Hamming-ball construction. \emph{Note:} In the Lean source, the code
 variables \texttt{E\_seq} and \texttt{C\_constant} correspond to $\Eseq(R)$ and
 $\Cconst(R)$ respectively.
 
 {\small
 \begin{lstlisting}[language={}, breaklines=true]
 theorem arrangement_extraconnectivity_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
-    (h_lower : forall (R n k : Nat), UniversalLowerBound R n k)
-    (h_cross : forall {R n k d : Nat} (hk : d <= k) (hnk : k + d <= n) (_hd : d = bit_length (R - 1)),
-      HBCrossCollisions R n k d hk hnk) :
+    (h_lower : forall (R n k : Nat), UniversalLowerBound R n k) :
   (exists V' : Finset (ArrVertex n k), V'.card = R /\
     external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
   (forall V' : Finset (ArrVertex n k), V'.card = R ->
@@ -1456,7 +1456,7 @@ Sorting and deduplication use the lexicographical comparison operators of
 \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This
 engine checks Proposition~\ref{prop:hb-eval} by verifying \\
 \texttt{brute\_force\_neighbors(verts, 2 * R, R) == (R * R - nk1) * R -
-constant} \\ for all $R \le 260$, giving strong numerical evidence that the
+constant} \\ for all $R \le 160$, giving strong numerical evidence that the
 Hamming Ball achieves the exact boundary predicted by Theorem~\ref{thm:main}.
 Because the Algebraic Defect Framework decouples the network dimensions from the
 subset structure, this paper leverages a property of $A(n,k)$, that the

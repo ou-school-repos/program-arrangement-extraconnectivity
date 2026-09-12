@@ -55,7 +55,7 @@ for f in "$@"; do
     fi
     printf 'source_mod\t"%s"\n' "$PDF_MOD_DATE" >> "$TEMP_META"
 
-    djvused "$OUT" -e "set-meta \"$TEMP_META\"" -s
+    djvused "$OUT" -e "select 1; set-meta \"$TEMP_META\"" -s
 
     # 5. SYNC FILESYSTEM MODIFIED DATE
     # This makes the .djvu match the .pdf on the disk level

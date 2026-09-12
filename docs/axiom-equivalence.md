@@ -1,9 +1,8 @@
-# Hypothesis Interface Duality: UniversalLowerBound and hamming_ball_eval
+# Universal Lower Bound and Hamming-ball Evaluation
 
-The two hypothesis interfaces used below, `UniversalLowerBound` and
-`HBCrossCollisions`, are Lean `def ... : Prop` parameters threaded
-explicitly through the capstone theorem, not raw `axiom` declarations — see
-`docs/lean-proof-status.md` for the current build status of each.
+`UniversalLowerBound` remains an explicit Lean `Prop` parameter rather than a
+raw `axiom` declaration. The direct `CrossTop` proof supplies the
+Hamming-ball collision evaluation used by the public capstone theorem.
 
 ## The Two Hypothesis Interfaces
 
@@ -160,23 +159,15 @@ witness.
 
 ## Formalization Path (if pursued)
 
-These two interfaces are at very different stages, not a single remaining
-effort:
-
-- **`HBCrossCollisions`** is closest: its arithmetic/inductive backbone is
-  fully proven (`hb_cross_collisions_of_recurrence`), reducing it to three
-  combinatorial interface lemmas, two of which (`CrossBaseOne`,
-  `CrossDimStable`) are done. Only `CrossRecurrence` remains — see
-  `docs/collision-axiom-roadmap.md`.
-- **`UniversalLowerBound`** has no active formalization strategy. An earlier
-  attempt via support-projection into the Boolean hypercube (to reuse
-  Mathlib's `Mathlib.Combinatorics.SetFamily.KruskalKatona`, which does
-  exist in Mathlib) was abandoned after a counterexample refuted its central
-  inequality; see
-  `docs/archive/collision-axiom-support-projection-abandoned.md`. A working
-  approach would need, at minimum, a corrected shadow-count inequality, a
-  proven colex correspondence, and a proven pullback to
-  `sum_unique_roots`/`external_neighbors` — none of which currently exist.
+The remaining live formalization effort is `UniversalLowerBound`. An earlier
+attempt via support-projection into the Boolean hypercube (to reuse
+Mathlib's `Mathlib.Combinatorics.SetFamily.KruskalKatona`, which does
+exist in Mathlib) was abandoned after a counterexample refuted its central
+inequality; see
+`docs/archive/collision-axiom-support-projection-abandoned.md`. A working
+approach would need, at minimum, a corrected shadow-count inequality, a
+proven colex correspondence, and a proven pullback to
+`sum_unique_roots`/`external_neighbors` — none of which currently exist.
 
 See [collision-axiom-roadmap.md](collision-axiom-roadmap.md) for the
 detailed step-by-step plan.

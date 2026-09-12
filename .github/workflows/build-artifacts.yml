@@ -27,16 +27,16 @@ jobs:
           make render
           python3 scripts/gen_complexity_curves.py
 
-      - name: Build Paper and Documentation
-        run: |
-          make paper
-          make docs
-
       - name: Unarchive Xournalpp handwritten notes
         run: |
           cd paper/journal-pads
           make unarchive loc=out/xml/handwritten-defense-2026-05-01-Note-22-41.xml
           make archive
+
+      - name: Build Paper and Documentation
+        run: |
+          make paper
+          make docs
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4

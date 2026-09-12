@@ -13,27 +13,22 @@ Sweep commands (run in your own terminal, one at a time):
   Read 1 file
 
 Analytically (Lean 4 side) — still open:
-- UniversalLowerBound — unproven; verified exhaustively only to R≤10 (nauty), not computationally verified beyond that range and not mechanized.
-- HBCrossCollisions — blocked specifically on the CrossRecurrence lemma (CrossBaseOne/CrossDimStable are already proven).
-- Two standing conjectures in the paper remain open: Sparse Limit Upper Bound (Star Graph as sparse extremizer) and Multiplicity of Achievable Defects (Topological Funnel section).
-- lake build hasn't been confirmed clean end-to-end locally since a prior read-only artifact-removal failure (TODO item 1) — worth retrying now that ArrangementExtraconnectivity.lean's docstring changed today.
-- docs/collision-axiom-roadmap.md — rewritten to match the current PenaltyExact story (TODO item 2 done); README also updated (item 4).
+- UniversalLowerBound — unproven and not mechanized.
+- Two standing paper conjectures remain open: Sparse Limit Upper Bound (Star
+  Graph as sparse extremizer) and Multiplicity of Achievable Defects
+  (Topological Funnel section).
 
 Paper-wise — still open:
-- The R≤260 full sweep + timing record (in progress — your commands above).
-- Once that completes, paper.tex's "computationally verified for all R ≤ 260" claims (lines 391, 948, abstract) should get a timing/machine footnote if you want that level of rigor, though the claim itself is already accurate.
-- Item 5 from TODO.txt (remove the global R variable in predict.cpp) — DONE: predict.cpp has no global `R`; `R` is local to `main()` and the vertex type is templated as `Vertex<K, SymT>`.
-- Everything from the earlier code-review batch (bib metadata, the transcendence proof, the bounded-oscillation remark, the Lean docstring, the predict.cpp tier fix) is now fixed and committed — no known open findings there.
-
-Want me to take docs/collision-axiom-roadmap.md next?
+- The predictor sweep is confirmed through R≤160. The segmented sweep through
+  R=260, with a timing and machine record, remains pending.
+- Update any R≤260 verification claims only after that sweep completes.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The two open hypotheses tracked in docs/lean-proof-status.md are:
-
-1. UniversalLowerBound — still an unproven hypothesis (this is the Lean-side stand-in for prop:universal in the paper).
-2. HBCrossCollisions — still a hypothesis interface; it's now blocked on just one remaining piece, CrossRecurrence (its siblings CrossBaseOne and CrossDimStable are both proven).
+The remaining live capstone hypothesis tracked in docs/lean-proof-status.md is
+UniversalLowerBound, the Lean-side stand-in for prop:universal in the paper.
+HBCrossCollisions is supplied internally by CrossTop's direct proof.
 
 Note also CollisionAdjustedBound is refuted and superseded, while
 sub_optimal_penalty is vacuously sound but depends on that false hypothesis and
@@ -50,14 +45,7 @@ see docs/lean-proof-status.md's "Superseded" note.
      Run cd proofs && lake build.
      I couldn’t complete that here because this environment hit a read-only artifact-removal failure, not a type error.
 
-  2. Clean the remaining stale status docs
-     docs/collision-axiom-roadmap.md is current (rewritten for PenaltyExact
-     above, and again for the CrossTop.lean route) — no longer a target here.
-     Remaining target:
-      - advisor_bundle/current_state.md
-        Still contradicts the current PenaltyExact / proof status story.
-
-  3. Re-verify the predictor range claim after the reserve fix
+  2. Re-verify the predictor range claim after the reserve fix
      Run predict --verify-range 2 260 locally and record:
       - whether it completes
       - runtime
@@ -79,12 +67,11 @@ see docs/lean-proof-status.md's "Superseded" note.
         Re-run in segments (2-64, 65-128, 129-192, 193-260) to get full
         coverage without a single long-lived uninterruptible process.
 
-  4. Tighten README/paper wording around the search output block
+  3. Tighten README/paper wording around the search output block
      The sample block is from arrangement, while the quickstart above it is run/predict.
 
-  5. Optionally remove the global R from predict.cpp — DONE (see above).
-
-  My recommendation: do 1, then I’ll handle 2 and 4, and if 3 succeeds we can update the verification claims cleanly.
+  My recommendation: do 1, then complete the segmented predictor sweep before
+  updating verification claims.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

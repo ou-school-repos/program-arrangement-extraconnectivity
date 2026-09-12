@@ -72,7 +72,9 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 **Justification**:
 
 - Conceptually justified by Section 6's Tug-of-War scaling logic: any sub-optimal defect is penalized by at least (n-k) boundary nodes, which eventually eclipses any cross-collision differences.
-- Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ (the tool's enforced ceiling — brute-force verification memory is Theta(R^3 \cdot K); see docs/verifications.csv) and exhaustively for $R \le 10$ using `arrangement`.
+- Computationally confirmed via `predict --verify R` through $R \le 160$ and
+  exhaustively for $R \le 10$ using `arrangement`. The configured predictor
+  ceiling is 260, but the complete sweep through that ceiling is still pending.
   TODO(review): this section still reads as if the universal lower bound were
   fully validated; keep the hypothesis framing explicit until the Lean proof is
   actually closed.
@@ -125,7 +127,8 @@ The core algebra, bijections, and isoperimetric defect inequalities of the **Alg
 - **Hamming Ball construction** (`hamming_ball_subset`): Explicit construction with proven cardinality.
 - **Exact Penalty Identity** (`boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` in `Arrangement/PenaltyExact.lean`): Unconditional boundary identities and comparative penalty formulas derived directly from `total_coord_edges_eq`.
 
-The following high-level results are **mechanically proven inside Lean**, but remain conditional on the remaining extremal-combinatorics hypotheses above:
+The following high-level results are **mechanically proven inside Lean**;
+the public capstone remains conditional only on the universal lower bound:
 
 - **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor parameterized by the fixed-size collision evaluation.
 - **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines the direct Hamming-ball evaluation with `UniversalLowerBound` to squeeze the exact minimum cut.

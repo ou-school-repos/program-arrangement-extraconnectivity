@@ -43,10 +43,10 @@ Computational search supports a unique Hamming-ball minimizer in the tested rang
 
 The stable Lean 4 build mechanically verifies the algebraic defect framework, the core arithmetic, the root/fiber identities, and the explicit Hamming-ball construction.
 
-The capstone extraconnectivity theorem is present in the stable proof path, but it is intentionally parameterized by outstanding extremal-combinatorics hypotheses rather than closed unconditionally. The remaining stable hypothesis interfaces are:
+The capstone extraconnectivity theorem supplies the Hamming-ball collision
+evaluation internally. Its remaining extremal-combinatorics hypothesis is:
 
 - `UniversalLowerBound`: the universal boundary lower bound for all $R$-element subsets.
-- `HBCrossCollisions`: the exact 4-cycle shadow overlap count of the explicitly constructed Hamming Ball.
 
 Current stable status:
 
