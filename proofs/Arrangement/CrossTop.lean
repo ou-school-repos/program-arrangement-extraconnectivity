@@ -504,9 +504,10 @@ lemma total_eq_sum_mult (V : Finset (ArrVertex n k)) :
     rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
     intro p _ hp_in
     unfold coord_boundary at hp_in
-    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp_in
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hp_in
     rcases hp_in with ⟨hw_not_v, v, hv, h_drop⟩
-    have h_adj : arr_adjacent v w := arr_adjacent_of_drop_pos_eq_of_ne' hw_not_v h_drop
+    have hne : w ≠ v := fun heq => hw_not_v (heq ▸ hv)
+    have h_adj : arr_adjacent v w := arr_adjacent_of_drop_pos_eq_of_ne' hne h_drop
     exact hwnot hw_not_v ⟨v, hv, h_adj⟩
 
 /-- Every external vertex has multiplicity ≥ 1.
@@ -524,21 +525,22 @@ lemma one_le_bd_mult_of_external (V : Finset (ArrVertex n k))
   rw [Finset.card_eq_one] at hadj
   rcases hadj with ⟨p, hp⟩
   use p
-  rw [Finset.mem_filter, Finset.mem_univ, true_and]
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and]
   unfold coord_boundary
-  rw [Finset.mem_filter, Finset.mem_univ, true_and]
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and]
   refine ⟨hw, v, hv, ?_⟩
   ext q
-  have h_eq : ∀ r : Fin k, r ≠ p → w r = v r := by
+  unfold drop_pos
+  have h_eq : ∀ r : Fin k, r ≠ p → w.val r = v.val r := by
     intro r hr
-    have hr_not : r ∉ Finset.filter (fun q' => w q' ≠ v q') Finset.univ := by
+    have hr_not : r ∉ Finset.filter (fun q' => v.val q' ≠ w.val q') Finset.univ := by
       intro hc
       rw [hp, Finset.mem_singleton] at hc
       exact hr hc
     simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_not] at hr_not
-    exact hr_not
+    exact hr_not.symm
   apply h_eq
-  exact Fin.succAbove_ne p q
+  exact q.property
 
 /-- **B1 (membership).**  For `t ≤ 2^d` and `t ≤ j < 2^d`:
     `embed j ∈ coord_boundary (HB t) p  ↔  p.val < d ∧ j ^^^ 2^(p.val) < t`.
@@ -564,7 +566,7 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
         coord_boundary (hamming_ball_subset t n k d hk hnk) p
       ↔ p.val < d ∧ j ^^^ 2 ^ p.val < t := by
   unfold coord_boundary hamming_ball_subset
-  rw [Finset.mem_filter, Finset.mem_univ, true_and]
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and]
   constructor
   · rintro ⟨h_not_in, w, hw_in, hw_adj⟩
     rw [Finset.mem_image] at hw_in
@@ -682,7 +684,7 @@ lemma mem_two_boundaries_is_cube {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     ∃ j, t ≤ j ∧ j < 2 ^ d ∧
       w = embed_vertex n k d (nat_to_cube d j) hk hnk := by
   unfold coord_boundary hamming_ball_subset at hp hq
-  rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp hq
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hp hq
   rcases hp with ⟨hw_not_in, vp, hvp_in, hp_adj⟩
   rcases hq with ⟨_, vq, hvq_in, hq_adj⟩
   rw [Finset.mem_image] at hvp_in hvq_in
@@ -749,7 +751,7 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     rw [Finset.mem_image] at hw
     rcases hw with ⟨j, hj, rfl⟩
     rw [Finset.mem_filter, Finset.mem_Ico] at hj
-    rw [Finset.mem_filter, Finset.mem_univ, true_and]
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and]
     have h_not_in : embed_vertex n k d (nat_to_cube d j) hk hnk ∉ V := by
       intro hc
       unfold hamming_ball_subset at hc
@@ -776,7 +778,7 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     rw [Finset.mem_sdiff] at hw
     have hw_U : w ∈ U := hw.1
     have hw_not : w ∉ U_embed := hw.2
-    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hw_U
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hw_U
     rcases hw_U with ⟨h_not_in, v, hv, h_adj⟩
     have h_mult : 1 ≤ bd_mult V w := one_le_bd_mult_of_external V h_not_in hv h_adj
     have h_mult_le : bd_mult V w ≤ 1 := by
