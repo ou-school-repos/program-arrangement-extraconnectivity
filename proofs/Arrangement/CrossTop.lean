@@ -591,11 +591,31 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
     · apply arr_adjacent_of_drop_pos_eq_of_ne'
       · intro hc
         have h_inj : j ^^^ 2 ^ p.val = j := embed_vertex_injective_cube hk hnk hc
-        have : j ^^^ 2 ^ p.val ≠ j := by admit
-        exact this h_inj
-      · ext q
-        -- Prove drop_pos eq
-        admit
+        have hxor_ne : j ^^^ 2 ^ p.val ≠ j := by
+          intro h
+          have h0 : (2 : ℕ) ^ p.val = 0 := by
+            have hc' := congrArg (j ^^^ ·) h
+            simpa [Nat.xor_assoc, Nat.xor_self] using hc'
+          exact (Nat.pow_pos (by norm_num) p.val).ne' h0
+        exact hxor_ne h_inj
+      · funext q
+        unfold drop_pos
+        show (embed_vertex n k d (nat_to_cube d (j ^^^ 2 ^ p.val)) hk hnk).val q.val
+           = (embed_vertex n k d (nat_to_cube d j) hk hnk).val q.val
+        unfold embed_vertex embed_cube
+        dsimp only
+        have hqp : q.val.val ≠ p.val := by
+          intro hcontra
+          exact q.property (Fin.ext hcontra)
+        by_cases hq : q.val.val < d
+        · simp only [hq, dif_pos]
+          have hbit : (nat_to_cube d (j ^^^ 2 ^ p.val)) ⟨q.val.val, hq⟩
+                    = (nat_to_cube d j) ⟨q.val.val, hq⟩ := by
+            show (j ^^^ 2 ^ p.val).testBit q.val.val = j.testBit q.val.val
+            rw [testBit_xor_two_pow]
+            simp [hqp]
+          rw [hbit]
+        · simp [hq]
 
 /-- **B2.**  Multiplicity of a cube vertex is its ball-degree.
     Proof plan: rewrite the `bd_mult` filter with B1, then transport the card

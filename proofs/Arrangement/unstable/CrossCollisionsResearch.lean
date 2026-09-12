@@ -629,7 +629,7 @@ theorem hb_cross_collisions_of_recurrence
                 (hamming_ball_subset m n k (bit_length (m - 1) + j + 1) hkj hnkj) =
               cross_collisions (hamming_ball_subset m n k (bit_length (m - 1))
                 (by omega) (by omega))
-            omega
+            exact hstep.trans this
         have := hkey (d - bit_length (m - 1)) (by omega)
           (by omega) (by omega)
         simpa [show bit_length (m - 1) + (d - bit_length (m - 1)) = d
@@ -637,9 +637,18 @@ theorem hb_cross_collisions_of_recurrence
       -- Assemble: recurrence + lifted IHs + arithmetic core.
       have hrec' := hrec R d m hd hR_eq hm_pos hm_le hk hnk
       unfold HBCrossCollisions at hIH_P hIH_m
+      have h1 : cross_collisions (hamming_ball_subset (2 ^ (d - 1)) n k d hk hnk)
+          + E_seq (2 ^ (d - 1)) = C_constant (2 ^ (d - 1)) := by
+        rw [hstab_P]; exact hIH_P
+      have h2 : cross_collisions (hamming_ball_subset m n k d hk hnk)
+          + E_seq m = C_constant m := by
+        rw [hstab_m]; exact hIH_m
+      have hrec'' : cross_collisions (hamming_ball_subset (2 ^ (d - 1) + m) n k d hk hnk) =
+          cross_collisions (hamming_ball_subset (2 ^ (d - 1)) n k d hk hnk) +
+          cross_collisions (hamming_ball_subset m n k d hk hnk) + ext_cube d m := by
+        rw [← hR_eq]; exact hrec'
       rw [hR_eq]
-      exact cross_step_arith hm_le hm_pos
-        (by omega) (by omega) (by omega)
+      exact cross_step_arith hm_le hm_pos h1 h2 hrec''
 
 end RecurrenceDriver
 
