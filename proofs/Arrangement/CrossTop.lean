@@ -655,7 +655,7 @@ lemma bd_mult_embed_eq_ball_deg {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
       simp only [Finset.mem_filter, Finset.mem_univ, true_and]
       have h_iff := embed_mem_coord_boundary_iff hk hnk ht hjt hjd ⟨q, hk_lt⟩
       rw [h_iff]
-      exact ⟨hq.1, hq.2⟩
+      exact ⟨hq, trivial⟩
   exact h_card
 
 /-- **B3 (collisions live on the cube).**  Membership in two distinct
@@ -740,6 +740,9 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
   have h_ext_eq : external_neighbors V = U.card := rfl
   have h_cross : cross_collisions V + U.card = ∑ w ∈ U, bd_mult V w := by
     have h_decomp := external_neighbors_decomp V (external_neighbors_le_total_coord V)
+    rw [h_ext_eq, h_tot] at h_decomp
+    have hle : cross_collisions V ≤ ∑ w ∈ U, bd_mult V w := by
+      rw [← h_tot]; unfold cross_collisions; omega
     omega
   set U_cube := (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j)
   set U_embed := U_cube.image (fun j => embed_vertex n k d (nat_to_cube d j) hk hnk)
@@ -749,14 +752,16 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     rw [Finset.mem_image] at hw
     rcases hw with ⟨j, hj, rfl⟩
     rw [Finset.mem_filter, Finset.mem_Ico] at hj
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+    simp only [U, Finset.mem_filter, Finset.mem_univ, true_and]
     have h_not_in : embed_vertex n k d (nat_to_cube d j) hk hnk ∉ V := by
       intro hc
-      unfold hamming_ball_subset at hc
+      simp only [V, hamming_ball_subset] at hc
       rw [Finset.mem_image] at hc
       rcases hc with ⟨i, hi, h_eq⟩
       rw [Finset.mem_range] at hi
-      have h_inj : i = j := embed_vertex_injective_cube n k d hk hnk h_eq
+      have h_cube_inj : nat_to_cube d i = nat_to_cube d j :=
+        embed_vertex_injective_cube n k d hk hnk h_eq
+      have h_inj : i = j := nat_to_cube_injective d i j (by omega) hj.1.2 h_cube_inj
       subst h_inj
       omega
     refine ⟨h_not_in, ?_⟩
@@ -765,11 +770,15 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     unfold bd_mult at hbd
     rw [Nat.succ_le_iff, Finset.card_pos] at hbd
     rcases hbd with ⟨p, hp⟩
-    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hp
     unfold coord_boundary at hp
-    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp
-    rcases hp with ⟨_, v, hv, h_adj⟩
-    exact ⟨v, hv, h_adj⟩
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hp
+    rcases hp with ⟨_, v, hv, h_drop⟩
+    have hne : embed_vertex n k d (nat_to_cube d j) hk hnk ≠ v := by
+      intro heq
+      rw [heq] at h_not_in
+      exact h_not_in hv
+    exact ⟨v, hv, arr_adjacent_of_drop_pos_eq_of_ne' hne h_drop⟩
 
   have h_U_diff : ∀ w ∈ U \ U_embed, bd_mult V w = 1 := by
     intro w hw
