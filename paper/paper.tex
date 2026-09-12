@@ -928,7 +928,8 @@ The Algebraic Defect Framework and the dimensional scaling bijections are mechan
 
 The capstone theorem conditionally combines a supplied universal lower bound with the Hamming-ball construction. \emph{Note:} In the Lean source, the code variables \texttt{E\_seq} and \texttt{C\_constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively.
 
-\begin{lstlisting}[language={}]
+{\small
+\begin{lstlisting}[language={}, breaklines=true]
 theorem arrangement_extraconnectivity_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
     (h_lower : forall (R n k : Nat), UniversalLowerBound R n k)
     (h_cross : forall {R n k d : Nat} (hk : d <= k) (hnk : k + d <= n) (_hd : d = bit_length (R - 1)),
@@ -938,6 +939,7 @@ theorem arrangement_extraconnectivity_minimum (R n k : Nat) (h_cond : can_embed_
   (forall V' : Finset (ArrVertex n k), V'.card = R ->
     external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
 \end{lstlisting}
+}
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Characterization Engine Source Code}\label{app:engine}
