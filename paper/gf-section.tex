@@ -14,7 +14,7 @@
 % density decomposition for R < 2^16; closed forms over their scripted ranges).
 % consistency check, not a proof: it does not (and cannot) establish the
 % section's genuinely analytic claims — nowhere-differentiability in
-% Theorem them:delange and transcendence in Corollary cor:transcend rest on
+% Theorem thm:delange and transcendence in Corollary cor:transcend rest on
 % their own arguments/citations; the supremum of the cross-collision
 % density is now PROVEN (Proposition prop:sup-density, elementary induction).
 % ============================================================================
@@ -129,7 +129,7 @@ operational form of Proposition~\ref{prop:mahler}.
 	$F(x)$ is transcendental over $\mathbb{Q}(x)$. Consequently $\Eseq(R)$
 	(and hence $\Cconst(R)$) satisfies no linear recurrence with constant
 	coefficients: the correction constants of
-	Theorem~\ref{them:main} are not expressible by any rational generating
+	Theorem~\ref{thm:main} are not expressible by any rational generating
 	function or polynomial-exponential closed form.
 \end{corollary}
 
@@ -160,7 +160,7 @@ operational form of Proposition~\ref{prop:mahler}.
 	(contradicting boundedness) and to $0$ for $K \ge 2$ (contradicting
 	positive limsup). No $K$ survives, so $a$ is not $C$-finite.
 
-	Since $\Eseq(R) = \tfrac{1}{2}R\log_2 R + O(R)$ (Theorem~\ref{them:delange}
+	Since $\Eseq(R) = \tfrac{1}{2}R\log_2 R + O(R)$ (Theorem~\ref{thm:delange}
 	below), $\Eseq$ is not $C$-finite by the above, so $F$ is not rational
 	(a rational $F$ would make $\Eseq$ eventually satisfy a linear recurrence
 	with constant coefficients, i.e.\ be $C$-finite). The identical growth
@@ -184,13 +184,13 @@ operational form of Proposition~\ref{prop:mahler}.
 	of infinite arithmetic progressions. But that set is
 	$\{2^t : t \ge 0\}$, which is infinite with unbounded gaps and hence
 	contains no infinite arithmetic progression. This argument is
-	independent of Theorem~\ref{them:delange}.
+	independent of Theorem~\ref{thm:delange}.
 \end{remark}
 
 \subsection{Exact asymptotics: the Trollope--Delange fluctuation}
 
 \begin{theorem}[Trollope~\cite{trollope1968explicit};
-		Delange~\cite{delange1975somme}]\label{them:delange}
+		Delange~\cite{delange1975somme}]\label{thm:delange}
 	There is a continuous, nowhere-differentiable function
 	$\Phi \colon \mathbb{R} \to \mathbb{R}$ of period $1$ such that for all
 	$R \ge 1$,
@@ -336,8 +336,7 @@ operational form of Proposition~\ref{prop:mahler}.
 
 \begin{remark}[Relation to the Fixed-Topology Asymptotic Penalty]\label{rem:penalty-analogy}
 	Corollary~\ref{cor:densities} quantifies exactly the $O_R(1)$ terms of
-	Theorem~\ref{them:penalty}: in the boundary
-	conditional extraconnectivity
+	Theorem~\ref{thm:penalty}: in the conditional extraconnectivity
 	formula~\eqref{eq:extraconnectivity}, the dimension scaling contributes
 	the exact linear term in $(n-k)$, while the correction density
 	$\Cconst(R)/R$ splits, per~\eqref{eq:C-density}, into a logarithmic trend
@@ -348,7 +347,7 @@ operational form of Proposition~\ref{prop:mahler}.
 	combinatorics~\cite{wilf2006generatingfunctionology} may recognize the
 	division of labor: as in singularity analysis, where a dominant pole
 	dictates growth and the remaining analytic part contributes bounded
-	corrections, the identity of Theorem~\ref{them:penalty} separates the
+	corrections, the identity of Theorem~\ref{thm:penalty} separates the
 	dominant $\Delta D \cdot (n-k)$ term from a topology-dependent constant
 	--- though here the separation is an exact finite identity, proved
 	directly in the discrete domain, rather than an asymptotic extraction.

@@ -4,6 +4,7 @@ classe = "classe"
 sur = "sur"
 fonction = "fonction"
 normale = "normale"
+thm = "thm"
 
 [type.lean.extend-words]
 hpe = "hpe"
