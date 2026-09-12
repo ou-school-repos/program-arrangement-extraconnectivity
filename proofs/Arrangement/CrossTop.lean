@@ -175,7 +175,7 @@ lemma testBit_two_pow_add {D y : ℕ} (hy : y < 2 ^ D) (q : ℕ) :
     have h1 : (2^q + y) / 2^q = 1 := by
       have : 2^q > 0 := Nat.two_pow_pos q
       rw [Nat.add_comm]
-      simpa [Nat.div_eq_of_lt hy] using Nat.add_mul_div_right y 1 this
+      simp [Nat.div_eq_of_lt hy]
     rw [Nat.testBit_eq_decide_div_mod_eq, h1]
     rfl
   · simp only [hq, if_false]
@@ -411,7 +411,7 @@ lemma sum_ball_deg (D : ℕ) :
         intro p _
         simp [Bool.not_eq_true]
       rw [hne]
-      have := Finset.filter_card_add_filter_neg_card_eq_card
+      have := Finset.card_filter_add_card_filter_not
         (s := range D) (p := fun p => m.testBit p)
       simpa [add_comm] using this
     have hprev := ih (by omega)
@@ -583,11 +583,70 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
       subst h_w_eq
       exact arr_adjacent_of_drop_pos_eq_of_ne' hne hw_adj
     -- They differ at exactly p.
+    subst h_w_eq
     unfold arr_adjacent at h_adj'
-    -- Since we don't have interactive feedback, we use a structural reduction.
-    -- The only way two embed_vertex outputs differ at exactly one position is if they differ on the cube.
-    have h_cube_adj : i ^^^ 2 ^ p.val = j := by admit
-    have hpd : p.val < d := by admit
+    rw [Finset.card_eq_one] at h_adj'
+    obtain ⟨r, hr⟩ := h_adj'
+    -- Every q ≠ p already agrees (drop_pos equality), so the lone differing
+    -- coordinate r must be p itself.
+    have hsub : Finset.univ.filter (fun p' =>
+        (embed_vertex n k d (nat_to_cube d i) hk hnk).val p'
+          ≠ (embed_vertex n k d (nat_to_cube d j) hk hnk).val p') ⊆ ({p} : Finset (Fin k)) := by
+      intro q hq
+      rw [Finset.mem_filter] at hq
+      rw [Finset.mem_singleton]
+      by_contra hqp
+      exact hq.2 (congr_fun hw_adj ⟨q, hqp⟩).symm
+    have hrp : r = p := Finset.mem_singleton.mp (hsub (hr ▸ Finset.mem_singleton_self r))
+    rw [hrp] at hr
+    have hpmem := hr ▸ Finset.mem_singleton_self p
+    rw [Finset.mem_filter] at hpmem
+    have hpne := hpmem.2
+    -- hpne : (embed i).val p ≠ (embed j).val p
+    have hpd : p.val < d := by
+      by_contra hge
+      push_neg at hge
+      apply hpne
+      show embed_cube n k d hk hnk (nat_to_cube d i) p
+         = embed_cube n k d hk hnk (nat_to_cube d j) p
+      unfold embed_cube
+      simp [not_lt.mpr hge]
+    have hbit_diff : i.testBit p.val ≠ j.testBit p.val := by
+      intro heq
+      apply hpne
+      show embed_cube n k d hk hnk (nat_to_cube d i) p
+         = embed_cube n k d hk hnk (nat_to_cube d j) p
+      unfold embed_cube nat_to_cube
+      simp only [hpd, dif_pos]
+      rw [heq]
+    have hbits_eq : ∀ q : ℕ, q ≠ p.val → i.testBit q = j.testBit q := by
+      intro q hqp
+      by_cases hqd : q < d
+      · have hqk : q < k := by omega
+        have hne_fin : (⟨q, hqk⟩ : Fin k) ≠ p := fun heq => hqp (congrArg Fin.val heq)
+        have hcong := congr_fun hw_adj ⟨⟨q, hqk⟩, hne_fin⟩
+        unfold drop_pos at hcong
+        have hcong' :
+            embed_cube n k d hk hnk (nat_to_cube d j) ⟨q, hqk⟩
+              = embed_cube n k d hk hnk (nat_to_cube d i) ⟨q, hqk⟩ := hcong
+        unfold embed_cube nat_to_cube at hcong'
+        simp only [hqd, dif_pos] at hcong'
+        by_cases hbj : j.testBit q <;> by_cases hbi : i.testBit q <;> simp_all <;> omega
+      · push_neg at hqd
+        have hpow_le : (2:ℕ) ^ d ≤ 2 ^ q := Nat.pow_le_pow_right (by norm_num) hqd
+        have hiq : i.testBit q = false :=
+          Nat.testBit_eq_false_of_lt (by omega)
+        have hjq : j.testBit q = false :=
+          Nat.testBit_eq_false_of_lt (by omega)
+        rw [hiq, hjq]
+    have h_cube_adj : i ^^^ 2 ^ p.val = j := by
+      apply Nat.eq_of_testBit_eq
+      intro q
+      rw [testBit_xor_two_pow]
+      by_cases hqp : q = p.val
+      · subst hqp
+        cases hbi : i.testBit p.val <;> cases hbj : j.testBit p.val <;> simp_all
+      · rw [hbits_eq q hqp, decide_eq_false (Ne.symm hqp), Bool.bne_false]
     have hj_xor : j ^^^ 2 ^ p.val < t := by
       rw [← h_cube_adj, xor_two_pow_involutive]
       exact hi
@@ -699,7 +758,7 @@ lemma mem_two_boundaries_is_cube {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
   have hj_d : j < 2 ^ d := by admit
   have hj_t : t ≤ j := by
     by_contra hc
-    push_neg at hc
+    push Not at hc
     have : embed_vertex n k d (nat_to_cube d j) hk hnk ∈ (Finset.range t).image (fun x => embed_vertex n k d (nat_to_cube d x) hk hnk) := by
       rw [Finset.mem_image]
       exact ⟨j, by rw [Finset.mem_range]; exact hc, rfl⟩
@@ -790,7 +849,7 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     have h_mult : 1 ≤ bd_mult V w := one_le_bd_mult_of_external V h_not_in hv h_adj
     have h_mult_le : bd_mult V w ≤ 1 := by
       by_contra hc
-      push_neg at hc
+      push Not at hc
       unfold bd_mult at hc
       obtain ⟨p, hp, q, hq, hpq⟩ := Finset.one_lt_card.mp hc
       simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hp hq
@@ -878,7 +937,7 @@ variable {n k : ℕ}
     `Nat.eq_of_testBit_eq`), and `2^(d-1)+x < 2^(d-1)+m ↔ x < m`.
     Verified numerically (check 5). -/
 lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
-    (hm' : m ≤ 2 ^ (d - 1)) (hj'm : m ≤ j') (hj' : j' < 2 ^ (d - 1)) :
+    (_hm' : m ≤ 2 ^ (d - 1)) (_hj'm : m ≤ j') (hj' : j' < 2 ^ (d - 1)) :
     ball_deg (2 ^ (d - 1) + m) d (2 ^ (d - 1) + j')
       = 1 + ball_deg m (d - 1) j' := by
   unfold ball_deg
@@ -933,7 +992,7 @@ lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
     `j ^^^ 2^(d-1) = y < 2^(d-1) < 2^(d-1)+m` (same bitwise-identity as in
     `ball_deg_top`); then `d-1 ∈ range d` witnesses `Finset.card_pos`. -/
 lemma one_le_ball_deg_top {d m j : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
-    (hm' : m ≤ 2 ^ (d - 1)) (hjR : 2 ^ (d - 1) + m ≤ j) (hjd : j < 2 ^ d) :
+    (_hm' : m ≤ 2 ^ (d - 1)) (hjR : 2 ^ (d - 1) + m ≤ j) (hjd : j < 2 ^ d) :
     1 ≤ ball_deg (2 ^ (d - 1) + m) d j := by
   unfold ball_deg
   rw [Nat.succ_le_iff, Finset.card_pos]
@@ -1075,7 +1134,7 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     subst hR
     have hd0 : d = 0 := by
       rw [hd, bit_length_eq_size]
-      simpa using Nat.size_zero
+      simp
     subst hd0
     have hb := cross_base_one (n := n) (k := k) 0 hk hnk
     have hE1 : E_seq 1 = 0 := by
