@@ -808,22 +808,30 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
   have h_sum_U : ∑ w ∈ U, bd_mult V w = ∑ w ∈ U_embed, bd_mult V w + (U \ U_embed).card := by
     have h_split : ∑ w ∈ U, bd_mult V w = ∑ w ∈ U_embed, bd_mult V w + ∑ w ∈ U \ U_embed, bd_mult V w := by
       rw [← Finset.sum_sdiff h_U_embed_sub]
+      omega
     rw [h_split]
     congr 1
     have h_ones : ∑ w ∈ U \ U_embed, bd_mult V w = ∑ w ∈ U \ U_embed, 1 := by
       apply Finset.sum_congr rfl
       intro w hw
       exact h_U_diff w hw
-    rw [h_ones, Finset.sum_const, smul_eq_mul, mul_one]
+    rw [h_ones, Finset.sum_const]
+    simp
 
   have h_sum_U_embed : ∑ w ∈ U_embed, bd_mult V w = ∑ j ∈ U_cube, ball_deg t d j := by
     rw [Finset.sum_image]
     · apply Finset.sum_congr rfl
       intro j hj
+      change j ∈ (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j) at hj
       rw [Finset.mem_filter, Finset.mem_Ico] at hj
       exact bd_mult_embed_eq_ball_deg hk hnk ht hj.1.1 hj.1.2
     · intro x hx y hy heq
-      exact embed_vertex_injective_cube n k d hk hnk heq
+      change x ∈ (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j) at hx
+      change y ∈ (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j) at hy
+      rw [Finset.mem_filter, Finset.mem_Ico] at hx hy
+      have h_cube_inj : nat_to_cube d x = nat_to_cube d y :=
+        embed_vertex_injective_cube n k d hk hnk heq
+      exact nat_to_cube_injective d x y hx.1.2 hy.1.2 h_cube_inj
 
   have h_sum_Ico : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ Ico t (2 ^ d), ball_deg t d j := by
     have h_filt : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ (Ico t (2 ^ d)).filter (fun j => ball_deg t d j ≠ 0), ball_deg t d j := by
@@ -833,13 +841,19 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     rw [h_filt, Finset.sum_filter_ne_zero]
 
   have h_card_U : U.card = U_embed.card + (U \ U_embed).card := by
-    rw [Finset.card_sdiff h_U_embed_sub]
-    exact Nat.add_sub_of_le (Finset.card_le_card h_U_embed_sub)
+    rw [Finset.card_sdiff, Finset.inter_eq_left.mpr h_U_embed_sub]
+    exact (Nat.add_sub_of_le (Finset.card_le_card h_U_embed_sub)).symm
 
   have h_card_embed : U_embed.card = U_cube.card := by
-    apply Finset.card_image_of_injective
-    intro x y heq
-    exact embed_vertex_injective_cube n k d hk hnk heq
+    apply Finset.card_image_of_injOn
+    intro x hx y hy heq
+    rw [Finset.mem_coe] at hx hy
+    change x ∈ (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j) at hx
+    change y ∈ (Ico t (2 ^ d)).filter (fun j => 1 ≤ ball_deg t d j) at hy
+    rw [Finset.mem_filter, Finset.mem_Ico] at hx hy
+    have h_cube_inj : nat_to_cube d x = nat_to_cube d y :=
+      embed_vertex_injective_cube n k d hk hnk heq
+    exact nat_to_cube_injective d x y hx.1.2 hy.1.2 h_cube_inj
 
   omega
 
@@ -1008,7 +1022,8 @@ theorem cross_top {d m : ℕ} (hd : 1 ≤ d) (hm : 0 < m) (hm' : m ≤ 2 ^ (d - 
   have hcardR : (Ico (2 ^ (d - 1) + m) (2 ^ d)).card = 2 ^ (d - 1) - m := by
     rw [Nat.card_Ico]; omega
   rw [hfull, hcardR, hshift, hpoint, Finset.sum_add_distrib,
-    Finset.sum_const, hcards, smul_eq_mul, mul_one] at hbridge
+    Finset.sum_const, hcards] at hbridge
+  simp at hbridge
   omega
 
 /-- Exact value of `E_seq` at powers of two, additive: `2·E_seq(2^j) = j·2^j`.
