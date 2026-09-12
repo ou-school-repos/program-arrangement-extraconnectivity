@@ -162,13 +162,14 @@ hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In
 $A(n,k)$, the target symbol may already appear at another coordinate of the same
 vertex, so the shift can either violate injectivity ($1324 \xrightarrow{4\to 1}
 1321$) or sever defect links ($\{13,\,23,\,43\}$ form a clique along root $\_3$;
-shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies). \item \textbf{The
-Algebraic Defect Framework (Section~\ref{sec:defect}):} Instead of moving
-vertices geometrically, we count the coordinate-aligned lines (roots) that the
-subset touches. Each root extends to exactly $(n-k+1)$ vertices, so the boundary
-factors cleanly into a term proportional to $(n-k)$ minus a correction that
-depends only on the subset's internal defect and cross-collisions---not on $n$
-or $k$. \item \textbf{The Fixed-Topology Asymptotic Penalty
+shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies).
+\item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):}
+Instead of moving vertices geometrically, we count the coordinate-aligned lines
+(roots) that the subset touches. Each root extends to exactly $(n-k+1)$
+vertices, so the boundary factors cleanly into a term proportional to $(n-k)$
+minus a correction that depends only on the subset's internal defect and
+cross-collisions---not on $n$ or $k$.
+\item \textbf{The Fixed-Topology Asymptotic Penalty
 (Section~\ref{sec:sandwich}):} For any fixed sub-optimal topology, the defect
 shortfall contributes a linear-in-$(n-k)$ term while the remaining correction
 stays topology-dependent but dimension-independent; consequently no sub-optimal
@@ -1136,14 +1137,14 @@ $d$-dimensional embedding hypercube $Q_d$ or it spills outside of it.
 \item \textbf{Case 1: $V' \subseteq Q_d$.} Since $R = 2^d - 1$, $V'$ is obtained
 by removing exactly one vertex $v$ from $Q_d$. Since $Q_d$ is $d$-regular,
 removing $v$ destroys exactly $d$ defect links (edges). Thus, the defect of any
-such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$. \item \textbf{Case 2: $V'
-\not\subseteq Q_d$.} If $V'$ contains at least one vertex $v'$ outside of $Q_d$,
-then at most $R-1$ vertices of $V'$ lie within $Q_d$. By
-Theorem~\ref{thm:defect}, the maximum defect among these $R-1$ vertices is
-bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses at least one
-fresh coordinate dimension and therefore can share at most $1$ root with $Q_d
-\cap V'$. The maximum possible defect for any such spillover configuration is
-thus bounded by $\Eseq(R-1) + 1$.
+such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$.
+\item \textbf{Case 2: $V' \not\subseteq Q_d$.} If $V'$ contains at least one
+vertex $v'$ outside of $Q_d$, then at most $R-1$ vertices of $V'$ lie within
+$Q_d$. By Theorem~\ref{thm:defect}, the maximum defect among these $R-1$
+vertices is bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses
+at least one fresh coordinate dimension and therefore can share at most $1$ root
+with $Q_d \cap V'$. The maximum possible defect for any such spillover
+configuration is thus bounded by $\Eseq(R-1) + 1$.
 	\end{enumerate}
 The difference between the dense configuration defect and the maximum spillover
 defect is:
@@ -1238,8 +1239,8 @@ denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$
 with defect exactly $D$. Then:
 	\begin{enumerate}
 \item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique
-maximizer). \item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$
-toward $R-1$.
+maximizer).
+\item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$ toward $R-1$.
 	\end{enumerate}
 \end{conjecture}
 
