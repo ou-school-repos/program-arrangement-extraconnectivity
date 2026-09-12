@@ -529,7 +529,7 @@ lemma one_le_bd_mult_of_external (V : Finset (ArrVertex n k))
   unfold coord_boundary
   simp only [Finset.mem_filter, Finset.mem_univ, true_and]
   refine ⟨hw, v, hv, ?_⟩
-  ext q
+  funext q
   unfold drop_pos
   have h_eq : ∀ r : Fin k, r ≠ p → w.val r = v.val r := by
     intro r hr
@@ -573,8 +573,15 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
     rcases hw_in with ⟨i, hi, h_w_eq⟩
     rw [Finset.mem_range] at hi
     have h_adj' : arr_adjacent (embed_vertex n k d (nat_to_cube d i) hk hnk) (embed_vertex n k d (nat_to_cube d j) hk hnk) := by
-      rw [← h_w_eq]
-      exact hw_adj
+      have hne : embed_vertex n k d (nat_to_cube d j) hk hnk
+          ≠ embed_vertex n k d (nat_to_cube d i) hk hnk := by
+        intro heq
+        have hcube_eq : nat_to_cube d j = nat_to_cube d i :=
+          embed_vertex_injective_cube n k d hk hnk heq
+        have : j = i := nat_to_cube_injective d j i hjd (by omega) hcube_eq
+        omega
+      subst h_w_eq
+      exact arr_adjacent_of_drop_pos_eq_of_ne' hne hw_adj
     -- They differ at exactly p.
     unfold arr_adjacent at h_adj'
     -- Since we don't have interactive feedback, we use a structural reduction.
@@ -592,40 +599,31 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
       rw [Finset.mem_image] at hc
       rcases hc with ⟨x, hx, h_eq⟩
       rw [Finset.mem_range] at hx
-      have h_inj : x = j := embed_vertex_injective_cube hk hnk h_eq
+      have h_cube_inj : nat_to_cube d x = nat_to_cube d j :=
+        embed_vertex_injective_cube n k d hk hnk h_eq
+      have h_inj : x = j := nat_to_cube_injective d x j (by omega) hjd h_cube_inj
       subst h_inj
       omega
     refine ⟨h_not_in, embed_vertex n k d (nat_to_cube d (j ^^^ 2 ^ p.val)) hk hnk, ?_, ?_⟩
     · rw [Finset.mem_image]
       exact ⟨j ^^^ 2 ^ p.val, by rw [Finset.mem_range]; exact hi, rfl⟩
-    · apply arr_adjacent_of_drop_pos_eq_of_ne'
-      · intro hc
-        have h_inj : j ^^^ 2 ^ p.val = j := embed_vertex_injective_cube hk hnk hc
-        have hxor_ne : j ^^^ 2 ^ p.val ≠ j := by
-          intro h
-          have h0 : (2 : ℕ) ^ p.val = 0 := by
-            have hc' := congrArg (j ^^^ ·) h
-            simpa [Nat.xor_assoc, Nat.xor_self] using hc'
-          exact (Nat.pow_pos (by norm_num) p.val).ne' h0
-        exact hxor_ne h_inj
-      · funext q
-        unfold drop_pos
-        show (embed_vertex n k d (nat_to_cube d (j ^^^ 2 ^ p.val)) hk hnk).val q.val
-           = (embed_vertex n k d (nat_to_cube d j) hk hnk).val q.val
-        unfold embed_vertex embed_cube
-        dsimp only
-        have hqp : q.val.val ≠ p.val := by
-          intro hcontra
-          exact q.property (Fin.ext hcontra)
-        by_cases hq : q.val.val < d
-        · simp only [hq, dif_pos]
-          have hbit : (nat_to_cube d (j ^^^ 2 ^ p.val)) ⟨q.val.val, hq⟩
-                    = (nat_to_cube d j) ⟨q.val.val, hq⟩ := by
-            show (j ^^^ 2 ^ p.val).testBit q.val.val = j.testBit q.val.val
-            rw [testBit_xor_two_pow]
-            simp [hqp]
-          rw [hbit]
-        · simp [hq]
+    · funext q
+      unfold drop_pos
+      show (embed_vertex n k d (nat_to_cube d j) hk hnk).val q.val
+         = (embed_vertex n k d (nat_to_cube d (j ^^^ 2 ^ p.val)) hk hnk).val q.val
+      unfold embed_vertex embed_cube
+      dsimp only
+      have hqp : q.val.val ≠ p.val := by
+        intro hcontra
+        exact q.property (Fin.ext hcontra)
+      by_cases hq : q.val.val < d
+      · simp only [hq, dif_pos]
+        have hbit : (nat_to_cube d (j ^^^ 2 ^ p.val)) ⟨q.val.val, hq⟩
+                  = (nat_to_cube d j) ⟨q.val.val, hq⟩ := by
+          show (j ^^^ 2 ^ p.val).testBit q.val.val = j.testBit q.val.val
+          rw [testBit_xor_two_pow, decide_eq_false (fun h => hqp h.symm), Bool.bne_false]
+        rw [hbit]
+      · simp [hq]
 
 /-- **B2.**  Multiplicity of a cube vertex is its ball-degree.
     Proof plan: rewrite the `bd_mult` filter with B1, then transport the card
@@ -641,7 +639,7 @@ lemma bd_mult_embed_eq_ball_deg {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
   unfold bd_mult ball_deg
   have h_card : (Finset.univ.filter (fun p : Fin k => embed_vertex n k d (nat_to_cube d j) hk hnk ∈ coord_boundary (hamming_ball_subset t n k d hk hnk) p)).card =
       ((range d).filter (fun p => j ^^^ 2 ^ p < t)).card := by
-    apply Finset.card_congr (fun (p : Fin k) _ => p.val)
+    apply Finset.card_bij (fun (p : Fin k) _ => p.val)
     · intro p hp
       rw [Finset.mem_filter] at hp
       have h_iff := embed_mem_coord_boundary_iff hk hnk ht hjt hjd p
@@ -654,7 +652,7 @@ lemma bd_mult_embed_eq_ball_deg {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
       rw [Finset.mem_filter, Finset.mem_range] at hq
       have hk_lt : q < k := by omega
       use ⟨q, hk_lt⟩
-      rw [Finset.mem_filter, Finset.mem_univ, true_and]
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and]
       have h_iff := embed_mem_coord_boundary_iff hk hnk ht hjt hjd ⟨q, hk_lt⟩
       rw [h_iff]
       exact ⟨hq.1, hq.2⟩
@@ -758,7 +756,7 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
       rw [Finset.mem_image] at hc
       rcases hc with ⟨i, hi, h_eq⟩
       rw [Finset.mem_range] at hi
-      have h_inj : i = j := embed_vertex_injective_cube hk hnk h_eq
+      have h_inj : i = j := embed_vertex_injective_cube n k d hk hnk h_eq
       subst h_inj
       omega
     refine ⟨h_not_in, ?_⟩
@@ -816,7 +814,7 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
       rw [Finset.mem_filter, Finset.mem_Ico] at hj
       exact bd_mult_embed_eq_ball_deg hk hnk ht hj.1.1 hj.1.2
     · intro x hx y hy heq
-      exact embed_vertex_injective_cube hk hnk heq
+      exact embed_vertex_injective_cube n k d hk hnk heq
 
   have h_sum_Ico : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ Ico t (2 ^ d), ball_deg t d j := by
     have h_filt : ∑ j ∈ U_cube, ball_deg t d j = ∑ j ∈ (Ico t (2 ^ d)).filter (fun j => ball_deg t d j ≠ 0), ball_deg t d j := by
@@ -832,7 +830,7 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
   have h_card_embed : U_embed.card = U_cube.card := by
     apply Finset.card_image_of_injective
     intro x y heq
-    exact embed_vertex_injective_cube hk hnk heq
+    exact embed_vertex_injective_cube n k d hk hnk heq
 
   omega
 
@@ -874,10 +872,10 @@ lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
     · subst hq
       have h1 : (2 ^ (d - 1) + j').testBit (d - 1) = true := by
         rw [testBit_two_pow_add hj' (d-1), if_pos rfl]
-      simp only [h1, decide_True, bne_self_eq_false]
+      simp only [h1, decide_true, bne_self_eq_false]
       exact (Nat.testBit_eq_false_of_lt hj').symm
-    · simp only [decide_False, bne_false]
-      rw [testBit_two_pow_add hj' q, if_neg (Ne.symm hq)]
+    · rw [decide_eq_false (Ne.symm hq), Bool.bne_false]
+      rw [testBit_two_pow_add hj' q, if_neg hq]
   have ht : (2 ^ (d - 1) + j') ^^^ 2 ^ (d - 1) < 2 ^ (d - 1) + m := by omega
   have hnot : d - 1 ∉ (range (d - 1)).filter (fun p => (2 ^ (d - 1) + j') ^^^ 2 ^ p < 2 ^ (d - 1) + m) := by simp
   simp only [ht, if_true, Finset.card_insert_of_notMem hnot]
@@ -925,11 +923,11 @@ lemma one_le_ball_deg_top {d m j : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
     rw [testBit_xor_two_pow]
     by_cases hq : q = d - 1
     · subst hq
-      simp only [ht1, decide_True, bne_self_eq_false]
+      simp only [ht1, decide_true, bne_self_eq_false]
       exact (Nat.testBit_eq_false_of_lt hy).symm
-    · simp only [decide_False, bne_false]
+    · rw [decide_eq_false (Ne.symm hq), Bool.bne_false]
       nth_rw 1 [hy2]
-      rw [testBit_two_pow_add hy q, if_neg (Ne.symm hq)]
+      rw [testBit_two_pow_add hy q, if_neg hq]
   rw [h_eq]
   omega
 
