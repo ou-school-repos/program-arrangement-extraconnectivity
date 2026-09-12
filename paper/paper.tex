@@ -73,8 +73,8 @@
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
-  \textbf{Exact Extraconnectivity of Arrangement Graphs $A(n,k)$:}\\[0.5em]
-  Analysis via Algebraic Defect Framework\\[0.5em]
+  \textbf{A Conditional Exact Boundary Formula and Asymptotic Hamming-Ball Optimality Framework for Arrangement Graphs $A(n,k)$:}\\[0.5em]
+  The Algebraic Defect Framework\\[0.5em]
   % \large \textit{Bachelor's thesis}
 }
 \author{%
@@ -96,7 +96,7 @@
 \maketitle
 
 \begin{abstract}
-	We determine the $(R-1)$-extraconnectivity of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$ whenever $n$ and $k$ satisfy $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$, conditional on two explicit propositions detailed below. Under those propositions, the lexicographic Hamming Ball is the boundary-minimizing subset for all $R \ge 2$, whose defect matches the cumulative binary weight sequence (OEIS A000788); notably, at $R=3$ the sparse and dense limits coincide. To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We establish an Asymptotic Penalty result: for any fixed sub-optimal topology, the boundary gap to the Hamming Ball grows without bound as $(n-k) \to \infty$, at rate at least $\Delta D \cdot (n-k)$ up to a topology-dependent constant, so the Hamming Ball dominates as the network scales. Finally, we completely classify the achievable defect spectrum, proving that it forms a ``Topological Funnel'' that exhibits primary and secondary fractures near powers of 2, while maintaining a continuous spectrum at lower defect densities. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), with Proposition~\ref{prop:hb-eval} computationally verified up to $R=260$ and Proposition~\ref{prop:universal} verified exhaustively for $R \le 10$.
+	We develop a conditional exact boundary formula for the minimum external boundary of $R$-element subsets of arrangement graphs $A(n,k)$ for all cluster sizes $R \ge 2$, subject to two explicit propositions (the Universal Boundary Inequality and the Hamming Ball Evaluation) that remain open in full generality. Under those propositions, the lexicographic Hamming Ball is the boundary-minimizing subset for all $R \ge 2$, whose defect matches the cumulative binary weight sequence (OEIS A000788); notably, at $R=3$ the sparse and dense limits coincide. To facilitate this, we introduce the \emph{algebraic defect framework}, replacing the geometric compression methods traditional to hypercube analysis, which we show fail on arrangement graphs because vertices must use distinct symbols. We establish an Asymptotic Penalty result: for any fixed sub-optimal topology, the boundary gap to the Hamming Ball grows without bound as $(n-k) \to \infty$, at rate at least $\Delta D \cdot (n-k)$ up to a topology-dependent constant, so the Hamming Ball dominates as the network scales. Finally, we completely classify the achievable defect spectrum, proving that it forms a ``Topological Funnel'' that exhibits primary and secondary fractures near powers of 2, while maintaining a continuous spectrum at lower defect densities. The core graph theory is mechanized in Lean 4, conditional upon two explicit propositions (Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}), with Proposition~\ref{prop:hb-eval} computationally verified up to $R=260$ and Proposition~\ref{prop:universal} verified exhaustively for $R \le 10$.
 \end{abstract}
 
 % ════════════════════════════════════════════════════════════════════════
@@ -104,9 +104,9 @@
 
 The arrangement graph $A(n,k)$, introduced by Day and Tripathi \cite{day1992arrangement}, models interconnection networks for multiprocessor systems. A vertex of $A(n,k)$ is an injective sequence of $k$ symbols drawn from an alphabet of size $n$, and two vertices are adjacent if and only if they differ in exactly one coordinate.
 
-The $g$-extraconnectivity $\kappa_g(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $g$ vertices. The ``linearly many faults'' property, established for arrangement graphs by Cheng, Lipt\'ak, and Yuan \cite{cheng2013linearly}, proves that any minimum vertex cut isolates a single connected cluster of exactly $R = g+1$ nodes. Thus the global extraconnectivity problem reduces to finding the $R$-element subset with the smallest external boundary. Cheng et al.\ \cite{cheng2022extraconnectivity} solved this case-by-case for $R \le 7$; this paper develops the general closed-form framework for all $R$, conditional on the two explicit propositions stated below. This vertex-fault metric serves as a natural dual to the edge-fault matching preclusion metrics recently explored for regular interconnection networks in \cite{cheng2025higher}.
+	The $g$-extraconnectivity $\kappa_g(G)$ of a graph $G$ is the minimum number of vertices whose removal disconnects $G$ into components each containing more than $g$ vertices. The ``linearly many faults'' property, established for arrangement graphs by Cheng, Lipt\'ak, and Yuan \cite{cheng2013linearly}, shows that under sufficiently many faults the graph either remains connected or splits into one large component with the remaining components totaling at most $g$ vertices---a result that is tight only for small parameters and asymptotically tight thereafter. To obtain \emph{exact} $(R{-}1)$-extraconnectivity one must reduce the problem to minimizing the external boundary over connected $R$-element subsets; this reduction is proposed here but remains open in full generality (Section~\ref{sec:defect}). Cheng et al.\ \cite{cheng2022extraconnectivity} solved the boundary problem case-by-case for $R \le 7$; this paper develops a conditional closed-form framework for all $R$, subject to the two explicit propositions stated below. This vertex-fault metric serves as a natural dual to the edge-fault matching preclusion metrics recently explored for regular interconnection networks in \cite{cheng2025higher}.
 
-We prove that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external boundary of any $R$-element subset is bounded below by an explicit function of $R$, $k$, and $(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball when $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. The full statement appears as Theorem~\ref{them:main}.
+	Under Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}, we show that for all $R \ge 2$ and $n \ge k \ge 1$, the minimum external boundary of any $R$-element subset is bounded below by an explicit function of $R$, $k$, and $(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball when $n - k \ge \lceil \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$. The full statement appears as Theorem~\ref{them:main}.
 
 Our approach proceeds in three steps:
 \begin{itemize}
@@ -115,7 +115,7 @@ Our approach proceeds in three steps:
 		\item \textbf{The Asymptotic Penalty (Section~\ref{sec:sandwich}):} For any fixed sub-optimal topology, the defect shortfall contributes a linear-in-$(n-k)$ term while the remaining correction stays topology-dependent but dimension-independent; consequently no sub-optimal topology can catch up once $n-k$ is large enough.
 \end{itemize}
 
-The exact $(R-1)$-extraconnectivity established in Theorem~\ref{them:main} has immediate consequences for the design and reliability analysis of fault-tolerant distributed systems. In multiprocessor interconnects and data center network architectures, our closed-form boundary formula provides system designers with the precise redundancy requirements needed to guarantee that any $R$-node workgroup survives catastrophic link failures, eliminating the wasted capacity inherent to looser bounds. Furthermore, within distributed consensus protocols, this exact boundary quantifies the minimum threshold of faulty nodes required to partition a Byzantine fault-tolerant (BFT) quorum. Beyond these practical systems applications, our Algebraic Defect Framework successfully extends Harper's classical edge-isoperimetric machinery~\cite{harper1966optimal} into permutation-constrained spaces, offering a new analytical baseline for combinatorial optimization and coding theory on Cayley graphs.
+	The conditional exact boundary formula of Theorem~\ref{them:main} has potential consequences for the design and reliability analysis of fault-tolerant distributed systems, pending closure of the two open propositions. In multiprocessor interconnects and data center network architectures, the closed-form boundary formula would provide system designers with the precise redundancy requirements needed to guarantee that any $R$-node workgroup survives catastrophic link failures, eliminating the wasted capacity inherent to looser bounds. Furthermore, within distributed consensus protocols, this exact boundary would quantify the minimum threshold of faulty nodes required to partition a Byzantine fault-tolerant (BFT) quorum. Beyond these practical systems applications, our Algebraic Defect Framework successfully extends Harper's classical edge-isoperimetric machinery~\cite{harper1966optimal} into permutation-constrained spaces, offering a new analytical baseline for combinatorial optimization and coding theory on Cayley graphs.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Preliminaries}
@@ -247,7 +247,7 @@ This exhaustive search confirms that the maximum defect for connected subgraphs 
 \noindent \small \textit{Notably, our closed-form evaluation reveals a geometric symmetry for perfect hypercubes ($R=2^d$): the defect mirrors the external shadow collision constant, yielding $\Eseq(2^d) = \Cconst(2^d) = d 2^{d-1}$.}
 
 \medskip
-\noindent \textbf{Connection to Prior Literature.}  This formula subsumes the ad-hoc topological cases manually discovered by Cheng et al.\ \cite{cheng2022extraconnectivity} for $R \le 7$, revealing that those early constructions were initial segments of the lexicographic Hamming Ball. Moreover, as dimensions scale ($k,\, n{-}k \to \infty$), the constants $\Cconst(R)$ and $\Eseq(R)$ become negligible relative to the leading $R \cdot k(n-k)$ term, confirming the asymptotic limits conjectured in~\cite{cheng2022extraconnectivity}.
+	\noindent \textbf{Connection to Prior Literature.}  Conditionally, this formula subsumes the ad-hoc topological cases manually discovered by Cheng et al.\ \cite{cheng2022extraconnectivity} for $R \le 7$, revealing that those early constructions were initial segments of the lexicographic Hamming Ball. Moreover, as dimensions scale ($k,\, n{-}k \to \infty$), the constants $\Cconst(R)$ and $\Eseq(R)$ become negligible relative to the leading $R \cdot k(n-k)$ term, confirming the asymptotic limits conjectured in~\cite{cheng2022extraconnectivity}.
 
 % ════════════════════════════════════════════════════════════════════════
 \section{Failure of Geometric Compression}\label{sec:nogo}
@@ -432,7 +432,7 @@ Combining these propositions with the boundary decomposition yields our main res
 \end{proof}
 
 \begin{corollary}[System-Level Diagnosability]\label{cor:diagnosis}
-	In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ under the PMC and MM* models is directly derived from the $g$-extra connectivity \cite{cheng2023augmented}. By establishing the exact $(R-1)$-extraconnectivity of $A(n,k)$, Theorem~\ref{them:main} analytically unlocks the exact $(R-1)$-extra diagnosability of the arrangement graph, extending recent diagnostic advances (e.g., adaptive local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries. Under standard network size conditions, the diagnosability is exactly $t_{R-1}(A(n,k)) = \kappa_{R-1}(A(n,k)) + R - 1$.
+	In multiprocessor system-level diagnosis, the $g$-extra diagnosability $t_g(G)$ under the PMC and MM* models is directly derived from the $g$-extra connectivity \cite{cheng2023augmented}. Conditionally on Theorem~\ref{them:main}, the exact $(R{-}1)$-extra diagnosability of the arrangement graph follows as $t_{R-1}(A(n,k)) = \kappa_{R-1}(A(n,k)) + R - 1$, extending recent diagnostic advances (e.g., adaptive local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries.
 \end{corollary}
 
 \begin{figure}[H]
@@ -524,7 +524,7 @@ Combining these propositions with the boundary decomposition yields our main res
 % ════════════════════════════════════════════════════════════════════════
 \section{Asymptotic Penalty}\label{sec:sandwich}
 
-The Main Theorem (Theorem~\ref{them:main}) establishes the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
+	Under Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}, the Main Theorem (Theorem~\ref{them:main}) identifies the Hamming Ball as the dense limit. We conjecture that the Star Graph provides the sparse limit:
 
 \begin{conjecture}[The Sparse Limit Upper Bound]
 	The external boundary of any optimal connected $R$-vertex subgraph $V'$ in $A(n,k)$ is bounded above by the Star Graph $K_{1, R-1}$, yielding a total correction $(X+D) = \binom{R}{2}$:
@@ -827,7 +827,7 @@ Our exhaustive enumeration confirms both parts for all $R \le 10$.
 % ════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
 
-The Algebraic Defect Framework establishes the $(R-1)$-extraconnectivity of $A(n,k)$ for all $R$, replacing previously used geometric tools with a verified algebraic framework. The formalization provides a definitive foundation for future research on boundary-minimization problems in large-scale interconnection networks.
+The Algebraic Defect Framework provides a conditional exact boundary formula for the minimum external boundary of $R$-element subsets of $A(n,k)$ for all $R$, subject to two open propositions. Replacing previously used geometric tools with a verified algebraic framework, the approach yields asymptotic Hamming-ball optimality unconditionally and a complete defect spectrum classification. Closing the Universal Boundary Inequality (Proposition~\ref{prop:universal}) and establishing the reduction from boundary minimization to exact $(R{-}1)$-extraconnectivity remain the principal open problems.
 
 % ════════════════════════════════════════════════════════════════════════
 \appendix
