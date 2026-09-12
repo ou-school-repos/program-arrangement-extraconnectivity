@@ -28,17 +28,20 @@
   commentstyle=\color{green!60!black},
   stringstyle=\color{red},
 }
-\usetikzlibrary{positioning, arrows.meta, shapes.geometric, decorations.pathreplacing}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric,
+decorations.pathreplacing}
 
 % -- Preprint watermark ---------------------------------------------------
 \usepackage{eso-pic}
 \newcommand{\nocopytext}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
 \AddToShipoutPictureBG{%
   \put(\LenToUnit{0.5\paperwidth},\LenToUnit{0.955\paperheight}){%
-    \makebox(0,0){\nocopytext{\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}}%
+\makebox(0,0){\nocopytext{\textcolor{gray!25}{\large\textit{Preprint --- not
+peer reviewed}}}}%
   }%
   \put(\LenToUnit{0.5\paperwidth},\LenToUnit{0.04\paperheight}){%
-    \makebox(0,0){\nocopytext{\textcolor{gray!25}{\large\textit{Preprint --- not peer reviewed}}}}%
+\makebox(0,0){\nocopytext{\textcolor{gray!25}{\large\textit{Preprint --- not
+peer reviewed}}}}%
   }%
 }
 
@@ -73,7 +76,8 @@
 \newcommand{\Hamball}{\mathcal{H}}
 
 \title{%
-  \textbf{A Conditional Exact Boundary Formula and Fixed-Topology Asymptotic Hamming-Ball Dominance for Arrangement Graphs $A(n,k)$:}\\[0.5em]
+\textbf{A Conditional Exact Boundary Formula and Fixed-Topology Asymptotic
+Hamming-Ball Dominance for Arrangement Graphs $A(n,k)$:}\\[0.5em]
   The Algebraic Defect Framework\\[0.5em]
   % \large \textit{Bachelor's thesis}
 }
