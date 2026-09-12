@@ -192,9 +192,6 @@ format:	##H @Dev Format C++ sources (clang-format)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lean 4 Proofs
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-LAKE_HOME ?= $(HOME)/.cache/lake
-export LAKE_HOME
-
 .PHONY: lean
 lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
