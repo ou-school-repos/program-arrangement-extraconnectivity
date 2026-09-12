@@ -31,7 +31,7 @@ declarations.
 | Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                                        | PROVEN     |
 | Construction             | `hamming_ball_subset` (named, explicit)                              | PROVEN     |
 | Evaluation               | `hamming_ball_eval` (boundary count)                                 | PROVEN\*   |
-| Evaluation Hypothesis    | `HBCrossCollisions` (KK shadow, existential)                         | PROVEN     |
+| Evaluation Hypothesis    | `HBCrossCollisions` (KK shadow, existential)                         | HYPOTHESIS |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`                   | PROVEN     |
 | Lower Bound              | `UniversalLowerBound` (universal bound)                              | HYPOTHESIS |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN     |
@@ -85,7 +85,19 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 
 - Computationally verified alongside Axiom 1.
 - Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
-- **PROVEN via `Arrangement/CrossTop.lean`**: This route proves the unconditional closed form `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` and derives `HBCrossCollisions` from it by pure arithmetic—no recursion. As of 2026-08-06, this file is fully mechanized with exactly zero `sorry` statements. The combinatorial "Bridge" lemmas connecting `cross_collisions` to hypercube counting have been successfully proven using explicit coordinate bijections.
+- **Active route, NOT complete: `Arrangement/CrossTop.lean`**. This route proves the unconditional closed form
+  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` and derives `HBCrossCollisions` from it by pure
+  arithmetic — no recursion. The Finset bookkeeping in `cross_collisions_eq_cube_sum` (`h_U_embed_sub`,
+  `h_U_diff`, `h_sum_U`, `h_sum_U_embed`, `h_sum_Ico`, `h_card_U`, `h_card_embed`) is genuinely proven. But
+  as of 2026-08-06 the file still has **7 unresolved holes**, using the `admit` tactic (a deprecated
+  `sorry` alias — it still emits `sorryAx`, so counting literal `sorry` occurrences understates this): in
+  `embed_mem_coord_boundary_iff` (4), `mem_two_boundaries_is_cube` (2, one of which — line ~669 — is the
+  entire lemma body), and `cross_top` (1, a mechanical `2^(d-1)+2^(d-1)=2^d` endpoint rewrite). The
+  combinatorial core connecting `cross_collisions` to hypercube counting (`embed_mem_coord_boundary_iff`,
+  `mem_two_boundaries_is_cube`) is the real remaining work. The file was also not in `lakefile.lean`'s
+  `roots` until this correction, so `lake build` never actually checked it — treat any prior "compiles"
+  claim about it as unverified. Status should be gated on `#print axioms hb_cross_collisions_closed`
+  showing no `sorryAx`, not on a `grep sorry` count.
 - **Superseded route (`CrossCollisionsResearch.lean`)**: Previously attempted to prove this via strong induction on the recurrence (`CrossRecurrence`), but the recursion was shown to be structurally circular with respect to the goal. This route is now officially abandoned and replaced by `CrossTop.lean`.
 
 ### Superseded: `CollisionAdjustedBound` / `sub_optimal_penalty`

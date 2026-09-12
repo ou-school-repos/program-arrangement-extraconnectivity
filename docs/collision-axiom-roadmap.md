@@ -18,7 +18,18 @@ require.
 
 - **Isolated as explicit Lean hypotheses** in the stable capstone theorem, rather
   than declared as raw global axioms.
-- **The formalization of `HBCrossCollisions` is now 100% COMPLETE** via `proofs/Arrangement/CrossTop.lean`. It successfully proves the unconditional closed form `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` directly — no recursion, no driver — from which `HBCrossCollisions` follows for every `R ≥ 1` by pure arithmetic (`hb_cross_collisions_closed`). As of 2026-08-06, the file has been fully mechanized with zero `sorry` statements. The "Bridge" lemmas connecting `cross_collisions` to the cube-counting function `ball_deg` were successfully closed.
+- **`HBCrossCollisions` is NOT yet complete**, and `arrangement_extraconnectivity_minimum` still takes it as
+  a live hypothesis parameter (`ArrangementExtraconnectivity.lean`). The active route,
+  `proofs/Arrangement/CrossTop.lean`, proves the unconditional closed form
+  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` directly — no recursion, no driver — from which
+  `HBCrossCollisions` would follow for every `R ≥ 1` by pure arithmetic (`hb_cross_collisions_closed`).
+  Genuine progress as of 2026-08-06: the Finset bookkeeping in `cross_collisions_eq_cube_sum` is fully
+  proven. Not progress, despite an earlier commit (`89e40ce`) claiming otherwise: the file's remaining 7
+  gaps were converted from the `sorry` tactic to `admit` — a deprecated alias that still produces
+  `sorryAx` — so the sorry-count went to zero without any actual proof obligation being discharged. The
+  file was also missing from `lakefile.lean`'s `roots`, so `lake build` never checked it; it is now added.
+  See `docs/lean-proof-status.md` for the current per-lemma gap list. Do not mark this hypothesis PROVEN
+  again until `#print axioms hb_cross_collisions_closed` shows no `sorryAx`.
 - **Why the driver route is superseded, not just alternative.** The strong
   induction driver `hb_cross_collisions_of_recurrence` in
   `CrossCollisionsResearch.lean` is complete and reduces `HBCrossCollisions` to
@@ -49,9 +60,15 @@ require.
 
 ## Immediate Lean Work Queue
 
-1. ~~Get `proofs/Arrangement/CrossTop.lean` compiling and finish all `sorry`s.~~ **[DONE 2026-08-06]**
-2. ~~Prove the four Bridge lemmas.~~ **[DONE 2026-08-06]**
-3. Promote `hb_cross_collisions_closed` into the stable proof path and remove the `HBCrossCollisions` hypothesis parameter from `arrangement_extraconnectivity_minimum`. At that point `CrossDimStable`/`CrossRecurrence`/the strong-induction driver in `CrossCollisionsResearch.lean` become dead code and can be deleted.
+1. Get `proofs/Arrangement/CrossTop.lean` actually compiling under `lake build` (now in `lakefile.lean`
+   roots) and replace its 7 `admit`s with real proofs — mechanical ones first
+   (`embed_mem_coord_boundary_iff`'s non-load-bearing holes, `mem_two_boundaries_is_cube`'s mechanical
+   hole, `cross_top`'s endpoint rewrite), then the two load-bearing combinatorial holes.
+2. Once genuinely `sorry`/`admit`-free, verify with `#print axioms hb_cross_collisions_closed`.
+3. Only then promote `hb_cross_collisions_closed` into the stable proof path and remove the
+   `HBCrossCollisions` hypothesis parameter from `arrangement_extraconnectivity_minimum`. At that point
+   `CrossDimStable`/`CrossRecurrence`/the strong-induction driver in `CrossCollisionsResearch.lean` become
+   dead code and can be deleted.
 4. `UniversalLowerBound` needs a formalization strategy from scratch (see "Current Status" above) — this is not close to done and has no in-progress Lean work.
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles
@@ -153,7 +170,8 @@ bit-toolbox `sorry`s, then the four Bridge lemmas connecting
 
 ## Total Remaining Estimated Effort
 
-**`HBCrossCollisions`**: **DONE (2026-08-06)**. `CrossTop.lean`'s closed form is completely proven with zero `sorry`s.
+**`HBCrossCollisions`**: NOT done. `CrossTop.lean`'s closed form has 7 remaining `admit`-marked gaps (2
+load-bearing, 5 mechanical) as of 2026-08-06; see `docs/lean-proof-status.md` for the itemized list.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares,

@@ -18,5 +18,7 @@ lean_lib «Proofs» where
     `Arrangement.PenaltyExact,
     `Arrangement.unstable.IsoperimetricPartialPermutation,
     `Arrangement.unstable.ArrangementGraphUtils,
-    `Arrangement.unstable.SupportProjection
+    `Arrangement.unstable.SupportProjection,
+    `Arrangement.unstable.CrossCollisionsResearch,
+    `Arrangement.CrossTop
   ]
