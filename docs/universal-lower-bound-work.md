@@ -84,3 +84,43 @@ For the Hamming ball this is equality, since
 dimension-independent inequality \(X(V)+D(V)\le C(R)\). It is a candidate
 for the missing mathematical lemma, not an established claim; the next task is
 to seek either a proof or a counterexample to it.
+
+## Second Math Audit (2026-09-12)
+
+The exhaustive checker now computes \(D(V)\) and \(X(V)\) from the same
+coordinate-root fibers as the Lean definitions. In particular, it does **not**
+mistake the number of outward graph edges for `total_coord_edges`: several
+vertices in one fiber contribute only once to a coordinate boundary.
+
+For every prior exhaustive case, and additionally all
+\(\binom{30}{5}=142{,}506\) five-sets of \(A(6,2)\) and all
+\(\binom{42}{r}\) subsets of \(A(7,2)\) for \(r=3,4,5\), both the stated
+boundary inequality and the compensated inequality passed whenever the Lean
+target's right-hand side was positive. In the new \(A(7,2)\) rows, the minimum
+boundary was connected, while the best disconnected boundary was strictly
+larger. No counterexample is presently known from this search. The reproducible
+commands are `python3 scripts/check_universal_lower_bound.py --profile small`
+and `python3 scripts/check_universal_lower_bound.py --profile extended`. This
+remains finite evidence, not a proof.
+
+The candidate is most naturally stated as the following weighted extremal
+claim, with \(m=n-k\):
+
+\[
+X(V)+(m+1)D(V)\le C(R)+mE(R).
+\]
+
+It is algebraically identical to the displayed compensated inequality, and the
+Hamming ball attains equality. This is the precise replacement sought for the
+false, dimension-independent combined-waste bound. A viable proof must show
+that the Hamming ball maximizes this **weighted** fiber-overlap potential; a
+proof merely maximizing collisions or merely maximizing defect is insufficient.
+
+### Current recommendation
+
+Keep `UniversalLowerBound` quantified over **all** subsets. The new exhaustive
+checks deliberately include disconnected subsets, and none has improved the
+minimum boundary or violated the weighted candidate. Restricting the theorem to
+connected subsets would therefore discard the desired statement without solving
+the missing extremal lemma. Revisit that decision only if a genuine all-subsets
+counterexample is found.
