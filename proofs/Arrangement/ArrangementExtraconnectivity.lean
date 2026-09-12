@@ -49,14 +49,14 @@ achieved uniquely by the Hamming Ball embedding.
 
 | Interface | Role | Status |
 |-------|------|--------|
-| `UniversalLowerBound` | Universal boundary inequality (∀ V') | Computationally verified for R ≤ 260; not mechanized |
-| `HBCrossCollisions` | Hamming Ball's exact cross-collision count (∃ witness) | Computationally verified; mechanization blocked on `CrossRecurrence` |
+| `UniversalLowerBound` | Universal boundary inequality (∀ V') | Tested through R ≤ 160; not mechanized |
+| `HBCrossCollisions` | Hamming Ball's exact cross-collision count (∃ witness) | Supplied by the direct `CrossTop` proof |
 
 Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
 `arrangement_extraconnectivity_minimum`, not raw `axiom` declarations.
-`UniversalLowerBound` depends on (n, k) dynamically, while `HBCrossCollisions`
-is independent of (n, k). Run `predict --verify R` for brute-force cross-check
-at any R ≤ 260. See `docs/lean-proof-status.md` for full status and
+`UniversalLowerBound` depends on (n, k) dynamically. The predictor has been
+run through R ≤ 160; its configured ceiling is R = 260, whose full sweep is
+still pending. See `docs/lean-proof-status.md` for full status and
 `docs/collision-axiom-roadmap.md` for the formalization path.
 
 ## References
@@ -774,10 +774,14 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   of missing defect, which always dominates any secondary cross-collision savings
   as dimensions scale.
 
-  **Properties**:
-  - Valid for all valid dimensions n and k
-  - Computationally verified via `predict --verify R` (predict.cpp)
-  - Exhaustive topology search confirms uniqueness for small R (arrangement.cpp)
+  **Status and computational evidence**:
+  - This is an all-subsets statement: it has no connectedness hypothesis.
+  - `predict.cpp` evaluates the Hamming-ball construction only, and
+    `arrangement.cpp` enumerates connected configurations only; neither
+    verifies this universal quantifier.
+  - `scripts/check_universal_lower_bound.py` exhaustively tests small complete
+    arrangement graphs, including disconnected subsets. This is evidence, not
+    a proof or a replacement for the missing extremal-combinatorics argument.
   - See docs/axiom-equivalence.md for the full duality explanation
   - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/

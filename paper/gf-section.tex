@@ -115,9 +115,10 @@ divide-and-conquer sequences.
 	standard $2$-regular sequence~\cite{allouche1992ring}, as is
 	$2^{d} = 2^{\lceil \log_2 R \rceil}$ (the round-up-to-a-power-of-$2$
 	sequence), and $R$ is $2$-regular as a polynomial sequence; since the
-	$2$-regular sequences form a ring (closed under both sums and products),
-	$R(d{+}1) - 2^d$ is $2$-regular, and hence so is
-	$\Cconst = R(d{+}1) - 2^d - \Eseq$ by~\eqref{eq:cconst}.
+	$2$-regular sequences form a ring (closed under both sums and products).
+	Thus the products $R(d{+}1)$ and the sequence $2^d$ are $2$-regular, and
+	the explicit identity $\Cconst = R(d{+}1) - 2^d - \Eseq$ in
+	\eqref{eq:cconst} gives the claimed regularity of $\Cconst$.
 \end{proof}
 
 The $2$-regular matrix representation is exactly what the characterization
@@ -127,10 +128,9 @@ operational form of Proposition~\ref{prop:mahler}.
 
 \begin{corollary}[No linear-recurrence closed form]\label{cor:transcend}
 	$F(x)$ is transcendental over $\mathbb{Q}(x)$. Consequently $\Eseq(R)$
-	(and hence $\Cconst(R)$) satisfies no linear recurrence with constant
-	coefficients: the correction constants of
-	Theorem~\ref{thm:main} are not expressible by any rational generating
-	function or polynomial-exponential closed form.
+	satisfies no linear recurrence with constant coefficients, and is not
+	expressible by a rational generating function or a polynomial-exponential
+	closed form.
 \end{corollary}
 
 \begin{proof}

@@ -86,7 +86,9 @@ Kruskal-Katona Shadow Theorem + Tug-of-War Scaling
 
 ## Computational Verification
 
-The Hamming-ball formula has been verified computationally at two independent levels; the universal bound is tested only by the small-R topology search:
+The Hamming-ball formula has finite computational consistency checks at two
+independent levels. These checks provide bounded evidence only; they do not
+establish the universally quantified lower bound.
 
 ### Level 1: Formula Engine (`predict.cpp`)
 
@@ -96,8 +98,8 @@ The predictor computes (for any R):
 - `C_constant(R) = (R-1) + Σ bit_length(x) - E_seq(R)` — the collision constant
 - `formula(R) = (R·k - E_seq(R))·(n-k) - C_constant(R)` — the predicted boundary
 
-The formula is cross-validated against brute-force neighbor enumeration for
-small R, confirming exact agreement.
+The formula is cross-validated against brute-force neighbor enumeration over
+the recorded finite range, confirming exact agreement on those instances.
 
 ### Level 2: Exhaustive Topology Search (`arrangement.cpp`)
 
@@ -108,10 +110,11 @@ For small R, the search engine:
 3. Confirms the **minimum** equals the formula value
 4. Records the **unique** minimizer topology (Hamming Ball)
 
-This provides independent verification that:
+This provides bounded finite-instance evidence that:
 
-- No R-vertex subset has fewer external neighbors than the formula (validates `UniversalLowerBound`)
-- The Hamming Ball subset achieves exactly the formula value (validates `hamming_ball_eval`, conditional on `HBCrossCollisions`)
+- No enumerated R-vertex subset has fewer external neighbors than the formula.
+- The enumerated Hamming Ball subsets achieve the formula value; this is a
+  finite check of `hamming_ball_eval`, not a replacement for its Lean proof.
 
 ## C_constant(R) and cross_collisions(HB(R)) Values
 

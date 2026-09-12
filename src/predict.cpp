@@ -349,7 +349,8 @@ static FormulaResult compute_formula(const std::vector<Vertex<K, SymT>> &verts,
         anon_coeff += static_cast<int>(group_keys.size());
     }
 
-    // Named neighbors (sort-based dedup, zero heap alloc in hot path)
+    // Named neighbors (sort-based dedup). Individual Vertex storage is inline,
+    // but these vectors allocate dynamically as their contents grow.
     std::vector<Vertex<K, SymT>> sorted_verts = verts;
     std::sort(sorted_verts.begin(), sorted_verts.end());
 

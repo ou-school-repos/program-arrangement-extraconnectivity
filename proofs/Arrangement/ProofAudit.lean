@@ -18,5 +18,6 @@ elab "assert_no_sorry " id:ident : command => do
     if axioms.contains ``sorryAx then
       throwError "{name} depends on sorryAx"
 
+assert_no_sorry Arrangement.hb_cross_collisions_closed
 assert_no_sorry Arrangement.arrangement_extraconnectivity_minimum
 assert_no_sorry Arrangement.globally_optimal_growth_strategy

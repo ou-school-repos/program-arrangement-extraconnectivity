@@ -75,9 +75,6 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 - Computationally confirmed via `predict --verify R` through $R \le 160$ and
   exhaustively for $R \le 10$ using `arrangement`. The configured predictor
   ceiling is 260, but the complete sweep through that ceiling is still pending.
-  TODO(review): this section still reads as if the universal lower bound were
-  fully validated; keep the hypothesis framing explicit until the Lean proof is
-  actually closed.
 
 ### 2. Hamming-ball collision evaluation
 
@@ -130,7 +127,9 @@ The core algebra, bijections, and isoperimetric defect inequalities of the **Alg
 The following high-level results are **mechanically proven inside Lean**;
 the public capstone remains conditional only on the universal lower bound:
 
-- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor parameterized by the fixed-size collision evaluation.
+- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven
+  constructor; the public route supplies its Hamming-ball collision evaluation
+  internally.
 - **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines the direct Hamming-ball evaluation with `UniversalLowerBound` to squeeze the exact minimum cut.
 
 ## Novel Contributions

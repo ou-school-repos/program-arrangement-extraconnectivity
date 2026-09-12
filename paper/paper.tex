@@ -590,7 +590,9 @@ computationally verified through $R \le 160$ by constructing $\mathrm{HB}_R$ and
 enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}).
 Proposition~\ref{prop:universal} is tested exhaustively over connected
 $R$-vertex subsets for $R \le 10$ by enumerating every non-isomorphic connected
-$R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3); it remains
+$R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). Because
+the proposition quantifies over \emph{all} $R$-vertex subsets, including
+disconnected ones, this is only partial computational evidence; it remains
 open, not yet proven, for general $R$. Conceptually,
 Section~\ref{sec:sandwich}'s asymptotic-dominance argument explains why, once
 $n-k$ is large relative to the fixed cluster size $R$, no sub-optimal topology's
@@ -1463,8 +1465,10 @@ subset structure, this paper leverages a property of $A(n,k)$, that the
 constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$;
 thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient
 to guarantee the formula's exactness for all valid dimensions.
-Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets)
-is tested exhaustively over connected $R$-vertex subsets for $R \le 10$.
+Proposition~\ref{prop:universal} quantifies over \emph{all} subsets, whereas
+the \texttt{nauty}-based search tests connected $R$-vertex subsets for
+$R \le 10$; it is therefore partial evidence rather than a verification of the
+universal proposition.
 
 \bibliographystyle{plain}
 % \nocite{*}
