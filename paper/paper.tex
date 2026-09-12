@@ -244,11 +244,12 @@ $V'$:
 	Its cardinality $|\extbd(V')|$ is the quantity we seek to minimize.
 \end{definition}
 
-The boundary-minimizing subset turns out to be the \emph{lexicographic Hamming
-Ball}: the first $R$ binary strings $0, 1, \ldots, R-1$, embedded as vertices
-via their binary expansions into the coordinate slots of $A(n,k)$. The exact
-extraconnectivity (Theorem~\ref{thm:main}) depends on two constants that emerge
-from building this ball vertex by vertex.
+Under Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}, the
+boundary-minimizing subset is the \emph{lexicographic Hamming Ball}: the first
+$R$ binary strings $0, 1, \ldots, R-1$, embedded as vertices via their binary
+expansions into the coordinate slots of $A(n,k)$. The conditional
+boundary formula (Theorem~\ref{thm:main}) depends on two constants
+that emerge from building this ball vertex by vertex.
 
 \begin{definition}[Hamming Ball and its Constants]\label{def:constants}
 The \emph{lexicographic Hamming Ball} $\mathrm{HB}_R$ consists of the first $R$
@@ -303,7 +304,9 @@ vertices:
 			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v5) at (8, -1.0) {\texttt{[I,B,C,D,E]} $\notin V'$};
 			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v6) at (8, -1.7) {\texttt{[J,B,C,D,E]} $\notin V'$};
 		\end{tikzpicture}
-		\caption{A single root expanding into a 1D-clique in $A(10,5)$. Vertices already in $V'$ form internal defect links, while the remaining empty slots generate the external boundary.}
+		\caption{A single root expanding into a 1D-clique in $A(10,5)$. Vertices
+		already in $V'$ form internal defect links, while the remaining empty
+		slots generate the external boundary.}
 		\label{fig:fill_example}
 	\end{figure}
 \end{example}
@@ -333,7 +336,9 @@ vertices:
 		\node[anchor=west, text=blue!70!black] at (9, 0.75) {Vertices in $V'$};
 		\node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
 	\end{tikzpicture}
-	\caption{Two vertices sharing the same root (fixed $k{-}1$ symbols) are adjacent in $A(n,k)$. Each shared root adds one to the defect $D$ instead of exposing a new boundary vertex.}
+	\caption{Two vertices sharing the same root (fixed $k{-}1$ symbols) are
+	adjacent in $A(n,k)$. Each shared root adds one to the defect $D$ instead
+	of exposing a new boundary vertex.}
 	\label{fig:fiber}
 \end{figure}
 
@@ -458,7 +463,10 @@ strictly increased.
 		\draw (u2) -- (m5); \draw (u2) -- (m6); \draw (u2) -- (m7);
 		\node at (8.5,-2.2) {$|\extbd| = 7$};
 	\end{tikzpicture}
-	\caption{Visualization of the Failure of Geometric Compression. Shifting symbol $3 \to 1$ in $A(4,2)$ severs a defect link because symbol 1 is already in use by another vertex, forcing the boundary to expand from 5 to 7 vertices.}
+	\caption{Visualization of the Failure of Geometric Compression. Shifting
+	symbol $3 \to 1$ in $A(4,2)$ severs a defect link because symbol 1 is
+	already in use by another vertex, forcing the boundary to expand from 5 to
+	7 vertices.}
 	\label{fig:nogo}
 \end{figure}
 
@@ -722,7 +730,10 @@ local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries.
 		\draw[red, dotted, thick] (2.2,4.5) -- (4.3,4.5);
 		\draw[red, dotted, thick] (4.5,2.2) -- (4.5,4.3);
 	\end{tikzpicture}
-	\caption{The boundary decomposition $|\extbd(V')| = U(V') \cdot (n-k) - (X(V') + D(V'))$: defect links $D$ shield internal vertices, while cross-collisions $X$ correct for boundary overlaps across coordinates.}
+	\caption{The boundary decomposition
+	$|\extbd(V')| = U(V') \cdot (n-k) - (X(V') + D(V'))$: defect links $D$
+	shield internal vertices, while cross-collisions $X$ correct for boundary
+	overlaps across coordinates.}
 	\label{fig:structure}
 \end{figure}
 
@@ -769,7 +780,12 @@ local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries.
 		\draw[->, ultra thick, red] (3.2, 2) -- (6.3, 2);
 		\node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$D=11$\\Impossible};
 	\end{tikzpicture}
-	\caption{The fracture gap at $R=8$: $\mathrm{HB}_8$ achieves $D=12$. In $A(n,k)$, defect links arise from root-sharing---two vertices that agree on all coordinates but one. Each link therefore has a ``twin'' at the same coordinate, so removing one vertex from a root pair destroys both links simultaneously. This makes $D=11$ impossible; the next achievable value is $D=10$.}
+	\caption{The fracture gap at $R=8$: $\mathrm{HB}_8$ achieves $D=12$. In
+	$A(n,k)$, defect links arise from root-sharing---two vertices that agree
+	on all coordinates but one. Each link therefore has a ``twin'' at the same
+	coordinate, so removing one vertex from a root pair destroys both links
+	simultaneously. This makes $D=11$ impossible; the next achievable value is
+	$D=10$.}
 	\label{fig:fracture}
 \end{figure}
 
@@ -881,7 +897,10 @@ correction $(X+D) = \binom{R}{2}$:
 		\draw[decorate, decoration={brace, mirror, amplitude=4pt}] (9.8, -1.2) -- (17.2, -1.2)
 		node[midway, below=5pt, font=\footnotesize] {$R = 8$};
 	\end{tikzpicture}
-	\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball coincide (both are $P_3$). At $R=4$ the gap is 1 defect link; at $R=8$ it widens to 5. Arrows connect the sparse limit $K_{1,R-1}$ ($D = R - 1$) to the dense limit $Q_d$ ($D = \Eseq(R)$).}
+	\caption{Sparse and dense limits. At $R=3$ the star graph and Hamming Ball
+	coincide (both are $P_3$). At $R=4$ the gap is 1 defect link; at $R=8$ it
+	widens to 5. Arrows connect the sparse limit $K_{1,R-1}$ ($D = R - 1$) to
+	the dense limit $Q_d$ ($D = \Eseq(R)$).}
 	\label{fig:limits}
 \end{figure}
 
@@ -953,7 +972,9 @@ in every integer from $10$ down to $7$. The full achievable spectrum is $\{7,\,
 
 \begin{table}[ht]
 	\centering
-	\caption{Complete defect walk-through for $R=8$ in $A(n,k)$, valid for any $k \ge 3$.  Each row is verified by exhaustive search over all connected $8$-vertex subgraphs.}
+	\caption{Complete defect walk-through for $R=8$ in $A(n,k)$, valid for any
+	$k \ge 3$.  Each row is verified by exhaustive search over all connected
+	$8$-vertex subgraphs.}
 	\label{tab:walkthrough_r8}
 	\begin{tabular}{@{}clcl@{}}
 		\toprule
@@ -1188,7 +1209,9 @@ selected values of $R$.
 
 \begin{table}[ht]
 	\centering
-	\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of 2 ($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2 ($2^d-1$) exhibit secondary fracture gaps of $d-3$ for $d \ge 4$.}
+	\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of
+	2 ($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2
+	($2^d-1$) exhibit secondary fracture gaps of $d-3$ for $d \ge 4$.}
 	\label{tab:edge_spectrum}
 	\begin{tabular}{rrrrl}
 		\toprule
@@ -1231,8 +1254,9 @@ of valid connected topologies is the number of non-isomorphic trees on $R$
 vertices, which grows exponentially (OEIS A000055). As the defect increases, the
 geometric constraints imposed by root-sharing progressively tighten the design
 space, creating a \emph{Topological Funnel} that narrows monotonically until it
-collapses to a single topology---the Hamming Ball---at the dense limit $D =
-\Eseq(R)$. At powers of $2$, the funnel exhibits a discrete fracture: the gap
+is conjectured to collapse to a single topology---the Hamming Ball---at the
+dense limit $D = \Eseq(R)$. At powers of $2$, the funnel exhibits a discrete
+fracture: the gap
 $\gamma(R) = d - 1$ excises an entire band of defect values, forcing a
 discontinuous jump from the second-best topology to the unique optimum. Similar
 secondary fractures emerge just below near-powers of $2$ (e.g., $R=2^d-1$).
@@ -1274,7 +1298,8 @@ $\Omega(R^{R-2})$), enabling exact boundary computation for arbitrary $R$.
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.8\textwidth]{../docs/complexity-curves.pdf}
-	\caption{The combinatorial growth of state-space search versus our $O(R^3 \log R)$ engine mapping limits up to and beyond $R=128$.}
+	\caption{The combinatorial growth of state-space search versus our
+	$O(R^3 \log R)$ engine mapping limits up to and beyond $R=128$.}
 	\label{fig:complexity}
 \end{figure}
 
@@ -1288,14 +1313,18 @@ ball.
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.5\textwidth]{../assets/out/R9_graph.png}
-	\caption{Induced subgraph of $\mathrm{HB}_9$: the $Q_3$ cube plus one vertex, yielding $D = 13$. Valid for any $A(n,k)$ with $n-k \ge 4$, $k \ge 4$.}
+	\caption{Induced subgraph of $\mathrm{HB}_9$: the $Q_3$ cube plus one
+	vertex, yielding $D = 13$. Valid for any $A(n,k)$ with $n-k \ge 4$,
+	$k \ge 4$.}
 	\label{fig:r9}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.5\textwidth]{../assets/out/R10_graph.png}
-	\caption{Induced subgraph of $\mathrm{HB}_{10}$: the $Q_3$ cube plus two vertices, yielding $D = 15$. Valid for any $A(n,k)$ with $n-k \ge 4$, $k \ge 4$.}
+	\caption{Induced subgraph of $\mathrm{HB}_{10}$: the $Q_3$ cube plus two
+	vertices, yielding $D = 15$. Valid for any $A(n,k)$ with $n-k \ge 4$,
+	$k \ge 4$.}
 	\label{fig:r10}
 \end{figure}
 
@@ -1435,7 +1464,7 @@ constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$;
 thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient
 to guarantee the formula's exactness for all valid dimensions.
 Proposition~\ref{prop:universal} (the universal bound over \emph{all} subsets)
-is verified separately by exhaustive enumeration for $R \le 10$.
+is tested exhaustively over connected $R$-vertex subsets for $R \le 10$.
 
 \bibliographystyle{plain}
 % \nocite{*}
