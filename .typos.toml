@@ -8,3 +8,4 @@ thm = "thm"
 
 [type.lean.extend-words]
 hpe = "hpe"
+hge = "hge"

@@ -605,7 +605,7 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
     -- hpne : (embed i).val p ≠ (embed j).val p
     have hpd : p.val < d := by
       by_contra hge
-      push_neg at hge
+      push Not at hge
       apply hpne
       show embed_cube n k d hk hnk (nat_to_cube d i) p
          = embed_cube n k d hk hnk (nat_to_cube d j) p
@@ -632,7 +632,7 @@ lemma embed_mem_coord_boundary_iff {t d j : ℕ} (hk : d ≤ k) (hnk : k + d ≤
         unfold embed_cube nat_to_cube at hcong'
         simp only [hqd, dif_pos] at hcong'
         by_cases hbj : j.testBit q <;> by_cases hbi : i.testBit q <;> simp_all <;> omega
-      · push_neg at hqd
+      · push Not at hqd
         have hpow_le : (2:ℕ) ^ d ≤ 2 ^ q := Nat.pow_le_pow_right (by norm_num) hqd
         have hiq : i.testBit q = false :=
           Nat.testBit_eq_false_of_lt (by omega)

@@ -264,7 +264,7 @@ lemma boundary_term_nonneg (j : ℕ) :
     · calc (m - 1) + sum_bit_length m ≤ m * j := ih m hsmall
         _ ≤ m * (j + 1) := Nat.mul_le_mul_left m (Nat.le_succ j)
     · -- 2^j < m ≤ 2^(j+1): split off the top half, m = 2^j + t, 1 ≤ t ≤ 2^j.
-      push_neg at hsmall
+      push Not at hsmall
       have hp : (2 : ℕ) ^ (j + 1) = 2 ^ j + 2 ^ j := by rw [pow_succ]; ring
       obtain ⟨t, rfl⟩ : ∃ t, m = 2 ^ j + t := ⟨m - 2 ^ j, by omega⟩
       have ht1 : 1 ≤ t := by omega
@@ -305,7 +305,7 @@ lemma bit_length_one : bit_length 1 = 1 := by
 
 lemma E_seq_one : E_seq 1 = 0 := by
   have h : E_seq 1 = E_seq 0 + popcount 0 := rfl
-  simp [h, popcount_zero, E_seq]
+  simp [popcount_zero, E_seq]
 
 lemma E_seq_two : E_seq 2 = 1 := by
   have h : E_seq 2 = E_seq 1 + popcount 1 := rfl
@@ -313,7 +313,7 @@ lemma E_seq_two : E_seq 2 = 1 := by
 
 lemma sum_bit_length_one : sum_bit_length 1 = 0 := by
   have h : sum_bit_length 1 = sum_bit_length 0 + bit_length 0 := rfl
-  simp [h, bit_length_zero, sum_bit_length]
+  simp [bit_length_zero, sum_bit_length]
 
 lemma sum_bit_length_two : sum_bit_length 2 = 1 := by
   have h : sum_bit_length 2 = sum_bit_length 1 + bit_length 1 := rfl
@@ -374,7 +374,7 @@ section BinaryReflection
 variable {n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
 
 /-- The first half of the Hamming Ball of size R: numbers 0 .. 2^(d-1) - 1. -/
-def hb_half0 (R d n k : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Finset (ArrVertex n k) :=
+def hb_half0 (_R d n k : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Finset (ArrVertex n k) :=
   (range (2 ^ (d - 1))).image (fun i => embed_vertex n k d (nat_to_cube d i) hk hnk)
 
 /-- The second half of the Hamming Ball of size R: numbers 2^(d-1) .. R - 1. -/
@@ -382,7 +382,7 @@ def hb_half1 (R d n k : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Finset (ArrVer
   (Ico (2 ^ (d - 1)) R).image (fun i => embed_vertex n k d (nat_to_cube d i) hk hnk)
 
 /-- Decomposing the range R image into the union of the two halves. -/
-lemma hb_decomposition {R : ℕ} (hd : 2 ^ (d - 1) < R) (hr : R ≤ 2 ^ d) :
+lemma hb_decomposition {R : ℕ} (hd : 2 ^ (d - 1) < R) (_hr : R ≤ 2 ^ d) :
     hamming_ball_subset R n k d hk hnk =
     hb_half0 R d n k hk hnk ∪ hb_half1 R d n k hk hnk := by
   unfold hamming_ball_subset hb_half0 hb_half1
@@ -400,7 +400,7 @@ lemma hb_decomposition {R : ℕ} (hd : 2 ^ (d - 1) < R) (hr : R ≤ 2 ^ d) :
     · omega
 
 /-- The two halves are disjoint. -/
-lemma hb_disjoint {R : ℕ} (hd : 2 ^ (d - 1) < R) (hr : R ≤ 2 ^ d) :
+lemma hb_disjoint {R : ℕ} (_hd : 2 ^ (d - 1) < R) (_hr : R ≤ 2 ^ d) :
     Disjoint (hb_half0 R d n k hk hnk) (hb_half1 R d n k hk hnk) := by
   rw [disjoint_iff_ne]
   rintro x hx y hy rfl
@@ -479,8 +479,8 @@ def CrossDimStable (n k : ℕ) : Prop :=
     graph isomorphism onto `HB(m)`); the cross-half pairs `(v, σ v)` contribute
     exactly `ext_cube d m`. -/
 def CrossRecurrence (n k : ℕ) : Prop :=
-  ∀ (R d m : ℕ) (hd : d = bit_length (R - 1)) (hR : R = 2 ^ (d - 1) + m)
-    (hm_pos : 0 < m) (hm : m ≤ 2 ^ (d - 1))
+  ∀ (R d m : ℕ) (_hd : d = bit_length (R - 1)) (_hR : R = 2 ^ (d - 1) + m)
+    (_hm_pos : 0 < m) (_hm : m ≤ 2 ^ (d - 1))
     (hk : d ≤ k) (hnk : k + d ≤ n),
     cross_collisions (hamming_ball_subset R n k d hk hnk) =
       cross_collisions (hamming_ball_subset (2 ^ (d - 1)) n k d hk hnk) +
@@ -513,7 +513,7 @@ theorem hb_cross_collisions_of_recurrence
     (hbase : CrossBaseOne n k) (hstab : CrossDimStable n k)
     (hrec : CrossRecurrence n k) :
     ∀ (R : ℕ), 1 ≤ R →
-      ∀ (d : ℕ) (hd : d = bit_length (R - 1))
+      ∀ (d : ℕ) (_hd : d = bit_length (R - 1))
         (hk : d ≤ k) (hnk : k + d ≤ n),
         HBCrossCollisions R n k d hk hnk := by
   intro R
@@ -527,7 +527,7 @@ theorem hb_cross_collisions_of_recurrence
       subst hR
       have hd0 : d = 0 := by
         rw [hd, bit_length_eq_size]
-        simpa using Nat.size_zero
+        simp
       subst hd0
       have hb := hbase 0 hk hnk
       have hE1 : E_seq 1 = 0 := E_seq_one
@@ -560,7 +560,7 @@ theorem hb_cross_collisions_of_recurrence
         rw [bit_length_eq_size]
         rcases Nat.eq_or_lt_of_le hd1 with h1 | h1
         · -- d = 1: P = 1, size 0 = 0 = d - 1.
-          rw [← h1]; simpa using Nat.size_zero.symm
+          rw [← h1]; simp
         · -- d ≥ 2: 2^(d-2) ≤ 2^(d-1) - 1 < 2^(d-1).
           have hup' : 2 ^ (d - 1) - 1 < 2 ^ (d - 1) := by omega
           have hpow' : (2 : ℕ) ^ (d - 1) = 2 ^ (d - 2) + 2 ^ (d - 2) := by
@@ -679,8 +679,7 @@ private lemma arr_adjacent_of_drop_pos_eq_of_ne {v w : ArrVertex n k} {p : Fin k
     have hq : q ≠ p := by exact hpq
     have h_eval := congr_fun hdrop ⟨q, hq⟩
     exact hne_q h_eval.symm
-  · intro hqp
-    intro heq
+  · intro hqp heq
     apply hne
     apply Subtype.ext
     funext q'
@@ -704,7 +703,7 @@ private lemma coord_boundary_singleton_subset_external {v : ArrVertex n k} (p : 
   refine ⟨Finset.mem_univ _, hw_not, v, Finset.mem_singleton_self v, ?_⟩
   exact arr_adjacent_of_drop_pos_eq_of_ne (by
     intro h
-    exact hw_not (by simpa [h])) hdrop
+    exact hw_not (by simp [h])) hdrop
 
 private lemma coord_boundary_singleton_disjoint {v : ArrVertex n k} :
     ((Finset.univ : Finset (Fin k)) : Set (Fin k)).PairwiseDisjoint
