@@ -902,24 +902,29 @@ lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
   have ht : (2 ^ (d - 1) + j') ^^^ 2 ^ (d - 1) < 2 ^ (d - 1) + m := by omega
   have hnot : d - 1 ∉ (range (d - 1)).filter (fun p => (2 ^ (d - 1) + j') ^^^ 2 ^ p < 2 ^ (d - 1) + m) := by simp
   simp only [ht, if_true, Finset.card_insert_of_notMem hnot]
-  congr 1
-  apply Finset.filter_congr
-  intro p hp
-  rw [Finset.mem_range] at hp
-  have hp_eq : (2 ^ (d - 1) + j') ^^^ 2 ^ p = 2 ^ (d - 1) + (j' ^^^ 2 ^ p) := by
-    apply Nat.eq_of_testBit_eq
-    intro q
-    rw [testBit_xor_two_pow]
-    have hy : j' ^^^ 2 ^ p < 2 ^ (d - 1) := xor_two_pow_lt_cube hj' hp
-    by_cases hq : q = d - 1
-    · subst hq
-      rw [testBit_two_pow_add hy (d - 1), if_pos rfl]
-      rw [testBit_two_pow_add hj' (d - 1), if_pos rfl]
-      simp [ne_of_gt hp]
-    · rw [testBit_two_pow_add hy q, if_neg (Ne.symm hq)]
-      rw [testBit_two_pow_add hj' q, if_neg (Ne.symm hq)]
+  have h_filter_eq :
+      (range (d - 1)).filter (fun p => (2 ^ (d - 1) + j') ^^^ 2 ^ p < 2 ^ (d - 1) + m)
+        = (range (d - 1)).filter (fun p => j' ^^^ 2 ^ p < m) := by
+    apply Finset.filter_congr
+    intro p hp
+    rw [Finset.mem_range] at hp
+    have hp_eq : (2 ^ (d - 1) + j') ^^^ 2 ^ p = 2 ^ (d - 1) + (j' ^^^ 2 ^ p) := by
+      apply Nat.eq_of_testBit_eq
+      intro q
       rw [testBit_xor_two_pow]
-  rw [hp_eq]
+      have hy : j' ^^^ 2 ^ p < 2 ^ (d - 1) := xor_two_pow_lt_cube hj' hp
+      by_cases hq : q = d - 1
+      · subst hq
+        rw [testBit_two_pow_add hy (d - 1), if_pos rfl]
+        rw [testBit_two_pow_add hj' (d - 1), if_pos rfl]
+        rw [decide_eq_false (show p ≠ d - 1 by omega)]
+        rfl
+      · rw [testBit_two_pow_add hy q, if_neg hq]
+        rw [testBit_two_pow_add hj' q, if_neg hq]
+        rw [testBit_xor_two_pow]
+    rw [hp_eq]
+    omega
+  rw [h_filter_eq]
   omega
 
 /-- Every vertex of the top strip sees its bottom partner.
