@@ -785,15 +785,15 @@ lemma cross_collisions_eq_cube_sum {t d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n
     rw [Finset.mem_sdiff] at hw
     have hw_U : w ∈ U := hw.1
     have hw_not : w ∉ U_embed := hw.2
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hw_U
+    simp only [U, Finset.mem_filter, Finset.mem_univ, true_and] at hw_U
     rcases hw_U with ⟨h_not_in, v, hv, h_adj⟩
     have h_mult : 1 ≤ bd_mult V w := one_le_bd_mult_of_external V h_not_in hv h_adj
     have h_mult_le : bd_mult V w ≤ 1 := by
       by_contra hc
       push_neg at hc
       unfold bd_mult at hc
-      obtain ⟨p, hp, q, hq, hpq⟩ := Finset.two_le_card_iff.mp hc
-      rw [Finset.mem_filter, Finset.mem_univ, true_and] at hp hq
+      obtain ⟨p, hp, q, hq, hpq⟩ := Finset.one_lt_card.mp hc
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hp hq
       obtain ⟨j, hj_t, hj_d, rfl⟩ := mem_two_boundaries_is_cube hk hnk ht hpq hp hq
       have hw_in_embed : embed_vertex n k d (nat_to_cube d j) hk hnk ∈ U_embed := by
         rw [Finset.mem_image]
