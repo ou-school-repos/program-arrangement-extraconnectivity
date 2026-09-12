@@ -18,13 +18,13 @@ its correction term `ext_cube d m` is essentially the `m`-scale instance of
 the very goal being proven, so a direct proof would have to re-derive
 `HBCrossCollisions` at `m` independently — see `CrossTop.lean`'s own module
 docstring ("Why this file exists (the circularity in `CrossRecurrence`)")
-for the full argument. `cross_recurrence` below is left as `sorry` for that
-reason; closing it is a research-scale undertaking, not missing tactic work,
+for the full argument. `cross_recurrence` remains unresolved for that reason;
+closing it is a research-scale undertaking, not missing tactic work,
 and is not required for `HBCrossCollisions` (proven elsewhere).
 
 Everything in this file besides `cross_recurrence` itself is fully proven:
-the strong-induction driver `hb_cross_collisions_of_recurrence` is
-sorry-free, and `cross_dim_stable` is a proven interface lemma. Both are
+the strong-induction driver `hb_cross_collisions_of_recurrence` is complete,
+and `cross_dim_stable` is a proven interface lemma. Both are
 inert unless something outside this file starts using them again.
 -/
 
@@ -75,7 +75,7 @@ lemma cross_step_arith {d m cP cm cR : ℕ} (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0
 
 /-- **The driver.**  Strong induction on `R`: given the three interface lemmas,
     `HBCrossCollisions` holds for every `R ≥ 1` (at its canonical dimension
-    `d = bit_length (R-1)`), with no axioms and no `sorry`.
+    `d = bit_length (R-1)`), assuming its three interface lemmas.
 
     Once `CrossBaseOne`, `CrossDimStable`, and `CrossRecurrence` are proven
     from the definitions, the `hb_cross_collisions` hypothesis threaded through
@@ -269,7 +269,7 @@ theorem cross_recurrence : CrossRecurrence n k := by
     interface theorems. Dead code — `CrossTop.lean` proves the same
     conclusion unconditionally by a non-circular route and does not call
     this. Kept only because `hb_cross_collisions_of_recurrence` is otherwise
-    an orphaned (if sorry-free) driver. -/
+    an orphaned driver. -/
 theorem hb_cross_collisions (R : ℕ) (hR1 : 1 ≤ R) (d : ℕ) (hd : d = bit_length (R - 1))
     (hk : d ≤ k) (hnk : k + d ≤ n) :
     HBCrossCollisions R n k d hk hnk :=

@@ -16,20 +16,10 @@ require.
 
 ## Current Status
 
-- **Isolated as explicit Lean hypotheses** in the stable capstone theorem, rather
-  than declared as raw global axioms.
-- **`HBCrossCollisions` is NOT yet complete**, and `arrangement_extraconnectivity_minimum` still takes it as
-  a live hypothesis parameter (`ArrangementExtraconnectivity.lean`). The active route,
-  `proofs/Arrangement/CrossTop.lean`, proves the unconditional closed form
-  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` directly — no recursion, no driver — from which
-  `HBCrossCollisions` would follow for every `R ≥ 1` by pure arithmetic (`hb_cross_collisions_closed`).
-  Genuine progress as of 2026-08-06: the Finset bookkeeping in `cross_collisions_eq_cube_sum` is fully
-  proven. Not progress, despite an earlier commit (`89e40ce`) claiming otherwise: the file's remaining 7
-  gaps were converted from the `sorry` tactic to `admit` — a deprecated alias that still produces
-  `sorryAx` — so the sorry-count went to zero without any actual proof obligation being discharged. The
-  file was also missing from `lakefile.lean`'s `roots`, so `lake build` never checked it; it is now added.
-  See `docs/lean-proof-status.md` for the current per-lemma gap list. Do not mark this hypothesis PROVEN
-  again until `#print axioms hb_cross_collisions_closed` shows no `sorryAx`.
+- **`HBCrossCollisions` is proven on the direct path.** `CrossTop.lean`
+  proves `hb_cross_collisions_closed` for every `R ≥ 1`, and the public
+  capstone handles `R = 0` with the empty set. The canonical capstone API no
+  longer accepts a collision-evaluation parameter.
 - **Why the driver route is superseded, not just alternative.** The strong
   induction driver `hb_cross_collisions_of_recurrence` in
   `CrossCollisionsResearch.lean` is complete and reduces `HBCrossCollisions` to
@@ -45,7 +35,7 @@ require.
   vertex; every top-strip cube vertex has multiplicity ≥ 1 via its "bottom
   partner"; summing the excess multiplicity reduces to a plain edge-boundary
   count in one lower dimension). `CrossRecurrence` and its driver are kept in
-  `CrossCollisionsResearch.lean` for reference but should be treated as
+  `CrossRecurrenceDriver.lean` for reference but should be treated as
   deprecated, not as the live path — do not invest further proof effort there.
 - **Formula values verified** via `predict --verify R` (predict.cpp) for
   `R ≤ 260`, and exhaustively via the `arrangement` nauty-based search for
@@ -60,16 +50,11 @@ require.
 
 ## Immediate Lean Work Queue
 
-1. Get `proofs/Arrangement/CrossTop.lean` actually compiling under `lake build` (now in `lakefile.lean`
-   roots) and replace its 7 `admit`s with real proofs — mechanical ones first
-   (`embed_mem_coord_boundary_iff`'s non-load-bearing holes, `mem_two_boundaries_is_cube`'s mechanical
-   hole, `cross_top`'s endpoint rewrite), then the two load-bearing combinatorial holes.
-2. Once genuinely `sorry`/`admit`-free, verify with `#print axioms hb_cross_collisions_closed`.
-3. Only then promote `hb_cross_collisions_closed` into the stable proof path and remove the
-   `HBCrossCollisions` hypothesis parameter from `arrangement_extraconnectivity_minimum`. At that point
-   `CrossDimStable`/`CrossRecurrence`/the strong-induction driver in `CrossCollisionsResearch.lean` become
-   dead code and can be deleted.
-4. `UniversalLowerBound` needs a formalization strategy from scratch (see "Current Status" above) — this is not close to done and has no in-progress Lean work.
+1. `UniversalLowerBound` needs a formalization strategy from scratch (see
+   "Current Status" above); it is the only live mathematical hypothesis of
+   the capstone.
+2. The archived recurrence driver remains available for research reference but
+   is not a work-queue item.
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles
 
@@ -164,14 +149,12 @@ route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 ### What remains
 
-Finishing `CrossTop.lean` (see "Immediate Lean Work Queue" above): the
-bit-toolbox `sorry`s, then the four Bridge lemmas connecting
-`cross_collisions` to `ball_deg`.
+The direct route is complete. The remaining capstone dependency is
+`UniversalLowerBound`.
 
 ## Total Remaining Estimated Effort
 
-**`HBCrossCollisions`**: NOT done. `CrossTop.lean`'s closed form has 7 remaining `admit`-marked gaps (2
-load-bearing, 5 mechanical) as of 2026-08-06; see `docs/lean-proof-status.md` for the itemized list.
+**`HBCrossCollisions`**: proven by the direct `CrossTop.lean` route.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares,

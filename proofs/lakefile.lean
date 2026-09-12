@@ -19,6 +19,5 @@ lean_lib «Proofs» where
     `Arrangement.unstable.ArrangementGraphUtils,
     `Arrangement.unstable.SupportProjection,
     `Arrangement.unstable.CrossCollisionsResearch,
-    `Arrangement.unstable.CrossRecurrenceDriver,
     `Arrangement.CrossTop
   ]

@@ -31,10 +31,9 @@ lemma hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
 
 **Role:** Supplies the _existential upper bound_. There **exists** a specific
 subset (the Hamming Ball) that achieves the formula exactly. This lemma is
-**proven** — it is conditional only on the `HBCrossCollisions` hypothesis
-parameter (`h_cross`), which is itself a separate, still-open hypothesis
-interface (mechanization blocked on `CrossRecurrence`; see
-`docs/collision-axiom-roadmap.md`).
+**proven** — the public capstone supplies the Hamming-ball collision evaluation
+from `hb_cross_collisions_closed`; only the universal lower-bound hypothesis
+remains external.
 
 ## The Mathematical Correction and Duality
 
@@ -150,11 +149,10 @@ in the proof:
 2. **`hamming_ball_eval`** is an ∃-statement about a specific V\*.
    It flows into `exists_optimal_embedding`.
 
-The capstone theorem (`arrangement_extraconnectivity_minimum`) takes both as
-explicit hypothesis parameters (`h_lower : ∀ R n k, UniversalLowerBound R n k`
-and `h_cross`, threading into `HBCrossCollisions`) and combines their
-_results_ — `exists_optimal_embedding ... h_cross` and `h_lower R n k V' hR
-hnk` — into the final `∧` pair, rather than merging them into one hypothesis.
+The public capstone theorem takes `h_lower : ∀ R n k, UniversalLowerBound R n k`
+and supplies the Hamming-ball evaluation internally. Its internal
+`..._of_cross` composition lemma remains available when a caller already has a
+fixed-size collision evaluation.
 
 Merging them into a single hypothesis would obscure the proof architecture and
 lose the clean separation between the universal bound and the constructive

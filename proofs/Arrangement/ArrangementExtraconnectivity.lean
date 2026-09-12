@@ -1598,15 +1598,15 @@ lemma hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
   omega
 
 lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
-      HBCrossCollisions R n k d hk hnk) :
+    (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
+      (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R := by
   obtain ⟨h_nk, h_k⟩ := h_cond
   let d := bit_length (R - 1)
   have hk : d ≤ k := h_k
   have hnk : k + d ≤ n := by omega
-  refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl (h_cross hk hnk rfl)⟩
+  refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl (h_cross d hk hnk rfl)⟩
   exact hamming_ball_card hk hnk rfl
 
 
@@ -1620,10 +1620,10 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
   of a constructive witness (the Hamming ball), we establish the
   **Full Isoperimetric Profile** of A(n,k) for all natural numbers R.
 -/
-theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+theorem arrangement_extraconnectivity_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
-    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
-      HBCrossCollisions R n k d hk hnk) :
+    (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
+      (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
@@ -1641,14 +1641,14 @@ theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_
   - IMPLICATION: There is no "hidden" value of R where a non-standard
     configuration (clique, path, etc.) can outperform the Hamming Ball.
 -/
-theorem globally_optimal_growth_strategy
+theorem globally_optimal_growth_strategy_of_cross
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
-    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
-      HBCrossCollisions R n k d hk hnk) :
+    (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
+      (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
-  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond h_lower h_cross
+  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum_of_cross R n k h_cond h_lower h_cross
   ⟨h_univ, h_exists⟩
 
 /-!

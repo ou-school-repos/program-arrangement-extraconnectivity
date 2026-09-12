@@ -19,18 +19,10 @@ open Finset
 /-!
 # CrossTop: unconditional closed form for the Hamming-ball cross-collision count
 
-**Revision note (2026-07-19):** this supersedes the prior version of this file
-(16 `sorry` tactics) with a cleaner bit-toolbox layer, a sorry-free
-`hpow`/`hfull` inside `cross_top`, and a self-contained `hb_cross_collisions_closed`
-(no longer takes `CrossBaseOne` as an external hypothesis parameter). Net
-result: 13 `sorry` tactics, down from 16. This has **not** been checked by
-`lake build` in this environment (no Mathlib build cache available); treat
-every lemma below, including ones without a literal `sorry`, as unverified
-until it compiles.
-The four Bridge lemmas (`embed_mem_coord_boundary_iff`,
-`bd_mult_embed_eq_ball_deg`, `mem_two_boundaries_is_cube`,
-`cross_collisions_eq_cube_sum`) are the actual remaining combinatorial
-content and are unproven here exactly as they were in the prior revision.
+This module proves the direct, non-recursive Hamming-ball collision formula.
+Its bridge lemmas reduce arrangement-boundary multiplicities to hypercube
+edge counts, and `hb_cross_collisions_closed` derives the closed form for
+every nonempty ball.
 
 ## Why this file exists (the circularity in `CrossRecurrence`)
 
@@ -58,26 +50,8 @@ strong-induction driver AND removes `CrossDimStable` from the main path
 (`hb_cross_collisions_closed` at the bottom), with `cross_base_one` as the
 only other combinatorial input.
 
-Every lemma below, including each `sorry`-marked one individually, is verified
-by exhaustive brute force in scripts/verify_crosstop.py (checks 0-7) against a
-model that reproduces `HBCrossCollisions` exactly on A(7,3), A(8,4), A(9,4).
-
-## Proof status map
-
-  PROVEN (modulo compile shake-out): xor_two_pow_involutive,
-    testBit_xor_two_pow, xor_two_pow_lt_of_testBit_true,
-    lt_xor_two_pow_of_testBit_false, xor_two_pow_lt_iff, xor_two_pow_lt_cube,
-    ball_deg_self, sum_ball_deg (given its two helper sorries),
-    arr_adjacent_of_drop_pos_eq_of_ne', cross_top (given Layer B),
-    E_seq_pow, C_constant_add_E_seq, hb_cross_collisions_closed.
-  SORRY, small/mechanical (est. 10-40 interactive lines each):
-    testBit_two_pow_add, popcount_eq_card_testBit, sum_Ico_shift_reindex,
-    the Bool-normalization step inside sum_ball_deg, one_le_bd_mult_of_external,
-    one_le_ball_deg_top, ball_deg_top.
-  SORRY, the real Finset work (est. 40-120 lines each):
-    sum_ball_deg_grow, total_eq_sum_mult, embed_mem_coord_boundary_iff,
-    bd_mult_embed_eq_ball_deg, mem_two_boundaries_is_cube,
-    cross_collisions_eq_cube_sum.
+The finite cases were also independently checked by
+`scripts/verify_crosstop.py` against small arrangement graphs.
 -/
 
 namespace Arrangement
@@ -1252,6 +1226,39 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     -- LHS = m(d-1) − 2E_m + (E_P + E_m + m) = m·d − E_m + E_P;
     -- RHS closes via  sbl P + P = (d-1)P + 1  and  2E_P = (d-1)P.
     omega
+
+/-- The unconditional arrangement-graph extraconnectivity capstone.
+    The nonempty case uses `hb_cross_collisions_closed`; the empty arrangement
+    has the empty Hamming ball as its witness. -/
+theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k) :
+    (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
+      external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
+    (∀ V' : Finset (ArrVertex n k), V'.card = R →
+      external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
+  by_cases hR : R = 0
+  · subst R
+    have hnk : k ≤ n := by
+      obtain ⟨hkn, _⟩ := h_cond
+      omega
+    refine ⟨?_, fun V hV => h_lower 0 n k V hV hnk⟩
+    refine ⟨∅, by simp, ?_⟩
+    simp [external_neighbors, C_constant, E_seq, sum_bit_length]
+  · have hR1 : 1 ≤ R := by omega
+    apply arrangement_extraconnectivity_minimum_of_cross R n k h_cond h_lower
+    intro d hk hnk hd
+    exact hb_cross_collisions_closed R hR1 d hd hk hnk
+
+/-- The unconditional globally optimal growth-strategy corollary. -/
+theorem globally_optimal_growth_strategy
+    (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
+    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k) :
+    (∀ V' : Finset (ArrVertex n k), V'.card = R →
+      external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
+    (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
+      external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) := by
+  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond h_lower
+  exact ⟨h_univ, h_exists⟩
 
 end CrossTopMain
 

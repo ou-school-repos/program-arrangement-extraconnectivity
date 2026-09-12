@@ -14,7 +14,7 @@ This file completes the arithmetic backbone for discharging `HBCrossCollisions`:
 via the Binary Reflection Decomposition
   `HB(R) = HB(2^(d-1)) ∪ σ(HB(m))`,  `R = 2^(d-1) + m`,  `0 < m ≤ 2^(d-1)`.
 
-## Status of the four former `sorry`s
+## Completed arithmetic components
 
 1. `popcount (2^(d-1) + m') = popcount m' + 1`      — PROVEN  (`popcount_two_pow_add`)
 2. `bit_length (2^(d-1) + m') = d`                  — PROVEN  (`bit_length_two_pow_add`)
@@ -85,11 +85,11 @@ lemma C_constant_def (R : ℕ) :
 
 end Interface
 
-/-! ### §1 Popcount arithmetic — kills `sorry` #1 -/
+/-! ### §1 Popcount arithmetic -/
 
 section PopcountArith
 
-/-- **Former `sorry` #1 (generalized).**
+/-- Generalized popcount increment lemma.
     Adding `2^j` to `m < 2^j` sets one fresh bit: `popcount (2^j + m) = popcount m + 1`.
     Pure induction on `j`; no bitwise Mathlib lemmas needed, so it is robust to
     whatever `Nat.testBit` API your Mathlib pin has. -/
@@ -142,11 +142,11 @@ lemma popcount_le_bit_length (n : ℕ) : popcount n ≤ bit_length n := by
 
 end PopcountArith
 
-/-! ### §2 Size arithmetic — kills `sorry` #2 -/
+/-! ### §2 Size arithmetic -/
 
 section SizeArith
 
-/-- **Former `sorry` #2 (generalized).**
+/-- Generalized bit-length increment lemma.
     For `1 ≤ d` and `m < 2^(d-1)`, the sum `2^(d-1) + m` lies in `[2^(d-1), 2^d)`,
     hence has bit length exactly `d`. -/
 lemma bit_length_two_pow_add {d m : ℕ} (hd : 1 ≤ d) (h : m < 2 ^ (d - 1)) :
@@ -178,7 +178,7 @@ lemma E_seq_sum_decomposition (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) :
     have h_le : m' ≤ 2 ^ (d - 1) := by omega
     have h_lt : m' < 2 ^ (d - 1) := by omega
     have h_eq : 2 ^ (d - 1) + (m' + 1) = (2 ^ (d - 1) + m') + 1 := by omega
-    -- Former `sorry` #1, discharged:
+    -- Fresh-top-bit popcount identity:
     have h_pop : popcount (2 ^ (d - 1) + m') = popcount m' + 1 :=
       popcount_two_pow_add h_lt
     rw [h_eq, E_seq, E_seq, ih h_le, h_pop]
@@ -198,7 +198,7 @@ lemma sum_bit_length_sum_decomposition (d m : ℕ) (hd : 1 ≤ d)
     have h_le : m' ≤ 2 ^ (d - 1) := by omega
     have h_lt : m' < 2 ^ (d - 1) := by omega
     have h_eq : 2 ^ (d - 1) + (m' + 1) = (2 ^ (d - 1) + m') + 1 := by omega
-    -- Former `sorry` #2, discharged:
+    -- Fresh-top-bit length identity:
     have h_bit : bit_length (2 ^ (d - 1) + m') = d :=
       bit_length_two_pow_add hd h_lt
     rw [h_eq, sum_bit_length, ih h_le, h_bit]
@@ -282,7 +282,7 @@ lemma boundary_term_nonneg (j : ℕ) :
 
 end ClosedForms
 
-/-! ### §5 The C_constant recurrence — kills `sorry` #3 -/
+/-! ### §5 The C_constant recurrence -/
 
 section CConstantRecurrence
 
@@ -355,7 +355,7 @@ theorem C_constant_recurrence' (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 
     rw [ext_cube, C_constant_def, C_constant_def, C_constant_def]
     omega
 
-/-- **Former `sorry` #3, discharged** — the theorem in its original drafted
+/-- The theorem in its original drafted
     shape (`let`-bound `R` and `ext_m`, no extra hypotheses; the `d = 0`
     corner turns out to hold and is handled inside `C_constant_recurrence'`). -/
 theorem C_constant_recurrence (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 < m) :
@@ -367,7 +367,7 @@ theorem C_constant_recurrence (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 <
 
 end CConstantRecurrence
 
-/-! ### §6 Binary reflection of the ball (unchanged from the draft: sorry-free) -/
+/-! ### §6 Binary reflection of the ball -/
 
 section BinaryReflection
 

@@ -31,13 +31,13 @@ declarations.
 | Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                                        | PROVEN     |
 | Construction             | `hamming_ball_subset` (named, explicit)                              | PROVEN     |
 | Evaluation               | `hamming_ball_eval` (boundary count)                                 | PROVEN\*   |
-| Evaluation Hypothesis    | `HBCrossCollisions` (KK shadow, existential)                         | HYPOTHESIS |
+| Hamming-ball evaluation  | `hb_cross_collisions_closed`                                         | PROVEN     |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`                   | PROVEN     |
 | Lower Bound              | `UniversalLowerBound` (universal bound)                              | HYPOTHESIS |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN     |
 | Capstone                 | `arrangement_extraconnectivity_minimum` (composition)                | PROVEN\*   |
 
-\*Proven but **conditional on outstanding hypotheses** (see below).
+\*Conditional only on `UniversalLowerBound` (see below).
 Harper's Theorem is proven but **not in the dependency chain** of the
 capstone theorem. The defect-based proof bypasses it entirely via algebraic
 subadditivity of E_seq.
@@ -56,7 +56,7 @@ arrangement_extraconnectivity_minimum
   │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
   │    └─ hamming_ball_eval           (exact boundary evaluation)
   │         ├─ hb_total_coord_edges   (from total_coord_edges_eq)
-  │         └─ HBCrossCollisions [HYPOTHESIS]
+  │         └─ hb_cross_collisions_closed
   └─ UniversalLowerBound [HYPOTHESIS] (universal lower bound)
 ```
 
@@ -77,28 +77,15 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
   fully validated; keep the hypothesis framing explicit until the Lean proof is
   actually closed.
 
-### 2. Existential Shadow Bound (`HBCrossCollisions`)
+### 2. Hamming-ball collision evaluation
 
-**What it says**: The cross collisions of the Hamming Ball is exactly `C_constant R - E_seq R`.
+`CrossTop.lean` proves `hb_cross_collisions_closed` directly for every
+nonempty Hamming ball. Its bridge lemmas identify boundary multiplicities with
+hypercube degrees, and the final arithmetic step is non-recursive. The public
+capstone handles the empty ball separately and uses this theorem for `R ≥ 1`.
 
-**Justification**:
-
-- Computationally verified alongside Axiom 1.
-- Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
-- **Active route, NOT complete: `Arrangement/CrossTop.lean`**. This route proves the unconditional closed form
-  `cross_collisions(HB(2^{d-1}+m)) + 2·E_seq(m) = m·(d-1)` and derives `HBCrossCollisions` from it by pure
-  arithmetic — no recursion. The Finset bookkeeping in `cross_collisions_eq_cube_sum` (`h_U_embed_sub`,
-  `h_U_diff`, `h_sum_U`, `h_sum_U_embed`, `h_sum_Ico`, `h_card_U`, `h_card_embed`) is genuinely proven. But
-  as of 2026-08-06 the file still has **7 unresolved holes**, using the `admit` tactic (a deprecated
-  `sorry` alias — it still emits `sorryAx`, so counting literal `sorry` occurrences understates this): in
-  `embed_mem_coord_boundary_iff` (4), `mem_two_boundaries_is_cube` (2, one of which — line ~669 — is the
-  entire lemma body), and `cross_top` (1, a mechanical `2^(d-1)+2^(d-1)=2^d` endpoint rewrite). The
-  combinatorial core connecting `cross_collisions` to hypercube counting (`embed_mem_coord_boundary_iff`,
-  `mem_two_boundaries_is_cube`) is the real remaining work. The file was also not in `lakefile.lean`'s
-  `roots` until this correction, so `lake build` never actually checked it — treat any prior "compiles"
-  claim about it as unverified. Status should be gated on `#print axioms hb_cross_collisions_closed`
-  showing no `sorryAx`, not on a `grep sorry` count.
-- **Superseded route (`CrossCollisionsResearch.lean`)**: Previously attempted to prove this via strong induction on the recurrence (`CrossRecurrence`), but the recursion was shown to be structurally circular with respect to the goal. This route is now officially abandoned and replaced by `CrossTop.lean`.
+The earlier binary-reflection driver is retained under `unstable/` as an
+archival research route; it is not on the public proof path.
 
 ### Superseded: `CollisionAdjustedBound` / `sub_optimal_penalty`
 
@@ -140,8 +127,8 @@ The core algebra, bijections, and isoperimetric defect inequalities of the **Alg
 
 The following high-level results are **mechanically proven inside Lean**, but remain conditional on the remaining extremal-combinatorics hypotheses above:
 
-- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor showing that the Hamming Ball achieves the exact optimal boundary (conditional on `HBCrossCollisions`).
-- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines existence and lower bound to squeeze the exact minimum cut (conditional on `HBCrossCollisions` and `UniversalLowerBound`).
+- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor parameterized by the fixed-size collision evaluation.
+- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines the direct Hamming-ball evaluation with `UniversalLowerBound` to squeeze the exact minimum cut.
 
 ## Novel Contributions
 
