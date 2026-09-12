@@ -940,6 +940,9 @@ lemma one_le_ball_deg_top {d m j : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
   use (d - 1)
   rw [Finset.mem_filter, Finset.mem_range]
   refine ⟨by omega, ?_⟩
+  have hpow : (2:ℕ) ^ d = 2 ^ (d - 1) + 2 ^ (d - 1) := by
+    conv_lhs => rw [show d = (d - 1) + 1 by omega]
+    rw [pow_succ]; ring
   have hy : j - 2 ^ (d - 1) < 2 ^ (d - 1) := by omega
   have hy2 : j = 2 ^ (d - 1) + (j - 2 ^ (d - 1)) := by omega
   have ht1 : j.testBit (d - 1) = true := by
@@ -964,15 +967,17 @@ lemma one_le_ball_deg_top {d m j : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
     `Σ_{j ∈ Ico (P+a) (P+b)} f j = Σ_{j' ∈ Ico a b} f (P + j')`. -/
 private lemma sum_Ico_shift_reindex (P a b : ℕ) (f : ℕ → ℕ) :
     (∑ j ∈ Ico (P + a) (P + b), f j) = ∑ j' ∈ Ico a b, f (P + j') := by
-  have h_bij : (Ico a b).map ⟨(P + ·), fun x y h => by omega⟩ = Ico (P + a) (P + b) := by
+  have h_bij : (Ico a b).map ⟨(P + ·), fun x y h => by simp only [] at h; omega⟩ = Ico (P + a) (P + b) := by
     ext x
     rw [Finset.mem_map, Finset.mem_Ico]
     constructor
     · rintro ⟨y, hy, rfl⟩
       rw [Finset.mem_Ico] at hy
+      simp only [Function.Embedding.coeFn_mk]
       omega
     · intro hx
       use x - P
+      simp only [Function.Embedding.coeFn_mk]
       rw [Finset.mem_Ico]
       constructor
       · omega
