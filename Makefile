@@ -223,7 +223,7 @@ lean:	##H @Build Build Lean 4 proofs (proofs/)
 		END { if (in_decl) process_buf(); }' \
 		proofs/Arrangement/*.lean proofs/Arrangement/unstable/*.lean 2>/dev/null || true
 	@printf "\033[1;32m--------------------------------\033[0m\n"
-	! rg -g '*.lean' -g '!**/CrossRecurrenceDriver.lean' \
+	@! rg -g '*.lean' -g '!**/CrossRecurrenceDriver.lean' \
 		-P '(?<!`)(?<!as )\b(sorry|admit)\b(?!`)(?!-free)' proofs/
 	@$(call print_success,Lean proofs verified.)
 
