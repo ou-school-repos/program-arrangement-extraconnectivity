@@ -1,6 +1,7 @@
 import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
 import Arrangement.unstable.CrossCollisionsResearch
+import Mathlib.Algebra.Order.BigOperators.Group.LocallyFinite
 -- ^ adjust the last module name if the lakefile maps `unstable/` differently.
 -- This file consumes (all verified present in the current sources):
 --   CrossCollisionsResearch.lean: popcount_zero, popcount_div_two,
@@ -148,7 +149,7 @@ lemma xor_two_pow_lt_cube {j p D : ℕ} (hj : j < 2 ^ D) (hp : p < D) :
   · rw [Nat.testBit_xor, Nat.testBit_eq_false_of_lt hj,
       Nat.testBit_eq_false_of_lt h2]
     rfl
-  · exact Nat.testBit_two_pow_self D
+  · exact Nat.testBit_two_pow_self (n := D)
   · intro q hq
     have hjq : j < 2 ^ q :=
       lt_of_lt_of_le hj (Nat.pow_le_pow_right (by omega) (by omega))
@@ -171,11 +172,11 @@ lemma testBit_two_pow_add {D y : ℕ} (hy : y < 2 ^ D) (q : ℕ) :
   by_cases hq : q = D
   · subst hq
     simp only [if_true]
-    have h1 : (2^D + y) / 2^D = 1 := by
-      have : 2^D > 0 := Nat.pos_pow_of_pos D (by decide)
-      rw [Nat.add_comm, Nat.add_mul_div_right y 1 this, Nat.div_eq_of_lt hy]
-      rfl
-    rw [Nat.testBit, h1]
+    have h1 : (2^q + y) / 2^q = 1 := by
+      have : 2^q > 0 := Nat.two_pow_pos q
+      rw [Nat.add_comm]
+      simpa [Nat.div_eq_of_lt hy] using Nat.add_mul_div_right y 1 this
+    rw [Nat.testBit_eq_decide_div_mod_eq, h1]
     rfl
   · simp only [hq, if_false]
     rcases lt_or_gt_of_ne hq with hlt | hgt
@@ -183,18 +184,20 @@ lemma testBit_two_pow_add {D y : ℕ} (hy : y < 2 ^ D) (q : ℕ) :
         have h3 : 2^D = 2^(D - q) * 2^q := by
           rw [← Nat.pow_add]
           congr 1; omega
-        have : 2^q > 0 := Nat.pos_pow_of_pos q (by decide)
+        have : 2^q > 0 := Nat.two_pow_pos q
         rw [h3, Nat.add_comm, Nat.add_mul_div_right y _ this, Nat.add_comm]
-      rw [Nat.testBit, Nat.testBit, h2]
+      rw [Nat.testBit_eq_decide_div_mod_eq, Nat.testBit_eq_decide_div_mod_eq, h2]
       have h4 : 2^(D - q) % 2 = 0 := by
         have h5 : 2^(D - q) = 2 * 2^(D - q - 1) := by
-          rw [← Nat.pow_add]; congr 1; omega
+          conv_lhs => rw [show D - q = (D - q - 1) + 1 by omega]
+          rw [pow_succ, mul_comm]
         rw [h5, Nat.mul_mod_right]
+      congr 1
       rw [Nat.add_mod, h4, zero_add, Nat.mod_mod]
     · have hgt1 : 2^D + y < 2^q := by
         calc 2^D + y < 2^D + 2^D := by omega
         _ = 2 * 2^D := by ring
-        _ = 2^(D+1) := by rw [← pow_succ]
+        _ = 2^(D+1) := by ring
         _ ≤ 2^q := Nat.pow_le_pow_right (by decide) hgt
       rw [Nat.testBit_eq_false_of_lt hgt1, Nat.testBit_eq_false_of_lt (by omega)]
 
@@ -217,7 +220,7 @@ lemma popcount_eq_card_testBit {D : ℕ} :
     simp [popcount_zero]
   | succ D ih =>
     intro m hm
-    rw [Finset.range_succ, Finset.filter_insert]
+    rw [Finset.range_add_one, Finset.filter_insert]
     by_cases h : m < 2^D
     · have ht : m.testBit D = false := Nat.testBit_eq_false_of_lt h
       simp [ht, ih h]
@@ -228,17 +231,19 @@ lemma popcount_eq_card_testBit {D : ℕ} :
         nth_rw 1 [hy2]
         rw [testBit_two_pow_add hy D, if_pos rfl]
       have hnot : D ∉ Finset.filter (fun p => m.testBit p) (range D) := by simp
-      simp only [ht, if_true, Finset.card_insert_of_not_mem hnot]
+      simp only [ht, if_true, Finset.card_insert_of_notMem hnot]
       have h_pop : popcount m = popcount (m - 2^D) + 1 := by
         nth_rw 1 [hy2]
-        exact popcount_two_pow_add (m - 2^D) D hy
-      rw [h_pop, ih hy, add_comm]
-      congr 1
-      apply Finset.filter_congr
-      intro p hp
-      rw [Finset.mem_range] at hp
-      nth_rw 1 [hy2]
-      rw [testBit_two_pow_add hy p, if_neg (by omega)]
+        exact popcount_two_pow_add hy
+      have h_filter_eq :
+          Finset.filter (fun p => m.testBit p) (range D)
+            = Finset.filter (fun p => (m - 2 ^ D).testBit p) (range D) := by
+        apply Finset.filter_congr
+        intro p hp
+        rw [Finset.mem_range] at hp
+        nth_rw 1 [hy2]
+        rw [testBit_two_pow_add hy p, if_neg (by omega)]
+      rw [h_pop, ih hy, h_filter_eq]
 
 end BitToolbox
 
@@ -301,8 +306,9 @@ private lemma sum_ball_deg_grow {m D : ℕ} (hm : m < 2 ^ D) :
         · exact ⟨hp, by omega⟩
     rw [h_or]
     apply Finset.card_union_of_disjoint
-    intro p hp
-    rw [Finset.inf_eq_inter, Finset.mem_inter, Finset.mem_filter, Finset.mem_filter] at hp
+    rw [Finset.disjoint_left]
+    intro p hp hq
+    rw [Finset.mem_filter] at hp hq
     omega
   have h_sum1 : (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg (m + 1) D j)
       = (∑ j ∈ Ico (m + 1) (2 ^ D), ball_deg m D j)
@@ -330,7 +336,8 @@ private lemma sum_ball_deg_grow {m D : ℕ} (hm : m < 2 ^ D) :
     by_cases hm_in : m ^^^ 2 ^ p ∈ Ico (m + 1) (2 ^ D)
     · rw [if_pos hm_in]
       have heq : (m ^^^ 2 ^ p) ^^^ 2 ^ p = m := xor_two_pow_involutive m p
-      apply Finset.sum_eq_single_of_mem (m ^^^ 2 ^ p) hm_in
+      rw [Finset.sum_eq_single_of_mem (f := fun x => if x ^^^ 2 ^ p = m then 1 else 0)
+        (m ^^^ 2 ^ p) hm_in]
       · rw [heq, if_pos rfl]
       · intro j hj hj_ne
         have hj_eq : j ^^^ 2 ^ p ≠ m := by
@@ -406,7 +413,7 @@ lemma sum_ball_deg (D : ℕ) :
       rw [hne]
       have := Finset.filter_card_add_filter_neg_card_eq_card
         (s := range D) (p := fun p => m.testBit p)
-      simpa using this
+      simpa [add_comm] using this
     have hprev := ih (by omega)
     have hE : E_seq (m + 1) = E_seq m + popcount m := rfl
     have hmul : (m + 1) * D = m * D + D := by ring
@@ -453,7 +460,7 @@ lemma arr_adjacent_of_drop_pos_eq_of_ne' {v w : ArrVertex n k} {p : Fin k}
     apply hne
     apply Subtype.ext
     funext q'
-    by_cases hp : q' = p
+    by_cases hp : q' = q
     · rw [hp]; exact heq.symm
     · exact congr_fun hdrop ⟨q', hp⟩
 
@@ -476,7 +483,8 @@ lemma total_eq_sum_mult (V : Finset (ArrVertex n k)) :
     apply Finset.sum_congr rfl
     intro p _
     rw [Finset.card_eq_sum_ones]
-    exact Finset.sum_filter _ _
+    conv_lhs => rw [← Finset.filter_univ_mem (coord_boundary V p)]
+    rw [Finset.sum_filter]
   have h2 : (∑ p : Fin k, ∑ w ∈ Finset.univ, ite (w ∈ coord_boundary V p) 1 0)
       = ∑ w ∈ Finset.univ, ∑ p : Fin k, ite (w ∈ coord_boundary V p) 1 0 :=
     Finset.sum_comm
@@ -487,12 +495,12 @@ lemma total_eq_sum_mult (V : Finset (ArrVertex n k)) :
     rw [Finset.card_eq_sum_ones]
     exact (Finset.sum_filter _ _).symm
   rw [h1, h2, h3]
+  symm
   apply Finset.sum_subset
   · intro w hw
-    rw [Finset.mem_filter, Finset.mem_univ, true_and] at hw
     exact Finset.mem_univ w
   · intro w _ hwnot
-    rw [Finset.mem_filter, Finset.mem_univ, true_and, not_and] at hwnot
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_and] at hwnot
     rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
     intro p _ hp_in
     unfold coord_boundary at hp_in
@@ -854,7 +862,7 @@ lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
   have h_range : range d = insert (d - 1) (range (d - 1)) := by
     have : d = d - 1 + 1 := by omega
     nth_rw 1 [this]
-    rw [Finset.range_succ]
+    rw [Finset.range_add_one]
   rw [h_range, Finset.filter_insert]
   have ht_eq : (2 ^ (d - 1) + j') ^^^ 2 ^ (d - 1) = j' := by
     apply Nat.eq_of_testBit_eq
@@ -870,7 +878,7 @@ lemma ball_deg_top {d m j' : ℕ} (hd : 1 ≤ d) (hm : 0 < m)
       rw [testBit_two_pow_add hj' q, if_neg (Ne.symm hq)]
   have ht : (2 ^ (d - 1) + j') ^^^ 2 ^ (d - 1) < 2 ^ (d - 1) + m := by omega
   have hnot : d - 1 ∉ (range (d - 1)).filter (fun p => (2 ^ (d - 1) + j') ^^^ 2 ^ p < 2 ^ (d - 1) + m) := by simp
-  simp only [ht, if_true, Finset.card_insert_of_not_mem hnot]
+  simp only [ht, if_true, Finset.card_insert_of_notMem hnot]
   congr 1
   apply Finset.filter_congr
   intro p hp
