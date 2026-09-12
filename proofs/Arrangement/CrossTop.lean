@@ -1,13 +1,8 @@
 import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
 import Mathlib.Algebra.Order.BigOperators.Group.LocallyFinite
--- ^ adjust the last module name if the lakefile maps `unstable/` differently.
--- This file consumes (all verified present in the current sources):
---   ArrangementExtraconnectivity.lean: popcount_even, popcount_odd,
---     coord_boundary, total_coord_edges, cross_collisions, external_neighbors,
---     external_neighbors_le_total_coord, drop_pos, embed_vertex, embed_cube,
---     nat_to_cube, nat_to_cube_injective, embed_vertex_injective_cube,
---     hamming_ball_subset, HBCrossCollisions, E_seq, sum_bit_length, C_constant.
+import Mathlib.Order.Interval.Finset.Nat
+import Mathlib.Tactic.IntervalCases
 
 open Finset
 
