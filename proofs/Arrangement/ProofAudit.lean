@@ -12,9 +12,11 @@ open Lean Elab Command
 
 /-- Fail if a declaration's transitive proof term depends on Lean's `sorryAx`. -/
 elab "assert_no_sorry " id:ident : command => do
-  let axioms ← collectAxioms id.getId
-  if axioms.contains ``sorryAx then
-    throwError "{id.getId} depends on sorryAx"
+  let names ← liftCoreM <| realizeGlobalConstWithInfos id
+  for name in names do
+    let axioms ← collectAxioms name
+    if axioms.contains ``sorryAx then
+      throwError "{name} depends on sorryAx"
 
-assert_no_sorry arrangement_extraconnectivity_minimum
-assert_no_sorry globally_optimal_growth_strategy
+assert_no_sorry Arrangement.arrangement_extraconnectivity_minimum
+assert_no_sorry Arrangement.globally_optimal_growth_strategy
