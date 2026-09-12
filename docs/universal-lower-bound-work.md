@@ -19,7 +19,7 @@
 ## Deliverables (in order)
 
 1. **Restate** all definitions and quantifiers precisely from Lean source
-2. **Stress-test** computationally — emphasize disconnected/sparse subsets and small slack (n−k ∈ {1,2}). A counterexample is a success: report ((n,k,R,V'), its boundary, claimed lower bound)
+2. **Stress-test** computationally — emphasize disconnected/sparse subsets and small slack \(n-k \in \{1,2\}\). A counterexample is a success: report \(((n,k,R,V'),\) its boundary, claimed lower bound)
 3. **Proof sketch** for the exact all-subsets statement; identify the lemma replacing the refuted support-projection inequality
 4. **Recommendation**: should the Lean statement/paper proposition remain all-subsets or be restricted to connected subsets?
 
