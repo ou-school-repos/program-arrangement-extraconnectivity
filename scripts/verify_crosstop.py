@@ -13,34 +13,45 @@ Definitions modeled:
 
 
 def popcount(x):
+    """Binary digit sum (number of set bits) of x."""
     return bin(x).count("1")
 
 
 def bit_length(x):
+    """Bit length of x (Nat.size)."""
     return x.bit_length()
 
 
 def E_seq(m):
+    """Cumulative popcount sum(popcount(i) for i in range(m)) (OEIS A000788)."""
     return sum(popcount(i) for i in range(m))
 
 
 def sum_bit_length(m):
+    """Cumulative bit-length sum sum(bit_length(i) for i in range(m))."""
     return sum(bit_length(i) for i in range(m))
 
 
 def C_constant(R):
+    """
+    The correction constant C(R) per the closed form:
+      (R-1) + sum_bit_length(R) - E_seq(R).
+    """
     return 0 if R == 0 else (R - 1) + sum_bit_length(R) - E_seq(R)
 
 
 def embed_vertex(n, k, d, i):
+    """Embed index i < 2^d as the i-th vertex of the Hamming ball in A(n,k)."""
     return tuple((k + p if (i >> p) & 1 else p) if p < d else p for p in range(k))
 
 
 def hamming_ball(R, n, k, d):
+    """Return the R-vertex Hamming ball {embed_vertex(n,k,d,i) : i < R} in A(n,k)."""
     return set(embed_vertex(n, k, d, i) for i in range(R))
 
 
 def coord_boundary(V, n, k, p):
+    """Vertices outside V reachable from V by changing only coordinate p."""
     out = set()
     for v in V:
         used = set(v) - {v[p]}
@@ -54,6 +65,7 @@ def coord_boundary(V, n, k, p):
 
 
 def cross_collisions(V, n, k):
+    """Count cross-collisions: overlaps between per-coordinate boundaries of V."""
     Bs = [coord_boundary(V, n, k, p) for p in range(k)]
     total = sum(len(B) for B in Bs)
     U = set().union(*Bs)
@@ -61,10 +73,12 @@ def cross_collisions(V, n, k):
 
 
 def deg(m, D, j):
+    """Number of D-cube neighbors of j that lie below m (ball-degree of j)."""
     return sum(1 for p in range(D) if (j ^ (1 << p)) < m)
 
 
 def main():
+    """Run every lemma check in the CrossTop decomposition and print pass/fail."""
     # 0. Model faithfulness: reproduce HBCrossCollisions exactly.
     for n, k in [(7, 3), (8, 4), (9, 4)]:
         for R in range(1, 2 ** min(4, k) + 1):
@@ -79,6 +93,7 @@ def main():
     # CrossRecurrence as stated in the repo
     # (true, but see analysis: circular interface).
     def ext_cube(d, m):
+        """CrossRecurrence's external-cube correction term for sub-ball size m."""
         return max(max(m * (d - 1) - E_seq(m), 0) - C_constant(m), 0)
 
     for n, k in [(8, 4), (9, 4), (11, 5)]:

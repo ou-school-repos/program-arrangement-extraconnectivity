@@ -18,7 +18,7 @@ To address the limitations of geometric compression, we developed a novel algebr
 
 ### Asymptotic Penalty Status
 
-The current Lean development contains a conditional `sub_optimal_penalty` theorem, but the stronger linear-penalty claim is not safe to advertise as an unconditional result yet. The open gap is documented in `docs/lean-proof-status.md` and `docs/collision-axiom-roadmap.md`.
+The unconditional penalty identities now live in `proofs/Arrangement/PenaltyExact.lean`: `boundary_identity`, `penalty_exact`, `penalty_defect`, and `penalty_ge` are mechanically verified in the stable build. The remaining open gap is not the penalty algebra itself, but the extremal-combinatorics path needed for the full exact minimum-cut capstone theorem; `docs/lean-proof-status.md` remains the source of truth for that boundary.
 
 ## The Topological Spectrum
 
@@ -43,10 +43,10 @@ Computational search supports a unique Hamming-ball minimizer in the tested rang
 
 The stable Lean 4 build mechanically verifies the algebraic defect framework, the core arithmetic, the root/fiber identities, and the explicit Hamming-ball construction.
 
-The capstone extraconnectivity theorem is present in the stable proof path, but it is intentionally parameterized by outstanding extremal-combinatorics hypotheses rather than closed unconditionally. The remaining stable hypothesis interfaces are:
+The capstone extraconnectivity theorem supplies the Hamming-ball collision
+evaluation internally. Its remaining extremal-combinatorics hypothesis is:
 
 - `UniversalLowerBound`: the universal boundary lower bound for all $R$-element subsets.
-- `HBCrossCollisions`: the exact 4-cycle shadow overlap count of the explicitly constructed Hamming Ball.
 
 Current stable status:
 
@@ -72,6 +72,7 @@ To provide a foundation for future combinatorics research, we have formally defi
 ├── proofs/
 │   ├── Arrangement/
 │   │   ├── ArrangementExtraconnectivity.lean # Stable conditional capstone theorem
+│   │   ├── PenaltyExact.lean                 # Unconditional penalty identities
 │   │   ├── ArrDefs.lean                      # Core graph definitions
 │   │   ├── HypercubeEdges.lean               # OEIS A000788 combinatorics
 │   │   └── unstable/                         # Ongoing collision / compression proof work
@@ -88,6 +89,19 @@ To provide a foundation for future combinatorics research, we have formally defi
 make run/predict R=10
 ```
 
+<details>
+<summary><strong>Sample Output (predict, R=10)</strong></summary>
+
+```text
+Hamming ball prediction for R=10
+  [analytical] nk1 = A000788(10) = 15
+  [analytical] constant = 19
+(10nk-15) (n-k)-19, EX: ABCDEFGHIJ KBCDEFGHIJ ALCDEFGHIJ KLCDEFGHIJ ABMDEFGHIJ KBMDEFGHIJ ALMDEFGHIJ KLMDEFGHIJ ABCNEFGHIJ KBCNEFGHIJ
+  formula(n=20,k=10): |N(V')| = 85·10 - 19 = 831
+```
+
+</details>
+
 **Verify the Lean 4 Proofs:**
 
 ```bash
@@ -96,7 +110,7 @@ make lean
 ```
 
 <details>
-<summary><strong>Sample Output (R=2 through R=10)</strong></summary>
+<summary><strong>Sample Output (arrangement, exhaustive nauty search, <code>make benchmark R=10</code>, R=2 through R=10)</strong></summary>
 
 ```text
 Searching R=2 (nauty limit: 3)

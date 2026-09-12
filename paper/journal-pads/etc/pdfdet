@@ -1,0 +1,36 @@
+#!/bin/bash -e
+
+cleanup() {
+  [[ -n "${tmp1:-}" && -e "$tmp1" ]] && rm -f -- "$tmp1"
+  [[ -n "${tmp2:-}" && -e "$tmp2" ]] && rm -f -- "$tmp2"
+  true
+}
+trap cleanup EXIT
+
+for pdf in "$@"; do
+  timestamp="$(stat -c "%Y" "$pdf")"
+  pdf_date="$(date -u -d "@$timestamp" '+%Y:%m:%d %H:%M:%S+00:00')"
+  dir="$(dirname "$pdf")"
+  base="$(basename "$pdf")"
+  tmp1="$(mktemp --tmpdir="$dir" ".$base.XXXXXX")"
+  tmp2="$(mktemp --tmpdir="$dir" ".$base.XXXXXX")"
+
+  cp -- "$pdf" "$tmp1"
+
+  # Normalize the volatile date metadata FIRST, so that qpdf's
+  # --deterministic-id below hashes already-normalized content: the /ID must
+  # be derived from content that no longer varies run-to-run, or re-archiving
+  # an unchanged source would still produce a byte-different PDF.
+  exiftool -overwrite_original \
+    -CreateDate="$pdf_date" \
+    -ModifyDate="$pdf_date" \
+    "$tmp1" >/dev/null
+
+  qpdf --deterministic-id "$tmp1" "$tmp2"
+
+  mv -f "$tmp2" "$pdf"
+  touch -d "@$timestamp" "$pdf"
+  rm -f -- "$tmp1"
+  tmp1=""
+  tmp2=""
+done

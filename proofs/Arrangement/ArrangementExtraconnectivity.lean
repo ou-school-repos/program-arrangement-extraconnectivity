@@ -35,21 +35,29 @@ achieved uniquely by the Hamming Ball embedding.
 3. **The Defect Bound** — `sum_unique_roots_lower_bound`: D(V') ≤ E(|V'|) where
    D(V') = |V'|·k − sum_unique_roots(V') measures root duplication.
 
-4. **The Collision-Adjusted Bound** — `external_neighbors_collision_bound`:
-   Uses fiber decomposition and coordinate-wise boundary counting.
+4. **Total Coordinate Edges** — `total_coord_edges_eq`: the unconditional fiber-counting
+   identity `external_neighbors V' + cross_collisions V' + R·k = U(V')·(n−k+1)`, from
+   which the exact penalty identities in `Arrangement/PenaltyExact.lean` follow with no
+   further hypotheses. (An earlier "Collision-Adjusted Bound" hypothesis that attempted
+   a dimension-independent bound on combined waste was refuted by the Star Graph
+   counterexample and has been removed; see `docs/lean-proof-status.md`'s "Superseded"
+   note.)
 
 5. **The Capstone** — Sandwich of lower bound (∀ V') and upper bound (∃ Hamming Ball).
 
-## Axiom Inventory (2 isoperimetric axioms)
+## Remaining Hypothesis Interfaces (2, not raw axioms)
 
-| Axiom | Role | Status |
+| Interface | Role | Status |
 |-------|------|--------|
-| `lower_bound_all_embeddings` | Universal boundary inequality | Computationally verified |
-| `hb_cross_collisions` | KK shadow bound (existential) | Computationally verified |
+| `UniversalLowerBound` | Universal boundary inequality (∀ V') | Tested through R ≤ 160; not mechanized |
+| `HBCrossCollisions` | Hamming Ball's exact cross-collision count (∃ witness) | Supplied by the direct `CrossTop` proof |
 
-The boundary inequality depends on (n, k) dynamically, while hb_cross_collisions remains independent of (n, k).
-Run `predict --verify R` for brute-force cross-check at any R.
-See `docs/axiom-equivalence.md` for the full duality explanation.
+Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
+`arrangement_extraconnectivity_minimum`, not raw `axiom` declarations.
+`UniversalLowerBound` depends on (n, k) dynamically. The predictor has been
+run through R ≤ 160; its configured ceiling is R = 260, whose full sweep is
+still pending. See `docs/lean-proof-status.md` for full status and
+`docs/collision-axiom-roadmap.md` for the formalization path.
 
 ## References
 
@@ -677,7 +685,7 @@ lemma sum_unique_roots_lower_bound {n k : ℕ}
     omega
 
 /-!
-## The Collision-Adjusted Bound
+## Fiber Double-Counting: `total_coord_edges`
 
 The double-counting argument:
 1. For each coordinate p and unique root r at p, there are exactly
@@ -686,10 +694,17 @@ The double-counting argument:
 3. But `external_neighbors` counts UNIQUE vertices, not edges.
    The overcounting (`cross_collisions`) measures how many external neighbors
    are reachable through multiple coordinates.
-4. The remaining axiom bounds: cross_collisions + defect ≤ C_constant(R)
+4. `total_coord_edges_eq` below is an unconditional PROVED identity relating
+   `total_coord_edges`, `sum_unique_roots`, and the dimension factor
+   `(n − k)` — it is not a bound and requires no hypothesis. (An earlier
+   "Collision-Adjusted Bound" hypothesis that instead attempted a
+   dimension-independent bound `cross_collisions + defect ≤ C_constant(R)`
+   was refuted by the Star Graph counterexample and has been removed; see
+   `docs/lean-proof-status.md`'s "Superseded" note and the module docstring
+   above.)
 
-This mechanizes the (n−k) scaling factor and isolates the finite
-Kruskal-Katona shadow bound to a pure R-dependent constant.
+This mechanizes the (n−k) scaling factor, from which the exact penalty identities
+in `Arrangement/PenaltyExact.lean` follow unconditionally.
 -/
 
 
@@ -759,10 +774,14 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   of missing defect, which always dominates any secondary cross-collision savings
   as dimensions scale.
 
-  **Properties**:
-  - Valid for all valid dimensions n and k
-  - Computationally verified via `predict --verify R` (predict.cpp)
-  - Exhaustive topology search confirms uniqueness for small R (arrangement.cpp)
+  **Status and computational evidence**:
+  - This is an all-subsets statement: it has no connectedness hypothesis.
+  - `predict.cpp` evaluates the Hamming-ball construction only, and
+    `arrangement.cpp` enumerates connected configurations only; neither
+    verifies this universal quantifier.
+  - `scripts/check_universal_lower_bound.py` exhaustively tests small complete
+    arrangement graphs, including disconnected subsets. This is evidence, not
+    a proof or a replacement for the missing extremal-combinatorics argument.
   - See docs/axiom-equivalence.md for the full duality explanation
   - See docs/collision-axiom-roadmap.md for the formalization roadmap
 -/
@@ -1073,12 +1092,6 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
     simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin, mul_comm]
   rw [h_rhs] at h_sum
   exact h_sum
-
--- TODO(review): this bridge lemma is the false combined-waste statement from
--- the review; keep it marked until the theorem is removed or restated.
-def CollisionAdjustedBound {n k : ℕ} (R : ℕ) : Prop :=
-  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
 def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
@@ -1589,15 +1602,15 @@ lemma hamming_ball_eval {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
   omega
 
 lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
-      HBCrossCollisions R n k d hk hnk) :
+    (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
+      (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     ∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R := by
   obtain ⟨h_nk, h_k⟩ := h_cond
   let d := bit_length (R - 1)
   have hk : d ≤ k := h_k
   have hnk : k + d ≤ n := by omega
-  refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl (h_cross hk hnk rfl)⟩
+  refine ⟨hamming_ball_subset R n k d hk hnk, ?_, hamming_ball_eval hk hnk rfl (h_cross d hk hnk rfl)⟩
   exact hamming_ball_card hk hnk rfl
 
 
@@ -1611,10 +1624,10 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
   of a constructive witness (the Hamming ball), we establish the
   **Full Isoperimetric Profile** of A(n,k) for all natural numbers R.
 -/
-theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+theorem arrangement_extraconnectivity_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
-    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
-      HBCrossCollisions R n k d hk hnk) :
+    (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
+      (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
@@ -1632,44 +1645,15 @@ theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_
   - IMPLICATION: There is no "hidden" value of R where a non-standard
     configuration (clique, path, etc.) can outperform the Hamming Ball.
 -/
-theorem globally_optimal_growth_strategy
+theorem globally_optimal_growth_strategy_of_cross
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
-    (h_cross : ∀ {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n) (_hd : d = bit_length (R - 1)),
-      HBCrossCollisions R n k d hk hnk) :
+    (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
+      (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
-  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond h_lower h_cross
+  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum_of_cross R n k h_cond h_lower h_cross
   ⟨h_univ, h_exists⟩
-
-/-!
-## Sub-Optimal Topologies and The Asymptotic Penalty
--/
-
-/--
-  THE ASYMPTOTIC PENALTY THEOREM (The Cost of Sub-Optimality)
-
-  If a topology fails to achieve the optimal defect E_seq(R), let the shortfall
-  (missed internal edges / extra unique roots) be ΔE. This theorem proves that
-  the external boundary unconditionally grows by AT LEAST ΔE * (n - k).
-
-  This formally characterizes the 2nd, 3rd, and j-th best solutions:
-  every internal edge you fail to form exposes exactly (n - k) new boundary
-  vertices, asymptotically dominating any Kruskal-Katona shadow savings.
--/
-theorem sub_optimal_penalty (R n k ΔE : ℕ) (V' : Finset (ArrVertex n k))
-    (hR : V'.card = R) (hnk : k ≤ n)
-    (h_suboptimal : sum_unique_roots V' = R * k - E_seq R + ΔE)
-    (h_coll_bound : @CollisionAdjustedBound n k R) :
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) + ΔE * (n - k) - C_constant R := by
-  -- TODO(review): this theorem inherits the false stronger penalty claim from
-  -- `CollisionAdjustedBound`; it should not be advertised as proven.
-  have h1 := h_coll_bound V' hR hnk
-  have h2 : sum_unique_roots V' * (n - k) = (R * k - E_seq R) * (n - k) + ΔE * (n - k) := by
-    calc sum_unique_roots V' * (n - k)
-      _ = (R * k - E_seq R + ΔE) * (n - k) := by rw [h_suboptimal]
-      _ = (R * k - E_seq R) * (n - k) + ΔE * (n - k) := by rw [Nat.add_mul]
-  omega
 
 /-!
 ## Open Problems
@@ -1678,10 +1662,27 @@ theorem sub_optimal_penalty (R n k ΔE : ℕ) (V' : Finset (ArrVertex n k))
 /--
   CONJECTURE 1: Uniqueness of the Hamming Ball Minimizer.
 
-  The `sub_optimal_penalty` theorem proves that any graph with fewer
-  internal edges than the Hamming Ball is strictly sub-optimal due to the (n-k)
-  scaling factor. Therefore, any potential rival for the minimum cut MUST
-  tie the Hamming Ball's internal edge count: E_seq(R).
+  `penalty_defect` (in `Arrangement/PenaltyExact.lean`) gives the *exact*,
+  unconditional identity `|∂V₁| + (X₁+D₁) = |∂V₂| + (X₂+D₂) + ΔD·(n−k)` for any
+  two same-size subsets, where `ΔD = D₂ − D₁` is the defect gap. This identity
+  alone does NOT force a defect tie: for a fixed `(n,k)`, a topology with
+  `ΔD > 0` (fewer internal edges than the Hamming Ball) can still match or beat
+  its boundary, provided its cross-collision/defect offset
+  `(X_sub + D_sub) − (X_opt + D_opt)` is at least `ΔD·(n-k)`. Since `X` and `D`
+  are combinatorial constants fixed by the abstract topology alone (they do not
+  grow with `(n-k)`, see paper eq:penalty-expansion), that offset is bounded
+  while `ΔD·(n-k)` grows without bound, so this compensation can only work for
+  finitely many `(n-k)`.
+
+  What is forced, per the paper's Theorem `them:penalty`, is the asymptotic
+  reading: every topology with `ΔD > 0` has a topology-dependent threshold
+  `(n-k)_0` beyond which it strictly LOSES (a genuine inequality, not a tie).
+  Consequently `ΔD = 0` (i.e. matching `E_seq(R)`) is necessary only for a
+  topology to remain tied with the Hamming Ball for ALL sufficiently large
+  `(n-k)` — it is not a consequence of `penalty_defect` for an individual,
+  fixed `(n,k)`. The discussion above is asymptotic; the uniqueness
+  conjecture below remains a stronger, pointwise statement for each fixed
+  `(R,n,k)`.
 
   However, the exact boundary formula is `|N(V')| = U*(n-k) - X(V')`. If two graphs
   tie in unique roots `U`, the one that maximizes cross-collisions `X(V')` wins.

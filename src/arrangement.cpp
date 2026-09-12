@@ -31,16 +31,19 @@ static int R = 5;
 static int global_nauty_limit = 5;
 
 // ── Vertex representation ──────────────────────────────────────────────────
+/// Extract the 5-bit symbol at position `pos` of a packed vertex.
 static inline int get_sym(uint64_t vertex, int pos) {
     return static_cast<int>((vertex >> ((R - 1 - pos) * 5)) & 0x1FU);
 }
 
+/// Return `vertex` with the symbol at position `pos` replaced by `sym`.
 static inline uint64_t set_sym(uint64_t vertex, int pos, int sym) {
     const int shift = (R - 1 - pos) * 5;
     return (vertex & ~(0x1FULL << shift)) |
            (static_cast<uint64_t>(sym) << shift);
 }
 
+/// True if `sym` appears anywhere among the R positions of `vertex`.
 static inline bool contains_sym(uint64_t vertex, int sym) {
     for (int i = 0; i < R; i++)
         if (get_sym(vertex, i) == sym)
@@ -48,6 +51,7 @@ static inline bool contains_sym(uint64_t vertex, int sym) {
     return false;
 }
 
+/// Bitmask of the symbols used by `vertex` (bit i set iff symbol i is used).
 static inline uint32_t sym_mask(uint64_t vertex) {
     uint32_t m = 0;
     for (int i = 0; i < R; i++)
@@ -55,6 +59,7 @@ static inline uint32_t sym_mask(uint64_t vertex) {
     return m;
 }
 
+/// The identity vertex (0, 1, ..., R-1).
 static inline uint64_t make_identity() {
     uint64_t vertex = 0;
     for (int i = 0; i < R; i++)
@@ -62,6 +67,7 @@ static inline uint64_t make_identity() {
     return vertex;
 }
 
+/// Render a packed vertex as an R-character string (A-Z, a-z per symbol).
 static std::string vertex_to_string(uint64_t vertex) {
     std::string str(R, ' ');
     for (int i = 0; i < R; i++) {
@@ -72,6 +78,7 @@ static std::string vertex_to_string(uint64_t vertex) {
     return str;
 }
 
+/// True if `v` occurs among the first `point` entries of `arr`.
 static inline bool in_ver_set(uint64_t v, int point, const uint64_t *arr) {
     for (int i = 0; i < point; i++)
         if (arr[i] == v)
@@ -80,6 +87,7 @@ static inline bool in_ver_set(uint64_t v, int point, const uint64_t *arr) {
 }
 
 // ── 128-bit hash fingerprint ───────────────────────────────────────────────
+/// SplitMix64 bit-mixing step, used to combine hash state.
 static inline uint64_t splitmix64(uint64_t z) {
     z ^= (z >> 30);
     z *= 0xbf58476d1ce4e5b9ULL;
@@ -96,6 +104,7 @@ struct Hash128 {
     bool operator==(const Hash128 &o) const { return h1 == o.h1 && h2 == o.h2; }
 };
 
+/// 128-bit fingerprint of a nauty canonical graph, for isomorphism dedup.
 static inline Hash128 hash_nauty_graph(const graph *cg, int m_aux, int n_aux) {
     uint64_t h1 = 0x123456789ABCDEF0ULL, h2 = 0x0FEDCBA987654321ULL;
     const size_t num_words = static_cast<size_t>(m_aux) * n_aux;
@@ -109,6 +118,7 @@ static inline Hash128 hash_nauty_graph(const graph *cg, int m_aux, int n_aux) {
     return {h1, h2};
 }
 
+/// 128-bit fingerprint of a sorted vertex-set array, for exact-set dedup.
 static inline Hash128 hash_sorted_vertices(const uint64_t *arr, int len) {
     uint64_t h1 = 0x8a976b32c61e4fbbULL ^ static_cast<uint64_t>(len);
     uint64_t h2 = 0x93309a6324d081f9ULL ^ static_cast<uint64_t>(len);
@@ -122,6 +132,8 @@ static inline Hash128 hash_sorted_vertices(const uint64_t *arr, int len) {
 }
 
 // ── Open-addressing Flat Hash Set ──────────────────────────────────────────
+/// Open-addressing set of Hash128 fingerprints with linear probing and
+/// automatic power-of-two growth.
 class FlatHashSet128 {
     std::vector<Hash128> data_;
     size_t count_ = 0, mask_;
@@ -129,6 +141,7 @@ class FlatHashSet128 {
   public:
     explicit FlatHashSet128(size_t capacity_pow2 = 1U << 16)
         : data_(capacity_pow2, {0, 0}), mask_(capacity_pow2 - 1) {}
+    /// Insert key; returns false if it was already present.
     bool insert(Hash128 key) {
         if (key.h1 == 0 && key.h2 == 0)
             key.h1 = 1;
@@ -149,6 +162,7 @@ class FlatHashSet128 {
     size_t size() const { return count_; }
 
   private:
+    /// Double the table size and reinsert all live entries.
     void rehash() {
         std::vector<Hash128> old = std::move(data_);
         data_.assign(old.size() * 2, {0, 0});
@@ -208,6 +222,8 @@ static constexpr int chunk_idx[64] = {
 };
 
 // ── O(1) SWAR-Accelerated Incremental Calculation ──────────────────────────
+/// Incrementally compute the (nk1, constant) contribution of adding vertex
+/// ver[count-1] against the previously placed vertices, via SWAR bit-scanning.
 static inline std::pair<int, int> calc_step(int count) {
     const int idx = count - 1;
     const uint64_t cur = ver[idx];
@@ -314,11 +330,17 @@ static inline std::pair<int, int> calc_step(int count) {
 
 // ── Internal edge count ────────────────────────────────────────────────────
 // Delegates to shared utility (see arrangement_utils.h)
+/// Count internal edges among the first n vertices of verts (delegates to
+/// utils.h).
 static int count_internal_edges(const uint64_t *verts, int n) {
     return arrangement::count_internal_edges(verts, n);
 }
 
 // ── Recursive search ───────────────────────────────────────────────────────
+/// Recursively extend the partial vertex set ver[0..point) toward size R,
+/// deduplicating by graph isomorphism (nauty) or exact vertex set as
+/// appropriate, and record the best (nk1, constant) pair seen at each leaf.
+/// Returns the number of leaf evaluations performed in this subtree.
 static uint64_t solve(int point, int nodl, int largchg,
                       uint32_t overall_sym_mask, int current_nk1,
                       int current_cons) {
@@ -509,14 +531,18 @@ static uint64_t solve(int point, int nodl, int largchg,
 }
 
 // ── A000788: cumulative popcount — O(log R) ──────────────────────────
+/// Number of set bits in n.
 static uint64_t popcount_u(uint64_t n) {
     return static_cast<uint64_t>(__builtin_popcountll(n));
 }
 
+/// Bit length of n (0 for n == 0).
 static uint64_t bit_length_u(uint64_t n) {
     return n == 0 ? 0 : 64 - static_cast<uint64_t>(__builtin_clzll(n));
 }
 
+/// Cumulative binary weight sum_{i<n} popcount(i) (OEIS A000788), via radix-2
+/// recursion.
 static int64_t A000788_fn(int64_t n) {
     if (n <= 0)
         return 0;
@@ -528,6 +554,8 @@ static int64_t A000788_fn(int64_t n) {
                static_cast<int64_t>(popcount_u(static_cast<uint64_t>(m)));
 }
 
+/// The correction constant C(R) = (R-1) + sum of bit_length(1..R-1) -
+/// A000788(R).
 static int64_t constant_analytical(int64_t R_val) {
     int64_t nk1 = A000788_fn(R_val);
     int64_t L = 0;
@@ -537,6 +565,8 @@ static int64_t constant_analytical(int64_t R_val) {
 }
 
 // ── Brute-force verification — O(R³ log R) ───────────────────────────
+/// Brute-force |N(V')| for the first R vertices of verts by explicit neighbor
+/// enumeration and dedup, over an n-symbol alphabet with k-symbol vertices.
 static int64_t count_neighbors(const uint64_t *verts, int n, int k) {
     std::vector<uint64_t> sorted_verts(verts, verts + R);
     std::sort(sorted_verts.begin(), sorted_verts.end());
@@ -561,6 +591,8 @@ static int64_t count_neighbors(const uint64_t *verts, int n, int k) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
+/// CLI entry point: exhaustively search A(2R, R) for the maximum-nk1
+/// extraconnectivity constant at the given R.
 int main(int argc, const char *argv[]) {
     nauty_check(WORDSIZE, MAX_NAUTY_M, MAX_NAUTY_N, NAUTYVERSIONID);
     if (argc >= 2)

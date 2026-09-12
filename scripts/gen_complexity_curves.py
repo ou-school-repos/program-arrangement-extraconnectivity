@@ -36,6 +36,7 @@ x_model = (search_R - 2) * np.log10(search_R)
 
 
 def linear_model(x, a, b):
+    """Affine model a + b*x, used to fit log10(search time) vs. (R-2)*log10(R)."""
     return a + b * x
 
 
@@ -46,6 +47,7 @@ print(f"Search fit: log10(T) = {a_fit:.4f}" f" + {b_fit:.4f} * (R-2)*log10(R)")
 
 # ── Best fit predictor: T = c * R^3 * log(R) ────────────────
 def pred_model(r, c):
+    """Model T = c * r^3 * log(r), used to fit predictor wall-clock time vs. R."""
     return c * r**3 * np.log(r)
 
 

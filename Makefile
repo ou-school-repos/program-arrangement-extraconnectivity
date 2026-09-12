@@ -184,6 +184,7 @@ format:	##H @Dev Format C++ sources (clang-format)
 	-black $$(git ls-files '*.py')
 	-isort $$(git ls-files '*.py')
 	-pre-commit run --all-files
+	-shfmt -w $$(git ls-files '*.sh')
 	clang-format -i $(SRCS)
 	@$(call print_success,Format complete.)
 
@@ -191,9 +192,6 @@ format:	##H @Dev Format C++ sources (clang-format)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lean 4 Proofs
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-LAKE_HOME ?= $(HOME)/.cache/lake
-export LAKE_HOME
-
 .PHONY: lean
 lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
@@ -225,6 +223,7 @@ lean:	##H @Build Build Lean 4 proofs (proofs/)
 		END { if (in_decl) process_buf(); }' \
 		proofs/Arrangement/*.lean proofs/Arrangement/unstable/*.lean 2>/dev/null || true
 	@printf "\033[1;32m--------------------------------\033[0m\n"
+	cd proofs && lake env lean Arrangement/ProofAudit.lean
 	@$(call print_success,Lean proofs verified.)
 
 .PHONY: cache lean/cache _lean/cache

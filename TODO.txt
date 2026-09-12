@@ -1,3 +1,81 @@
+7/18/2026
+
+❯ commit.
+
+  give me the commands to run the sweep, and let me know what else is left analytically or paper wise
+
+  Committed 96084d5, ran 3 shell commands
+
+Committed as 96084d5. Working tree clean.
+
+Sweep commands (run in your own terminal, one at a time):
+
+  Read 1 file
+
+Analytically (Lean 4 side) — still open:
+- UniversalLowerBound — unproven and not mechanized.
+- Two standing paper conjectures remain open: Sparse Limit Upper Bound (Star
+  Graph as sparse extremizer) and Multiplicity of Achievable Defects
+  (Topological Funnel section).
+
+Paper-wise — still open:
+- The predictor sweep is confirmed through R≤160. The segmented sweep through
+  R=260, with a timing and machine record, remains pending.
+- Update any R≤260 verification claims only after that sweep completes.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The remaining live capstone hypothesis tracked in docs/lean-proof-status.md is
+UniversalLowerBound, the Lean-side stand-in for prop:universal in the paper.
+HBCrossCollisions is supplied internally by CrossTop's direct proof.
+
+Note also CollisionAdjustedBound is refuted and superseded, while
+sub_optimal_penalty is vacuously sound but depends on that false hypothesis and
+should not be advertised. The star graph directly refutes CollisionAdjustedBound;
+both have been replaced by the unconditional identities in Arrangement/PenaltyExact.lean. They are
+not live hypothesis interfaces and should not be presented as plausible open ones —
+see docs/lean-proof-status.md's "Superseded" note.
+
+---
+
+• Next highest-value work is:
+
+  1. Rebuild Lean locally with writable .lake/build
+     Run cd proofs && lake build.
+     I couldn’t complete that here because this environment hit a read-only artifact-removal failure, not a type error.
+
+  2. Re-verify the predictor range claim after the reserve fix
+     Run predict --verify-range 2 260 locally and record:
+      - whether it completes
+      - runtime
+      - machine/RAM
+        Then update docs that currently claim verification up to 260.
+
+     Partial data so far (machine: coffeelake, 31 GiB RAM, per `free -h`):
+      - `--verify-range 2 260` run to completion was NOT confirmed; the run
+        was interrupted (Ctrl-C) at R=160 after reaching R=159.
+      - Cumulative real time for R=2..159: 2m12.400s (user 1m59.432s,
+        sys 0m12.419s).
+      - Standalone spot check `--verify-range 159 160`: 9.824s real
+        (user 9.016s, sys 0.774s) for just those two R values — consistent
+        with per-R cost growing sharply near the top of the range, since
+        R^3*K*log(R) dominates as R approaches the K=256 tier ceiling.
+      - Conclusion so far: correctness confirmed for all R up to 160
+        (matches docs/verifications.csv row-for-row); the full 2..260 sweep
+        completing end-to-end with a timing/RAM record is still open.
+        Re-run in segments (2-64, 65-128, 129-192, 193-260) to get full
+        coverage without a single long-lived uninterruptible process.
+
+  3. Tighten README/paper wording around the search output block
+     The sample block is from arrangement, while the quickstart above it is run/predict.
+
+  My recommendation: do 1, then complete the segmented predictor sweep before
+  updating verification claims.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 7/16/2026
 
 All the native_decide sites compile clean now — only the pre-existing (already-known, pre-dating this session) omega gap in the driver assembly and the intentional cross_recurrence sorry remain.

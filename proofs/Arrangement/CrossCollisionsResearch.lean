@@ -14,7 +14,7 @@ This file completes the arithmetic backbone for discharging `HBCrossCollisions`:
 via the Binary Reflection Decomposition
   `HB(R) = HB(2^(d-1)) ∪ σ(HB(m))`,  `R = 2^(d-1) + m`,  `0 < m ≤ 2^(d-1)`.
 
-## Status of the four former `sorry`s
+## Completed arithmetic components
 
 1. `popcount (2^(d-1) + m') = popcount m' + 1`      — PROVEN  (`popcount_two_pow_add`)
 2. `bit_length (2^(d-1) + m') = d`                  — PROVEN  (`bit_length_two_pow_add`)
@@ -85,11 +85,11 @@ lemma C_constant_def (R : ℕ) :
 
 end Interface
 
-/-! ### §1 Popcount arithmetic — kills `sorry` #1 -/
+/-! ### §1 Popcount arithmetic -/
 
 section PopcountArith
 
-/-- **Former `sorry` #1 (generalized).**
+/-- Generalized popcount increment lemma.
     Adding `2^j` to `m < 2^j` sets one fresh bit: `popcount (2^j + m) = popcount m + 1`.
     Pure induction on `j`; no bitwise Mathlib lemmas needed, so it is robust to
     whatever `Nat.testBit` API your Mathlib pin has. -/
@@ -142,11 +142,11 @@ lemma popcount_le_bit_length (n : ℕ) : popcount n ≤ bit_length n := by
 
 end PopcountArith
 
-/-! ### §2 Size arithmetic — kills `sorry` #2 -/
+/-! ### §2 Size arithmetic -/
 
 section SizeArith
 
-/-- **Former `sorry` #2 (generalized).**
+/-- Generalized bit-length increment lemma.
     For `1 ≤ d` and `m < 2^(d-1)`, the sum `2^(d-1) + m` lies in `[2^(d-1), 2^d)`,
     hence has bit length exactly `d`. -/
 lemma bit_length_two_pow_add {d m : ℕ} (hd : 1 ≤ d) (h : m < 2 ^ (d - 1)) :
@@ -178,7 +178,7 @@ lemma E_seq_sum_decomposition (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) :
     have h_le : m' ≤ 2 ^ (d - 1) := by omega
     have h_lt : m' < 2 ^ (d - 1) := by omega
     have h_eq : 2 ^ (d - 1) + (m' + 1) = (2 ^ (d - 1) + m') + 1 := by omega
-    -- Former `sorry` #1, discharged:
+    -- Fresh-top-bit popcount identity:
     have h_pop : popcount (2 ^ (d - 1) + m') = popcount m' + 1 :=
       popcount_two_pow_add h_lt
     rw [h_eq, E_seq, E_seq, ih h_le, h_pop]
@@ -198,7 +198,7 @@ lemma sum_bit_length_sum_decomposition (d m : ℕ) (hd : 1 ≤ d)
     have h_le : m' ≤ 2 ^ (d - 1) := by omega
     have h_lt : m' < 2 ^ (d - 1) := by omega
     have h_eq : 2 ^ (d - 1) + (m' + 1) = (2 ^ (d - 1) + m') + 1 := by omega
-    -- Former `sorry` #2, discharged:
+    -- Fresh-top-bit length identity:
     have h_bit : bit_length (2 ^ (d - 1) + m') = d :=
       bit_length_two_pow_add hd h_lt
     rw [h_eq, sum_bit_length, ih h_le, h_bit]
@@ -264,7 +264,7 @@ lemma boundary_term_nonneg (j : ℕ) :
     · calc (m - 1) + sum_bit_length m ≤ m * j := ih m hsmall
         _ ≤ m * (j + 1) := Nat.mul_le_mul_left m (Nat.le_succ j)
     · -- 2^j < m ≤ 2^(j+1): split off the top half, m = 2^j + t, 1 ≤ t ≤ 2^j.
-      push_neg at hsmall
+      push Not at hsmall
       have hp : (2 : ℕ) ^ (j + 1) = 2 ^ j + 2 ^ j := by rw [pow_succ]; ring
       obtain ⟨t, rfl⟩ : ∃ t, m = 2 ^ j + t := ⟨m - 2 ^ j, by omega⟩
       have ht1 : 1 ≤ t := by omega
@@ -282,7 +282,7 @@ lemma boundary_term_nonneg (j : ℕ) :
 
 end ClosedForms
 
-/-! ### §5 The C_constant recurrence — kills `sorry` #3 -/
+/-! ### §5 The C_constant recurrence -/
 
 section CConstantRecurrence
 
@@ -305,7 +305,7 @@ lemma bit_length_one : bit_length 1 = 1 := by
 
 lemma E_seq_one : E_seq 1 = 0 := by
   have h : E_seq 1 = E_seq 0 + popcount 0 := rfl
-  simp [h, popcount_zero, E_seq]
+  simp [popcount_zero, E_seq]
 
 lemma E_seq_two : E_seq 2 = 1 := by
   have h : E_seq 2 = E_seq 1 + popcount 1 := rfl
@@ -313,7 +313,7 @@ lemma E_seq_two : E_seq 2 = 1 := by
 
 lemma sum_bit_length_one : sum_bit_length 1 = 0 := by
   have h : sum_bit_length 1 = sum_bit_length 0 + bit_length 0 := rfl
-  simp [h, bit_length_zero, sum_bit_length]
+  simp [bit_length_zero, sum_bit_length]
 
 lemma sum_bit_length_two : sum_bit_length 2 = 1 := by
   have h : sum_bit_length 2 = sum_bit_length 1 + bit_length 1 := rfl
@@ -355,7 +355,7 @@ theorem C_constant_recurrence' (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 
     rw [ext_cube, C_constant_def, C_constant_def, C_constant_def]
     omega
 
-/-- **Former `sorry` #3, discharged** — the theorem in its original drafted
+/-- The theorem in its original drafted
     shape (`let`-bound `R` and `ext_m`, no extra hypotheses; the `d = 0`
     corner turns out to hold and is handled inside `C_constant_recurrence'`). -/
 theorem C_constant_recurrence (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 < m) :
@@ -367,14 +367,14 @@ theorem C_constant_recurrence (d m : ℕ) (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 <
 
 end CConstantRecurrence
 
-/-! ### §6 Binary reflection of the ball (unchanged from the draft: sorry-free) -/
+/-! ### §6 Binary reflection of the ball -/
 
 section BinaryReflection
 
 variable {n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
 
 /-- The first half of the Hamming Ball of size R: numbers 0 .. 2^(d-1) - 1. -/
-def hb_half0 (R d n k : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Finset (ArrVertex n k) :=
+def hb_half0 (_R d n k : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Finset (ArrVertex n k) :=
   (range (2 ^ (d - 1))).image (fun i => embed_vertex n k d (nat_to_cube d i) hk hnk)
 
 /-- The second half of the Hamming Ball of size R: numbers 2^(d-1) .. R - 1. -/
@@ -382,7 +382,7 @@ def hb_half1 (R d n k : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Finset (ArrVer
   (Ico (2 ^ (d - 1)) R).image (fun i => embed_vertex n k d (nat_to_cube d i) hk hnk)
 
 /-- Decomposing the range R image into the union of the two halves. -/
-lemma hb_decomposition {R : ℕ} (hd : 2 ^ (d - 1) < R) (hr : R ≤ 2 ^ d) :
+lemma hb_decomposition {R : ℕ} (hd : 2 ^ (d - 1) < R) (_hr : R ≤ 2 ^ d) :
     hamming_ball_subset R n k d hk hnk =
     hb_half0 R d n k hk hnk ∪ hb_half1 R d n k hk hnk := by
   unfold hamming_ball_subset hb_half0 hb_half1
@@ -400,7 +400,7 @@ lemma hb_decomposition {R : ℕ} (hd : 2 ^ (d - 1) < R) (hr : R ≤ 2 ^ d) :
     · omega
 
 /-- The two halves are disjoint. -/
-lemma hb_disjoint {R : ℕ} (hd : 2 ^ (d - 1) < R) (hr : R ≤ 2 ^ d) :
+lemma hb_disjoint {R : ℕ} (_hd : 2 ^ (d - 1) < R) (_hr : R ≤ 2 ^ d) :
     Disjoint (hb_half0 R d n k hk hnk) (hb_half1 R d n k hk hnk) := by
   rw [disjoint_iff_ne]
   rintro x hx y hy rfl
@@ -434,23 +434,15 @@ lemma hb_half1_eq_image_shifted (R : ℕ) (m : ℕ) (hm : R = 2 ^ (d - 1) + m) :
 
 end BinaryReflection
 
-/-! ### §7 The corrected combinatorial recurrence and its induction driver
+/-! ### §7 `CrossBaseOne` and the singleton lemmas it needs
 
-⚠ The drafted `hb_cross_collisions_recurrence` used
-`external_neighbors (hamming_ball_subset m n k (d-1) …)` as the reflection
-term.  That quantity is `(m·k − E_seq m)·(n−k) − C_constant m` — it scales
-with the ambient graph (65 for `HB(2) ⊆ A(12,6)`), whereas the term the
-`C_constant` recurrence produces is the ambient-independent `ext_cube d m`
-(= 2 in the same example).  The corrected recurrence below,
-
-  `cross(HB R) = cross(HB 2^(d-1)) + cross(HB m) + ext_cube d m`,
-
-has been machine-checked (via `cross(t) = C(t) − E(t)`) for every
-`2 ≤ R ≤ 4096`.
-
-What follows reduces `HBCrossCollisions` for ALL `R` to three interface
-lemmas about the definitions in `ArrDefs` — everything arithmetic is proven.
--/
+The strong-induction route that used to live here (`CrossDimStable`,
+`CrossRecurrence`, `cross_step_arith`, `hb_cross_collisions_of_recurrence`,
+and the `cross_dim_stable`/`cross_recurrence`/`hb_cross_collisions`
+theorems) has moved to `Arrangement.unstable.CrossRecurrenceDriver` — it is
+superseded dead code (see that file's docstring) and `CrossTop.lean` does
+not need it. `CrossBaseOne`/`cross_base_one` stay here because
+`CrossTop.lean` still calls `cross_base_one` directly. -/
 
 section RecurrenceDriver
 
@@ -461,185 +453,6 @@ variable {n k : ℕ}
 def CrossBaseOne (n k : ℕ) : Prop :=
   ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n),
     cross_collisions (hamming_ball_subset 1 n k d hk hnk) = 0
-
-/-- INTERFACE (combinatorial): for `t ≤ 2^(d-1)`, the `d`-dimensional embedding
-    of `HB(t)` never flips coordinate `d-1`, so it coincides (as a vertex set,
-    hence in `cross_collisions`) with the `(d-1)`-dimensional embedding. -/
-def CrossDimStable (n k : ℕ) : Prop :=
-  ∀ (t d : ℕ) (ht : t ≤ 2 ^ (d - 1)) (hd : 1 ≤ d)
-    (hk : d ≤ k) (hnk : k + d ≤ n),
-    cross_collisions (hamming_ball_subset t n k d hk hnk) =
-    cross_collisions
-      (hamming_ball_subset t n k (d - 1) (by omega) (by omega))
-
-/-- INTERFACE (combinatorial, the real content): the corrected binary-reflection
-    recurrence.  Split `HB(R)` by `hb_decomposition`/`hb_disjoint`; within-half
-    collisions restrict to the halves (the lower half by `CrossDimStable`, the
-    upper half via the relabeling `σ` of `hb_half1_eq_image_shifted`, which is a
-    graph isomorphism onto `HB(m)`); the cross-half pairs `(v, σ v)` contribute
-    exactly `ext_cube d m`. -/
-def CrossRecurrence (n k : ℕ) : Prop :=
-  ∀ (R d m : ℕ) (hd : d = bit_length (R - 1)) (hR : R = 2 ^ (d - 1) + m)
-    (hm_pos : 0 < m) (hm : m ≤ 2 ^ (d - 1))
-    (hk : d ≤ k) (hnk : k + d ≤ n),
-    cross_collisions (hamming_ball_subset R n k d hk hnk) =
-      cross_collisions (hamming_ball_subset (2 ^ (d - 1)) n k d hk hnk) +
-      cross_collisions (hamming_ball_subset m n k d hk hnk) +
-      ext_cube d m
-
-/-- The arithmetic core of each induction step, fully proven.  Given the two
-    sub-instances of the target identity and the recurrence, the target
-    identity at `R = P + m` follows from `E_seq_sum_decomposition` and
-    `C_constant_recurrence'` by linear arithmetic — note the additive
-    (`cross + E = C`) phrasing keeps everything subtraction-free here. -/
-lemma cross_step_arith {d m cP cm cR : ℕ} (hm : m ≤ 2 ^ (d - 1)) (hm_pos : 0 < m)
-    (h1 : cP + E_seq (2 ^ (d - 1)) = C_constant (2 ^ (d - 1)))
-    (h2 : cm + E_seq m = C_constant m)
-    (hrec : cR = cP + cm + ext_cube d m) :
-    cR + E_seq (2 ^ (d - 1) + m) = C_constant (2 ^ (d - 1) + m) := by
-  have hE := E_seq_sum_decomposition d m hm
-  have hC := C_constant_recurrence' d m hm hm_pos
-  omega
-
-/-- **The driver.**  Strong induction on `R`: given the three interface lemmas,
-    `HBCrossCollisions` holds for every `R ≥ 1` (at its canonical dimension
-    `d = bit_length (R-1)`), with no axioms and no `sorry`.
-
-    Once `CrossBaseOne`, `CrossDimStable`, and `CrossRecurrence` are proven
-    from the definitions, the `hb_cross_collisions` hypothesis threaded through
-    `hamming_ball_eval` / `exists_optimal_embedding` /
-    `arrangement_extraconnectivity_minimum` is discharged by this theorem. -/
-theorem hb_cross_collisions_of_recurrence
-    (hbase : CrossBaseOne n k) (hstab : CrossDimStable n k)
-    (hrec : CrossRecurrence n k) :
-    ∀ (R : ℕ), 1 ≤ R →
-      ∀ (d : ℕ) (hd : d = bit_length (R - 1))
-        (hk : d ≤ k) (hnk : k + d ≤ n),
-        HBCrossCollisions R n k d hk hnk := by
-  intro R
-  induction R using Nat.strong_induction_on with
-  | _ R ih =>
-    intro hR1 d hd hk hnk
-    unfold HBCrossCollisions
-    rcases Nat.lt_or_ge R 2 with hR2 | hR2
-    · -- R = 1: d = bit_length 0 = Nat.size 0 = 0; base case + tiny computation.
-      have hR : R = 1 := by omega
-      subst hR
-      have hd0 : d = 0 := by
-        rw [hd, bit_length_eq_size]
-        simpa using Nat.size_zero
-      subst hd0
-      have hb := hbase 0 hk hnk
-      have hE1 : E_seq 1 = 0 := E_seq_one
-      have hC1 : C_constant 1 = 0 := C_constant_one
-      omega
-    · -- R ≥ 2: split R = 2^(d-1) + m with 1 ≤ m ≤ 2^(d-1), recurse on both halves.
-      have hdsize : d = Nat.size (R - 1) := by rw [hd, bit_length_eq_size]
-      have hd1 : 1 ≤ d := by
-        rw [hdsize]
-        have : (0 : ℕ) < Nat.size (R - 1) := Nat.size_pos.mpr (by omega)
-        omega
-      -- 2^(d-1) ≤ R - 1 < 2^d  from the size characterization.
-      have hup : R - 1 < 2 ^ d := by
-        rw [hdsize]; exact Nat.lt_size_self (R - 1)
-      have hlow : 2 ^ (d - 1) ≤ R - 1 := by
-        have : d - 1 < Nat.size (R - 1) := by omega
-        rw [hdsize] at this ⊢
-        exact Nat.lt_size.mp (by omega)
-      have hpow : (2 : ℕ) ^ d = 2 ^ (d - 1) + 2 ^ (d - 1) := by
-        conv_lhs => rw [← Nat.sub_add_cancel hd1]
-        rw [pow_succ]; ring
-      set m := R - 2 ^ (d - 1) with hm_def
-      have hR_eq : R = 2 ^ (d - 1) + m := by omega
-      have hm_pos : 0 < m := by omega
-      have hm_le : m ≤ 2 ^ (d - 1) := by omega
-      have hPpos : 0 < 2 ^ (d - 1) := Nat.two_pow_pos _
-      -- Induction hypothesis at the power-of-two half P = 2^(d-1),
-      -- whose canonical dimension is d - 1.
-      have hdP : d - 1 = bit_length (2 ^ (d - 1) - 1) := by
-        rw [bit_length_eq_size]
-        rcases Nat.eq_or_lt_of_le hd1 with h1 | h1
-        · -- d = 1: P = 1, size 0 = 0 = d - 1.
-          rw [← h1]; simpa using Nat.size_zero.symm
-        · -- d ≥ 2: 2^(d-2) ≤ 2^(d-1) - 1 < 2^(d-1).
-          have hup' : 2 ^ (d - 1) - 1 < 2 ^ (d - 1) := by omega
-          have hpow' : (2 : ℕ) ^ (d - 1) = 2 ^ (d - 2) + 2 ^ (d - 2) := by
-            conv_lhs => rw [show d - 1 = (d - 2) + 1 by omega]
-            rw [pow_succ]; ring
-          have hlow' : 2 ^ (d - 2) ≤ 2 ^ (d - 1) - 1 := by
-            have := Nat.two_pow_pos (d - 2); omega
-          have hs1 : Nat.size (2 ^ (d - 1) - 1) ≤ d - 1 :=
-            Nat.size_le.mpr hup'
-          have hs2 : d - 2 < Nat.size (2 ^ (d - 1) - 1) :=
-            Nat.lt_size.mpr hlow'
-          omega
-      have hIH_P : HBCrossCollisions (2 ^ (d - 1)) n k (d - 1)
-          (by omega) (by omega) :=
-        ih (2 ^ (d - 1)) (by omega) hPpos (d - 1) hdP (by omega) (by omega)
-      -- Induction hypothesis at the reflected half m, at ITS canonical
-      -- dimension d' = bit_length (m - 1) ≤ d - 1.
-      have hdm_le : bit_length (m - 1) ≤ d - 1 := by
-        rw [bit_length_eq_size]
-        exact Nat.size_le.mpr (by omega)
-      have hIH_m : HBCrossCollisions m n k (bit_length (m - 1))
-          (by omega) (by omega) :=
-        ih m (by omega) hm_pos (bit_length (m - 1)) rfl (by omega) (by omega)
-      -- Lift both to ambient dimension d via CrossDimStable (iterated for m).
-      -- The stability interface transports cross_collisions across ambient
-      -- dimensions; combined with the recurrence and cross_step_arith the
-      -- goal closes.
-      have hstab_P :
-          cross_collisions (hamming_ball_subset (2 ^ (d - 1)) n k d hk hnk) =
-          cross_collisions (hamming_ball_subset (2 ^ (d - 1)) n k (d - 1)
-            (by omega) (by omega)) :=
-        hstab (2 ^ (d - 1)) d (by omega) hd1 hk hnk
-      have hstab_m :
-          cross_collisions (hamming_ball_subset m n k d hk hnk) =
-          cross_collisions (hamming_ball_subset m n k (bit_length (m - 1))
-            (by omega) (by omega)) := by
-        -- Descend one ambient dimension at a time from d to bit_length (m-1),
-        -- using m ≤ 2^(j-1) at every intermediate j > bit_length (m-1):
-        -- m - 1 < 2^(bit_length (m-1)) ≤ 2^(j-1).
-        clear hIH_P hIH_m hstab_P
-        have hkey : ∀ j, bit_length (m - 1) + j ≤ d →
-            ∀ (hkj : bit_length (m - 1) + j ≤ k)
-              (hnkj : k + (bit_length (m - 1) + j) ≤ n),
-            cross_collisions
-              (hamming_ball_subset m n k (bit_length (m - 1) + j) hkj hnkj) =
-            cross_collisions (hamming_ball_subset m n k (bit_length (m - 1))
-              (by omega) (by omega)) := by
-          intro j
-          induction j with
-          | zero => intro _ _ _; rfl
-          | succ j ihj =>
-            intro hle hkj hnkj
-            have hm_small : m ≤ 2 ^ (bit_length (m - 1) + j) := by
-              have h1 : m - 1 < 2 ^ bit_length (m - 1) := by
-                rw [bit_length_eq_size]; exact Nat.lt_size_self (m - 1)
-              have h2 : (2 : ℕ) ^ bit_length (m - 1)
-                  ≤ 2 ^ (bit_length (m - 1) + j) :=
-                Nat.pow_le_pow_right (by omega) (by omega)
-              omega
-            have hstep := hstab m (bit_length (m - 1) + j + 1)
-              (by simpa using hm_small) (by omega) hkj hnkj
-            have := ihj (by omega) (by omega) (by omega)
-            simp only [show bit_length (m - 1) + j + 1 - 1
-              = bit_length (m - 1) + j by omega] at hstep
-            show cross_collisions
-                (hamming_ball_subset m n k (bit_length (m - 1) + j + 1) hkj hnkj) =
-              cross_collisions (hamming_ball_subset m n k (bit_length (m - 1))
-                (by omega) (by omega))
-            omega
-        have := hkey (d - bit_length (m - 1)) (by omega)
-          (by omega) (by omega)
-        simpa [show bit_length (m - 1) + (d - bit_length (m - 1)) = d
-          by omega] using this
-      -- Assemble: recurrence + lifted IHs + arithmetic core.
-      have hrec' := hrec R d m hd hR_eq hm_pos hm_le hk hnk
-      unfold HBCrossCollisions at hIH_P hIH_m
-      rw [hR_eq]
-      exact cross_step_arith hm_le hm_pos
-        (by omega) (by omega) (by omega)
 
 end RecurrenceDriver
 
@@ -670,8 +483,7 @@ private lemma arr_adjacent_of_drop_pos_eq_of_ne {v w : ArrVertex n k} {p : Fin k
     have hq : q ≠ p := by exact hpq
     have h_eval := congr_fun hdrop ⟨q, hq⟩
     exact hne_q h_eval.symm
-  · intro hqp
-    intro heq
+  · intro hqp heq
     apply hne
     apply Subtype.ext
     funext q'
@@ -695,7 +507,7 @@ private lemma coord_boundary_singleton_subset_external {v : ArrVertex n k} (p : 
   refine ⟨Finset.mem_univ _, hw_not, v, Finset.mem_singleton_self v, ?_⟩
   exact arr_adjacent_of_drop_pos_eq_of_ne (by
     intro h
-    exact hw_not (by simpa [h])) hdrop
+    exact hw_not (by simp [h])) hdrop
 
 private lemma coord_boundary_singleton_disjoint {v : ArrVertex n k} :
     ((Finset.univ : Finset (Fin k)) : Set (Fin k)).PairwiseDisjoint
@@ -745,53 +557,6 @@ theorem cross_base_one : CrossBaseOne n k := by
   intro d hk hnk
   rw [hamming_ball_subset_one_eq_singleton d hk hnk]
   exact cross_collisions_singleton _
-
-/-- PROVEN: for `t ≤ 2^(d-1)`, the extra fresh coordinate `d-1` is never used by the
-    Hamming ball of size `t` (bit `d-1` of every `i < t` is `0`), so the two
-    `hamming_ball_subset` Finsets are literally equal, hence so are their
-    `cross_collisions`. -/
-theorem cross_dim_stable : CrossDimStable n k := by
-  intro t d ht hd hk hnk
-  have hk' : d - 1 ≤ k := by omega
-  have hnk' : k + (d - 1) ≤ n := by omega
-  have hset : hamming_ball_subset t n k d hk hnk =
-      hamming_ball_subset t n k (d - 1) hk' hnk' := by
-    unfold hamming_ball_subset
-    apply Finset.image_congr
-    intro i hi
-    rw [Finset.mem_coe, Finset.mem_range] at hi
-    have hi' : i < 2 ^ (d - 1) := lt_of_lt_of_le hi ht
-    apply Subtype.ext
-    funext p
-    unfold embed_vertex embed_cube nat_to_cube
-    by_cases hp1 : p.val < d - 1
-    · have hp1' : p.val < d := by omega
-      simp only [hp1, hp1', dif_pos]
-    · by_cases hp2 : p.val < d
-      · have hpeq : p.val = d - 1 := by omega
-        have htb : i.testBit p.val = false := by
-          rw [hpeq]; exact Nat.testBit_eq_false_of_lt hi'
-        simp [hp1, hp2, htb]
-      · simp [hp1, hp2]
-  rw [hset]
-
-/-- TODO(review): Binary-reflection recurrence for `cross_collisions`. `CrossRecurrence`
-    is the genuine remaining combinatorial content of this file; see the module
-    docstring above for the corrected recurrence statement and numerical validation,
-    and `docs/collision-axiom-roadmap.md` / `advisor_bundle/` for the current proof plan
-    (including the open circularity concern between this interface and the strong-
-    induction driver, which should be resolved before investing further here). -/
-theorem cross_recurrence : CrossRecurrence n k := by
-  intro R d m hd hR hm_pos hm hk hnk
-  sorry
-
-/-- The final step: proving HBCrossCollisions unconditionally from the three interface
-    theorems. Two of three (`CrossBaseOne`, `CrossDimStable`) are proven; `CrossRecurrence`
-    remains open, so this theorem is not yet axiom/sorry-free. -/
-theorem hb_cross_collisions (R : ℕ) (hR1 : 1 ≤ R) (d : ℕ) (hd : d = bit_length (R - 1))
-    (hk : d ≤ k) (hnk : k + d ≤ n) :
-    HBCrossCollisions R n k d hk hnk :=
-  hb_cross_collisions_of_recurrence cross_base_one cross_dim_stable cross_recurrence R hR1 d hd hk hnk
 
 end InterfaceProofs
 
