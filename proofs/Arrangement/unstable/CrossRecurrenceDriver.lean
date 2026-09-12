@@ -1,6 +1,6 @@
 import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
-import Arrangement.CrossCollisionsResearch
+import Arrangement.CrossTop
 
 open Finset
 
@@ -18,6 +18,9 @@ its correction term `ext_cube d m` is essentially the `m`-scale instance of
 the very goal being proven, so a direct proof would have to re-derive
 `HBCrossCollisions` at `m` independently — see `CrossTop.lean`'s own module
 docstring ("Why this file exists (the circularity in `CrossRecurrence`)")
+
+This file now imports CrossTop for the utility lemmas it needs
+(popcount, bit_length, E_seq, CrossBaseOne, etc.)
 for the full argument. `cross_recurrence` remains unresolved for that reason;
 closing it is a research-scale undertaking, not missing tactic work,
 and is not required for `HBCrossCollisions` (proven elsewhere).
