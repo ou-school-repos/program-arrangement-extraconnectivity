@@ -17,6 +17,7 @@ lean_lib «Proofs» where
     `Arrangement.ArrangementExtraconnectivity,
     `Arrangement.PenaltyExact,
     `Arrangement.CrossTop,
+    `Arrangement.CapacityBoundExamples,
     `Arrangement.unstable.ArrangementGraphUtils,
     `Arrangement.unstable.SupportProjection
   ]

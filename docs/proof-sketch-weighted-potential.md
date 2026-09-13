@@ -846,6 +846,15 @@ this up next; the first attempt at stating it (this section, initial
 version) undercounted the problem's own difficulty, which is itself
 worth remembering before trusting the next draft of it either.
 
+The two concrete examples above (the channel-1 `m-1` identity and the
+channel-2 independent-gating example) are mechanically checked, not
+just re-verified in Python twice, in
+`proofs/Arrangement/CapacityBoundExamples.lean` (`lake build
+Arrangement.CapacityBoundExamples`, no `sorry`). That file does not
+attempt the open aggregation bound itself — it only pins down, at the
+kernel level, the two facts any future attempt at that bound has to
+remain consistent with.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
