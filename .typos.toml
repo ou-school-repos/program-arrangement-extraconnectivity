@@ -6,6 +6,9 @@ fonction = "fonction"
 normale = "normale"
 thm = "thm"
 
+[type.cpp.extend-words]
+ba = "ba"
+
 [type.lean.extend-words]
 hpe = "hpe"
 hge = "hge"

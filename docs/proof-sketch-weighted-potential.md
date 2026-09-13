@@ -996,39 +996,39 @@ The "margin widens as sizes grow" conclusion drawn from this table does
 **Corrected table**, extended to 17 cells (`src/check_amortized_slack.cpp`):
 
 | cell (n,k,c_a,c_b) | Delta | max(I+B_ba+B_ab−Delta) found |
-| ------------------ | ----- | ----------------------------- |
-| (5,3,1,1)          | 3     | 0                              |
-| (5,3,2,2)          | 6     | 0                              |
-| (5,3,1,2)          | 4     | 0                              |
-| (5,3,1,3)          | 5     | 0                              |
-| (6,3,1,1)          | 4     | 0                              |
-| (6,3,2,2)          | 8     | 0                              |
-| (6,3,1,2)          | 5     | 0                              |
-| (5,3,3,3)          | 9     | −2                             |
-| (5,3,4,4)          | 12    | −6                             |
-| (6,3,3,3)          | 12    | 0                              |
-| (6,3,3,4)          | 13    | 0                              |
-| (6,3,4,4)          | 16    | 0                              |
-| (7,3,4,4)          | 20    | 0                              |
-| (6,3,2,3)          | 9     | 0                              |
-| (6,3,4,5)          | 17    | −5                             |
-| (6,3,5,5)          | 20    | −8                             |
-| (7,3,3,3)          | 15    | 0                              |
+| ------------------ | ----- | ---------------------------- |
+| (5,3,1,1)          | 3     | 0                            |
+| (5,3,2,2)          | 6     | 0                            |
+| (5,3,1,2)          | 4     | 0                            |
+| (5,3,1,3)          | 5     | 0                            |
+| (6,3,1,1)          | 4     | 0                            |
+| (6,3,2,2)          | 8     | 0                            |
+| (6,3,1,2)          | 5     | 0                            |
+| (5,3,3,3)          | 9     | −2                           |
+| (5,3,4,4)          | 12    | −6                           |
+| (6,3,3,3)          | 12    | 0                            |
+| (6,3,3,4)          | 13    | 0                            |
+| (6,3,4,4)          | 16    | 0                            |
+| (7,3,4,4)          | 20    | 0                            |
+| (6,3,2,3)          | 9     | 0                            |
+| (6,3,4,5)          | 17    | −5                           |
+| (6,3,5,5)          | 20    | −8                           |
+| (7,3,3,3)          | 15    | 0                            |
 
 **This is a materially different picture than the first pass, not just
 a smaller margin.** The corrected quantity hits the bound **exactly**
 (margin 0, i.e. S(V')=0 exactly at that split) in 13 of 17 cells — the
-inequality is *tight*, not comfortably loose. Zero violations
+inequality is _tight_, not comfortably loose. Zero violations
 (margin > 0) found anywhere. Equality that consistent is usually
 explained by a clean bijective/counting argument, not a slack
 inequality with room in it — and the 4 negative cells now pin down
 exactly when that argument would have to break:
 
 **Sharp pattern found, 17/17 cells, zero exceptions:** margin = 0 iff
-`n−k ≥ ⌈log₂(c_a+c_b)⌉` — i.e. iff the *combined* size R = c_a+c_b is
+`n−k ≥ ⌈log₂(c_a+c_b)⌉` — i.e. iff the combined size (`R = c_a+c_b`) is
 itself small enough for a Hamming ball to embed in A(n,k) — and margin
 < 0 iff `n−k < ⌈log₂ R⌉`. This holds regardless of whether the
-*individual* fibers c_a, c_b are themselves at, below, or above their
+individual fibers (`c_a`, `c_b`) are themselves at, below, or above their
 own marginal embedding size: (6,3,4,5) has c_a=4 comfortably
 non-marginal (⌈log₂4⌉=2<3=n−k) and c_b=5 exactly marginal
 (⌈log₂5⌉=3=n−k), yet still goes negative (−5), because R=9 needs
@@ -1050,9 +1050,9 @@ analytically yet; this is 17 data points and a pattern, not a proof.
 
 margin=0 at (1,1) is not a coincidence to explain away: it is exactly
 the R=2 case (an adjacent pair achieving rhs(2) exactly, S(V')=0 by
-Proposition~hb-eval), reappearing correctly once B_ba/B_ab are counted.
-The very first version of this corrected tool flagged margin=0 as
-"*** CRITICAL-CASE VIOLATION ***" — a real bug (wrong inequality
+the Hamming Ball Evaluation proposition), reappearing correctly once
+`B_ba`/`B_ab` are counted. The very first version of this corrected
+tool flagged margin=0 as `CRITICAL-CASE VIOLATION` — a real bug (wrong inequality
 direction: equality is not a violation of `S(V') ≥ 0`), caught and
 fixed before any of the numbers above were trusted.
 
