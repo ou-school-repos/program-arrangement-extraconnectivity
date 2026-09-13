@@ -262,17 +262,52 @@ change Δ Φ = ΔX + (m+1)ΔD when v is added back.
    where Δ E_seq(R) = popcount(R−1) (from the defining recurrence of
    E_seq) and ΔC(R) is the corresponding marginal change in C_constant.
 
-4. **Open obstacle.** The proof needs a bound on ΔX purely as a function
-   of s (and m), independent of which specific roots are shared. In the
-   hypercube-embedded (binary) case this is close to what the Fracture
-   Gap analysis (`Theorem~\ref{thm:fracture}`) already computes for
-   single-vertex removal from Q_d; whether that computation generalizes
-   to arbitrary partial layers and to the full n-ary alphabet (not just
-   the embedded hypercube) is unresolved. **This step has not been
-   attempted.**
+4. **Partial result on ΔX (2026-09-12, derived and hand-checked, not yet
+   Lean-formalized).** Write `total_coord_edges` for the quantity
+   `Σ_w bd_mult V' w` over external w. Since each of the U used roots at
+   a coordinate contributes (m+1) minus its own occupancy, and occupancies
+   sum to Rk, `total_coord_edges = U(m+1) − Rk`; combined with the proved
+   fiber identity `|∂V'| = Um − D − X` (using U = Rk − D), this gives
+   `total_coord_edges = |∂V'| + X`, i.e. **X = total_coord_edges − |∂V'|**.
+
+   Adding v with s shared roots: ΔU = k−s, ΔR = 1, so
+   `Δ(total_coord_edges) = (k−s)(m+1) − k = (k−s)m − s`. Separately,
+   Δ|∂V'| ≥ −[s>0] (the only way the boundary can shrink is v itself
+   dropping out of it, which requires s>0, and by at most 1 — every other
+   effect of adding v can only add new external vertices). Substituting:
+
+   ```
+   ΔX = Δ(total_coord_edges) − Δ|∂V'| ≤ (k−s)m         (all s, since the
+                                                          s=0 and s>0 cases
+                                                          both reduce to this)
+   ```
+
+   This matches the maximal ΔX = km observed in the s=0 double-clique
+   stress test in A(6,2) (R: 8→9, k=2, m=4, ΔX=8=km exactly), so the bound
+   is tight, not just an upper estimate.
+
+   A second, dimension-independent cap: only vertices of V'\{v} at Hamming
+   distance exactly 2 from v can border one of v's fresh-root fibers, and
+   each such vertex differs from v in exactly 2 coordinates, so it can
+   border at most 2 fresh fibers. With N₂ = #{u ∈ V'\{v} : d(u,v)=2} ≤ R−1,
+   this gives ΔX ≤ 2(R−1) independent of k and m. **The "exactly 2"
+   claim above needs a more careful check** — a distance-2 vertex's second
+   differing coordinate could in principle coincide with a _shared_ root's
+   coordinate rather than a fresh one, which would need ruling out before
+   this half is treated as proved.
+
+   **What remains.** The bound ΔX ≤ (k−s)m only closes the induction if
+   `(k−s)m ≤ Δ C(R) + m·Δ E_seq(R) − (m+1)s` for all valid s, i.e. if
+   `(k−s)m + (m+1)s ≤ ΔC(R) + m·popcount(R−1)`, i.e.
+   `km + s ≤ ΔC(R) + m·popcount(R−1)`. This must hold uniformly in s up to
+   k, which is the actual remaining obstacle — the ΔX bound above is now
+   solid, but plugging it into the target inequality has not yet been
+   checked against ΔC(R)'s actual formula.
 
 This approach's main appeal is that steps 1–2 reuse verified machinery
-directly; its main open question is entirely contained in step 4.
+directly; the ΔX bound in step 4 is now a checked derivation rather than
+an open guess, but closing the induction still requires reconciling it
+against ΔC(R) for all s, which has not been done.
 
 ### Strategy 2 sketch: Global Lyapunov function on fiber multisets
 
