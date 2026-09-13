@@ -226,32 +226,44 @@ Neither result rules out a more sophisticated version of either tool
 higher-order constraints), but no such candidate has been proposed.
 
 \paragraph{The open problem, restated as a capacity/pigeonhole
-aggregation bound.} Writing out the exact per-pair condition for a
-cross-boundary target to exist clarifies what remains without closing
-it. For $u\in F_a$ ($u_p=\alpha$), $v\in F_b$ ($v_p=\beta$), agreeing
-everywhere except $p$ and one other coordinate $q$ (the only case that
-can contribute --- distance $\ge3$ gives nothing, distance $1$ gives
-$\Delta X=0$, proved earlier): the candidate cross-vertex $w$ (obtained
-by swapping $u$'s value at $p$ to $\beta$) is a valid, distinct boundary
-point \emph{iff} $\beta\ne u_q$ (symmetrically, the other candidate
-exists iff $\alpha\ne v_q$). This is a pure local injectivity check ---
-$m$ does not appear in it; it is exactly what $\mathrm{bd\_mult}$ was
-already computing in every $k=3$/$k=5$ example above, so writing it out
-adds no independent leverage by itself.
+aggregation bound (corrected).} An initial version of this paragraph
+claimed only distance-2 pairs between $F_a$ and $F_b$ contribute shared
+external neighbors, citing the $\Delta X=0$-at-adjacency lemma to
+dismiss distance-1 pairs. That was a category error: the lemma concerns
+a different setting (single-vertex marginal peeling, not two fixed
+disjoint fibers) and is false here --- checked directly in $A(6,3)$,
+$F_a=\{(0,1,2)\}$, $F_b=\{(3,1,2)\}$ (distance-1, sharing a root at
+$p=0$) gives $|\partial F_a\cap\partial F_b|=2=m-1$, nonzero.
 
-$m$ enters one level up, as a capacity constraint on \emph{aggregation}
-rather than on any single pair: each vertex has exactly $m$ missing
-symbols, and spreading many pairs' targets across distinct
-$q$-coordinates (to avoid $k=3$-style collapse) must draw fresh,
-non-colliding symbols from those $m$-sized pools --- too few, and pairs
-either violate the local inequality above or collapse onto shared
-targets, the same mechanism observed, not proved, in the $k=5$
-construction earlier. The remaining open problem, precisely: translate
-``each vertex has $m$ missing symbols'' into a hard ceiling on the
-number of distinct cross-boundary targets two fibers of size $c_a,c_b$
-can jointly generate, as a function of $(c_a,c_b,m)$ alone, aggregated
-over all pairs. No such bound has been derived or attempted. This is
-the cleanest surviving open question after this document's testing:
-everything upstream of it ($\Phi$, entropy, the naive LP) carries no
-independent information, and everything downstream of it (the
-induction skeletons meant to consume it) is refuted in naive form.
+The corrected picture has two channels. \textbf{Channel 1 (distance-1,
+root-sharing), genuinely $m$-linear:} if $u\in F_a,v\in F_b$ share a
+root at $p$, every extension not already used is a shared external
+neighbor: exactly $m+1-|\{u_p,v_p\}|=m-1$ of them (generally
+$m+1-|A_r\cup B_r|$ for larger co-occupying groups). This is the only
+channel whose count is literally linear in $m$; it vanishes correctly
+at $m=1$. \textbf{Channel 2 (distance-2, midpoint), gated but
+$m$-free per pair:} for $u,v$ differing at $p$ and one other coordinate
+$q$, the candidate $w$ (swapping $u$'s value at $p$ to $\beta=v_p$) is
+valid \emph{iff} $\beta\ne u_q$, and the mirrored candidate iff
+$\alpha\ne v_q$ --- \emph{two independent conditions}, verified
+directly: $A(5,3)$, $u=(0,1,3)$, $v=(1,2,3)$ has $\beta=1=u_q$ (first
+candidate invalid) but $\alpha=0\ne v_q=2$ (second valid), giving
+exactly one shared neighbor, not zero or two. $m$ does not enter this
+per-pair condition.
+
+Finally, the aggregation is not pair-disjoint: distinct pairs can
+generate the same target, the same $k=3$ collapse mechanism established
+elsewhere in this appendix, so the per-pair sum over channel 2 is only
+an upper bound, not an exact count. The open problem, correctly scoped:
+bound $|\partial F_a\cap\partial F_b|$ from $(c_a,c_b,m)$ alone, as the
+union of both channels adjusted for their mutual overcounting --- not
+simply ``sum a 0--2 count over distance-2 pairs,'' which both
+undercounts (omitting channel 1) and overcounts (ignoring collisions)
+simultaneously. No such bound has been derived or attempted. $m$ enters
+through two distinct, now-identified mechanisms: root-sharing capacity
+(channel 1) and cross-pair symbol supply for spreading (channel 2, via
+the unproven collapse/spread trade-off); a correct bound must account
+for both and their interaction. This remains the cleanest surviving
+open question after this appendix's testing, and its own first draft
+undercounting the problem's difficulty is worth remembering when
+reading the next attempt at it too.

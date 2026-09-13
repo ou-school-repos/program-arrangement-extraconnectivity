@@ -781,41 +781,70 @@ than an hour of hand algebra would have taken and for a more decisive
 reason than the a priori staircase-vs-smooth risk. Neither result rules
 out a more sophisticated version of either tool; none has been proposed.
 
-### The open problem, restated as a capacity/pigeonhole aggregation bound (2026-09-13)
+### The open problem, restated as a capacity/pigeonhole aggregation bound (2026-09-13, corrected)
 
-Writing out the exact per-pair condition for a cross-boundary target to
-exist clarifies what remains, without closing it. For u∈F_a (u_p=α),
-v∈F_b (v_p=β), agreeing everywhere except p and one other coordinate q
-(the only case that can contribute — distance ≥3 gives nothing,
-distance 1 gives ΔX=0, proved earlier): the candidate cross-vertex
-w = u with position p swapped to β is a valid, distinct boundary point
-**iff β ≠ u_q** (symmetrically, the other candidate exists iff
-α ≠ v_q). This is a pure local injectivity check — **m does not appear
-in it**. It is exactly what `bd_mult` was already computing in every
-k=3/k=5 example above; writing it out adds no new leverage by itself.
+**Correction to this section, caught immediately after first writing
+it:** the original version of this section claimed only distance-2
+pairs between F_a and F_b contribute to shared external neighbors,
+citing the earlier-proved "ΔX=0 at adjacency" lemma to dismiss
+distance-1 pairs. That citation was a category error: the ΔX=0 lemma
+is about a different setting (single-vertex marginal peeling, Strategy
+3 — the change in X when adding one vertex to an existing set), not
+about two fixed, disjoint fibers sharing external neighbors. Checked
+directly and found false: A(6,3), F_a={(0,1,2)}, F_b={(3,1,2)} (a
+distance-1 pair, sharing a root at p=0) gives eb(F_a)∩eb(F_b) =
+{(4,1,2),(5,1,2)}, size 2 — nonzero, and exactly m−1 (m=3 here). This
+is a real, independent channel this section's first draft omitted
+entirely.
 
-m enters one level up, as a capacity constraint on _aggregation_, not
-on any single pair: each vertex has exactly m missing symbols, and a
-construction attempting to spread many pairs' targets across distinct
-q-coordinates (to avoid the k=3-style collapse) must draw fresh,
-non-colliding symbols from those m-sized pools. If m is too small to
-supply enough distinct symbols, pairs are forced either to violate the
-local inequality above (destroying that boundary point) or to collide
-on the same target (collapsing it) — this is the same mechanism
-observed, not proved, in the k=5 construction earlier in this section.
+**The corrected per-pair picture has two channels, not one:**
 
-**The remaining open problem, precisely:** translate "each vertex has m
-missing symbols" into a hard ceiling on the number of distinct
-cross-boundary targets that two fibers of size c_a, c_b can jointly
-generate, as a function of (c_a, c_b, m) alone — aggregated over all
-pairs, not per-pair. The per-pair condition above is necessary
-groundwork for that bound but does not by itself supply it; no such
-aggregate bound has been derived or attempted. This is the cleanest
-surviving open question after tonight's testing: everything upstream of
-it (Φ, entropy, the naive LP) has been shown to carry no independent
-information, and everything downstream of it (the induction skeletons
-built to use it) has been refuted in naive form. This exact capacity
-bound is the trailhead for whoever picks this up next.
+1. **Distance-1 (root-sharing) channel — genuinely m-linear.** If
+   u∈F*a, v∈F_b share a root at the partition coordinate p (agree
+   everywhere except p), every extension (r, γ) with γ not already
+   used by u or v is a shared external neighbor: exactly
+   m+1−|{u_p,v_p}| = m−1 of them (generalizing to c_a,c_b>1 sharing one
+   root: m+1−|A_r∪B_r| where A_r,B_r are the symbols already used at p
+   by members of F_a,F_b sharing that root). This is the \_only* channel
+   whose count is literally linear in m, verified at m=1 (A(4,3)) where
+   it correctly vanishes (m−1=0).
+
+2. **Distance-2 (midpoint) channel — gated, but m-free per pair.** For
+   u∈F_a, v∈F_b differing at p and exactly one other coordinate q, the
+   candidate cross-vertex w = u with position p swapped to β=v_p is a
+   valid, distinct boundary point **iff β≠u_q**; symmetrically the
+   other candidate exists iff α≠v_q. **These are two independent
+   conditions, not one** — verified directly: A(5,3), u=(0,1,3),
+   v=(1,2,3) (distance 2, p=0, q=1) has β=1=u_q (first candidate
+   invalid) but α=0≠v_q=2 (second candidate valid), giving
+   eb(u)∩eb(v) = {(0,2,3)}, size exactly 1 — confirming the two gates
+   fire independently, not together. Each pair contributes 0, 1, or 2,
+   and m does not appear in the per-pair condition itself (this part of
+   the original section was correct).
+
+**And the aggregation is not pair-disjoint — the per-pair sum is only
+an upper bound**, not an exact count: distinct (u,v) pairs can generate
+the _same_ target w, exactly the k=3 collapse mechanism already
+established elsewhere in this document. So the true shared-boundary
+count I = eb(F_a)∩eb(F_b) is bounded above by (channel 1 total) +
+(channel 2 pair-sum), with equality failing whenever two pairs collide
+on a target — which is precisely the phenomenon the capacity bound
+needs to control, not a side issue.
+
+**The remaining open problem, precisely, and now correctly scoped:**
+bound |I| = |eb(F*a)∩eb(F_b)| from (c_a, c_b, m) alone, where I is the
+union of \_both* channels above, adjusted for their mutual overcounting.
+This is strictly harder than "sum a 0–2 count over distance-2 pairs" —
+that undercounts (by omitting channel 1) and overcounts (by ignoring
+collisions) at the same time. No such bound has been derived or
+attempted. m enters through two distinct mechanisms now identified —
+root-sharing capacity (channel 1, directly linear) and cross-pair
+symbol supply for spreading (channel 2, only via the aggregate
+collapse/spread trade-off) — and any correct bound has to account for
+both plus their interaction. This is the trailhead for whoever picks
+this up next; the first attempt at stating it (this section, initial
+version) undercounted the problem's own difficulty, which is itself
+worth remembering before trusting the next draft of it either.
 
 ## Status
 
