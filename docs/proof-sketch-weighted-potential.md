@@ -618,31 +618,86 @@ one open, concretely-scoped question:
    `run 6 4 2`, `run 6 4 3`), so a hand-built subset there is guaranteed
    to satisfy the inequality trivially and tests nothing new.
 
-**Status: open, not resolved either way.** Point 7 rules out one
-entire class of future experiments (anything phrased as "push X_cross
-up while keeping m/k favorable") as vacuous, since X and |∂V| are not
-independently controllable. The remaining non-vacuous form of the
-question, in boundary language rather than through X and D: **how many
-of F_a's external neighbors get absorbed (cease to be external) when
-F_b is unioned in?** That count is a genuine, non-tautological
-quantity with the same meaning at every (n,k), and bounding it from
-fiber sizes and m alone — not bounding X_cross directly — is what
-would actually close Strategy 3b's recombination step.
+8. **The naive per-split induction is refuted outright (2026-09-13,
+   independently verified).** An exhaustive sweep of all coordinate
+   2-way splits of every V' in A(5,3) up to R=4 found 810 splits (out of
+   4,074,840 checked) where the recombination penalty S exceeds the
+   per-split slack bound m·ΔE(R)+ΔC(R). The worst case found:
+   V' = {(0,1,2),(0,2,1),(0,3,4),(0,4,3)} in A(5,3) (n=5,k=3,m=2,R=4),
+   split into F_a={(0,1,2),(0,2,1)}, F_b={(0,3,4),(0,4,3)} — two
+   "swap pairs" on disjoint symbol sets, both sharing root (0,·,·)-type
+   structure. Independently recomputed with `boundary_metrics` from
+   `scripts/check_universal_lower_bound.py`:
+
+   ```
+   |∂F_a| = |∂F_b| = 12, D=X=0 in both fibers (each is internally clean)
+   |∂V'| = 16, D(V')=0, X(V')=8
+   S = |∂F_a| + |∂F_b| - |∂V'| = 12 + 12 - 16 = 8
+   dE = E(4)-E(2)-E(2) = 2, dC = C(4)-C(2)-C(2) = 2
+   bound = m·dE + dC = 2·2 + 2 = 6
+   ```
+
+   **S=8 > bound=6 — deficit 2.** Confirmed S is _entirely_ cross-target
+   collision (X_cross=8, ΔD_cross=0) via direct decomposition:
+   `∂F_a ∩ B = ∅`, `∂F_b ∩ A = ∅`, and the 8 shared external targets
+   `I = ∂F_a ∩ ∂F_b` account for all of S (0+0+8=8) — the first example
+   in this document where X_cross, not ΔD_cross, is the deficit's entire
+   source. The global inequality still holds only because each fiber
+   individually has slack: |∂F_a|-rhs(F_a) = 12-9 = 3 and likewise for
+   F_b, totaling 6, which absorbs the 2-unit per-split deficit with 4 to
+   spare (global: |∂V'|=16 ≥ rhs(V')=12, confirmed).
+
+   **This is the direct analogue of Strategy 3's refutation, for the
+   partition skeleton rather than the single-vertex-peeling skeleton:**
+   the naive induction "sum the two fiber bounds, subtract the
+   recombination penalty, compare to the target" does not close
+   step-by-step, exactly as the marginal per-vertex bound failed for
+   Strategy 3. The global inequality survives here only via banked slack
+   carried in the fibers themselves, not via any per-split bound on S.
+   As with Strategy 3, the natural fix (an amortized argument tracking
+   banked slack across the recursion) has not been attempted and is not
+   obviously easier than the original claim. The full R≤4
+   sweep has since been independently re-run in full (all coordinate
+   2-way splits of every V' ⊆ A(5,3), 4,074,840 splits): it reproduces
+   the report exactly — 810 violating splits, worst deficit 2, extremal
+   instance the swap-pair V' above at partition coordinate p=1 — with no
+   split exceeding the fibers' combined slack (every violation is
+   covered by slack banked in the two fibers).
+
+**Status: Strategy 3b's naive per-split induction is refuted**, on the
+same footing as Strategy 3 — a concrete, independently-verified
+counterexample (point 8) shows the per-split recombination bound can be
+violated, with the global inequality surviving only through slack
+banked in the sub-fibers. Point 7 additionally rules out an entire
+class of future experiments (anything phrased as "push X*cross up
+while keeping m/k favorable") as vacuous, since X and |∂V| are not
+independently controllable — so a repair cannot come from a better
+X_cross bound alone. The remaining non-vacuous form of the question, in
+boundary language rather than through X and D: **how many of F_a's
+external neighbors get absorbed (cease to be external) when F_b is
+unioned in?** That count is a genuine, non-tautological quantity with
+the same meaning at every (n,k); whether an \_amortized* version of the
+partition induction (banking slack across recursive levels, as opposed
+to a per-split bound) can close is the open question left standing.
 
 ### Status of all sketches
 
 None of the four are unqualified results. Strategy 3 (single-vertex
 marginal peeling) is refuted (see above); any continuation needs a
 genuinely amortized argument, which has not been attempted. Strategy 3b
-(coordinate-partition induction on Φ) is a distinct, not-yet-refuted
-skeleton reusing `thm:defect`'s real proof structure, but the
-recombination penalty has only loose (and possibly too loose) bounds
-checked so far — see above. Strategy 4 is unexplored beyond one failed
-candidate operator pair. Strategy 2 remains a from-scratch invariant
-search with no candidate potential yet shown to work. As of this
-writing, none of the four/five sketches has a confirmed, closed path to
-Proposition 5.3; the exhaustive computational evidence (30+ rows, no
-counterexample) remains the only supporting evidence.
+(coordinate-partition induction on Φ) reuses `thm:defect`'s real proof
+structure but its naive per-split form is now also refuted by a
+concrete, independently-verified counterexample (point 8 above) — the
+global inequality survives there only via slack banked in the
+sub-fibers, not via any per-split bound. Strategy 4 is unexplored
+beyond one failed candidate operator pair. Strategy 2 remains a
+from-scratch invariant search with no candidate potential yet shown to
+work. As of this writing, none of the four/five sketches has a
+confirmed, closed path to Proposition 5.3 — both induction skeletons
+tried (single-vertex peeling and coordinate-partition) are refuted in
+their naive, per-step forms, and an amortized repair has not been
+attempted for either; the exhaustive computational evidence (30+ rows,
+no counterexample) remains the only supporting evidence.
 
 ## Status
 

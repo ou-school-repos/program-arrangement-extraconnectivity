@@ -80,9 +80,9 @@ pair's coordinate distinct, which forced $m$ large enough to supply them
 in the one instance checked, and the resulting $X_{\text{cross}}$ still
 sat comfortably under slack there. Whether this alphabet cost is a
 necessary trade-off or an artifact of that one construction is itself
-open; no construction achieving spread at small $m$ and large $k$, nor
-any violation of the recombination bound, has been found. This direction
-remains open, not refuted, but not confirmed either.
+open; no construction achieving spread at small $m$ and large $k$ was
+found in the search that produced these two examples. \textbf{The naive
+per-split induction itself is refuted}, however: see below.
 
 The natural next adversarial attempt --- maximizing $X_{\text{cross}}$
 while keeping $m$ small and $k$ large --- turns out not to be an
@@ -105,6 +105,30 @@ across all $(n,k)$; bounding it from fiber sizes and $m$ alone, rather
 than bounding $X_{\text{cross}}$ directly, is what would close the
 recombination step.
 
+\textbf{The naive per-split induction is refuted}, on the same footing
+as the marginal-peeling refutation above, by an explicit,
+independently-verified counterexample. An exhaustive sweep of all
+coordinate 2-way splits of every $R$-subset of $A(5,3)$ up to $R=4$
+found $810$ splits (of $4{,}074{,}840$ checked) where the recombination
+penalty $S$ exceeds the per-split slack $m\Delta\Eseq(R)+\Delta\Cconst(R)$.
+The worst case, $V' = \{(0,1,2),(0,2,1),(0,3,4),(0,4,3)\}$ in $A(5,3)$
+($n=5,k=3,m=2,R=4$) split into two disjoint ``swap pairs''
+$F_a=\{(0,1,2),(0,2,1)\}$, $F_b=\{(0,3,4),(0,4,3)\}$, gives
+$|\partial F_a|=|\partial F_b|=12$ with $D=X=0$ in each fiber, while
+$|\partial V'|=16$, so $S = 12+12-16 = 8$ against a bound of
+$m\cdot 2 + 2 = 6$ --- a deficit of $2$. Decomposing $S$ shows it is
+\emph{entirely} cross-target collision ($X_{\text{cross}}=8$,
+$\Delta D_{\text{cross}}=0$): the two fibers share $8$ common external
+neighbors and neither fiber's boundary otherwise reaches into the
+other. The global inequality still holds ($|\partial V'|=16 \ge 12$)
+only because each fiber individually carries slack ($12-9=3$ each,
+totaling $6$, absorbing the deficit of $2$ with room to spare) --- not
+because the per-split bound holds. This is the direct analogue, for
+the partition skeleton, of the marginal-peeling refutation: the naive
+induction does not close step-by-step, and a repair would again require
+an amortized argument banking slack across the recursion, which has not
+been attempted for either skeleton.
+
 \paragraph{Dual root-compression via averaging.}
 Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
 conjectures on the hypercube \cite{pinto2015directed}, where two
@@ -120,32 +144,38 @@ for the coordinate-tangling obstacle; no candidate operator pair has been
 proposed.
 
 \paragraph{A global Lyapunov function on fiber multisets.}
-This direction proposes a potential $\Phi(V') = \sum_{p=1}^k \sum_r
+This direction proposes a potential $\Psi(V') = \sum_{p=1}^k \sum_r
 f(|F_{p,r}|)$ over the multiset of fiber sizes at every coordinate, for
-some convex $f$, and asks whether a single root-compression move's local
+some convex $f$ --- a different functional from $\Phi=X+(m+1)D$ above,
+not a renaming of it. Whether a single root-compression move's local
 gain (from concentrating vertices into larger fibers at one coordinate)
-always dominates its collateral loss (from scrambling roots at every other
-coordinate). Neither the link between this $\Phi$ and $X + (m+1)D$, nor
-the required domination bound, has been established; it is not known
-whether a suitable $f$ exists.
+always dominates its collateral loss (from scrambling roots at every
+other coordinate) is the open question. The $\Phi$-collapse identity
+above says nothing about $\Psi$: it shows $\Phi$ carries no information
+beyond $|\partial V|$, but $\Psi$ is a genuinely different quantity, and
+this direction remains untouched by that result. Neither the link
+between $\Psi$ and $X+(m+1)D$, nor the required domination bound, has
+been established; it is not known whether a suitable $f$ exists.
 
 \medskip
 \noindent None of these directions currently has a confirmed, closed
-path to Proposition~\ref{prop:universal}. Marginal peeling's per-step
-approach is refuted outright; its early machinery
-(Lemma~\ref{lem:subadditivity}, Theorem~\ref{thm:defect}'s induction
-skeleton, and the proved $\Delta X=0$-at-adjacency lemma) remains valid,
-but the induction built on top of it does not close as planned, and an
-amortized replacement is untried. Coordinate-partition induction
-(Strategy 3b) is a distinct, not-yet-refuted skeleton with only loose
-recombination bounds checked so far, which appear too weak at scale; it
-is open, not confirmed. The dual-compression direction's one tested
-candidate operator pair failed its own averaging inequality and
-degenerated into a graph automorphism on the example checked; no
-non-degenerate candidate has been proposed. The Lyapunov direction
-remains a from-scratch invariant search with no candidate potential
-shown to work. These are research opinions, not mathematical claims, and
-should not be read as evidence toward Proposition~\ref{prop:universal}
-itself; the exhaustive computational sweep (Appendix~\ref{app:engine})
-remains the only supporting evidence for the proposition as of this
-writing.
+path to Proposition~\ref{prop:universal}. Both induction skeletons
+tried are refuted in their naive, per-step form: marginal peeling's
+per-vertex bound (Lemma~\ref{lem:subadditivity},
+Theorem~\ref{thm:defect}'s induction skeleton, and the proved
+$\Delta X=0$-at-adjacency lemma remain valid, but the induction built on
+top does not close as planned), and coordinate-partition induction's
+per-split recombination bound (an explicit, independently-verified
+counterexample in $A(5,3)$ shows $S$ can exceed the per-split slack by
+$2$, with the global inequality surviving only via slack banked in the
+sub-fibers). Neither has an attempted amortized replacement. The
+dual-compression direction's one tested candidate operator pair failed
+its own averaging inequality and degenerated into a graph automorphism
+on the example checked; no non-degenerate candidate has been proposed.
+The Lyapunov direction ($\Psi$ over fiber-size multisets, distinct from
+$\Phi$) remains a from-scratch invariant search with no candidate
+potential shown to work. These are research opinions, not mathematical
+claims, and should not be read as evidence toward
+Proposition~\ref{prop:universal} itself; the exhaustive computational
+sweep (Appendix~\ref{app:engine}) remains the only supporting evidence
+for the proposition as of this writing.
