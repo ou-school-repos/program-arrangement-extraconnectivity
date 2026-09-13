@@ -682,30 +682,37 @@ to a per-split bound) can close is the open question left standing.
 
 ### Status of all sketches
 
-None of the four are unqualified results. Strategy 3 (single-vertex
-marginal peeling) is refuted (see above); any continuation needs a
-genuinely amortized argument, which has not been attempted. Strategy 3b
-(coordinate-partition induction on Φ) reuses `thm:defect`'s real proof
-structure but its naive per-split form is now also refuted by a
-concrete, independently-verified counterexample (point 8 above) — the
-global inequality survives there only via slack banked in the
-sub-fibers, not via any per-split bound. Strategy 4 is unexplored
-beyond one failed candidate operator pair. Strategy 2 remains a
-from-scratch invariant search with no candidate potential yet shown to
-work. As of this writing, none of the four/five sketches has a
-confirmed, closed path to Proposition 5.3 — both induction skeletons
-tried (single-vertex peeling and coordinate-partition) are refuted in
-their naive, per-step forms, and an amortized repair has not been
-attempted for either; the exhaustive computational evidence (30+ rows,
-no counterexample) remains the only supporting evidence.
+**Both induction skeletons tried are refuted in their naive, step-local
+form.** Strategy 3 (single-vertex marginal peeling) is refuted by the
+A(5,3) R:2→3 counterexample (ΔX=2, s=1, LHS=5 > RHS=4). Strategy 3b
+(coordinate-partition induction on Φ) is refuted by the A(5,3) R=4
+swap-pair counterexample (point 8 above: S=8 > bound=6). In both cases
+the global inequality survives only because slack banked elsewhere
+(an earlier step, or a sibling fiber) absorbs the local deficit — never
+because the local bound itself holds. Neither has an attempted
+amortized/potential-method repair, and — as noted for Strategy 3 above
+— any such repair that explicitly carries banked surplus across steps
+is provably equivalent in strength to the original global claim, i.e.
+telescopes back to Proposition 5.3 rather than simplifying it. Strategy
+4 (dual-compression) is unexplored beyond one failed, degenerate
+candidate operator pair. Strategy 2 (Lyapunov over fiber-size
+multisets, Ψ) remains a from-scratch invariant search with no candidate
+potential yet shown to work. As of this writing, none of the four
+sketches has a confirmed, closed path to Proposition 5.3; the
+exhaustive computational evidence (30+ rows, no counterexample) remains
+the _only_ supporting evidence for the proposition.
 
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
-stalled on the coordinate-tangling obstacle. The two strategies sketched
-above (marginal induction and the global Lyapunov function) are candidate
-replacements, recorded at the whiteboard-sketch stage only; neither has
-been carried far enough to check, let alone prove.
+stalled on the coordinate-tangling obstacle. Both induction-based
+replacements attempted since (marginal peeling and coordinate-partition
+induction) are refuted in their naive form — see "Status of all
+sketches" above for the final state of the board. The two remaining
+unexplored directions (dual-compression averaging and the Lyapunov
+function over fiber-size multisets) are recorded at the
+whiteboard-sketch stage only; neither has been carried far enough to
+check, let alone prove.
 
 The exhaustive computational evidence (30 rows as of 2026-09-12, up to
 3.65 billion subsets in a single row) supports the inequality with no
