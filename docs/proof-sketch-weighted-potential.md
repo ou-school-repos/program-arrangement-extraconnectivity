@@ -1294,16 +1294,43 @@ of `HB_7`; both tight (`|extbd|=20,18`); `I=7 = ΔE*(m-1)+1 = 3*2+1`,
 the `+1` being the one missing cube corner reached by a distance-2 path
 from each fiber; `B_ba=3, B_ab=3`; total `13 = Delta = 18+20-25`.
 
-**Still open, not yet attempted:** proving `T+(B_ab+B_ba)=ΔE+ΔC` in
-general (only hand-checked on 4 small splits so far), and confirming
-the `ΔE*(m-1)` targets and the `T` targets don't overlap (true in every
-case checked so far, but not yet argued, only assumed absent evidence
-of a counterexample). If pursued further, the natural empirical next
-step is extending `src/check_amortized_slack.cpp` to report `T`,
-`B_ab`, `B_ba` separately (it already computes `shared`, `b_ba`,
-`b_ab` internally) and re-running the small embeddable cells
-`(4,2,1,3)`, `(6,3,3,4)`, `(6,3,4,4)`, `(6,3,3,5)` — not yet done, no
-commands issued.
+**Empirical follow-up (same session): `X=dE` confirmed, disjointness
+resolved.** `src/check_amortized_slack.cpp` was extended twice more to
+test the mechanism directly rather than only the net identity:
+
+- `compute_X`: counts direct cross-edges `(u,v)`, `u∈F_a`, `v∈F_b`,
+  adjacent — via the pair loop (`sum over u∈F_a of |nbrMask[u]∩F_b|`),
+  not derivable from `B_ba`/`B_ab` (which count touching *vertices*,
+  not edges). Checked `X == ΔE` on every margin=0 pair.
+- `D1 = I - T` (the distance-1-attributed share of `I`) checked against
+  `ΔE*(m-1)`.
+
+Run across 7 cells spanning `m∈{2,3,4}`, `k∈{2,3}`:
+`(4,2,1,3)` m=2, `(5,2,1,3)` m=3, `(6,2,1,3)` m=4, `(6,3,3,4)` m=3,
+`(6,3,4,4)` m=3, `(6,3,3,5)` m=3, `(7,3,4,4)` m=4 — **5,124 margin=0
+pairs total, `X=ΔE` and `D1=ΔE*(m-1)` hold on all of them, zero
+exceptions.** At `(1,3)`, every tight pair found was margin=0 (24/24,
+120/120, 360/360), so this isn't a thin slice.
+
+**Scoping this correctly (per advisor review, to avoid over-claiming):**
+only `X=ΔE` is an *independent* count — it's a direct enumeration with
+nothing derived from `Delta`. Given margin=0 (`I+B_ba+B_ab=Delta`) and
+`Delta=ΔE*m+ΔC` (both already established), `X=ΔE` alone forces
+`D1=ΔE*(m-1)` and `T+(B_ab+B_ba)=ΔE+ΔC` algebraically — so those two
+checks passing are a consistency check on the instrumentation, not a
+second independent confirmation. The real content of this batch is:
+**the disjointness assumption flagged in the previous entry (do the
+`ΔE*(m-1)` cross-edge targets and the `T` distance-2 targets overlap?)
+is now resolved empirically** — `X=ΔE` pins the cross-edge count
+exactly, and combined with margin=0 there is no room left for
+collision slack to hide. This does *not* touch the circularity noted
+above: `X=ΔE` is a count over configurations that already are
+margin=0, and says nothing about *why* margin=0 is unbeatable, so it
+still cannot be a step inside the induction.
+
+**Still open:** proving `X=ΔE` from Hamming-ball structure directly
+(currently observed, not derived), and the long-standing deficit bound
+in the non-embeddable regime.
 
 ## Status
 
