@@ -1077,6 +1077,46 @@ deficit, and bound the deficit when it is nonzero.** 25 data points and
 a partial, known-incomplete rule — not a proof, and not as sharp a
 reframing as previously claimed.
 
+**Correction to the correction (2026-09-13, later same session): the
+rule above was itself incomplete, not wrong in kind.** The retraction
+only tested `n−k ≥ ⌈log₂R⌉` — half of Theorem `thm:main`(ii)'s own
+stated achievability condition
+(`paper/sections/04_defect_framework.tex:176-177`):
+**`n−k ≥ ⌈log₂R⌉` AND `k ≥ ⌈log₂R⌉`.** The (7,3,5,5) "counterexample"
+has `n−k=4≥⌈log₂10⌉=4` (passes) but `k=3<4` (fails) — A(7,3) physically
+has only 3 coordinates, so no configuration of any alphabet size can
+embed a `Q_4`, exactly the achievability theorem's own second
+condition. This was an omission in this document's restatement of the
+rule, not an error in the paper (grep-verified against the paper text
+before writing this correction) or in the underlying phenomenon.
+
+Re-checked programmatically against **all 27** recorded cells (the 25
+above, plus (7,3,3,4) and two new sweep points (8,3,3,4)=0,
+(8,3,4,4)=0, run to test saturation on a second `(c_a,c_b)` pair): the
+two-sided rule predicts `margin=0` exactly where `n−k ≥ ⌈log₂R⌉ AND
+k ≥ ⌈log₂R⌉` both hold, and a strict deficit exactly where either
+fails — **27/27, zero exceptions**, including (7,3,5,5) now correctly
+predicted as a deficit case rather than a counterexample. Also matches
+the two-pair saturation sweep exactly: `(4,4)` and `(3,4)` both go from
+deficit at m=2 to exact equality at every larger m tested, precisely
+because `R=8` and `R=7` respectively both satisfy `k=3 ≥ ⌈log₂R⌉=3`
+already at that k, so only the `n−k` side was ever the constraint for
+those two pairs — which is also why the earlier (unqualified) `n−k`-only
+rule happened to work for them despite being incomplete in general.
+
+**Restored, corrected statement:** margin = 0 iff
+`n−k ≥ ⌈log₂(c_a+c_b)⌉ AND k ≥ ⌈log₂(c_a+c_b)⌉` — i.e. iff the combined
+Hamming ball `HB_R` is actually embeddable in `A(n,k)` at all, matching
+Theorem `thm:main`(ii)'s own achievability condition exactly, not a
+new or separate rule. The open lemma is reframed exactly as it was
+before the refutation: (a) prove `I+B_ba+B_ab = Delta` exactly whenever
+`HB_R` embeds (a bijective/counting claim); (b) bound the deficit
+`Delta − (I+B_ba+B_ab)` when it does not (12 data points, −1 to −10,
+still no closed form). The lesson kept from the brief detour: verify a
+proposed invariant against a paper's own already-precise statement of
+the same condition before restating it informally, since restating it
+is exactly where the omission happened.
+
 margin=0 at (1,1) is not a coincidence to explain away: it is exactly
 the R=2 case (an adjacent pair achieving rhs(2) exactly, S(V')=0 by
 the Hamming Ball Evaluation proposition), reappearing correctly once
