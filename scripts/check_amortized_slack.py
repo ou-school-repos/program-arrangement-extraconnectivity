@@ -114,11 +114,11 @@ def run(n: int, k: int, ca: int, cb: int) -> int:
             if Fa & Fb:
                 continue
             ebB = get_eb(Fb)
-            I = len(ebA & ebB)
+            shared = len(ebA & ebB)
             checked += 1
-            if I - delta > worst:
-                worst = I - delta
-                worst_pair = (Fa, Fb, I)
+            if shared - delta > worst:
+                worst = shared - delta
+                worst_pair = (Fa, Fb, shared)
         if (i + 1) % 200 == 0:
             print(
                 f"  ... {i+1}/{len(opt_a)} tight-A fibers done, "

@@ -963,10 +963,14 @@ independent (n,k,c_a,c_b) cells up to size (3,3):
 | (6,3,2,2)          | 8     | −4                 |
 | (6,3,1,2)          | 5     | −2                 |
 | (5,3,3,3)          | 9     | −5                 |
+| (5,3,4,4)          | 12    | −8                 |
 
 I never even reaches Delta in the tight case, and the margin widens (not
-narrows) as sizes grow. This is genuine positive evidence for the
-amortized approach, not a proof: 8 data points up to size 3, not an
+narrows) as sizes grow: on the (5,3) diagonal alone, sizes 1,2,3,4 give
+margins −1,−3,−5,−8. The (5,3,4,4) row was run independently, directly
+from `scripts/check_amortized_slack.py`. This is genuine positive
+evidence for the amortized approach, not a proof: 9 data points up to
+size 4, not an
 argument for all sizes. Also verified as a sanity check (not new
 information, but confirms no bug in the identity/search code): the TRUE
 minimum of S(V') over all splits, exhaustively, at R=2 and R=3 is exactly
