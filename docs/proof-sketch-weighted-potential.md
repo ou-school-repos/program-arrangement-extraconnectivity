@@ -938,7 +938,7 @@ channels above. Verified exactly against the known swap-pair witness
 3+3+6−8=4=S(V') — matches the directly-computed value exactly.
 
 **Caveat found and confirmed by direct construction, not assumed:** this
-identity is *not* unconditional — it breaks by exactly +2 per mutual edge
+identity is _not_ unconditional — it breaks by exactly +2 per mutual edge
 when F_a and F_b are directly adjacent to each other (checked on the
 minimal case, an adjacent pair in A(4,3): the naive identity predicts
 S(V')=1, the true value is 0). Any general induction built on this
@@ -949,20 +949,20 @@ done.
 **The critical-case test.** An amortized induction's dangerous case is
 exactly S(F_a)=S(F_b)=0 (both fibers individually tight, i.e. achieving
 rhs exactly — the induction-hypothesis boundary case), where the identity
-reduces to needing I < Delta. Exhaustive search over *every* disjoint pair
+reduces to needing I < Delta. Exhaustive search over _every_ disjoint pair
 of tight fibers (script: `scripts/check_amortized_slack.py`), across 8
 independent (n,k,c_a,c_b) cells up to size (3,3):
 
 | cell (n,k,c_a,c_b) | Delta | max(I−Delta) found |
-|---|---|---|
-| (5,3,1,1) | 3 | −1 |
-| (5,3,2,2) | 6 | −3 |
-| (5,3,1,2) | 4 | −2 |
-| (5,3,1,3) | 5 | −3 |
-| (6,3,1,1) | 4 | −2 |
-| (6,3,2,2) | 8 | −4 |
-| (6,3,1,2) | 5 | −2 |
-| (5,3,3,3) | 9 | −5 |
+| ------------------ | ----- | ------------------ |
+| (5,3,1,1)          | 3     | −1                 |
+| (5,3,2,2)          | 6     | −3                 |
+| (5,3,1,2)          | 4     | −2                 |
+| (5,3,1,3)          | 5     | −3                 |
+| (6,3,1,1)          | 4     | −2                 |
+| (6,3,2,2)          | 8     | −4                 |
+| (6,3,1,2)          | 5     | −2                 |
+| (5,3,3,3)          | 9     | −5                 |
 
 I never even reaches Delta in the tight case, and the margin widens (not
 narrows) as sizes grow. This is genuine positive evidence for the
@@ -974,7 +974,7 @@ minimum of S(V') over all splits, exhaustively, at R=2 and R=3 is exactly
 exactly.
 
 **What is still missing before this is a lemma, let alone a proof:** (a)
-an actual argument for *why* I < Delta when fibers are tight — not just
+an actual argument for _why_ I < Delta when fibers are tight — not just
 data up to size 3 — the natural guess is that tight fibers are highly
 root-concentrated, which should structurally cap shared-neighbor overlap,
 but this has not been shown; (b) the direct-adjacency correction term

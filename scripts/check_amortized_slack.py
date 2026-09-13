@@ -39,8 +39,10 @@ def e_seq(size: int) -> int:
 
 
 def c_constant(size: int) -> int:
-    return 0 if size == 0 else (
-        (size - 1) + sum(v.bit_length() for v in range(1, size)) - e_seq(size)
+    return (
+        0
+        if size == 0
+        else ((size - 1) + sum(v.bit_length() for v in range(1, size)) - e_seq(size))
     )
 
 
@@ -54,7 +56,7 @@ def neighbors(vertex: tuple[int, ...], n: int) -> set[tuple[int, ...]]:
     for pos in range(len(vertex)):
         for s in range(n):
             if s not in used:
-                out.add(vertex[:pos] + (s,) + vertex[pos + 1:])
+                out.add(vertex[:pos] + (s,) + vertex[pos + 1 :])
     return out
 
 
@@ -72,21 +74,31 @@ def run(n: int, k: int, ca: int, cb: int) -> int:
     target_b = rhs(n, k, cb)
     delta = rhs(n, k, ca) + rhs(n, k, cb) - rhs(n, k, ca + cb)
 
-    print(f"A({n},{k}) c_a={ca} c_b={cb}: enumerating tight (s=0) fibers "
-          f"out of C({len(verts)},{ca})={comb(len(verts), ca):,} / "
-          f"C({len(verts)},{cb})={comb(len(verts), cb):,} candidates ...",
-          flush=True)
+    print(
+        f"A({n},{k}) c_a={ca} c_b={cb}: enumerating tight (s=0) fibers "
+        f"out of C({len(verts)},{ca})={comb(len(verts), ca):,} / "
+        f"C({len(verts)},{cb})={comb(len(verts), cb):,} candidates ...",
+        flush=True,
+    )
 
-    opt_a = [frozenset(c) for c in itertools.combinations(verts, ca)
-             if len(eb(c, n)) == target_a]
-    opt_b = (opt_a if ca == cb else
-             [frozenset(c) for c in itertools.combinations(verts, cb)
-              if len(eb(c, n)) == target_b])
+    opt_a = [
+        frozenset(c)
+        for c in itertools.combinations(verts, ca)
+        if len(eb(c, n)) == target_a
+    ]
+    opt_b = (
+        opt_a
+        if ca == cb
+        else [
+            frozenset(c)
+            for c in itertools.combinations(verts, cb)
+            if len(eb(c, n)) == target_b
+        ]
+    )
 
-    print(f"  #tight_a={len(opt_a)} #tight_b={len(opt_b)} Delta={delta}",
-          flush=True)
+    print(f"  #tight_a={len(opt_a)} #tight_b={len(opt_b)} Delta={delta}", flush=True)
 
-    worst = -10**9
+    worst = -(10**9)
     worst_pair = None
     checked = 0
     eb_cache = {}
@@ -108,12 +120,15 @@ def run(n: int, k: int, ca: int, cb: int) -> int:
                 worst = I - delta
                 worst_pair = (Fa, Fb, I)
         if (i + 1) % 200 == 0:
-            print(f"  ... {i+1}/{len(opt_a)} tight-A fibers done, "
-                  f"{checked:,} pairs checked so far, running max(I-Delta)={worst}",
-                  flush=True)
+            print(
+                f"  ... {i+1}/{len(opt_a)} tight-A fibers done, "
+                f"{checked:,} pairs checked so far, running max(I-Delta)={worst}",
+                flush=True,
+            )
 
-    print(f"  checked {checked:,} disjoint tight-fiber pairs; "
-          f"max(I-Delta) = {worst}")
+    print(
+        f"  checked {checked:,} disjoint tight-fiber pairs; " f"max(I-Delta) = {worst}"
+    )
     if worst >= 0:
         print("  *** CRITICAL-CASE VIOLATION (I >= Delta) ***")
         print("  witness:", worst_pair)
