@@ -126,11 +126,11 @@ proof merely maximizing collisions or merely maximizing defect is insufficient.
 
 ## Third Math Audit (2026-09-12, extended sweep)
 
-The exhaustive C++ verifier (`universal_check`) now covers 29 parameter rows,
-including the 3,244,032,792-subset A(7,3) R=5 case, the 190,578,024-subset
-A(6,3) R=5 case, and the 61,949,040-subset A(6,5) R=3 case. 17 rows were
+The exhaustive C++ verifier (`universal_check`) now covers 30 parameter rows,
+including the 3,652,745,460-subset A(6,3) R=6 case, the 3,244,032,792-subset
+A(7,3) R=5 case, and the 61,949,040-subset A(6,5) R=3 case. 17 rows were
 cross-checked against the Python oracle (`check_universal_lower_bound.py`);
-9 C++-only rows exceeded the Python 1-million-subset safety cap. No
+10 C++-only rows exceeded the Python 1-million-subset safety cap. No
 counterexample was found in any row.
 
 ### Observed tightness pattern
@@ -143,14 +143,19 @@ observed in the following regimes:
 | --- | -------------------------- | ---------------------------------------------------- |
 | 1   | A(3,2) R=2                 | A(3,2) R=3; A(4,3) R=3–6; A(5,4) R=3–4; A(6,5) R=2–3 |
 | 2   | A(5,3) R=3–4; A(6,4) R=2–3 | A(5,3) R=5                                           |
-| 3   | A(6,3) R=2–5               | —                                                    |
+| 3   | A(6,3) R=2–6               | —                                                    |
 | 4   | A(6,2) R=2–4; A(7,3) R=2–5 | A(6,2) R=5–6                                         |
 | 5   | A(7,2) R=3–4               | A(7,2) R=5–6                                         |
 | 6   | A(8,2) R=2–4               | A(8,2) R=5–6                                         |
 
-TODO(review): the A(6,3) row's "—" non-tight entry only reflects R=2–5; R=6+
+A(6,3) R=6 was subsequently run to completion with `--max-subsets 4000000000`
+(C(120,6) = 3,652,745,460 subsets, ~18 minutes at ~3.3M subsets/sec):
+`min=24 (connected), min_disconnected=29, min_compensated_slack=0: PASS` —
+tight, so the row is now A(6,3) R=2–6, all tight.
+
+TODO(review): the A(6,3) row's "—" non-tight entry only reflects R=2–6; R=7+
 was never tested and may still be non-tight, as seen in the analogous A(6,2)
-row (n−k=4). An attempted run of A(6,3) R=6 timed out without completing.
+row (n−k=4).
 
 A(8,2) R=2, R=5, and R=6 were run to fill the previous gap:
 
