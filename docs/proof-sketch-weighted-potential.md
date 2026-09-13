@@ -1593,6 +1593,80 @@ still open; this section narrows *what kind* of formula to look for
 (likely two regime-dependent pieces, one for each crush type, rather
 than one uniform expression) but does not supply one.
 
+### Two refuted separability hypotheses (negative results, recorded to
+avoid repeating them)
+
+Built `src/sweep_deficit.cpp` (a stripped-down worst-margin-only scan,
+no histogram/identity overhead, so many cells can be checked quickly)
+to test whether the deficit collapses onto a small number of variables.
+Two specific hypotheses were tried and refuted, each by exactly one
+counterexample immediately after looking promising on prior data — a
+pattern worth noting for its own sake (two points is not evidence of a
+closed form; the base rate for a hand-picked hypothesis surviving a
+third test appears to be low here).
+
+**Hypothesis 1 (refuted): `deficit` is a function of the two
+starvation gaps alone,**
+`dk = ⌈log₂R⌉-k`, `dm = ⌈log₂R⌉-(n-k)`, independent of `n,k,R,c_a,c_b`
+individually. Supporting data initially looked clean: `deficit(dk=1,
+dm=0)=2` (`A(7,3)` c=5,5), `deficit(dk=0,dm=1)=6` (`A(5,3)` c=4,4),
+`deficit(dk=1,dm=1)=8` (`A(4,2)` c=4,4) — and `8=2+6` exactly, suggesting
+`deficit=f(dk)+g(dm)`. Refuted by a same-`(dk,dm)=(1,1)` cell at
+different `R`/balance: `A(6,3)` c=4,5 (`R=9`, unbalanced) gave
+`deficit=5`, not `8`. `(dk,dm)` alone does not determine the deficit.
+
+**Hypothesis 2 (refuted): the underlying arithmetic error that
+initially seemed to explain hypothesis 1's exception.** The unbalanced
+counterexample was first (wrongly) explained via `ΔE(4,5) < ΔE(4,4)`
+("the unbalanced split is promised less interference, so it can't
+suffer the same deficit") — but `ΔE(4,5)=e_seq(9)-e_seq(4)-e_seq(5)
+=13-4-5=4`, equal to `ΔE(4,4)=e_seq(8)-e_seq(4)-e_seq(4)=12-4-4=4`
+(the error: `e_seq(9)=12` was used instead of the correct `13`, missing
+`popcount(8)=1`). With `ΔE` actually equal, the revised hypothesis was
+that the *achieved* physical interference `combined=I+B_ab+B_ba
+=Delta-deficit` — not `ΔE` — depends only on `(n,k,m)`, not on the
+`(c_a,c_b)` split. This looked clean on one pair: `A(6,3)` c=4,5 and
+c=5,5 (same `n,k,m=6,3,3`, different split) both gave `combined=12`.
+Refuted immediately by a second pair: `A(4,2)` c=4,4 gives
+`combined=4`, but `A(4,2)` c=3,4 (same `n,k,m=4,2,2`) gives
+`combined=5`, not `4`. `combined` also depends on the split, not just
+`(n,k,m)`.
+
+**Conclusion of the empirical phase.** Two hand-picked separability
+guesses, each briefly consistent with the data on hand, were both
+refuted by the very next targeted cell. This is a weak enough hit rate
+that further hand-picked hypotheses are not a good use of compute or
+time; a real closed-form fit (if one exists) would need a systematic
+multi-cell regression, not one-off comparisons, and even then may not
+exist in a simple form given the deficit is now known to arise from at
+least three qualitatively different mechanisms (m-crush, k-crush
+saturated, k-crush ghost-compensated) that need not combine additively.
+This closes the empirical (exhaustive-enumeration) phase of the
+subcube-intersection attack.
+
+**What survives, to build on analytically instead of empirically:**
+- The unconditional bound `X ≤ ΔE` (Lean's `sum_unique_roots_lower_bound`,
+  proved by strong induction, no tightness hypothesis needed for this
+  direction — see "X=ΔE derived, conditionally" above), giving a
+  provable ceiling on cross-edges for *any* disjoint `F_a,F_b`, crushed
+  or not.
+- `Delta`'s exact closed form in `(c_a,c_b)` (already known:
+  `Delta=ΔE·m+ΔC`).
+- The two-sided embeddability gate (`margin=0` iff
+  `k≥⌈log₂R⌉ AND m≥⌈log₂R⌉`), verified 28/28 plus every trace in this
+  document.
+- Three concretely identified (not just asserted) physical mechanisms
+  by which margin goes negative when that gate fails, each with a
+  hand-verified witness.
+
+**What does not exist yet, and is not expected to come from more
+sweeps:** a closed-form deficit magnitude. The path forward is to prove
+a structural inequality — the achievable physical interference is
+*strictly* bounded below `Delta` whenever the embeddability gate fails,
+using the case-split by mechanism above and the unconditional `X≤ΔE`
+bound as building blocks — rather than to keep searching for the exact
+scalar deficit as a function of `(n,k,c_a,c_b)`.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is

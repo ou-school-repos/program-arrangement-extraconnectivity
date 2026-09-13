@@ -17,6 +17,7 @@ predict_test
 universal_check
 check_amortized_slack
 check_uniqueness
+sweep_deficit
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
