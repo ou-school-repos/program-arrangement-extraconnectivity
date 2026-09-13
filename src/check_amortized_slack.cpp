@@ -92,6 +92,45 @@ int popcountAnd(const Bits &a, const Bits &b) {
     return c;
 }
 
+bool testBit(const Bits &b, int i) {
+    return (b.w[i / WBITS] & (Word{1} << (i % WBITS))) != 0;
+}
+
+// T: among the shared external targets (ebA ∩ ebB), count those NOT
+// explained by a distance-1 cross pair -- i.e. a shared target w such
+// that no neighbor-of-w-in-Fa is directly adjacent to a
+// neighbor-of-w-in-Fb. Those are the "distance-2 channel" targets
+// (docs/proof-sketch-weighted-potential.md, subcube-intersection
+// attack, corrected constant-term identity T+(B_ab+B_ba)=ΔE+ΔC).
+int compute_T(const Bits &ebA, const Bits &ebB, const Bits &membersA,
+              const Bits &membersB, const std::vector<Bits> &nbrMask, int N,
+              std::size_t words) {
+    Bits shared(words);
+    for (std::size_t i = 0; i < words; ++i)
+        shared.w[i] = ebA.w[i] & ebB.w[i];
+
+    int T = 0;
+    for (int w = 0; w < N; ++w) {
+        if (!testBit(shared, w))
+            continue;
+        Bits Na(words), Nb(words);
+        for (std::size_t i = 0; i < words; ++i) {
+            Na.w[i] = nbrMask[w].w[i] & membersA.w[i];
+            Nb.w[i] = nbrMask[w].w[i] & membersB.w[i];
+        }
+        bool dist1 = false;
+        for (int a = 0; a < N && !dist1; ++a) {
+            if (!testBit(Na, a))
+                continue;
+            if (nbrMask[a].intersects(Nb))
+                dist1 = true;
+        }
+        if (!dist1)
+            ++T;
+    }
+    return T;
+}
+
 std::vector<std::vector<int>> generate_vertices(int n, int k) {
     std::vector<std::vector<int>> verts;
     std::vector<int> used(n, 0);
@@ -200,8 +239,12 @@ int main(int argc, char **argv) {
 
     const std::int64_t delta =
         rhs(n, k, ca) + rhs(n, k, cb) - rhs(n, k, ca + cb);
+    const std::int64_t dE = e_seq(ca + cb) - e_seq(ca) - e_seq(cb);
+    const std::int64_t dC =
+        c_constant(ca + cb) - c_constant(ca) - c_constant(cb);
     std::cerr << "A(" << n << "," << k << ") c_a=" << ca << " c_b=" << cb
-              << " (N=" << N << " vertices): Delta=" << delta << "\n";
+              << " (N=" << N << " vertices): Delta=" << delta << " (dE=" << dE
+              << " dC=" << dC << ", dE+dC=" << (dE + dC) << ")\n";
 
     auto tightA = tight_fibers(n, k, ca, N, nbrMask, words);
     auto tightB =
@@ -213,6 +256,10 @@ int main(int argc, char **argv) {
     std::int64_t worst = std::numeric_limits<std::int64_t>::min();
     std::size_t checked = 0;
     std::size_t adjacent_pairs = 0;
+    std::size_t margin_zero_pairs = 0;
+    std::size_t identity_checked = 0;
+    std::size_t identity_holds = 0;
+    std::size_t identity_first_violation_reported = 0;
     auto t0 = std::chrono::steady_clock::now();
 
     for (std::size_t i = 0; i < tightA.size(); ++i) {
@@ -239,6 +286,27 @@ int main(int argc, char **argv) {
             if (margin > worst)
                 worst = margin;
             ++checked;
+
+            // Only margin=0 (critical-case-tight) pairs are relevant to
+            // the T+(B_ab+B_ba)=dE+dC identity -- that's the regime the
+            // subcube-intersection attack is trying to explain.
+            if (margin == 0) {
+                ++margin_zero_pairs;
+                const int T =
+                    compute_T(ebA, ebB, membersA, membersB, nbrMask, N, words);
+                const std::int64_t lhs =
+                    static_cast<std::int64_t>(T) + b_ab + b_ba;
+                const std::int64_t rhs_val = dE + dC;
+                ++identity_checked;
+                if (lhs == rhs_val) {
+                    ++identity_holds;
+                } else if (identity_first_violation_reported < 5) {
+                    ++identity_first_violation_reported;
+                    std::cerr << "  identity mismatch: T=" << T
+                              << " b_ab=" << b_ab << " b_ba=" << b_ba
+                              << " lhs=" << lhs << " dE+dC=" << rhs_val << "\n";
+                }
+            }
         }
         if ((i + 1) % 200 == 0) {
             auto elapsed = std::chrono::duration<double>(
@@ -247,7 +315,8 @@ int main(int argc, char **argv) {
             std::cerr << "  ... " << (i + 1) << "/" << tightA.size()
                       << " tight-A fibers done, " << checked
                       << " pairs checked, running max(I+B_ba+B_ab-Delta)="
-                      << worst << " (" << elapsed << "s elapsed)\n";
+                      << worst << ", identity holds " << identity_holds << "/"
+                      << identity_checked << " (" << elapsed << "s elapsed)\n";
         }
     }
 
@@ -256,8 +325,14 @@ int main(int argc, char **argv) {
               << adjacent_pairs
               << " directly Fa-Fb adjacent); max(I+B_ba+B_ab-Delta) = " << worst
               << "\n";
+    std::cout << "  margin=0 pairs: " << margin_zero_pairs
+              << "; T+(B_ab+B_ba)=dE+dC identity holds " << identity_holds
+              << "/" << identity_checked << "\n";
     if (worst > 0)
         std::cout << "*** CRITICAL-CASE VIOLATION (I+B_ba+B_ab >= Delta) "
                      "***\n";
+    if (identity_checked > 0 && identity_holds != identity_checked)
+        std::cout << "*** T+(B_ab+B_ba)=dE+dC IDENTITY VIOLATED on "
+                  << (identity_checked - identity_holds) << " pair(s) ***\n";
     return 0;
 }
