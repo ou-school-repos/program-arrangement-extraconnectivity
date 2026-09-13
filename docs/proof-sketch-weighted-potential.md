@@ -1024,29 +1024,58 @@ explained by a clean bijective/counting argument, not a slack
 inequality with room in it — and the 4 negative cells now pin down
 exactly when that argument would have to break:
 
-**Sharp pattern found, 17/17 cells, zero exceptions:** margin = 0 iff
-`n−k ≥ ⌈log₂(c_a+c_b)⌉` — i.e. iff the combined size (`R = c_a+c_b`) is
-itself small enough for a Hamming ball to embed in A(n,k) — and margin
-< 0 iff `n−k < ⌈log₂ R⌉`. This holds regardless of whether the
-individual fibers (`c_a`, `c_b`) are themselves at, below, or above their
-own marginal embedding size: (6,3,4,5) has c_a=4 comfortably
-non-marginal (⌈log₂4⌉=2<3=n−k) and c_b=5 exactly marginal
-(⌈log₂5⌉=3=n−k), yet still goes negative (−5), because R=9 needs
-⌈log₂9⌉=4>3=n−k; (5,3,1,3) has c_b=3 exactly marginal
-(⌈log₂3⌉=2=n−k) but stays at margin 0, because R=4 needs
-⌈log₂4⌉=2=n−k, still embeddable. It is the union's embeddability, not
-either fiber's, that controls the sign. Also consistent with the
-earlier-noted (5,3,4,5)/(5,3,5,5) edge cases: those aren't just "no
-tight fiber of size 5" curiosities, they're the same embeddability
-threshold acting on a single fiber instead of the union.
+**"Sharp pattern," 17/17 cells — REFUTED at the 18th (2026-09-13, later
+same session).** The embeddability rule above (margin = 0 iff
+`n−k ≥ ⌈log₂(c_a+c_b)⌉`) was reported as holding with zero exceptions
+across 17 cells, framed as a candidate exact law. It is false: **A(7,3),
+c_a=c_b=5** has `n−k=4`, `R=10`, `⌈log₂10⌉=4`, so `4≥4` — the rule
+predicts margin=0 — but the measured value is **margin=−2**. Caught
+immediately by running one more cell rather than stopping at 17, and
+retracted here rather than left standing. Full data (25 cells; two
+still running when this was written and not included:
+(7,3,6,6) is in progress):
 
-This reframes the open lemma sharply: **prove that for tight F_a, F_b
-with c_a+c_b embeddable in A(n,k), I+B_ba+B_ab = Delta exactly** (a
-bijective/counting claim, not an inequality), and **separately bound
-the deficit when c_a+c_b exceeds embeddability** (where the four data
-points give −2,−5,−6,−8 — not yet enough to see a clean closed form,
-but not simply "unboundedly bad" either). Neither has been attempted
-analytically yet; this is 17 data points and a pattern, not a proof.
+| cell | n−k | R | ⌈log₂R⌉ | margin |
+|---|---|---|---|---|
+| (5,3,1,1)..(5,3,1,3), (6,3,1,1),(6,3,2,2),(6,3,1,2) | 2,2,2,2,3,3,3 | 2,4,3,4,2,4,3 | ≤2,≤2,≤2,≤2,≤2,≤2,≤2 | 0 (7 cells) |
+| (5,3,3,3) | 2 | 6 | 3 | −2 |
+| (5,3,4,4) | 2 | 8 | 3 | −6 |
+| (5,3,2,3) | 2 | 5 | 3 | −1 |
+| (5,3,1,4) | 2 | 5 | 3 | −1 |
+| (5,3,2,4) | 2 | 6 | 3 | −2 |
+| (5,3,3,4) | 2 | 7 | 3 | −4 |
+| (6,3,3,3) | 3 | 6 | 3 | 0 |
+| (6,3,3,4) | 3 | 7 | 3 | 0 |
+| (6,3,4,4) | 3 | 8 | 3 | 0 |
+| (6,3,2,3) | 3 | 5 | 3 | 0 |
+| (6,3,4,5) | 3 | 9 | 4 | −5 |
+| (6,3,5,5) | 3 | 10 | 4 | −8 |
+| (6,3,3,6) | 3 | 9 | 4 | −2 |
+| (6,3,4,6) | 3 | 10 | 4 | −4 |
+| (6,3,6,6) | 3 | 12 | 4 | −10 |
+| (7,3,4,4) | 4 | 8 | 3 | 0 |
+| (7,3,3,3) | 4 | 6 | 3 | 0 |
+| (7,3,5,5) | 4 | 10 | 4 | **−2** (breaks the rule: `n−k≥⌈log₂R⌉` here) |
+
+The embeddability rule correctly predicts every `margin=0` cell
+(`n−k ≥ ⌈log₂R⌉` held in all of them) but is not sufficient: it also
+holds for (6,3,2,3), (6,3,3,4), (7,3,3,3), (7,3,4,4) with margin 0 —
+and now also for (7,3,5,5) where margin is −2. So `n−k ≥ ⌈log₂R⌉` is
+necessary-looking but not sufficient for margin=0; something about the
+specific sizes (c_a,c_b), not just R and n−k, also matters, the same
+way it already mattered for the deficit magnitude in the
+non-embeddable regime (A(6,3) R=9: (4,5)→−5 vs (3,6)→−2; R=10:
+(5,5)→−8 vs (4,6)→−4 — recorded above, and now shown to extend to
+whether the deficit is zero at all, not just how large it is when
+nonzero). No closed-form invariant is currently known. Do not cite the
+embeddability rule as more than "correctly predicts margin=0 in every
+case checked so far where it says 0, but is known incomplete."
+
+The open lemma is therefore back to its unreframed form: **characterize
+exactly when tight F_a, F_b give I+B_ba+B_ab = Delta versus a strict
+deficit, and bound the deficit when it is nonzero.** 25 data points and
+a partial, known-incomplete rule — not a proof, and not as sharp a
+reframing as previously claimed.
 
 margin=0 at (1,1) is not a coincidence to explain away: it is exactly
 the R=2 case (an adjacent pair achieving rhs(2) exactly, S(V')=0 by
@@ -1092,14 +1121,18 @@ corrected quantity); results are the corrected table above, not the
 struck-through one.
 
 **What is still missing before this is a lemma, let alone a proof:** (a)
-a bijective/counting proof of I + B_ba + B_ab = Delta exactly whenever
-c_a+c_b is Hamming-ball-embeddable (13 of 17 cells, 0 exceptions) — the
-sharp embeddability pattern above turns "why does equality hold so
-often" into a precise, checkable target rather than a vague hunch, but
-the argument itself has not been attempted; (b) a bound (not yet even
-conjectured in closed form) on the deficit Delta − (I+B_ba+B_ab) when
-c_a+c_b exceeds embeddability — 4 data points (−2,−5,−6,−8) is not
-enough to guess a formula; (c) the direct-adjacency correction term is
+a characterization of exactly when tight F_a, F_b give
+I + B_ba + B_ab = Delta exactly versus a strict deficit — the
+embeddability rule (n−k ≥ ⌈log₂(c_a+c_b)⌉) predicts every margin=0 case
+correctly but was refuted as a complete characterization by A(7,3)
+c_a=c_b=5 (embeddable by that rule, margin=−2 anyway), so this is back
+to an open question, not a "why does the known pattern hold" question;
+(b) a bound (not yet even conjectured in closed form) on the deficit
+Delta − (I+B_ba+B_ab) when it is nonzero — now 12 data points
+(−1,−1,−2,−2,−2,−2,−4,−4,−5,−6,−8,−10, plus one more pending) spanning
+multiple (n,k), still not enough to guess a formula, and now known to
+depend on (c_a,c_b) individually, not just on R and n−k; (c) the
+direct-adjacency correction term is
 now characterized exactly (the identity above) but not yet proven from
 first principles independent of the computational check; (d) even
 granting (a)–(c), an amortized induction also needs to handle the
