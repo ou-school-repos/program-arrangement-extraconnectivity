@@ -738,6 +738,49 @@ specific candidate is dead; it does not, by itself, rule out some other
 entropy-type functional (a different random variable, a different
 weighting) — none has been proposed or tested.
 
+### LP-dual candidate (Vector B): tested and killed, more decisively (2026-09-13)
+
+Move 2 was also tried as a fast empirical probe before any hand algebra:
+solve the natural fractional LP relaxation of the vertex-boundary
+problem exactly (via `scipy.optimize.linprog`, HiGHS), and compare to
+the true integer-optimal boundary from exhaustive search. LP: minimize
+Σ_w y_w subject to y_w ≥ x_v − x_w for every edge (v,w) of A(n,k),
+Σ_v x_v = R, 0≤x≤1, y≥0 (the standard vertex-expansion relaxation:
+integral solutions reproduce |∂V'| exactly).
+
+Solved exactly for A(4,3) and A(5,3), R=2,3,4, against the true integer
+minimum boundary (exhaustive search, same territory as the sweep):
+
+| (n,k,R) | LP relaxation | true integer min |
+| ------- | ------------- | ---------------- |
+| (4,3,2) | 0             | 4                |
+| (4,3,3) | 0             | 5                |
+| (4,3,4) | 0             | 6                |
+| (5,3,2) | 0             | 9                |
+| (5,3,3) | 0             | 11               |
+| (5,3,4) | 0             | 12               |
+
+**The LP optimum is exactly 0 in every case, not merely a weaker
+constant.** Reason (structural, not numerical): the uniform fractional
+point x_v = R/N for every vertex is feasible (sums to R, stays in
+[0,1]) and makes every edge difference x_v−x_w=0, so y≡0 satisfies
+every constraint. This relaxation has no mechanism forcing spread mass
+to generate boundary — a known failure mode of naive vertex-isoperimetric
+LP relaxations. Consequence: there is no dual certificate to examine at
+all; the earlier framing ("banked slack looks like a dual certificate")
+had nothing to attach to, since the primal never leaves zero. This
+kills the naive LP-relaxation approach more decisively than the entropy
+candidate (which was at least directionally informative, if wrong) —
+it does not rule out a smarter relaxation (e.g. one with symmetry-
+breaking or higher-order constraints), but none has been proposed.
+
+**Status of Vectors A and B after empirical testing:** both proposed
+"heavy hammer" replacements for the failed inductions have been tried
+in their most natural form and killed outright, in each case faster
+than an hour of hand algebra would have taken and for a more decisive
+reason than the a priori staircase-vs-smooth risk. Neither result rules
+out a more sophisticated version of either tool; none has been proposed.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is

@@ -193,10 +193,12 @@ subadditivity lemma underlying \S\ref{sec:sandwich} is a carry identity
 in binary addition, not a smooth or continuous relation --- a
 continuous relaxation (LP duality) or a smooth bound (entropy) is not
 guaranteed to recover an exact integer staircase, and may instead
-certify only a nearby, weaker constant. The LP-dual direction remains
-entirely unwritten. The most natural entropy candidate, however, has
-since been checked and killed: taking $H_p(V')$ as the Shannon entropy
-of the root-distribution (fiber sizes) at coordinate $p$ and
+certify only a nearby, weaker constant. Both natural candidates have
+since been checked empirically and killed, in each case faster than the
+hand algebra would have taken.
+
+The most natural entropy candidate: taking $H_p(V')$ as the Shannon
+entropy of the root-distribution (fiber sizes) at coordinate $p$ and
 $S(V')=\sum_p H_p(V')$, the conjecture that the Hamming Ball minimizes
 $S(V')$ --- the entropy analogue of Theorem~\ref{thm:defect} --- is
 false already at $R=3$ in $A(5,3)$ (exhaustively checked over all
@@ -204,6 +206,21 @@ $487{,}635$ subsets at $R\le4$): the true minimizer
 $\{(0,1,2),(0,1,3),(0,1,4)\}$ achieves $S=3.17$ against the Hamming
 Ball's $S=3.42$, while having a \emph{larger} boundary ($12$ vs.\ $11$)
 --- the functional does not merely miss the exact staircase, it
-disagrees with the target in direction on the first case tested. This
-rules out that specific functional, not entropy methods in general; no
-other entropy-type candidate has been proposed or tested.
+disagrees with the target in direction on the first case tested.
+
+The natural LP relaxation fares worse: minimizing $\sum_w y_w$ subject
+to $y_w \ge x_v - x_w$ for every edge, $\sum_v x_v = R$, $0\le x\le1$,
+solved exactly (\texttt{scipy.optimize.linprog}, HiGHS) for $A(4,3)$
+and $A(5,3)$, $R=2,3,4$, against the true integer-optimal boundary from
+exhaustive search, gives LP optimum \emph{exactly zero in every case}
+--- not a weaker constant but no information at all. The uniform
+fractional point $x_v=R/N$ is always feasible and forces every edge
+difference to zero, so $y\equiv0$ satisfies every constraint; the
+relaxation has no mechanism forcing spread mass to generate boundary.
+Consequently there is no dual certificate to examine, and the earlier
+``banked slack looks like a dual certificate'' framing had nothing to
+attach to.
+
+Neither result rules out a more sophisticated version of either tool
+(a different entropy functional; an LP with symmetry-breaking or
+higher-order constraints), but no such candidate has been proposed.
