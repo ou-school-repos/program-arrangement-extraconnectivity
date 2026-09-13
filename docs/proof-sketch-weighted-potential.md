@@ -304,10 +304,49 @@ change Δ Φ = ΔX + (m+1)ΔD when v is added back.
    solid, but plugging it into the target inequality has not yet been
    checked against ΔC(R)'s actual formula.
 
+   **The (k−s)m bound is checked and fails as a standalone closer.**
+   Plugging R=1→2 into A(10,5) (k=5, m=5, s=k−1=4 since the two connected
+   vertices share k−1 roots): LHS = km+s = 29, RHS = ΔC(2)+m·popcount(1)
+   = 1+5 = 6. 29 ≤ 6 is false, so `(k−s)m` alone cannot close the
+   induction at small R with large k, m.
+
+   **Proven exact fact for this case: ΔX = 0 for any two adjacent
+   vertices, in general (not just this example).** If external w borders
+   v via coordinate p and borders u via a different coordinate q, then w
+   agrees with u everywhere except q, forcing w_p = u_p; but w disagrees
+   with v at p, forcing u_p ≠ v_p. Symmetrically, w agrees with v
+   everywhere except p, forcing w_q = v_q, and w disagrees with u at q,
+   forcing v_q ≠ u_q. So u and v differ at both p and q — contradicting
+   that adjacent vertices differ at exactly one coordinate. Hence p = q,
+   i.e. any two adjacent vertices contribute to X only through a shared
+   coordinate, never a cross-coordinate collision: **ΔX = 0 whenever v is
+   adjacent to the vertex it's added next to**, independent of n, k, R.
+   This is a genuine, reusable lemma (worth Lean-formalizing on its own),
+   not just an artifact of the R=2 example.
+
+   **Conjectured second cap (not yet proved as a general trade-off).**
+   Separately, ΔX ≤ 2·N₂ where N₂ = #{u ∈ V'\{v} : d(u,v)=2} ≤ R−1 (see
+   above); this "Source Cap" is small when V'\{v} is sparse near v. The
+   working conjecture is that ΔX is always bounded by
+   `min((k−s)m, 2N₂)`, and that whichever cap is small enough to be the
+   binding one always keeps `ΔX + (m+1)s ≤ ΔC(R) + m·popcount(R−1)`
+   satisfied — i.e., that a configuration cannot simultaneously have
+   large (k−s)m (small s, so cheap ΔD) *and* large N₂ (many distance-2
+   neighbors near v, which should itself require existing structure that
+   already costs D_old/X_old budget). **This trade-off has not been
+   proved.** Only two data points support it so far — the sparse R=2 case
+   (Source Cap ≈ 0 saves it) and the dense R=9 clique-trap (Volume Cap is
+   tight but RHS has banked enough slack from D_old to absorb it). No
+   mid-range example (moderate R, k, m, with neither cap trivially small)
+   has been checked; that is the natural next stress test before treating
+   the crossover as anything more than a naming convention for two
+   observed cases.
+
 This approach's main appeal is that steps 1–2 reuse verified machinery
-directly; the ΔX bound in step 4 is now a checked derivation rather than
-an open guess, but closing the induction still requires reconciling it
-against ΔC(R) for all s, which has not been done.
+directly; the ΔX bound in step 4 is now a checked derivation with one
+fully proved special case (ΔX=0 at adjacency) and one still-conjectural
+general trade-off, but closing the induction for all R, s still requires
+either proving that trade-off or finding a counterexample to it.
 
 ### Strategy 2 sketch: Global Lyapunov function on fiber multisets
 
