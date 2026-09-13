@@ -541,10 +541,57 @@ one open, concretely-scoped question:
    adversarial configuration at R≈10–20 has been hand-constructed and
    verified the way every other claim in this document has been.
 
-**Status: open, not resolved either way.** The next required test is a
-hand-built moderate-R (≈10–20) adversarial fiber pair, computed directly
-(not via the tautological subtraction method), to see whether real
-X_cross values approach the loose bounds above or stay far below them.
+4. **A specific R=20 adversarial construction (k=3) was checked and
+   collapses.** F_a = {(1,y,3): y∈Y}, F_b = {(2,z,3): z∈Z}, |Y|=|Z|=10,
+   Y∩Z=∅. All 100 pairs are genuinely distance-2, but every pair sharing
+   the same z (or same y) generates the *same* collision target — bd_mult
+   counts distinct coordinates, not pairs, so 100 raw pair-interactions
+   collapse to X_cross=20, comfortably under the slack of 63 at m=20.
+   **This collapse is a property of k=3 specifically, not of A(n,k) in
+   general:** with only one non-p coordinate available (k=3 means
+   positions {1,2,3}, p=1, only q=2 remains), every pair is forced
+   through the same q, which is exactly why they collapse onto shared
+   targets.
+
+5. **A k=5 counter-construction shows the collapse is not universal.**
+   Fix a base tuple over positions 2–5; let F_a={u_i} and F_b={v_i} for
+   i=2..5, where u_i (resp. v_i) is the base with position i replaced by
+   a fresh symbol α_i (resp. β_i), and position 1 fixed to a (resp. b).
+   Only matched pairs (u_i,v_i) are distance-2 (mismatched i≠j give
+   distance 3, contributing 0), and each matched pair uses a *different*
+   q=i, so their targets don't coincide. Hand-checked at k=5, n=14, m=9:
+   4 valid pairs, X_cross=8, no collapse — confirmed distinct from the
+   k=3 collapse case.
+
+   **This shows "geometry always collapses collisions" is false as a
+   general claim** — it disproves the blanket version of that claim, not
+   merely restates the k=3 example. It does **not** show X_cross can be
+   pushed past the slack: the one instance checked (k=5, R=8, m=9) gives
+   slack=28, comfortably clear of X_cross=8.
+
+6. **Open obstacle for partition induction: bounding X_cross.** The
+   recombination step needs X_cross ≤ Δrecombination-slack from fiber
+   sizes and m alone. Naive pairwise counting (c_a·c_b, O(R²)) fails —
+   see point 3. Whether collisions collapse (point 4) or spread across
+   distinct q's (point 5) depends on the specific construction, not on a
+   general law. The k=5 spread construction needed roughly O(k) distinct
+   fresh symbols to keep each pair's q unique without accidental
+   collapse, which forced m to be large enough to supply them (m=9 for
+   k=5 in the instance checked) — **this was only observed in the one
+   construction tried, not proved as a necessary trade-off.** It remains
+   open whether some other, less alphabet-hungry construction could
+   achieve spread at small m, and whether any construction (collapsing,
+   spreading, or otherwise) can push X_cross past the available slack at
+   small m and large k. No counterexample to the recombination bound has
+   been found in any case checked so far, but no proof of the trade-off
+   as a general law exists either.
+
+**Status: open, not resolved either way.** The next required test is
+either (a) an explicit small-m, large-k construction attempting to
+spread collisions across many q's without the alphabet cost observed in
+point 5, to see if the apparent trade-off is real or an artifact of one
+construction, or (b) a genuine general upper bound on X_cross proven
+from fiber sizes and m alone, closing the question outright.
 
 ### Status of all sketches
 

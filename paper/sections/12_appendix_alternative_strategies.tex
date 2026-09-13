@@ -67,9 +67,22 @@ $O(\log R)$, while $c_ac_b$ for a balanced split is $O(R^2)$ and even the
 refined bound is $O(R)$ for fixed $k$ — numerically, at $R=20$ balanced
 $(10,10)$ the slack is $6$ (at $m=1$) against bounds of $100$ and $40$.
 Whether the true worst-case $X_{\text{cross}}$ (not these loose
-combinatorial bounds) stays near $O(\log R)$ is unresolved; no explicit
-moderate-$R$ adversarial fiber pair has been hand-verified. This
-direction is open, not refuted, but not confirmed either.
+combinatorial bounds) stays near $O(\log R)$ is unresolved. Two explicit
+constructions at $k=3$ and $k=5$ have since been hand-verified: at $k=3$
+($R=20$, balanced $(10,10)$ split), all $100$ candidate pairs collapse
+onto only $20$ distinct collision targets, because $\mathrm{bd\_mult}$
+counts distinct coordinates, not pairs, and $k=3$ leaves only one
+non-partition coordinate for every pair to route through. A $k=5$
+construction (matched pairs routed through $k-1=4$ \emph{different}
+coordinates) avoids this collapse entirely, disproving collapse as a
+general law — but it required $O(k)$ fresh alphabet symbols to keep each
+pair's coordinate distinct, which forced $m$ large enough to supply them
+in the one instance checked, and the resulting $X_{\text{cross}}$ still
+sat comfortably under slack there. Whether this alphabet cost is a
+necessary trade-off or an artifact of that one construction is itself
+open; no construction achieving spread at small $m$ and large $k$, nor
+any violation of the recombination bound, has been found. This direction
+remains open, not refuted, but not confirmed either.
 
 \paragraph{Dual root-compression via averaging.}
 Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
