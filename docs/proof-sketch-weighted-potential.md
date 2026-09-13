@@ -947,9 +947,9 @@ of the two shared-neighbor channels already catalogued; this has not been
 done.
 
 **The critical-case test.** An amortized induction's dangerous case is
-exactly S(F_a)=S(F_b)=0 (both fibers individually tight, i.e. achieving
+exactly S(F*a)=S(F_b)=0 (both fibers individually tight, i.e. achieving
 rhs exactly — the induction-hypothesis boundary case), where the identity
-reduces to needing I < Delta. Exhaustive search over _every_ disjoint pair
+reduces to needing I < Delta. Exhaustive search over \_every* disjoint pair
 of tight fibers (script: `scripts/check_amortized_slack.py`), across 8
 independent (n,k,c_a,c_b) cells up to size (3,3):
 
@@ -964,30 +964,59 @@ independent (n,k,c_a,c_b) cells up to size (3,3):
 | (6,3,1,2)          | 5     | −2                 |
 | (5,3,3,3)          | 9     | −5                 |
 | (5,3,4,4)          | 12    | −8                 |
+| (6,3,3,3)          | 12    | −4                 |
+| (6,3,3,4)          | 13    | −6                 |
+| (6,3,4,4)          | 16    | −8                 |
+| (6,3,4,5)          | 17    | −11                |
+| (6,3,5,5)          | 20    | −12                |
+| (7,3,4,4)          | 20    | −8                 |
 
 I never even reaches Delta in the tight case, and the margin widens (not
-narrows) as sizes grow: on the (5,3) diagonal alone, sizes 1,2,3,4 give
-margins −1,−3,−5,−8. The (5,3,4,4) row was run independently, directly
-from `scripts/check_amortized_slack.py`. This is genuine positive
-evidence for the amortized approach, not a proof: 9 data points up to
-size 4, not an
+narrows) as sizes grow: on the (5,3) diagonal, sizes 1,2,3,4 give margins
+−1,−3,−5,−8; on the (6,3) diagonal, sizes 1,2,3,4,5 give −2,−4,−4,−8,−12.
+The (6,3) diagonal's size-3 margin (−4) is _tighter_ than (5,3)'s
+size-3 margin (−5) despite the larger alphabet — the margin is not
+monotone in n at fixed (k,c_a,c_b), only empirically monotone so far
+along each fixed-(n,k) diagonal. This is genuine positive evidence for
+the amortized approach, not a proof: 15 data points up to size 5, not an
 argument for all sizes. Also verified as a sanity check (not new
 information, but confirms no bug in the identity/search code): the TRUE
 minimum of S(V') over all splits, exhaustively, at R=2 and R=3 is exactly
 0, matching Proposition 5.3 / the Hamming-ball-evaluation proposition
 exactly.
 
+**One genuine edge case surfaced while extending the table, not a bug:**
+A(5,3) c_a=4, c_b=5 has zero tight fibers of size 5 at all
+(`#tight_b=0`) — confirmed independently in both the Python and C++
+implementations. This is the achievability log-condition
+(n−k ≥ ⌈log₂R⌉) failing, not a search error: in A(5,3), n−k=2 <
+⌈log₂5⌉=3, so the Hamming ball construction cannot even embed at R=5
+there, and nothing else hits rhs(5) exactly either. A useful independent
+confirmation that the achievability caveat already in the paper
+(Section 1) is the real boundary, not a formality.
+
+**Ported to C++** (`src/check_amortized_slack.cpp`, `make
+check_amortized_slack`) after the Python version stalled at A(6,3)
+c_a=c_b=4 (it did eventually finish and cross-validated exactly:
+max(I−Delta)=−8 both ways). The C++ version is a straight port —
+bitset boundary computation instead of Python sets, same combinatorial
+search, same output format — cross-validated against every Python
+result above before being trusted on new cells; it reaches (6,3,5,5)
+(checking ~2M disjoint tight-fiber pairs) in under 10 seconds where
+the Python equivalent would not complete in reasonable time. Passes
+`cppcheck` and the repo's `make lint`/`clang-format` checks cleanly.
+
 **What is still missing before this is a lemma, let alone a proof:** (a)
 an actual argument for _why_ I < Delta when fibers are tight — not just
-data up to size 3 — the natural guess is that tight fibers are highly
+data up to size 5 — the natural guess is that tight fibers are highly
 root-concentrated, which should structurally cap shared-neighbor overlap,
 but this has not been shown; (b) the direct-adjacency correction term
 from the caveat above, uncharacterized; (c) even granting (a) and (b), an
 amortized induction also needs to handle the non-tight case (S(F_a),
 S(F_b) > 0) in general, not just confirm one already-known witness has
-enough margin. `scripts/check_amortized_slack.py` is set up to extend the
-critical-case table to size (4,4) and beyond for whoever picks this up
-next.
+enough margin. `scripts/check_amortized_slack.py` and
+`src/check_amortized_slack.cpp` are both set up to extend the
+critical-case table further for whoever picks this up next.
 
 ## Status
 
