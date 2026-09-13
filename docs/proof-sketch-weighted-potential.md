@@ -220,16 +220,110 @@ the transition.
    X + (m+1)D > C(R) + m·E(R) would violate some known constraint
    (e.g., the defect bound D ≤ E(R), or the fiber identity itself).
 
+## Whiteboard Sketches for Strategies 2 and 3 (2026-09-12)
+
+Root compression (Step 4) has stalled on the coordinate-tangling obstacle
+(Step 5): a local move at position p unavoidably scrambles roots at every
+q ≠ p, and no argument has bounded that scatter damage tightly enough to
+recover monotonicity. Rather than keep pushing on that specific operator,
+here are informal starting sketches for Strategies 2 and 3 from the list
+above. **Neither is worked out to the point of being checkable, let alone
+a proof — both are starting points for further whiteboard work, recorded
+here so the next pass doesn't restart from nothing.**
+
+### Strategy 3 sketch: Marginal induction with partial-layer tracking
+
+This reuses the exact skeleton already used to prove `Theorem~\ref{thm:defect}`
+(`D(V') ≤ E_seq(R)`, proven by strong induction on R via `sum_unique_roots_lower_bound`
+and the subadditivity lemma `E_add_min_le`), extended to carry the joint
+quantity Φ = X + (m+1)D instead of D alone.
+
+Proceed by strong induction on R. Strip a vertex v from V', apply the
+inductive hypothesis to V' \ {v} (size R−1), then bound the marginal
+change Δ Φ = ΔX + (m+1)ΔD when v is added back.
+
+1. **Marginal defect.** v brings k roots. Let s = the number of these
+   roots already populated by V' \ {v} (shared roots), so k−s are fresh.
+   By definition, ΔD = s.
+
+2. **Marginal collisions.** v contributes at most (k−s)(n−k) new external
+   edges from its fresh roots (0 from shared roots, since those don't
+   expose new boundary). Some of these edges may land on vertices already
+   in the external boundary of V' \ {v}; each such overlap adds 1 to ΔX
+   instead of exposing a genuinely new boundary vertex.
+
+3. **Target bound for the inductive step.** To close the induction, we'd
+   need
+
+   ```
+   ΔX + (m+1)s ≤ ΔC(R) + m·Δ E_seq(R)
+   ```
+
+   where Δ E_seq(R) = popcount(R−1) (from the defining recurrence of
+   E_seq) and ΔC(R) is the corresponding marginal change in C_constant.
+
+4. **Open obstacle.** The proof needs a bound on ΔX purely as a function
+   of s (and m), independent of which specific roots are shared. In the
+   hypercube-embedded (binary) case this is close to what the Fracture
+   Gap analysis (`Theorem~\ref{thm:fracture}`) already computes for
+   single-vertex removal from Q_d; whether that computation generalizes
+   to arbitrary partial layers and to the full n-ary alphabet (not just
+   the embedded hypercube) is unresolved. **This step has not been
+   attempted.**
+
+This approach's main appeal is that steps 1–2 reuse verified machinery
+directly; its main open question is entirely contained in step 4.
+
+### Strategy 2 sketch: Global Lyapunov function on fiber multisets
+
+1. **State space.** Let 𝓕(V') be the multiset of nonzero fiber sizes
+   across all k coordinates: 𝓕(V') = ⋃ₚ {|F\_{p,r}| : r ∈ U_p(V')}.
+
+2. **Candidate potential.** Since D(V') = Rk − |𝓕(V')|, a natural
+   candidate is Φ(V') = Σₚ Σᵣ f(|F\_{p,r}|) for a convex f (e.g.
+   f = E_seq or f(c) = C(c,2)). Convexity would make concentrating
+   vertices into fewer, larger fibers — which the Hamming ball
+   maximizes — strictly increase Φ.
+
+3. **Single-operation accounting.** For one root-compression move
+   (vertex v shifted from a smaller to a larger fiber at coordinate p):
+   the _local_ gain at p is positive by convexity of f. The _collateral_
+   effect at every other coordinate q ≠ p, where v's root also changes,
+   could go either way; worst case v lands in k−1 brand-new
+   singleton fibers, each contributing f(1) at those coordinates.
+
+4. **What would need to be shown.** (a) Φ actually lower-bounds
+   X(V') + (m+1)D(V') in a form matching the target inequality — this
+   link has not been established, only motivated informally via D;
+   (b) the local gain at p strictly dominates the worst-case collateral
+   loss summed over q ≠ p, for every possible compression move. Neither
+   (a) nor (b) has been attempted formally.
+
+This approach's main appeal is a single global argument with no per-layer
+casework; its main open question is whether such an f and such a
+domination bound actually exist — nothing here rules out that they don't.
+
+### Status of both sketches
+
+Both are recorded as starting points, not results. Strategy 3 is judged
+the more promising of the two to work out first, because steps 1–2 of its
+induction reuse already-verified Lean machinery (`sum_unique_roots_lower_bound`,
+`E_add_min_le`) and a partially-relevant existing computation (the Fracture
+Gap theorem), leaving a narrower, better-scoped open step (step 4) than
+Strategy 2's from-scratch invariant search.
+
 ## Status
 
-This is a research sketch, not a proof. The root compression approach
-(Step 4) is the most promising direction but the multi-coordinate
-interaction (Step 5) is the main obstacle. The five resolution strategies
-above are unexplored.
+This is a research sketch, not a proof. Root compression (Step 4/5) is
+stalled on the coordinate-tangling obstacle. The two strategies sketched
+above (marginal induction and the global Lyapunov function) are candidate
+replacements, recorded at the whiteboard-sketch stage only; neither has
+been carried far enough to check, let alone prove.
 
-The exhaustive computational evidence (24 rows, up to 190M subsets)
-supports the inequality. The proof target is precise: show that root
-compression is monotone for X + (m+1)D, or find an alternative global
-argument. The existing Cheng et al. computational results \cite{cheng2022extraconnectivity}
-do not supply this — they are limited to small g and do not address the
-all-subsets vertex-isoperimetric question.
+The exhaustive computational evidence (30 rows as of 2026-09-12, up to
+3.65 billion subsets in a single row) supports the inequality with no
+counterexample found. The proof target is precise: show
+X(V') + (m+1)D(V') ≤ C(R) + m·E(R) for all V', by any of the strategies
+above or another route. The existing Cheng et al. computational results
+\cite{cheng2022extraconnectivity} do not supply this — they are limited to
+small g and do not address the all-subsets vertex-isoperimetric question.

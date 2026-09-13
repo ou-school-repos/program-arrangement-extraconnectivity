@@ -1,0 +1,50 @@
+\section{Future ideas for Proving the Universal Boundary Inequality}\label{app:alt-strategies}
+
+\begin{quote}
+\textit{Everything in this appendix is a research sketch, not a result.
+Nothing here is proven, checked, or claimed to be correct; it is recorded
+only so that future work on Proposition~\ref{prop:universal} does not
+restart from nothing. Neither strategy below has been carried past an
+informal whiteboard stage.}
+\end{quote}
+
+The coordinate-root compression approach outlined in the accompanying
+research notes (\texttt{docs/proof-sketch-weighted-potential.md}) stalls
+on a coordinate-tangling obstacle: a local compression move at position
+$p$ unavoidably scrambles roots at every other position $q \neq p$, and no
+argument to date bounds that scatter damage tightly enough to recover
+monotonicity of $X(V') + (m+1)D(V')$. Two alternative directions are
+sketched below.
+
+\paragraph{Marginal induction with partial-layer tracking.}
+This direction extends the proof skeleton already used for
+Theorem~\ref{thm:defect} (proven by strong induction on $R$, partitioning
+$V'$ by a coordinate and applying Lemma~\ref{lem:subadditivity}), carrying
+the joint quantity $\Phi = X + (m+1)D$ instead of $D$ alone. Stripping a
+vertex $v$ with $s$ roots shared with the remaining $R-1$ vertices gives
+$\Delta D = s$ exactly; closing the induction would require bounding
+$\Delta X$ as a function of $s$ and $m$ alone, so that
+$\Delta X + (m+1)s \le \Delta \Cconst(R) + m \cdot \Delta \Eseq(R)$. This
+bound on $\Delta X$ is the open step and has not been attempted beyond the
+single-vertex-removal case already computed for the Fracture Gap
+(Theorem~\ref{thm:fracture}).
+
+\paragraph{A global Lyapunov function on fiber multisets.}
+This direction proposes a potential $\Phi(V') = \sum_{p=1}^k \sum_r
+f(|F_{p,r}|)$ over the multiset of fiber sizes at every coordinate, for
+some convex $f$, and asks whether a single root-compression move's local
+gain (from concentrating vertices into larger fibers at one coordinate)
+always dominates its collateral loss (from scrambling roots at every other
+coordinate). Neither the link between this $\Phi$ and $X + (m+1)D$, nor
+the required domination bound, has been established; it is not known
+whether a suitable $f$ exists.
+
+\medskip
+\noindent Of the two, the marginal-induction direction is judged more
+promising to pursue first, since its early steps reuse machinery already
+mechanized in Lean (Lemma~\ref{lem:subadditivity} and
+Theorem~\ref{thm:defect}'s induction), leaving a narrower, better-scoped
+open question than the from-scratch invariant search the Lyapunov
+direction would require. This judgment is a research opinion, not a
+mathematical claim, and should not be read as evidence toward
+Proposition~\ref{prop:universal} itself.
