@@ -15,8 +15,19 @@ I = |extbd(F_a) ∩ extbd(F_b)| is the shared-boundary overcounting.
 The critical case for an amortized induction is s_A = s_B = 0 (both fibers
 individually tight/optimal, i.e. achieving rhs(c_a), rhs(c_b) exactly --
 the induction-hypothesis boundary case). This script exhaustively checks,
-for that critical case, whether I ever reaches or exceeds Delta. Verified
-so far (by hand, up to size (3,3)): it never does, with growing margin.
+for that critical case, whether I ever reaches or exceeds Delta.
+
+SUPERSEDED (2026-09-13, later same session): the identity above only
+holds when F_a and F_b share no direct edges. The corrected identity is
+S(V') = s_A + s_B + Delta - (I + B_ba + B_ab), where B_ba = |F_b ∩
+extbd(F_a)| and B_ab = |F_a ∩ extbd(F_b)| are direct-adjacency crossover
+counts -- this script does NOT compute those, so its I-only output
+undercounts whenever a checked pair is directly adjacent (which this
+search already allows; there is no adjacency filter to add). The
+corrected quantity is computed by src/check_amortized_slack.cpp, which
+found the true picture is materially different: most small cells hit
+I+B_ba+B_ab = Delta exactly (not strictly below it). Do not cite this
+script's "growing margin" output; see the doc's corrected table.
 
 Usage:
   ./scripts/check_amortized_slack.py 5 3 4 4      # A(5,3), c_a=c_b=4

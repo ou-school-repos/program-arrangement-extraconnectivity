@@ -946,12 +946,29 @@ identity has to handle direct F_a–F_b adjacency as a third effect, on top
 of the two shared-neighbor channels already catalogued; this has not been
 done.
 
-**The critical-case test.** An amortized induction's dangerous case is
-exactly S(F*a)=S(F_b)=0 (both fibers individually tight, i.e. achieving
-rhs exactly — the induction-hypothesis boundary case), where the identity
-reduces to needing I < Delta. Exhaustive search over \_every* disjoint pair
-of tight fibers (script: `scripts/check_amortized_slack.py`), across 8
-independent (n,k,c_a,c_b) cells up to size (3,3):
+**The critical-case test, corrected (2026-09-13, same session, second
+pass).** An amortized induction's dangerous case is exactly
+S(F_a)=S(F_b)=0 (both fibers individually tight). The first pass at this
+test (table below, struck through) checked only I < Delta, using the
+direct-adjacency caveat above as a footnote rather than folding it into
+the quantity being tested. That was an error, not merely an
+incompleteness: the exact identity derived above is
+
+    S(V') = S(F_a) + S(F_b) + Delta − (I + B_ba + B_ab)
+
+where B_ba = |F_b ∩ ∂F_a| and B_ab = |F_a ∩ ∂F_b| are the direct
+F_a↔F_b adjacency crossover counts (derived cleanly: ∂F_a = E_a ⊔ B_ba
+with E_a = ∂F_a \ F_b, so ∂V' = E_a ∪ E_b exactly and E_a ∩ E_b = I —
+this decomposition was checked against the algebra independently before
+trusting it). The critical-case quantity that actually has to stay
+`≤ Delta` is **I + B_ba + B_ab**, not I alone; the first-pass table
+below undercounted it whenever F_a, F_b shared a direct edge (which the
+search already allowed — there was never an adjacency filter to drop,
+only a term missing from what was measured).
+
+<details>
+<summary>Superseded first-pass table (I only, undercounts — kept for the
+record, not to be cited)</summary>
 
 | cell (n,k,c_a,c_b) | Delta | max(I−Delta) found |
 | ------------------ | ----- | ------------------ |
@@ -971,19 +988,57 @@ independent (n,k,c_a,c_b) cells up to size (3,3):
 | (6,3,5,5)          | 20    | −12                |
 | (7,3,4,4)          | 20    | −8                 |
 
-I never even reaches Delta in the tight case, and the margin widens (not
-narrows) as sizes grow: on the (5,3) diagonal, sizes 1,2,3,4 give margins
-−1,−3,−5,−8; on the (6,3) diagonal, sizes 1,2,3,4,5 give −2,−4,−4,−8,−12.
-The (6,3) diagonal's size-3 margin (−4) is _tighter_ than (5,3)'s
-size-3 margin (−5) despite the larger alphabet — the margin is not
-monotone in n at fixed (k,c_a,c_b), only empirically monotone so far
-along each fixed-(n,k) diagonal. This is genuine positive evidence for
-the amortized approach, not a proof: 15 data points up to size 5, not an
-argument for all sizes. Also verified as a sanity check (not new
-information, but confirms no bug in the identity/search code): the TRUE
-minimum of S(V') over all splits, exhaustively, at R=2 and R=3 is exactly
-0, matching Proposition 5.3 / the Hamming-ball-evaluation proposition
-exactly.
+The "margin widens as sizes grow" conclusion drawn from this table does
+**not** survive the correction below and should not be reused.
+
+</details>
+
+**Corrected table** (`src/check_amortized_slack.cpp`, same 13
+comparable cells plus the two that already had no tight fiber of size
+5 — see below):
+
+| cell (n,k,c_a,c_b) | Delta | max(I+B_ba+B_ab−Delta) found |
+| ------------------ | ----- | ----------------------------- |
+| (5,3,1,1)          | 3     | 0                              |
+| (5,3,2,2)          | 6     | 0                              |
+| (5,3,1,2)          | 4     | 0                              |
+| (5,3,1,3)          | 5     | 0                              |
+| (6,3,1,1)          | 4     | 0                              |
+| (6,3,2,2)          | 8     | 0                              |
+| (6,3,1,2)          | 5     | 0                              |
+| (5,3,3,3)          | 9     | −2                             |
+| (5,3,4,4)          | 12    | −6                             |
+| (6,3,3,3)          | 12    | 0                              |
+| (6,3,3,4)          | 13    | 0                              |
+| (6,3,4,4)          | 16    | 0                              |
+| (7,3,4,4)          | 20    | 0                              |
+
+**This is a materially different picture than the first pass, not just
+a smaller margin.** The corrected quantity hits the bound **exactly**
+(margin 0, i.e. S(V')=0 exactly at that split) in 11 of 13 cells — the
+inequality is *tight*, not comfortably loose. Only (5,3,3,3) and
+(5,3,4,4) go strictly negative, and by less than the first-pass table
+claimed (−2 and −6, not −5 and −8). Zero violations (margin > 0) found
+in any cell. This still counts as evidence the corrected critical-case
+lemma is plausible, but the "growing margin" story is dead: the real
+signature so far is an inequality living right at its own boundary,
+which is a harder thing to prove analytically than something with slack
+to spare — equality that tight, that often, is usually explained by a
+clean bijective/counting argument, not an inequality with room in it.
+No such argument has been found yet.
+
+margin=0 at (1,1) is not a coincidence to explain away: it is exactly
+the R=2 case (an adjacent pair achieving rhs(2) exactly, S(V')=0 by
+Proposition~hb-eval), reappearing correctly once B_ba/B_ab are counted.
+The very first version of this corrected tool flagged margin=0 as
+"*** CRITICAL-CASE VIOLATION ***" — a real bug (wrong inequality
+direction: equality is not a violation of `S(V') ≥ 0`), caught and
+fixed before any of the numbers above were trusted.
+
+Also verified as a sanity check (not new information, but confirms no
+bug in the identity/search code): the TRUE minimum of S(V') over all
+splits, exhaustively, at R=2 and R=3 is exactly 0, matching Proposition
+5.3 / the Hamming-ball-evaluation proposition exactly.
 
 **One genuine edge case surfaced while extending the table, not a bug:**
 A(5,3) c_a=4, c_b=5 has zero tight fibers of size 5 at all
@@ -1006,15 +1061,30 @@ result above before being trusted on new cells; it reaches (6,3,5,5)
 the Python equivalent would not complete in reasonable time. Passes
 `cppcheck` and the repo's `make lint`/`clang-format` checks cleanly.
 
+**Second-pass update to the C++ tool (same session):** extended in place
+to compute B_ba and B_ab alongside I and report the combined quantity;
+cross-checked against the known swap-pair witness's non-adjacent-fiber
+case (where B_ba=B_ab=0 by construction, reducing correctly to the old
+I=8 value) before trusting it on adjacent pairs. Re-ran 13 of the
+original cells (all but (6,3,4,5) and (6,3,5,5), not yet redone with the
+corrected quantity); results are the corrected table above, not the
+struck-through one.
+
 **What is still missing before this is a lemma, let alone a proof:** (a)
-an actual argument for _why_ I < Delta when fibers are tight — not just
-data up to size 5 — the natural guess is that tight fibers are highly
-root-concentrated, which should structurally cap shared-neighbor overlap,
-but this has not been shown; (b) the direct-adjacency correction term
-from the caveat above, uncharacterized; (c) even granting (a) and (b), an
-amortized induction also needs to handle the non-tight case (S(F_a),
+an actual argument for _why_ I + B_ba + B_ab ≤ Delta when fibers are
+tight, and — now the sharper question — why it holds with *equality* in
+11 of 13 tested cells rather than merely holding; the natural guess is
+still that tight fibers are highly root-concentrated, which should
+structurally cap boundary interference, but this has not been shown,
+and an equality this consistent suggests a bijective or counting
+argument is the right tool, not a slack-based inequality; (b) the
+direct-adjacency correction term is now characterized exactly (the
+identity above) but not yet proven from first principles independent of
+the computational check; (c) even granting (a) and (b), an amortized
+induction also needs to handle the non-tight case (S(F_a),
 S(F_b) > 0) in general, not just confirm one already-known witness has
-enough margin. `scripts/check_amortized_slack.py` and
+enough margin. `scripts/check_amortized_slack.py` (still I-only, now
+known to undercount — a fix note has not yet been added to it) and
 `src/check_amortized_slack.cpp` are both set up to extend the
 critical-case table further for whoever picks this up next.
 

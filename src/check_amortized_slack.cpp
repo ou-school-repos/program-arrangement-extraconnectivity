@@ -3,10 +3,16 @@
 // (docs/proof-sketch-weighted-potential.md, "amortized slack" trailhead,
 // 2026-09-13 session).
 //
-// Same computation, same output format as the Python script, just fast
-// enough to reach sizes it chokes on (e.g. A(6,3) c_a=c_b=4:
-// C(120,4)=8,214,570 candidate fibers to filter, then an O(#tight^2)
-// pairwise pass).
+// Diverged from the Python script (2026-09-13, later same session): tests
+// the corrected combined quantity I + B_ba + B_ab <= Delta, not just
+// I <= Delta, where B_ba = |F_b ∩ ∂F_a| and B_ab = |F_a ∩ ∂F_b| are the
+// direct Fa<->Fb adjacency crossover counts. Derived from the exact
+// identity |∂V'| = |∂F_a| + |∂F_b| - |B_ba| - |B_ab| - |I| (verified
+// algebraically by decomposing ∂F_a = E_a ⊔ B_ba with E_a = ∂F_a \ F_b,
+// so ∂V' = E_a ∪ E_b exactly and E_a ∩ E_b = I). The original I-only
+// version undercounted whenever Fa and Fb share a direct edge; this
+// version runs over the same disjoint tight-fiber pairs (no adjacency
+// filter existed or exists) but reports the full combined quantity.
 //
 // Usage: ./check_amortized_slack n k c_a c_b
 //
@@ -206,6 +212,7 @@ int main(int argc, char **argv) {
 
     std::int64_t worst = std::numeric_limits<std::int64_t>::min();
     std::size_t checked = 0;
+    std::size_t adjacent_pairs = 0;
     auto t0 = std::chrono::steady_clock::now();
 
     for (std::size_t i = 0; i < tightA.size(); ++i) {
@@ -217,8 +224,18 @@ int main(int argc, char **argv) {
             const auto &[membersB, ebB] = tightB[j];
             if (membersA.intersects(membersB))
                 continue;
+            // I: strictly-external shared targets (unaffected by Fa-Fb
+            // adjacency, since ebA/ebB already exclude their own fiber but
+            // not necessarily the other one -- see B_ba/B_ab below).
             const int shared = popcountAnd(ebA, ebB);
-            const std::int64_t margin = shared - delta;
+            // B_ba = |F_b ∩ ∂F_a|: Fb-members directly adjacent to Fa.
+            // B_ab = |F_a ∩ ∂F_b|: Fa-members directly adjacent to Fb.
+            const int b_ba = popcountAnd(ebA, membersB);
+            const int b_ab = popcountAnd(ebB, membersA);
+            const int combined = shared + b_ba + b_ab;
+            if (b_ba > 0 || b_ab > 0)
+                ++adjacent_pairs;
+            const std::int64_t margin = combined - delta;
             if (margin > worst)
                 worst = margin;
             ++checked;
@@ -229,16 +246,18 @@ int main(int argc, char **argv) {
                                .count();
             std::cerr << "  ... " << (i + 1) << "/" << tightA.size()
                       << " tight-A fibers done, " << checked
-                      << " pairs checked, running max(I-Delta)=" << worst
-                      << " (" << elapsed << "s elapsed)\n";
+                      << " pairs checked, running max(I+B_ba+B_ab-Delta)="
+                      << worst << " (" << elapsed << "s elapsed)\n";
         }
     }
 
     std::cout << "A(" << n << "," << k << ") c_a=" << ca << " c_b=" << cb
-              << ": checked " << checked
-              << " disjoint tight-fiber pairs; max(I-Delta) = " << worst
+              << ": checked " << checked << " disjoint tight-fiber pairs ("
+              << adjacent_pairs
+              << " directly Fa-Fb adjacent); max(I+B_ba+B_ab-Delta) = " << worst
               << "\n";
-    if (worst >= 0)
-        std::cout << "*** CRITICAL-CASE VIOLATION (I >= Delta) ***\n";
+    if (worst > 0)
+        std::cout << "*** CRITICAL-CASE VIOLATION (I+B_ba+B_ab >= Delta) "
+                     "***\n";
     return 0;
 }
