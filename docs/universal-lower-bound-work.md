@@ -142,9 +142,40 @@ observed in the following regimes:
 | --- | -------------------------- | ---------------------------------------------------- |
 | 1   | A(3,2) R=2                 | A(3,2) R=3; A(4,3) R=3–6; A(5,4) R=3–4; A(6,5) R=2–3 |
 | 2   | A(5,3) R=3–4; A(6,4) R=2–3 | A(5,3) R=5                                           |
-| 3   | A(6,3) R=3–5               | —                                                    |
+| 3   | A(6,3) R=2–5               | —                                                    |
+| 4   | A(6,2) R=2–4; A(7,3) R=2–4 | A(6,2) R=5–6                                         |
 | 5   | A(7,2) R=3–4               | A(7,2) R=5–6                                         |
 | 6   | A(8,2) R=3–4               | —                                                    |
+
+TODO(review): the A(6,3) row's "—" non-tight entry only reflects R=2–5; R=6+
+was never tested and may still be non-tight, as seen in the analogous A(6,2)
+row (n−k=4).
+
+TODO(review): the A(8,2) row only covers R=3–4. R=2 and R=5–6 were never
+tested — the "—" non-tight entry is untested, not confirmed absent. Run
+`./universal_check 8 2 2`, `./universal_check 8 2 5`, `./universal_check 8 2 6`
+to fill this in.
+
+Commands used for the n−k=4 rows:
+
+```bash
+g++ -O2 -std=c++17 -o /tmp/universal_check src/universal_lower_bound.cpp
+/tmp/universal_check 6 2 2
+/tmp/universal_check 6 2 3
+/tmp/universal_check 6 2 4
+/tmp/universal_check 6 2 5
+/tmp/universal_check 6 2 6
+/tmp/universal_check 7 3 2
+/tmp/universal_check 7 3 3
+/tmp/universal_check 7 3 4
+```
+
+A(7,3) R=5 (C(210,5) ≈ 3.2B subsets) was not run — it needs a long/background
+run. To attempt it:
+
+```bash
+time /tmp/universal_check 7 3 5
+```
 
 In the non-tight rows, positive slack is observed and grows with R for fixed
 n−k. This pattern is consistent with the conjecture that the Hamming ball is

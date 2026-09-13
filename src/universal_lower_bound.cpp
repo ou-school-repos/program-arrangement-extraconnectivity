@@ -215,6 +215,8 @@ class Checker {
 
     void inspect_subset() {
         ++checked_;
+        if (checked_ % 10'000'000 == 0)
+            std::cerr << "progress: " << checked_ << " subsets checked\n";
         const Metrics values = metrics();
         const bool is_connected = connected(subset_, vertices_);
         if (values.boundary < minimum_boundary_) {

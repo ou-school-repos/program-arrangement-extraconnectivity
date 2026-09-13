@@ -34,9 +34,10 @@ require.
   vertex is double-counted in the top-heavy ball's boundary iff it is a cube
   vertex; every top-strip cube vertex has multiplicity ≥ 1 via its "bottom
   partner"; summing the excess multiplicity reduces to a plain edge-boundary
-  count in one lower dimension). `CrossRecurrence` and its driver are kept in
-  `CrossRecurrenceDriver.lean` for reference but should be treated as
-  deprecated, not as the live path — do not invest further proof effort there.
+  count in one lower dimension). `CrossRecurrence` and its driver have been
+  archived to `docs/archive/CrossRecurrenceDriver.lean` for reference but
+  should be treated as deprecated, not as the live path — do not invest
+  further proof effort there.
 - **Formula values verified** via `predict --verify R` (predict.cpp) for
   `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
   `arrangement` nauty-based search covers
@@ -50,10 +51,10 @@ require.
   counterexample first. The current math-first candidate is the equivalent
   weighted potential inequality
   `X(V') + (n-k+1) · D(V') ≤ C(R) + (n-k) · E(R)`.
-  It has finite exhaustive evidence but no proof. The standard guarded symbol
-  compression is known to increase boundary on a two-vertex `A(4,2)` example,
-  so it cannot establish this candidate; see
-  `docs/universal-lower-bound-work.md`.
+  Exhaustive C++ testing now covers 24 parameter rows (up to 190M subsets)
+  with no counterexample. The standard guarded symbol compression is known to
+  increase boundary on a two-vertex `A(4,2)` example, so it cannot establish
+  this candidate; see `docs/universal-lower-bound-work.md`.
 
 ## Immediate Lean Work Queue
 

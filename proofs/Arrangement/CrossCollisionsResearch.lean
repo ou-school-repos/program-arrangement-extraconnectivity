@@ -439,7 +439,7 @@ end BinaryReflection
 The strong-induction route that used to live here (`CrossDimStable`,
 `CrossRecurrence`, `cross_step_arith`, `hb_cross_collisions_of_recurrence`,
 and the `cross_dim_stable`/`cross_recurrence`/`hb_cross_collisions`
-theorems) has moved to `Arrangement.unstable.CrossRecurrenceDriver` — it is
+theorems) has moved to `docs/archive/CrossRecurrenceDriver.lean` — it is
 superseded dead code (see that file's docstring) and `CrossTop.lean` does
 not need it. `CrossBaseOne`/`cross_base_one` stay here because
 `CrossTop.lean` still calls `cross_base_one` directly. -/
