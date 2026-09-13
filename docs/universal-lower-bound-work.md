@@ -126,7 +126,7 @@ proof merely maximizing collisions or merely maximizing defect is insufficient.
 
 ## Third Math Audit (2026-09-12, extended sweep)
 
-The exhaustive C++ verifier (`universal_check`) now covers 26 parameter rows,
+The exhaustive C++ verifier (`universal_check`) now covers 29 parameter rows,
 including the 3,244,032,792-subset A(7,3) R=5 case, the 190,578,024-subset
 A(6,3) R=5 case, and the 61,949,040-subset A(6,5) R=3 case. 17 rows were
 cross-checked against the Python oracle (`check_universal_lower_bound.py`);
@@ -146,16 +146,22 @@ observed in the following regimes:
 | 3   | A(6,3) R=2–5               | —                                                    |
 | 4   | A(6,2) R=2–4; A(7,3) R=2–5 | A(6,2) R=5–6                                         |
 | 5   | A(7,2) R=3–4               | A(7,2) R=5–6                                         |
-| 6   | A(8,2) R=3–4               | —                                                    |
+| 6   | A(8,2) R=2–4               | A(8,2) R=5–6                                         |
 
 TODO(review): the A(6,3) row's "—" non-tight entry only reflects R=2–5; R=6+
 was never tested and may still be non-tight, as seen in the analogous A(6,2)
-row (n−k=4).
+row (n−k=4). An attempted run of A(6,3) R=6 timed out without completing.
 
-TODO(review): the A(8,2) row only covers R=3–4. R=2 and R=5–6 were never
-tested — the "—" non-tight entry is untested, not confirmed absent. Run
-`./universal_check 8 2 2`, `./universal_check 8 2 5`, `./universal_check 8 2 6`
-to fill this in.
+A(8,2) R=2, R=5, and R=6 were run to fill the previous gap:
+
+```
+A(8,2) R=2: PASS, min_compensated_slack=0 (tight)
+A(8,2) R=5: PASS, min_compensated_slack=1
+A(8,2) R=6: PASS, min_compensated_slack=2 (C(56,6)=32,468,436 subsets)
+```
+
+This is a new tight case at n−k=6 (R=2) and matches the pattern of growing
+slack with R seen elsewhere.
 
 A(7,3) R=5 was subsequently run to completion (3,244,032,792 subsets,
 ~50 minutes): `min=33 (connected), min_disconnected=36,
