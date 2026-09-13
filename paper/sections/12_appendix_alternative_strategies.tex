@@ -299,3 +299,97 @@ random/structured rather than exhaustive (the exhaustive sweep stops at
 $R=5$ for $k=3$), so they do not prove the bound at the frontier; they
 refute the specific ``try harder designs at scale'' program, whose
 target regime is empty.
+
+\paragraph{The amortized-slack decomposition, an unconditional
+cross-edge bound, and three crush mechanisms (2026-09-13 session):
+refines, but does not close, the capacity/pigeonhole paragraph above.}
+For a disjoint split $V'=F_a\sqcup F_b$, define the slack
+$S(X)=|\partial X|-\mathrm{rhs}(|X|)$ against the conjectured bound and
+$\Delta=\mathrm{rhs}(c_a)+\mathrm{rhs}(c_b)-\mathrm{rhs}(c_a+c_b)$. The
+exact identity
+$S(V')=S(F_a)+S(F_b)+\Delta-(I+B_{ba}+B_{ab})$ holds for \emph{any}
+disjoint split (no adjacency assumption needed), where
+$I=|\partial F_a\cap\partial F_b|$ and $B_{ba}=|F_b\cap\partial F_a|$,
+$B_{ab}=|F_a\cap\partial F_b|$ are direct-adjacency crossover counts
+(an earlier draft of this identity omitted $B_{ba},B_{ab}$ and
+undercounted whenever the fibers share a direct edge). When both
+fibers are individually tight ($S(F_a)=S(F_b)=0$), the critical-case
+inequality $S(V')\ge0$ becomes exactly $I+B_{ba}+B_{ab}\le\Delta$: this
+is the non-vacuous form of the aggregation bound called for in the
+paragraph above, now stated with the direct-adjacency terms the
+earlier framing was missing.
+
+One direction of this closes unconditionally. Writing $X$ for the
+number of direct cross-edges between $F_a$ and $F_b$ and $D(S)$ for
+the internal-edge count (defect) of a subset $S$, edge double-counting
+gives $D(V')=D(F_a)+D(F_b)+X$ for any disjoint split. Combined with
+$D(S)\le\Eseq(|S|)$ for every subset (proved unconditionally by strong
+induction on $R$, no tightness hypothesis, in the Lean development's
+\texttt{sum\_unique\_roots\_lower\_bound}), this gives
+$X\le\Eseq(c_a+c_b)-D(F_a)-D(F_b)$ for any disjoint split, and
+$X\le\Delta\Eseq:=\Eseq(c_a+c_b)-\Eseq(c_a)-\Eseq(c_b)$ specifically
+when both fibers are themselves tight and Hamming-ball-isomorphic in
+defect (the latter substitution depends on the repository's own open
+\texttt{uniqueness\_conjecture} --- whether a tight fiber can achieve
+its boundary minimum with defect strictly below $\Eseq(c)$ by
+compensating by cross-collision count --- which remains unresolved;
+see \texttt{src/check\_uniqueness.cpp}, 0 counterexamples across 5
+exhaustive sizes, not a proof). $X\le\Delta\Eseq$ was also confirmed
+empirically as an equality ($X=\Delta\Eseq$) across every margin-zero
+pair checked (7 cells, $5{,}124$ pairs).
+
+Exhaustive checks establish a two-sided gate on when $I+B_{ba}+B_{ab}$
+reaches $\Delta$ exactly (margin $0$) versus falls strictly below it
+(margin $<0$, a deficit): margin $=0$ iff $k\ge\lceil\log_2R\rceil$
+\emph{and} $n-k\ge\lceil\log_2R\rceil$ ($28/28$ balanced-split cells
+checked, plus every hand-traced witness below), matching exactly when
+a Hamming ball of size $R$ admits a subcube bipartition. At margin
+$0$, hand-traced coordinate witnesses (a balanced power-of-2 split in
+$A(6,3)$, $c_a=c_b=4$, and an unbalanced split, $c_a=3,c_b=4$) show
+the mechanism directly: cross-edges form a matching realizing
+$X=\Delta\Eseq$, and any corner missing from a fiber relative to a
+complete subcube generates exactly one ``ghost'' shared external
+target reachable at distance $1$ from both fibers but not stitched by
+an actual edge --- consistent with, though not proved to imply in
+general, the refined identity $T=\Delta\Cconst-\Delta\Eseq$ (where $T$
+counts such ghosts), conditional on the observed matching property
+$B_{ab}+B_{ba}=2X$.
+
+When the gate fails, three distinct, hand-verified mechanisms were
+found for where the resulting deficit lands, not one uniform
+phenomenon: (i) \emph{alphabet starvation} ($n-k<\lceil\log_2R\rceil$,
+$k$ sufficient): the two fibers cannot agree on a shared axis's
+symbol set, so some cross-edges become structurally impossible and the
+deficit lands in missing $B_{ab}+B_{ba}$ (witnessed in $A(5,3)$,
+$c_a=c_b=4$); (ii) \emph{coordinate starvation, saturated}
+($k<\lceil\log_2R\rceil$, $n-k$ sufficient): both fibers saturate each
+other (every vertex touched) but the cross-edges' distance-$1$ targets
+are no longer all distinct for lack of a free coordinate to keep them
+apart, so the deficit lands in the distance-1-attributed target count
+falling short of $\Delta\Eseq\cdot(m-1)$ (witnessed in $A(7,3)$,
+$c_a=c_b=5$); (iii) \emph{coordinate starvation, ghost-compensated}:
+the same shortfall re-expressed with a unit moved into a $T$-type
+ghost instead (a second bucket of the same cell). A single scalar
+deficit magnitude as a function of $(n,k,c_a,c_b)$ was sought and not
+found: two hand-picked separability hypotheses --- deficit as a
+function of the two starvation gaps alone, and (after correcting an
+arithmetic error, $\Eseq(9)=13$ not $12$) the achieved interference
+$I+B_{ab}+B_{ba}$ as a function of $(n,k,m)$ alone independent of the
+$(c_a,c_b)$ split --- each looked consistent with the data on hand and
+were each refuted by the very next targeted test cell. Full witnesses,
+the refuted hypotheses, and the tooling
+(\texttt{src/check\_amortized\_slack.cpp},
+\texttt{src/sweep\_deficit.cpp}) are recorded in
+\texttt{docs/proof-sketch-weighted-potential.md}.
+
+This narrows, but does not close, the open aggregation bound above: it
+supplies an unconditional half ($X\le\Delta\Eseq$, modulo the
+uniqueness conjecture for the fiber-defect substitution), names three
+distinct mechanisms by which the non-embeddable regime generates
+surplus slack rather than deficit toward the global inequality, and
+rules out two specific closed-form guesses for the deficit's
+magnitude. What remains is a structural inequality --- that the
+achieved interference is strictly below $\Delta$ whenever the
+embeddability gate fails, argued by case-split on the three mechanisms
+above --- rather than a proof of that magnitude in closed form; no such
+argument has yet been attempted.
