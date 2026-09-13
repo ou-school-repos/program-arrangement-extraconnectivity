@@ -1183,6 +1183,54 @@ already-known witness has enough margin. `scripts/check_amortized_slack.py`
 set up to extend the critical-case table further for whoever picks this
 up next.
 
+**28th point, still consistent:** A(7,3) c_a=6, c_b=6 (R=12): checked
+24,740,100 disjoint tight-fiber pairs, `max(I+B_ba+B_ab−Delta) = −4`.
+Two-sided rule: `n−k=4 ≥ ⌈log₂12⌉=4` passes but `k=3 < 4` fails, so
+predicted deficit — matches. 28/28, zero exceptions.
+
+### The subcube-intersection attack (started 2026-09-13, same session)
+
+With the two-sided embeddability rule validated to 28/28, the next step
+is attempting (a) above analytically rather than by further sweeping:
+prove `I+B_ba+B_ab = Delta` exactly whenever `HB_R` embeds, by modeling
+`F_a`, `F_b` as (or against) Hamming balls / subcubes and counting the
+cross-boundary directly, instead of treating it as an opaque search
+output.
+
+**Setup.** When `HB_R` embeds, the tight fibers `F_a`, `F_b` are (by the
+uniqueness evidence above — tight implies Hamming-ball-consistent
+defect, 0 counterexamples in 5 exhaustive checks) Hamming balls of radii
+giving sizes `c_a`, `c_b`. A Hamming ball of size `c` sits inside a
+`Q_d` subcube (`d = ⌈log₂c⌉` coordinates carrying the "used" alphabet
+symbols beyond the base point) embedded in the `m = n−k` free
+alphabet-symbol slots per coordinate. Two disjoint tight fibers `F_a`,
+`F_b` correspond to two disjoint Hamming-ball regions, each living in
+its own local subcube of the same ambient graph.
+
+**Goal:** express `I+B_ba+B_ab` — the total cross-boundary edges between
+`F_a` and `F_b` — as a function of `c_a`, `c_b`, and `m = n−k` alone
+(when embeddable), and show it equals `Delta` exactly. Whiteboard
+starting point (verified arithmetically against (5,3,4,4) and (7,3,4,4)
+by the user before this section was written):
+
+```
+Delta = rhs(c_a) + rhs(c_b) - rhs(c_a+c_b)
+      = [E_seq(c_a+c_b) - E_seq(c_a) - E_seq(c_b)] * m
+        + [C(c_a+c_b) - C(c_a) - C(c_b)]
+```
+
+i.e. Delta splits cleanly into an m-linear term and an m-independent
+constant term. If `I+B_ba+B_ab` can be shown to split the same way —
+a per-coordinate-position cross-count term scaling with the number of
+free alphabet slots `m`, plus a fixed combinatorial constant from the
+internal defect structure — the two sides could be matched term by
+term instead of only numerically.
+
+Not yet attempted: the actual bijective count of cross-adjacent
+vertex/target pairs between two disjoint Hamming balls placed in
+"generic position" (disjoint coordinate-tuple supports) in `A(n,k)`.
+This is the open next step.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
