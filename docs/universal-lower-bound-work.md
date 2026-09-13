@@ -131,3 +131,25 @@ minimum boundary or violated the weighted candidate. Restricting the theorem to
 connected subsets would therefore discard the desired statement without solving
 the missing extremal lemma. Revisit that decision only if a genuine all-subsets
 counterexample is found.
+
+### Compression audit
+
+For fixed \((R,n,k)\), the proved fiber identity rewrites the boundary exactly
+as
+
+\[
+  |\partial V|=Rk(n-k)-\bigl(X(V)+(n-k+1)D(V)\bigr).
+\]
+
+Consequently, a compression is monotone for the weighted potential exactly
+when it does not increase boundary. The guarded symbol compression already
+defined as `compressSet` in the unstable Lean scaffold fails this test: in
+\(A(4,2)\), shifting \(3\mathbin{\to}1\) in
+\(\{[4,3],[1,3]\}\) produces \(\{[4,1],[1,3]\}\) and raises the boundary
+from \(5\) to \(7\). Its weighted potential therefore falls from \(3\) to
+\(1\). This rules out a monotonicity proof for that operation, not the
+weighted candidate itself.
+
+The next proof search must use a different, coordinate-aware symmetrization or
+a global arrangement-graph vertex-isoperimetric theorem. Do not resume the
+ordinary symbol-compression route.

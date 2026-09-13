@@ -47,7 +47,13 @@ require.
   direct counterexample. See
   `docs/archive/collision-axiom-support-projection-abandoned.md` for the
   historical record; do not resume from it without addressing the
-  counterexample first.
+  counterexample first. The current math-first candidate is the equivalent
+  weighted potential inequality
+  `X(V') + (n-k+1) · D(V') ≤ C(R) + (n-k) · E(R)`.
+  It has finite exhaustive evidence but no proof. The standard guarded symbol
+  compression is known to increase boundary on a two-vertex `A(4,2)` example,
+  so it cannot establish this candidate; see
+  `docs/universal-lower-bound-work.md`.
 
 ## Immediate Lean Work Queue
 
