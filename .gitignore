@@ -15,6 +15,7 @@ arrangement
 predict
 predict_test
 universal_check
+check_amortized_slack
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

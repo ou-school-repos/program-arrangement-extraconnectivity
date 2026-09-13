@@ -1616,15 +1616,30 @@ lemma exists_optimal_embedding (R n k : ℕ) (h_cond : can_embed_hypercube R n k
 
 /-!
 ## The Capstone
+
+**Naming note:** despite the file name, nothing below proves anything about
+the graph's actual extraconnectivity metric κ_g (minimum vertex-cut sizes,
+or the number/size of resulting components). Both theorems in this section
+conclude a statement about `external_neighbors V'` only — the external
+vertex-boundary of an R-element subset — which is the *boundary-to-
+extraconnectivity reduction*'s input, not its output. That reduction
+(showing deleting a minimum-boundary set's boundary leaves every remaining
+component with at least R vertices, and that every minimum (R-1)-extra cut
+reduces to this) is open and is not addressed anywhere in this file; see
+`paper/sections/08_conclusion.tex` and the remark after Proposition
+`prop:universal` in `paper/sections/04_defect_framework.tex`. Treat
+"extraconnectivity" in these names as legacy/aspirational, not descriptive.
 -/
 
 /--
-  The Arrangement Graph Extraconnectivity Theorem.
+  The Arrangement Graph Boundary-Minimum Theorem.
   By squeezing the lower bound (via bridge lemmas) against the existence
   of a constructive witness (the Hamming ball), we establish the
-  **Full Isoperimetric Profile** of A(n,k) for all natural numbers R.
+  **Full Isoperimetric Profile** of A(n,k) for all natural numbers R —
+  i.e. the exact minimum `external_neighbors` value, not extraconnectivity
+  itself (see the naming note above).
 -/
-theorem arrangement_extraconnectivity_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
@@ -1652,7 +1667,7 @@ theorem globally_optimal_growth_strategy_of_cross
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
-  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum_of_cross R n k h_cond h_lower h_cross
+  let ⟨h_exists, h_univ⟩ := arrangement_boundary_minimum_of_cross R n k h_cond h_lower h_cross
   ⟨h_univ, h_exists⟩
 
 /-!

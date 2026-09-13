@@ -15,8 +15,12 @@ Section~\ref{sec:fracture} are proven on paper from Harper's edge-isoperimetric
 theorem but are not yet mechanized. The entire graph theory of $A(n,k)$ is
 formalized from first principles; rather than declaring the unproved bounds as
 global axioms, we express the remaining capstone dependency by parameterizing
-the final exact minimum-cut theorem with the explicit
-\texttt{UniversalLowerBound} hypothesis. The direct proof supplies
+the final exact boundary-minimum theorem with the explicit
+\texttt{UniversalLowerBound} hypothesis --- a statement about
+\texttt{external\_neighbors}, i.e. Theorem~\ref{thm:main}(i)--(ii), not about
+the graph's extraconnectivity metric itself (Section~\ref{sec:defect}'s
+remark and Section~\ref{sec:funnel} discuss why that further reduction is
+independently open). The direct proof supplies
 \texttt{HBCrossCollisions}. This cleanly isolates the classical extremal set
 theory from the novel algebraic machinery
 while ensuring that the compiled theorems are completely transparent, verified,
@@ -29,7 +33,7 @@ $\Cconst(R)$ respectively.
 
 {\small
 \begin{lstlisting}[language={}, breaklines=true]
-theorem arrangement_extraconnectivity_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
+theorem arrangement_boundary_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
     (h_lower : forall (R n k : Nat), UniversalLowerBound R n k) :
   (exists V' : Finset (ArrVertex n k), V'.card = R /\
     external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\

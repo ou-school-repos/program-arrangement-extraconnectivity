@@ -1227,10 +1227,15 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     -- RHS closes via  sbl P + P = (d-1)P + 1  and  2E_P = (d-1)P.
     omega
 
-/-- The unconditional arrangement-graph extraconnectivity capstone.
+/-- The unconditional arrangement-graph boundary-minimum capstone.
+    Concludes a statement about `external_neighbors V'` (the external
+    vertex-boundary) only — not the graph's extraconnectivity metric κ_g,
+    which requires the still-open boundary-to-extraconnectivity reduction
+    (paper/sections/08_conclusion.tex). "Extraconnectivity" in this file's
+    surrounding names is legacy naming, not a claim about that reduction.
     The nonempty case uses `hb_cross_collisions_closed`; the empty arrangement
     has the empty Hamming ball as its witness. -/
-theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
@@ -1245,7 +1250,7 @@ theorem arrangement_extraconnectivity_minimum (R n k : ℕ) (h_cond : can_embed_
     refine ⟨∅, by simp, ?_⟩
     simp [external_neighbors, C_constant, E_seq, sum_bit_length]
   · have hR1 : 1 ≤ R := by omega
-    apply arrangement_extraconnectivity_minimum_of_cross R n k h_cond h_lower
+    apply arrangement_boundary_minimum_of_cross R n k h_cond h_lower
     intro d hk hnk hd
     exact hb_cross_collisions_closed R hR1 d hd hk hnk
 
@@ -1257,7 +1262,7 @@ theorem globally_optimal_growth_strategy
       external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) := by
-  let ⟨h_exists, h_univ⟩ := arrangement_extraconnectivity_minimum R n k h_cond h_lower
+  let ⟨h_exists, h_univ⟩ := arrangement_boundary_minimum R n k h_cond h_lower
   exact ⟨h_univ, h_exists⟩
 
 end CrossTopMain
