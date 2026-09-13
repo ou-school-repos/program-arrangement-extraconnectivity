@@ -532,9 +532,9 @@ one open, concretely-scoped question:
    small for the O(R²) vs O(log R) gap to show up.
 
    **This does not prove Strategy 3b is dead** — it only shows the
-   generic combinatorial upper bounds on X_cross (pairwise count, degree
+   generic combinatorial upper bounds on X*cross (pairwise count, degree
    count) are too loose to confirm the inequality at moderate-to-large R.
-   Whether the _true, tightly-argued_ worst-case X_cross for a genuine
+   Whether the \_true, tightly-argued* worst-case X_cross for a genuine
    adversarial fiber pair stays down near O(log R) — the way earlier
    "crude bound achievable but the trade-off saves it" patterns played
    out elsewhere in this document — has not been checked. No explicit

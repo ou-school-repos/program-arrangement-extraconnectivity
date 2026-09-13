@@ -23,8 +23,8 @@ R-element subsets.
 
 1. **Restate** all definitions and quantifiers precisely from Lean source
 2. **Stress-test** computationally — emphasize disconnected/sparse subsets and
-   small slack \(n-k \in \{1,2\}\). A counterexample is a success: report
-   \(((n,k,R,V'),\) its boundary, claimed lower bound)
+   small slack $n-k \in \{1,2\}$. A counterexample is a success: report
+   $((n,k,R,V'),$ its boundary, claimed lower bound)
 3. **Proof sketch** for the exact all-subsets statement; identify the lemma
    replacing the refuted support-projection inequality
 4. **Recommendation**: should the Lean statement/paper proposition remain
@@ -53,12 +53,12 @@ output is treated as evidence.
 
 No counterexample was found in the following exhaustive tests:
 
-- every subset of \(A(3,2)\) and \(A(4,2)\);
-- every \(R\)-set of \(A(4,3)\) for \(R\le6\);
-- every \(R\)-set of \(A(5,3)\) for \(R\le4\), including
-  \(\binom{60}{4}=487{,}635\) four-sets;
-- all \(280{,}840\) three-sets of \(A(5,4)\), all \(64{,}620\) pairs of
-  \(A(6,4)\), and all \(258{,}840\) pairs of \(A(6,5)\).
+- every subset of $A(3,2)$ and $A(4,2)$;
+- every $R$-set of $A(4,3)$ for $R\le6$;
+- every $R$-set of $A(5,3)$ for $R\le4$, including
+  $\binom{60}{4}=487{,}635$ four-sets;
+- all $280{,}840$ three-sets of $A(5,4)$, all $64{,}620$ pairs of
+  $A(6,4)$, and all $258{,}840$ pairs of $A(6,5)$.
 
 In every tested row, a boundary minimizer was connected; the best disconnected
 set had no smaller boundary. This is evidence only, not a reduction from
@@ -66,40 +66,40 @@ all subsets to connected subsets.
 
 ### Corrected candidate lemma
 
-Write \(m=n-k\), \(D(V)=Rk-\mathrm{sum_unique_roots}(V)\), and
-\(X(V)=\mathrm{cross_collisions}(V)\). The proved defect theorem gives
-\(D(V)\le E(R)\), and the proved fiber identity gives
+Write $m=n-k$, $D(V)=Rk-\mathrm{sum_unique_roots}(V)$, and
+$X(V)=\mathrm{cross_collisions}(V)$. The proved defect theorem gives
+$D(V)\le E(R)$, and the proved fiber identity gives
 
-\[
+$$
 |\partial V|=(Rk-D(V))m-D(V)-X(V).
-\]
+$$
 
 Thus, whenever the stated lower-bound right-hand side is positive, the target
 is equivalent to the following **deficit-compensated collision inequality**:
 
-\[
+$$
 X(V)\le\bigl(C(R)-E(R)\bigr)+(m+1)\bigl(E(R)-D(V)\bigr).
-\]
+$$
 
 For the Hamming ball this is equality, since
-\(D(\mathrm{HB}\_R)=E(R)\) and
-\(X(\mathrm{HB}\_R)=C(R)-E(R)\). This is strictly weaker than the refuted
-dimension-independent inequality \(X(V)+D(V)\le C(R)\). It is a candidate
+$D(\mathrm{HB}\_R)=E(R)$ and
+$X(\mathrm{HB}\_R)=C(R)-E(R)$. This is strictly weaker than the refuted
+dimension-independent inequality $X(V)+D(V)\le C(R)$. It is a candidate
 for the missing mathematical lemma, not an established claim; the next task is
 to seek either a proof or a counterexample to it.
 
 ## Second Math Audit (2026-09-12)
 
-The exhaustive checker now computes \(D(V)\) and \(X(V)\) from the same
+The exhaustive checker now computes $D(V)$ and $X(V)$ from the same
 coordinate-root fibers as the Lean definitions. In particular, it does **not**
 mistake the number of outward graph edges for `total_coord_edges`: several
 vertices in one fiber contribute only once to a coordinate boundary.
 
 For every prior exhaustive case, and additionally all
-\(\binom{30}{5}=142{,}506\) five-sets of \(A(6,2)\) and all
-\(\binom{42}{r}\) subsets of \(A(7,2)\) for \(r=3,4,5\), both the stated
+$\binom{30}{5}=142{,}506$ five-sets of $A(6,2)$ and all
+$\binom{42}{r}$ subsets of $A(7,2)$ for $r=3,4,5$, both the stated
 boundary inequality and the compensated inequality passed whenever the Lean
-target's right-hand side was positive. In the new \(A(7,2)\) rows, the minimum
+target's right-hand side was positive. In the new $A(7,2)$ rows, the minimum
 boundary was connected, while the best disconnected boundary was strictly
 larger. No counterexample is presently known from this search. The reproducible
 commands are `python3 scripts/check_universal_lower_bound.py --profile small`
@@ -112,11 +112,11 @@ safety limit; a deliberate larger run can supply `--max-subsets LIMIT`. The
 purpose is faster exhaustive evidence, not an unbounded claim.
 
 The candidate is most naturally stated as the following weighted extremal
-claim, with \(m=n-k\):
+claim, with $m=n-k$:
 
-\[
+$$
 X(V)+(m+1)D(V)\le C(R)+mE(R).
-\]
+$$
 
 It is algebraically identical to the displayed compensated inequality, and the
 Hamming ball attains equality. This is the precise replacement sought for the
@@ -219,20 +219,20 @@ counterexample is found.
 
 ### Compression audit
 
-For fixed \((R,n,k)\), the proved fiber identity rewrites the boundary exactly
+For fixed $(R,n,k)$, the proved fiber identity rewrites the boundary exactly
 as
 
-\[
+$$
 |\partial V|=Rk(n-k)-\bigl(X(V)+(n-k+1)D(V)\bigr).
-\]
+$$
 
 Consequently, a compression is monotone for the weighted potential exactly
 when it does not increase boundary. The guarded symbol compression already
 defined as `compressSet` in the unstable Lean scaffold fails this test: in
-\(A(4,2)\), shifting \(3\mathbin{\to}1\) in
-\(\{[4,3],[1,3]\}\) produces \(\{[4,1],[1,3]\}\) and raises the boundary
-from \(5\) to \(7\). Its weighted potential therefore falls from \(3\) to
-\(1\). This rules out a monotonicity proof for that operation, not the
+$A(4,2)$, shifting $3\mathbin{\to}1$ in
+$\{[4,3],[1,3]\}$ produces $\{[4,1],[1,3]\}$ and raises the boundary
+from $5$ to $7$. Its weighted potential therefore falls from $3$ to
+$1$. This rules out a monotonicity proof for that operation, not the
 weighted candidate itself.
 
 The next proof search must use a different, coordinate-aware symmetrization or
