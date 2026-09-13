@@ -794,7 +794,7 @@ w = u with position p swapped to β is a valid, distinct boundary point
 in it**. It is exactly what `bd_mult` was already computing in every
 k=3/k=5 example above; writing it out adds no new leverage by itself.
 
-m enters one level up, as a capacity constraint on *aggregation*, not
+m enters one level up, as a capacity constraint on _aggregation_, not
 on any single pair: each vertex has exactly m missing symbols, and a
 construction attempting to spread many pairs' targets across distinct
 q-coordinates (to avoid the k=3-style collapse) must draw fresh,
