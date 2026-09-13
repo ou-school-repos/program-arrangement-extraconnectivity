@@ -916,6 +916,75 @@ Scope honesty: random/structured probes, not exhaustive (the sweep stops at R=5 
 
 Formula-slip note (2026-09-13): an early draft of this probe quoted the wrong RHS, C(R)+mE(R), printing "target=68" at A(7,3) R=9; the correct RHS is (Rk−E(R))·m − C(R) and the true target there is 40. Conclusion unaffected (71 > 40 still holds), but the wrong number appeared in the initial discussion and should not be reused.
 
+### The amortized-slack lemma candidate (2026-09-13, evidence gathered, not a proof)
+
+Reframing from "bound |I| from (c_a,c_b,m)" (answered, and shown incapable
+of rescuing Strategy 3b — see above) to the actual remaining lever: whether
+every split of a set into two fibers always carries enough banked boundary
+slack to cover its own recombination penalty.
+
+**The exact algebraic identity.** For a split V' = F_a ⊔ F_b with sizes
+c_a, c_b (R = c_a+c_b), define the slack of any subset X as
+S(X) = |extbd(X)| − rhs(|X|), where rhs(R) = (Rk−E(R))·(n−k) − C(R) is the
+conjectured true minimum boundary (Proposition 5.3's RHS). Then, **provided
+F_a and F_b share no direct edges to each other**:
+
+    S(V') = S(F_a) + S(F_b) + Delta − I
+
+where Delta = rhs(c_a) + rhs(c_b) − rhs(R) is the recombination budget and
+I = |extbd(F_a) ∩ extbd(F_b)| is the shared-boundary count from the two
+channels above. Verified exactly against the known swap-pair witness
+(A(5,3), R=4): S(F_a)=S(F_b)=3, Delta=6, I=8, giving
+3+3+6−8=4=S(V') — matches the directly-computed value exactly.
+
+**Caveat found and confirmed by direct construction, not assumed:** this
+identity is *not* unconditional — it breaks by exactly +2 per mutual edge
+when F_a and F_b are directly adjacent to each other (checked on the
+minimal case, an adjacent pair in A(4,3): the naive identity predicts
+S(V')=1, the true value is 0). Any general induction built on this
+identity has to handle direct F_a–F_b adjacency as a third effect, on top
+of the two shared-neighbor channels already catalogued; this has not been
+done.
+
+**The critical-case test.** An amortized induction's dangerous case is
+exactly S(F_a)=S(F_b)=0 (both fibers individually tight, i.e. achieving
+rhs exactly — the induction-hypothesis boundary case), where the identity
+reduces to needing I < Delta. Exhaustive search over *every* disjoint pair
+of tight fibers (script: `scripts/check_amortized_slack.py`), across 8
+independent (n,k,c_a,c_b) cells up to size (3,3):
+
+| cell (n,k,c_a,c_b) | Delta | max(I−Delta) found |
+|---|---|---|
+| (5,3,1,1) | 3 | −1 |
+| (5,3,2,2) | 6 | −3 |
+| (5,3,1,2) | 4 | −2 |
+| (5,3,1,3) | 5 | −3 |
+| (6,3,1,1) | 4 | −2 |
+| (6,3,2,2) | 8 | −4 |
+| (6,3,1,2) | 5 | −2 |
+| (5,3,3,3) | 9 | −5 |
+
+I never even reaches Delta in the tight case, and the margin widens (not
+narrows) as sizes grow. This is genuine positive evidence for the
+amortized approach, not a proof: 8 data points up to size 3, not an
+argument for all sizes. Also verified as a sanity check (not new
+information, but confirms no bug in the identity/search code): the TRUE
+minimum of S(V') over all splits, exhaustively, at R=2 and R=3 is exactly
+0, matching Proposition 5.3 / the Hamming-ball-evaluation proposition
+exactly.
+
+**What is still missing before this is a lemma, let alone a proof:** (a)
+an actual argument for *why* I < Delta when fibers are tight — not just
+data up to size 3 — the natural guess is that tight fibers are highly
+root-concentrated, which should structurally cap shared-neighbor overlap,
+but this has not been shown; (b) the direct-adjacency correction term
+from the caveat above, uncharacterized; (c) even granting (a) and (b), an
+amortized induction also needs to handle the non-tight case (S(F_a),
+S(F_b) > 0) in general, not just confirm one already-known witness has
+enough margin. `scripts/check_amortized_slack.py` is set up to extend the
+critical-case table to size (4,4) and beyond for whoever picks this up
+next.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
