@@ -224,3 +224,34 @@ attach to.
 Neither result rules out a more sophisticated version of either tool
 (a different entropy functional; an LP with symmetry-breaking or
 higher-order constraints), but no such candidate has been proposed.
+
+\paragraph{The open problem, restated as a capacity/pigeonhole
+aggregation bound.} Writing out the exact per-pair condition for a
+cross-boundary target to exist clarifies what remains without closing
+it. For $u\in F_a$ ($u_p=\alpha$), $v\in F_b$ ($v_p=\beta$), agreeing
+everywhere except $p$ and one other coordinate $q$ (the only case that
+can contribute --- distance $\ge3$ gives nothing, distance $1$ gives
+$\Delta X=0$, proved earlier): the candidate cross-vertex $w$ (obtained
+by swapping $u$'s value at $p$ to $\beta$) is a valid, distinct boundary
+point \emph{iff} $\beta\ne u_q$ (symmetrically, the other candidate
+exists iff $\alpha\ne v_q$). This is a pure local injectivity check ---
+$m$ does not appear in it; it is exactly what $\mathrm{bd\_mult}$ was
+already computing in every $k=3$/$k=5$ example above, so writing it out
+adds no independent leverage by itself.
+
+$m$ enters one level up, as a capacity constraint on \emph{aggregation}
+rather than on any single pair: each vertex has exactly $m$ missing
+symbols, and spreading many pairs' targets across distinct
+$q$-coordinates (to avoid $k=3$-style collapse) must draw fresh,
+non-colliding symbols from those $m$-sized pools --- too few, and pairs
+either violate the local inequality above or collapse onto shared
+targets, the same mechanism observed, not proved, in the $k=5$
+construction earlier. The remaining open problem, precisely: translate
+``each vertex has $m$ missing symbols'' into a hard ceiling on the
+number of distinct cross-boundary targets two fibers of size $c_a,c_b$
+can jointly generate, as a function of $(c_a,c_b,m)$ alone, aggregated
+over all pairs. No such bound has been derived or attempted. This is
+the cleanest surviving open question after this document's testing:
+everything upstream of it ($\Phi$, entropy, the naive LP) carries no
+independent information, and everything downstream of it (the
+induction skeletons meant to consume it) is refuted in naive form.

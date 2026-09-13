@@ -781,6 +781,42 @@ than an hour of hand algebra would have taken and for a more decisive
 reason than the a priori staircase-vs-smooth risk. Neither result rules
 out a more sophisticated version of either tool; none has been proposed.
 
+### The open problem, restated as a capacity/pigeonhole aggregation bound (2026-09-13)
+
+Writing out the exact per-pair condition for a cross-boundary target to
+exist clarifies what remains, without closing it. For u∈F_a (u_p=α),
+v∈F_b (v_p=β), agreeing everywhere except p and one other coordinate q
+(the only case that can contribute — distance ≥3 gives nothing,
+distance 1 gives ΔX=0, proved earlier): the candidate cross-vertex
+w = u with position p swapped to β is a valid, distinct boundary point
+**iff β ≠ u_q** (symmetrically, the other candidate exists iff
+α ≠ v_q). This is a pure local injectivity check — **m does not appear
+in it**. It is exactly what `bd_mult` was already computing in every
+k=3/k=5 example above; writing it out adds no new leverage by itself.
+
+m enters one level up, as a capacity constraint on *aggregation*, not
+on any single pair: each vertex has exactly m missing symbols, and a
+construction attempting to spread many pairs' targets across distinct
+q-coordinates (to avoid the k=3-style collapse) must draw fresh,
+non-colliding symbols from those m-sized pools. If m is too small to
+supply enough distinct symbols, pairs are forced either to violate the
+local inequality above (destroying that boundary point) or to collide
+on the same target (collapsing it) — this is the same mechanism
+observed, not proved, in the k=5 construction earlier in this section.
+
+**The remaining open problem, precisely:** translate "each vertex has m
+missing symbols" into a hard ceiling on the number of distinct
+cross-boundary targets that two fibers of size c_a, c_b can jointly
+generate, as a function of (c_a, c_b, m) alone — aggregated over all
+pairs, not per-pair. The per-pair condition above is necessary
+groundwork for that bound but does not by itself supply it; no such
+aggregate bound has been derived or attempted. This is the cleanest
+surviving open question after tonight's testing: everything upstream of
+it (Φ, entropy, the naive LP) has been shown to carry no independent
+information, and everything downstream of it (the induction skeletons
+built to use it) has been refuted in naive form. This exact capacity
+bound is the trailhead for whoever picks this up next.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
