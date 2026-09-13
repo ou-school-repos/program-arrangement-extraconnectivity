@@ -271,6 +271,7 @@ int main(int argc, char **argv) {
     std::size_t checked = 0;
     std::size_t adjacent_pairs = 0;
     std::size_t margin_zero_pairs = 0;
+    std::size_t worst_margin_pairs = 0;
     std::size_t identity_checked = 0;
     std::size_t identity_holds = 0;
     std::size_t identity_first_violation_reported = 0;
@@ -314,13 +315,27 @@ int main(int argc, char **argv) {
             if (b_ba > 0 || b_ab > 0)
                 ++adjacent_pairs;
             const std::int64_t margin = combined - delta;
-            if (margin > worst)
+            if (margin > worst) {
+                // A new best (least-deficient) margin displaces the old
+                // one -- the (T,B) histogram/witnesses track the *worst*
+                // (i.e. margin-maximizing) pairs only, so they must reset
+                // whenever that bucket moves. See advisor review,
+                // docs/proof-sketch-weighted-potential.md
+                // subcube-intersection attack, non-embeddable-regime
+                // extension.
                 worst = margin;
+                tb_histogram.clear();
+                tb_witness.clear();
+                worst_margin_pairs = 0;
+            }
             ++checked;
 
             // Only margin=0 (critical-case-tight) pairs are relevant to
-            // the T+(B_ab+B_ba)=dE+dC identity -- that's the regime the
-            // subcube-intersection attack is trying to explain.
+            // the T+(B_ab+B_ba)=dE+dC identity -- that identity is
+            // specific to the exactly-tight/embeddable regime and is
+            // tautologically false whenever margin!=0, so it stays
+            // gated here rather than moving to the dynamic worst-margin
+            // bucket below.
             if (margin == 0) {
                 ++margin_zero_pairs;
                 const int T =
@@ -363,7 +378,17 @@ int main(int argc, char **argv) {
                               << " D1=" << D1 << " dE*(m-1)=" << (dE * (m - 1))
                               << "\n";
                 }
+            }
 
+            // (T, B_ab+B_ba) tracking for the dynamic worst-margin
+            // bucket: unlike the identity/mechanism checks above, T
+            // itself is meaningful for any margin (it's just a count of
+            // distance-2-only shared targets), so this runs whenever the
+            // pair matches the current worst margin, embeddable or not.
+            if (margin == worst) {
+                ++worst_margin_pairs;
+                const int T =
+                    compute_T(ebA, ebB, membersA, membersB, nbrMask, N, words);
                 const auto key = std::make_pair(T, b_ab + b_ba);
                 ++tb_histogram[key];
                 tb_witness.emplace(key, std::make_pair(i, j));
@@ -403,11 +428,12 @@ int main(int argc, char **argv) {
                      "on some pair(s) -- net identity may be masking "
                      "compensating errors ***\n";
 
-    // (T, B_ab+B_ba) distribution over margin=0 pairs: is the split
-    // constant, or does it vary while T+(B_ab+B_ba)=dE+dC stays fixed?
+    // (T, B_ab+B_ba) distribution over the worst-margin pairs (margin=0
+    // in the embeddable regime; the least-negative achievable margin
+    // otherwise): is the split constant, or does it vary?
     if (!tb_histogram.empty()) {
-        std::cout << "  (T, B_ab+B_ba) distribution over " << margin_zero_pairs
-                  << " margin=0 pairs:\n";
+        std::cout << "  (T, B_ab+B_ba) distribution over " << worst_margin_pairs
+                  << " worst-margin (=" << worst << ") pairs:\n";
         for (const auto &[key, count] : tb_histogram) {
             std::cout << "    T=" << key.first << " B_ab+B_ba=" << key.second
                       << " (sum=" << (key.first + key.second) << "): " << count
@@ -434,8 +460,8 @@ int main(int argc, char **argv) {
             std::cout << "}\n";
         }
         if (tb_histogram.size() > 1)
-            std::cout << "  *** (T,B) SPLIT VARIES across margin=0 pairs -- "
-                         "not a fixed geometric split ***\n";
+            std::cout << "  *** (T,B) SPLIT VARIES across worst-margin pairs "
+                         "-- not a fixed geometric split ***\n";
     }
     return 0;
 }
