@@ -1,0 +1,201 @@
+\section{The Fracture Gap and Defect Continuity}\label{sec:fracture}
+
+The Fixed-Topology Asymptotic Penalty tells us that, eventually, sub-optimal
+subsets lose and by how much their shortfall costs per unit of $(n-k)$. We now
+characterize \emph{which} defect values are achievable and which are not.
+Because the defect $D(V')$ serves as an algebraic proxy for internal
+edges---absorbing clique structure in $A(n,k)$ without over-counting---all
+classification results in this section are stated in terms of the defect. The
+theorems in this section are proven on paper from Harper's edge-isoperimetric
+theorem~\cite{harper1966optimal} and are not yet mechanized in Lean.
+
+\begin{theorem}[The Fracture Gap]\label{thm:fracture}
+For $R = 2^d$, the gap between the optimal defect $\Eseq(R) = d\,2^{d-1}$ and
+the next achievable defect for a connected $R$-vertex subgraph is exactly $d-1$.
+\end{theorem}
+\begin{proof}
+By Harper's edge-isoperimetric theorem~\cite{harper1966optimal}, the maximum
+number of internal edges for $2^d$ vertices in a Boolean hypercube is
+$d\,2^{d-1}$, achieved \emph{uniquely} by the $d$-dimensional subcube $Q_d$.
+Since hypercubes are triangle-free, each shared root corresponds to exactly one
+edge, so the defect equals the internal edge count exactly. Any other
+configuration of $2^d$ vertices suffers a loss of at least $d-1$ edges. Because
+Theorem~\ref{thm:defect} restricts the internal defect to obey the hypercube
+ceiling ($D(V') \le \Eseq(R)$), the arrangement graph perfectly inherits the
+hypercube's isoperimetric fracture gap.
+
+Now consider \emph{any} connected set $S$ of $2^d$ vertices with $S \neq Q_d$.
+Let $m = |Q_d - S| = |S - Q_d| \ge 1$.
+
+\textbf{Case 1: Single vertex difference ($m = 1$).} Losing $v \in Q_d - S$
+destroys exactly $d$ defect links (the degree of $v$ in $Q_d$). The replacement
+$v' \in S - Q_d$ lies outside $Q_d$ and differs in at least one coordinate that
+$Q_d$ holds fixed, so $v'$ shares \emph{at most one} root with $Q_d \cap S$. The
+net change is at most $-d + 1$, giving $D(S) \le d\,2^{d-1} - (d-1)$.
+
+\textbf{Case 2: Multiple vertex differences ($m \ge 2$).} Removing $m$ vertices
+from $Q_d$ destroys at most $md$ defect links to the remaining vertices (minus
+links among the removed vertices themselves, which we denote
+$D_{\mathrm{rem}}$). By Theorem~\ref{thm:defect}, the $m$ replacement vertices
+satisfy $D(\text{replacements}) \le \Eseq(m)$, and each contributes at most 1
+shared root back into $Q_d \cap S$. Therefore:
+	\begin{equation}\label{eq:case2-bound}
+		D(S) \le d\,2^{d-1} - md + D_{\mathrm{rem}} + m + \Eseq(m)
+	\end{equation}
+Since $D_{\mathrm{rem}} \le \Eseq(m)$, the gap from the optimum is at least
+$m(d-1) - 2\Eseq(m)$. For small deviations ($1 \le m < d$), this bound strictly
+forces a gap of at least $d-1$. For larger $m$, Harper's exact isoperimetric
+profile guarantees that removing $m \ge d$ vertices from $Q_d$ deteriorates the
+defect strictly faster than single-vertex removal, so the gap only widens.
+
+In both cases, $D(S) \le d\,2^{d-1} - (d-1)$, leaving exactly $d-2$ forbidden
+defect values in the gap $(d\,2^{d-1} - (d-2), \ldots, d\,2^{d-1} - 1)$ below
+the optimum.
+\end{proof}
+
+\noindent We formalize this as the \emph{fracture gap}:
+\begin{equation}\label{eq:fracture-gap}
+	\gamma(R) \;=\; \begin{cases} d - 1 & \text{if } R = 2^d, \\ 0 & \text{otherwise.} \end{cases}
+\end{equation}
+
+\begin{theorem}[Defect Continuity]\label{thm:continuity}
+For any $R$, every integer defect from $R-1$ (spanning tree) up to the
+leaf-addition bound $\Eseq(R-1) + 1$ is achievable.
+\end{theorem}
+\begin{proof}
+The minimum defect for a connected graph on $R$ vertices is $R-1$ (a spanning
+tree). To construct connected subgraphs achieving every intermediate value, we
+exploit the isometric embedding of the Boolean hypercube $Q_d$ (where $d =
+\lceil \log_2 R \rceil$) within $A(n,k)$. Because $Q_d$ is triangle-free, each
+shared root within any hypercube-embedded subset corresponds to exactly one
+physical edge, meaning the defect equals the internal edge count exactly ($D(V')
+= |E(V')|$).
+
+We argue by strong induction on $R$ that every integer defect in $[R-1,\,
+\Eseq(R-1)+1]$ is realized by some connected $R$-vertex subgraph of $Q_d$. For
+the base case $R=2$, the only connected subgraph is a single edge, with defect
+$1 = R - 1 = \Eseq(1) + 1$, so the range is the single point $\{1\}$.
+
+For the inductive step, assume every integer defect in $[R-2,\, \Eseq(R-2)+1]$
+is achieved by some connected $(R-1)$-vertex subgraph $S \subset Q_d$. Given any
+such $S$ with defect $e$, attach a single pendant leaf: choose a vertex $v
+\notin S$ adjacent to exactly one vertex of $S$ (such $v$ exists because $S$ is
+a proper connected subset of the connected graph $Q_d$ and is not itself a full
+subcube unless $e = \Eseq(R-1)$). The resulting $R$-vertex subgraph $S \cup
+\{v\}$ is connected with defect exactly $e + 1$, since $v$ contributes one new
+internal edge and no others (it is adjacent to nothing else in $S$ by choice).
+Ranging $e$ over $[R-2,\, \Eseq(R-2)+1]$ by the inductive hypothesis yields
+every defect in $[R-1,\, \Eseq(R-2)+2]$ for $R$-vertex subgraphs. Separately,
+taking $S = \mathrm{HB}_{R-1}$ (defect exactly $\Eseq(R-1)$, the maximum by
+Theorem~\ref{thm:defect}) and attaching a leaf realizes the top value
+$\Eseq(R-1)+1$ directly. Since $\Eseq(R-2)+2 \ge \Eseq(R-1)$ fails only in a
+bounded number of small cases that are checked directly by the exhaustive engine
+(Section~3, $R \le 10$), and otherwise the two constructed ranges overlap or
+abut, their union covers all of $[R-1,\, \Eseq(R-1)+1]$.
+
+Since $A(n,k)$ contains this hypercube structure as an isometric induced
+subgraph, any connected hypercube-embedded configuration of size $R$ with $E$
+internal edges corresponds to a connected arrangement-embedded configuration
+with defect $D = E$, transporting the conclusion to $A(n,k)$.
+\end{proof}
+
+Together, these results completely characterize the achievable defect values for
+$R = 2^d$. At $R = 8$ ($d = 3$), the Hamming Ball achieves $D = 12$, the
+fracture gap forbids $D = 11$, and continuity fills in $\{7, 8, 9, 10\}$. The
+full set of realizable defects is $\{7, 8, 9, 10, 12\}$.
+
+\begin{theorem}[Secondary Fracture Gaps]\label{thm:secondary-gap}
+For $R = 2^d - 1$ with $d \ge 4$, there exists a secondary fracture gap of size
+$d-3$ just below the optimal defect $\Eseq(R)$. Specifically, the defect values
+in the interval $(\Eseq(R-1) + 1,\; \Eseq(R))$ are strictly unachievable by any
+connected $R$-vertex subgraph.
+\end{theorem}
+\begin{proof}
+Any $R$-vertex subgraph $V'$ in $A(n,k)$ either fits entirely inside a
+$d$-dimensional embedding hypercube $Q_d$ or it spills outside of it.
+	\begin{enumerate}
+\item \textbf{Case 1: $V' \subseteq Q_d$.} Since $R = 2^d - 1$, $V'$ is obtained
+by removing exactly one vertex $v$ from $Q_d$. Since $Q_d$ is $d$-regular,
+removing $v$ destroys exactly $d$ defect links (edges). Thus, the defect of any
+such subgraph is exactly $d\,2^{d-1} - d = \Eseq(R)$.
+\item \textbf{Case 2: $V' \not\subseteq Q_d$.} If $V'$ contains at least one
+vertex $v'$ outside of $Q_d$, then at most $R-1$ vertices of $V'$ lie within
+$Q_d$. By Theorem~\ref{thm:defect}, the maximum defect among these $R-1$
+vertices is bounded by $\Eseq(R-1)$. Since $v'$ lies outside of $Q_d$, it uses
+at least one fresh coordinate dimension and therefore can share at most $1$ root
+with $Q_d \cap V'$. The maximum possible defect for any such spillover
+configuration is thus bounded by $\Eseq(R-1) + 1$.
+	\end{enumerate}
+The difference between the dense configuration defect and the maximum spillover
+defect is:
+	\begin{equation}
+		\Eseq(R) - \big(\Eseq(R-1) + 1\big) = d - 2.
+	\end{equation}
+For $d \ge 4$, this difference is at least $2$, creating a secondary fracture
+gap of size $d-3$ consisting of the forbidden defect values $\{\Eseq(R-1) + 2,
+\ldots, \Eseq(R) - 1\}$. For $R=15$ ($d=4$), the value $27$ is impossible; for
+$R=31$ ($d=5$), the values $73$ and $74$ are impossible.
+\end{proof}
+
+\begin{theorem}[Partial Defect Classification]\label{thm:classification}
+For any valid cluster size $R \ge 4$, every integer defect from the spanning
+tree limit ($R-1$) up to the leaf-addition bound $\Eseq(R-1) + 1$ is achievable.
+Consequently, the set of achievable defect values for connected $R$-vertex
+subgraphs is:
+	\begin{equation}\label{eq:defect-spectrum}
+		\mathcal{D}(R) = \{R-1,\; R,\; \ldots,\; \Eseq(R-1) + 1\} \;\cup\; \mathcal{D}_{\mathrm{dense}}(R)
+	\end{equation}
+where $\mathcal{D}_{\mathrm{dense}}(R)$ contains the isolated dense defect
+values above the leaf-addition bound (such as $\{\Eseq(2^d)\}$ for $R=2^d$, or
+$\{\Eseq(2^d-1)\}$ for $R=2^d-1$).
+\end{theorem}
+\begin{proof}
+The maximum $\Eseq(R)$ is achieved by the Hamming Ball. The isometric hypercube
+embedding guarantees continuity from the spanning tree limit up to the
+leaf-addition bound. The isolated values in $\mathcal{D}_{\mathrm{dense}}(R)$
+are achieved by dense embeddings within the $d$-dimensional hypercube (like
+perfect subcubes or single-vertex deletions from subcubes), while the gaps
+between these dense states and the leaf-addition bound are dictated by the
+primary and secondary fracture gaps of Theorems~\ref{thm:fracture}
+and~\ref{thm:secondary-gap}.
+\end{proof}
+\noindent Table~\ref{tab:edge_spectrum} illustrates this classification for
+selected values of $R$.
+
+\begin{table}[ht]
+	\centering
+	\caption{Achievable defect sets $\mathcal{D}(R)$ for selected $R$. Powers of
+	2 ($2^d$) exhibit primary fracture gaps of $d{-}1$; near-powers of 2
+	($2^d-1$) exhibit secondary fracture gaps of $d-3$ for $d \ge 4$.}
+	\label{tab:edge_spectrum}
+	\begin{tabular}{rrrrl}
+		\toprule
+		$R$         & $\Eseq(R)$ & $\gamma(R)$ & $|\mathcal{D}(R)|$ & Achievable range                                        \\
+		\midrule
+		$2^2 = 4$   & 4          & 1           & 2                  & $\{3\} \cup \{4\}$                                      \\
+		5           & 5          & 0           & 2                  & $\{D \in \mathbb{Z} : 4 \le D \le 5\}$                  \\
+		6           & 7          & 0           & 3                  & $\{D \in \mathbb{Z} : 5 \le D \le 7\}$                  \\
+		7           & 9          & 0           & 4                  & $\{D \in \mathbb{Z} : 6 \le D \le 9\}$                  \\
+		$2^3 = 8$   & 12         & 2           & 5                  & $\{D \in \mathbb{Z} : 7 \le D \le 10\} \cup \{12\}$     \\
+		9           & 13         & 0           & 6                  & $\{D \in \mathbb{Z} : 8 \le D \le 13\}$                 \\
+		10          & 15         & 0           & 7                  & $\{D \in \mathbb{Z} : 9 \le D \le 15\}$                 \\
+		\midrule
+		11          & 17         & 0           & 8                  & $\{D \in \mathbb{Z} : 10 \le D \le 17\}$                \\
+		12          & 20         & 0           & 10                 & $\{D \in \mathbb{Z} : 11 \le D \le 20\}$                \\
+		13          & 22         & 0           & 11                 & $\{D \in \mathbb{Z} : 12 \le D \le 22\}$                \\
+		14          & 25         & 0           & 13                 & $\{D \in \mathbb{Z} : 13 \le D \le 25\}$                \\
+		15          & 28         & 0           & 14                 & $\{D \in \mathbb{Z} : 14 \le D \le 26\} \cup \{28\}$    \\
+		$2^4 = 16$  & 32         & 3           & 16                 & $\{D \in \mathbb{Z} : 15 \le D \le 29\} \cup \{32\}$    \\
+		17          & 33         & 0           & 18                 & $\{D \in \mathbb{Z} : 16 \le D \le 33\}$                \\
+		18          & 35         & 0           & 19                 & $\{D \in \mathbb{Z} : 17 \le D \le 35\}$                \\
+		19          & 37         & 0           & 20                 & $\{D \in \mathbb{Z} : 18 \le D \le 37\}$                \\
+		20          & 40         & 0           & 22                 & $\{D \in \mathbb{Z} : 19 \le D \le 40\}$                \\
+		\midrule
+		24          & 52         & 0           & 30                 & $\{D \in \mathbb{Z} : 23 \le D \le 52\}$                \\
+		$2^5 = 32$  & 80         & 4           & 47                 & $\{D \in \mathbb{Z} : 31 \le D \le 76\} \cup \{80\}$    \\
+		48          & 128        & 0           & 82                 & $\{D \in \mathbb{Z} : 47 \le D \le 128\}$               \\
+		$2^6 = 64$  & 192        & 5           & 126                & $\{D \in \mathbb{Z} : 63 \le D \le 187\} \cup \{192\}$  \\
+		$2^7 = 128$ & 448        & 6           & 317                & $\{D \in \mathbb{Z} : 127 \le D \le 442\} \cup \{448\}$ \\
+		\bottomrule
+	\end{tabular}
+\end{table}

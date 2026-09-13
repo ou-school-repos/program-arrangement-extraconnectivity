@@ -1,0 +1,27 @@
+\section{The Topological Funnel and Open Problems}
+
+Theorem~\ref{thm:classification} reveals a striking geometric structure in the
+space of achievable defect values. At the sparse limit ($D = R-1$), the number
+of valid connected topologies is the number of non-isomorphic trees on $R$
+vertices, which grows exponentially (OEIS A000055). As the defect increases, the
+geometric constraints imposed by root-sharing progressively tighten the design
+space, creating a \emph{Topological Funnel} that narrows monotonically until it
+is conjectured to collapse to a single topology---the Hamming Ball---at the
+dense limit $D = \Eseq(R)$. At powers of $2$, the funnel exhibits a discrete
+fracture: the gap
+$\gamma(R) = d - 1$ excises an entire band of defect values, forcing a
+discontinuous jump from the second-best topology to the unique optimum. Similar
+secondary fractures emerge just below near-powers of $2$ (e.g., $R=2^d-1$).
+
+\begin{conjecture}[Multiplicity of Achievable Defects]\label{conj:multiplicity}
+For each $R$ and each achievable defect $D \in \mathcal{D}(R)$, let $M(R, D)$
+denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$
+with defect exactly $D$. Then:
+	\begin{enumerate}
+\item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique
+maximizer).
+\item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$ toward $R-1$.
+	\end{enumerate}
+\end{conjecture}
+
+Our exhaustive enumeration confirms both parts for all $R \le 10$.

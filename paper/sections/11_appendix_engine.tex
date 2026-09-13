@@ -1,0 +1,41 @@
+\section{Characterization Engine Source Code}\label{app:engine}
+
+The $O(R^3 \log R)$ characterization engine that computes exact boundary
+formulas for arbitrary $R$ is listed below (C++17). The engine operates in three
+tiers: (1)~analytical evaluation of $\Eseq(R)$ and $\Cconst(R)$ in $O(R)$ time,
+(2)~constructive Hamming Ball computation and formula verification in $O(R^3)$
+time, and (3)~brute-force neighbor enumeration in $O(R^3 \log R)$ time. The full
+source repository is available at
+\href{https://github.com/ou-school-repos/program-arrangement-extraconnectivity}{\texttt{github.com/ou-school-repos/program-arrangement-extraconnectivity}}
+and an excerpt is provided below (\texttt{predict.cpp}).
+
+\paragraph{Implementation details.}
+The engine is designed for exact integer arithmetic. Vertex representations use
+an inline fixed-capacity array (\texttt{Vertex<K,SymT>}) templatized on both a
+compile-time capacity $K$ and the symbol type: \texttt{uint8\_t} for $R \le 127$
+and \texttt{uint16\_t} for $128 \le R \le 260$. The verification tiers choose
+$K$ close to the actual $R$, reducing the constant factor in the $\Theta(R^3
+\cdot K)=\Theta(R^4)$ peak storage used for brute-force neighbor enumeration.
+Sorting and deduplication use the lexicographical comparison operators of
+\texttt{std::array}. The final boundary computation is promoted to
+\texttt{\_\_int128}, while the inner loops use native integer arithmetic.
+
+\embedfile[filespec=predict.cpp,desc={Characterization engine source (C++17)}]{../src/predict.cpp}
+
+\lstinputlisting[language=C++]{predict_core_sample.cpp}
+
+\noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and
+\texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This
+engine checks Proposition~\ref{prop:hb-eval} by verifying \\
+\texttt{brute\_force\_neighbors(verts, 2 * R, R) == (R * R - nk1) * R -
+constant} \\ for all $R \le 160$, giving strong numerical evidence that the
+Hamming Ball achieves the exact boundary predicted by Theorem~\ref{thm:main}.
+Because the Algebraic Defect Framework decouples the network dimensions from the
+subset structure, this paper leverages a property of $A(n,k)$, that the
+constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$;
+thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient
+to guarantee the formula's exactness for all valid dimensions.
+Proposition~\ref{prop:universal} quantifies over \emph{all} subsets, whereas
+the \texttt{nauty}-based search tests connected $R$-vertex subsets for
+$R \le 10$; it is therefore partial evidence rather than a verification of the
+universal proposition.
