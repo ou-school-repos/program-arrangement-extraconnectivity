@@ -267,3 +267,35 @@ for both and their interaction. This remains the cleanest surviving
 open question after this appendix's testing, and its own first draft
 undercounting the problem's difficulty is worth remembering when
 reading the next attempt at it too.
+
+\paragraph{The symmetric/spread counterexample hunt (2026-09-13):
+vacuity at scale, starvation at the frontier.} A natural program to
+beat the bound is to construct highly symmetric, ``spread'' sets ---
+orthogonal arrays, finite-geometry designs --- that avoid concentrating
+on a single fiber, and to deploy them at the $R$ where the Hamming ball
+is claimed to be least efficient. Two independent facts close that
+program off. \emph{Vacuity at scale.} With the correct right-hand side
+$\mathrm{rhs}(n,k,R)=(Rk-\Eseq(R))\,(n-k)-\Cconst(R)$, one has
+$\mathrm{rhs}(7,3,29)=5$ and $\mathrm{rhs}(7,3,R)\le 0$ for every
+$R\ge 30$ ($-41$ at $R=42$): in $A(7,3)$ the inequality asserts nothing
+past $R\approx 29$, so ``beaten at scale'' is structurally impossible
+there. The mechanism is generic for fixed $k$: $Rk-\Eseq(R)$ behaves
+like $R\left(k-\tfrac12\log_2 R\right)$, eventually turning negative
+against the growing correction constant, so the bound's content is
+confined to roughly $R\le 2^k$. \emph{Starvation at the frontier.}
+Where the bound bites --- $A(6,3)$, $A(7,3)$ at $R\in\{6,7,8\}$, with
+targets $24,25,24$ and $35,37,36$ --- a pairwise-distance-2 set has no
+internal edges, so its external boundary is approximately
+$R\cdot k(n-k)$ minus modest overlap, far above the tight target:
+greedy spread sets at those sizes give boundaries $42$--$77$ against
+targets $24$--$37$, and randomized search ($60{,}000$ sets per cell)
+with an independent $20{,}000$-set rerun found no $R$-set below target.
+The strongest structured candidate, the orthogonal-array family
+$\{(a,b,a+b)\bmod 7\}$ in $A(7,3)$ (30 injective triples, pairwise
+distance $\ge 2$), was checked exhaustively over all
+$\binom{30}{9}=14{,}307{,}150$ nine-element subsets: minimal external
+boundary $71$, strictly above the target $40$ at $R=9$. These probes are
+random/structured rather than exhaustive (the exhaustive sweep stops at
+$R=5$ for $k=3$), so they do not prove the bound at the frontier; they
+refute the specific ``try harder designs at scale'' program, whose
+target regime is empty.

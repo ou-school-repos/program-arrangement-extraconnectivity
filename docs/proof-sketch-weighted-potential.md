@@ -855,6 +855,18 @@ attempt the open aggregation bound itself — it only pins down, at the
 kernel level, the two facts any future attempt at that bound has to
 remain consistent with.
 
+### The symmetric/spread counterexample hunt (2026-09-13): vacuity at scale, starvation at the frontier
+
+A proposed adversarial program: beat the universal lower bound with highly symmetric "spread" sets (orthogonal arrays, finite-geometry designs) deployed at R values where the Hamming ball is claimed to be least efficient. Closed off on two independent grounds, both verified computationally:
+
+1. **Vacuity at scale.** With the correct RHS, rhs(n,k,R) = (Rk − E(R))·(n−k) − C(R): rhs(7,3,29) = 5 but rhs(7,3,R) ≤ 0 for all R ≥ 30 (−41 at R=42). In A(7,3) the bound asserts nothing past R≈29; "beaten at scale" is structurally impossible there. The mechanism is generic for fixed k: Rk − E(R) behaves like R(k − ½·log₂R), turning negative against the growing correction constant, so the bound's content is confined to roughly R ≤ 2^k.
+
+2. **Starvation at the frontier.** Where the bound bites (A(6,3), A(7,3) at R ∈ {6,7,8}, targets 24/25/24 and 35/37/36), pairwise-distance-2 sets have zero internal edges → external boundary ≈ R·k(n−k) minus modest overlap, far above tight targets. Greedy spread sets: boundaries 42–77 vs targets 24–37. Random search 60k/cell (plus an independent 20k/cell rerun): no set below target. The strongest structured candidate — the OA family {(a,b,a+b) mod 7} in A(7,3), 30 injective triples, pairwise dist ≥ 2 — exhaustively checked over all C(30,9) = 14,307,150 nine-subsets: min |extbd| = 71 > 40 = target at R=9.
+
+Scope honesty: random/structured probes, not exhaustive (the sweep stops at R=5 for k=3); they do not prove the bound at the frontier — they refute the "try harder designs at scale" program, whose target regime is empty.
+
+Formula-slip note (2026-09-13): an early draft of this probe quoted the wrong RHS, C(R)+mE(R), printing "target=68" at A(7,3) R=9; the correct RHS is (Rk−E(R))·m − C(R) and the true target there is 40. Conclusion unaffected (71 > 40 still holds), but the wrong number appeared in the initial discussion and should not be reused.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
