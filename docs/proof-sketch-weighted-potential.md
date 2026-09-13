@@ -413,6 +413,38 @@ counterpart in Q_n (Pinto's proof leans on set-complement symmetry
 between C_i and D_i that may not survive the "no repeated symbol"
 restriction).
 
+**First crucible test (2026-09-12): a candidate pair fails the averaging
+inequality, and the test itself was degenerate.** Since |V'|=R is fixed,
+Pinto's C_i/D_i (which change |S|) cannot be ported directly; any dual
+pair must be cardinality-preserving swaps. Candidate pair tried, keyed to
+a symbol pair (a,b) exactly as in `compressSet`:
+
+- C(V') = the original guarded compressSet: for each v containing b,
+  replace b→a; skip (leave v unchanged) if v already contains a.
+- D(V') = push-up repair: for each v containing b, if v also contains a
+  (the guard-blocked case for C), apply the full transposition (a b) to
+  the whole vertex instead of skipping; otherwise same as C.
+
+Tested on the exact refuted-compressSet example, A(4,2),
+V'={[4,3],[1,3]}, (a,b)=(1,3): C(V')={[4,1],[1,3]} (the known result,
+Φ: 3→1, boundary 5→7). D(V')={[4,1],[3,1]}, computed by hand: boundary=5,
+Φ=3 — unchanged from the original. Checking the averaging inequality
+Φ(V') ≤ ½(Φ(C(V'))+Φ(D(V'))): 3 ≤ ½(1+3) = 2 is **false**. Pinto's
+mechanism does not transfer as stated on this example.
+
+**The D(V')=3 result is not evidence D works — it's a degenerate
+coincidence.** Both vertices in this V' contain b=3, so D applied the
+transposition (1 3) to _every_ vertex, which is exactly the global graph
+automorphism π=(1 3) applied to all of V'. Automorphisms trivially
+preserve Φ and boundary for any set, so Φ(D(V'))=Φ(V') here proves
+nothing about whether D does useful compressive work — it only shows D
+degenerated into a no-op symmetry because R=2 and both vertices shared
+the swapped symbol. **This candidate pair has not been meaningfully
+tested.** The next test needs R≥3 with at least one vertex not containing
+b, so D acts as a genuine partial (non-global) relabeling rather than a
+whole-set automorphism, before either accepting or discarding this
+operator pair.
+
 ### Status of all sketches
 
 None of the four are results. Strategy 3 is judged the most advanced in
