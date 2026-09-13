@@ -278,6 +278,18 @@ int main(int argc, char **argv) {
     std::size_t x_holds = 0;
     std::size_t d1_holds = 0;
     std::size_t mechanism_first_violation_reported = 0;
+    // Histogram of (T, B_ab+B_ba) over margin=0 pairs: is the split
+    // constant across all margin=0 configurations, or does it vary
+    // while the sum T+(B_ab+B_ba)=dE+dC stays fixed? See advisor
+    // review, docs/proof-sketch-weighted-potential.md
+    // subcube-intersection attack -- a varying split is itself a
+    // structural signal, not just noise.
+    std::map<std::pair<int, int>, std::size_t> tb_histogram;
+    // First witness pair index (i,j into tightA/tightB) for each
+    // distinct (T, B_ab+B_ba) bucket, so a specific pair can be
+    // hand-traced afterward.
+    std::map<std::pair<int, int>, std::pair<std::size_t, std::size_t>>
+        tb_witness;
     const int m = n - k;
     auto t0 = std::chrono::steady_clock::now();
 
@@ -351,6 +363,10 @@ int main(int argc, char **argv) {
                               << " D1=" << D1 << " dE*(m-1)=" << (dE * (m - 1))
                               << "\n";
                 }
+
+                const auto key = std::make_pair(T, b_ab + b_ba);
+                ++tb_histogram[key];
+                tb_witness.emplace(key, std::make_pair(i, j));
             }
         }
         if ((i + 1) % 200 == 0) {
@@ -386,5 +402,40 @@ int main(int argc, char **argv) {
         std::cout << "*** MECHANISM CHECK FAILED (X!=dE or D1!=dE*(m-1)) "
                      "on some pair(s) -- net identity may be masking "
                      "compensating errors ***\n";
+
+    // (T, B_ab+B_ba) distribution over margin=0 pairs: is the split
+    // constant, or does it vary while T+(B_ab+B_ba)=dE+dC stays fixed?
+    if (!tb_histogram.empty()) {
+        std::cout << "  (T, B_ab+B_ba) distribution over " << margin_zero_pairs
+                  << " margin=0 pairs:\n";
+        for (const auto &[key, count] : tb_histogram) {
+            std::cout << "    T=" << key.first << " B_ab+B_ba=" << key.second
+                      << " (sum=" << (key.first + key.second) << "): " << count
+                      << " pair(s)";
+            auto wit = tb_witness.at(key);
+            const auto &[wMembersA, wEbA] = tightA[wit.first];
+            const auto &[wMembersB, wEbB] = tightB[wit.second];
+            std::cout << "  -- witness Fa={";
+            for (int id = 0; id < N; ++id) {
+                if (!testBit(wMembersA, id))
+                    continue;
+                for (int x : verts[id])
+                    std::cout << x;
+                std::cout << " ";
+            }
+            std::cout << "} Fb={";
+            for (int id = 0; id < N; ++id) {
+                if (!testBit(wMembersB, id))
+                    continue;
+                for (int x : verts[id])
+                    std::cout << x;
+                std::cout << " ";
+            }
+            std::cout << "}\n";
+        }
+        if (tb_histogram.size() > 1)
+            std::cout << "  *** (T,B) SPLIT VARIES across margin=0 pairs -- "
+                         "not a fixed geometric split ***\n";
+    }
     return 0;
 }
