@@ -1226,10 +1226,84 @@ free alphabet slots `m`, plus a fixed combinatorial constant from the
 internal defect structure — the two sides could be matched term by
 term instead of only numerically.
 
-Not yet attempted: the actual bijective count of cross-adjacent
-vertex/target pairs between two disjoint Hamming balls placed in
-"generic position" (disjoint coordinate-tuple supports) in `A(n,k)`.
-This is the open next step.
+**First attempt, and its errors (2026-09-13, same session, caught by
+advisor review before being trusted).** A first pass tried to argue
+that the worst-case (margin-0) configuration is *forced* to be a rigid
+Hamming-ball embedding by appeal to "the boundary theorem we're proving
+says S(V') ≥ 0 unconditionally, and HB achieves 0, so nothing can beat
+it" — then tried to match `I+B_ba+B_ab` to `Delta`'s split term by
+term via: each of the `ΔE = E_seq(c_a+c_b)-E_seq(c_a)-E_seq(c_b)`
+cross-edges contributes `1` to `B_ab` and `1` to `B_ba` (total `2` per
+edge) plus `m-1` shared external targets to `I`, so Channel 1 totals
+`ΔE*(m+1)`, leaving a claimed remainder `ΔC-ΔE` (`ΔC` defined
+analogously from `C_constant`) asserted to be exactly the number of
+distance-2 cross-pair shared targets. This is **wrong in two ways**,
+caught before being written in as fact:
+
+1. **`B_ba`/`B_ab` count touching vertices, not edges** — the "`2` per
+   cross-edge" step silently assumes the cross-cut is a perfect
+   matching. Counterexample inside the embeddable regime: `A(4,2)`,
+   `c_a=1, c_b=3` (`R=4`, `⌈log₂4⌉=2 ≤ k=2` and `≤ m=2`, so the rule
+   predicts margin 0). With base `v0=(0,1)`, fresh symbols `{2,3}`,
+   `HB_4 = {(0,1),(2,1),(0,3),(2,3)}`, take `F_b = {(0,1),(2,1),(0,3)}`
+   (tight, `|extbd|=5=rhs(4,2,3)`), `F_a = {(2,3)}` (tight,
+   `|extbd|=4=rhs(4,2,1)`). `ΔE=2` cross-edges, but the single vertex
+   `(2,3)` touches both of `F_b`'s exposed neighbors, giving
+   `B_ab=1, B_ba=2` (total `3`, not `2*ΔE=4`). The overall margin is
+   still `0` (`I=2`, total `2+1+2=5=Delta=rhs(1)+rhs(3)-rhs(4)`), but
+   via a different split of terms than claimed.
+2. **`ΔC-ΔE` is not a count in general** — it goes negative for other
+   splits (`(c_a,c_b)=(1,3)`: `-1`; `(3,5)`: `-3`; `(1,7)`: `-2`), so it
+   cannot be "the number of distance-2 shared targets" as a general
+   claim; the two cases checked by hand ((4,4) and (3,4), both giving
+   0 and matching by coincidence of small numbers) do not generalize.
+
+There is also a **circularity** in the framing, independent of the
+arithmetic: invoking "`S(V') ≥ 0` unconditionally" — the theorem this
+whole document is trying to prove — to conclude the worst case must hit
+`Delta` exactly assumes the conclusion at the very size being inducted
+to. It is legitimate as a *consistency check* on data already gathered,
+not as a step usable inside a proof. The further claim that the
+worst-case fibers must be *rigid Hamming-ball embeddings* additionally
+leans on `uniqueness_conjecture` (`ArrangementExtraconnectivity.lean`),
+which is still open — 0 counterexamples across 5 exhaustive sizes
+(`check_uniqueness.cpp`), not a proof.
+
+**What survives, corrected.** The m-linear term of `Delta` *is*
+matched by a real, checkable mechanism: each of the `ΔE` cross-edges
+joins some `u ∈ F_a`, `v ∈ F_b` sharing a root (a common (k-1)-tuple
+obtained by deleting the one coordinate where `u,v` differ); their
+common neighbors are the `m-1` other fresh symbols available at that
+coordinate, all strictly external to `F_a ∪ F_b` — contributing
+`ΔE*(m-1)` to `I` with exactly the slope `ΔE` that `Delta`'s own
+`m`-coefficient has. The corrected form of the constant-term target,
+replacing the false `ΔC-ΔE` claim above, is
+
+```
+T + (B_ab + B_ba) = ΔE + ΔC
+```
+
+where `T` is the count of strictly-external shared targets generated
+specifically by *distance-2* cross pairs (`u ∈ F_a`, `v ∈ F_b` with
+`dist(u,v)=2`), and `B_ab+B_ba` is the touching-*vertex* count (not
+`2*ΔE`). Hand-checked against four splits: `(c_a,c_b)=(4,4)`:
+`0+8=8=ΔE+ΔC`; `(3,4)`: `1+6=7`; `(1,3)`: `0+3=3`; `(3,5)`: `0+7=7`.
+Worked fully at `A(6,3)`, `c_a=3, c_b=4`, `m=3`: base `v0=(0,1,2)`,
+fresh `{3,4,5}`, `F_b` = the size-4 face, `F_a` = the size-3 remainder
+of `HB_7`; both tight (`|extbd|=20,18`); `I=7 = ΔE*(m-1)+1 = 3*2+1`,
+the `+1` being the one missing cube corner reached by a distance-2 path
+from each fiber; `B_ba=3, B_ab=3`; total `13 = Delta = 18+20-25`.
+
+**Still open, not yet attempted:** proving `T+(B_ab+B_ba)=ΔE+ΔC` in
+general (only hand-checked on 4 small splits so far), and confirming
+the `ΔE*(m-1)` targets and the `T` targets don't overlap (true in every
+case checked so far, but not yet argued, only assumed absent evidence
+of a counterexample). If pursued further, the natural empirical next
+step is extending `src/check_amortized_slack.cpp` to report `T`,
+`B_ab`, `B_ba` separately (it already computes `shared`, `b_ba`,
+`b_ab` internally) and re-running the small embeddable cells
+`(4,2,1,3)`, `(6,3,3,4)`, `(6,3,4,4)`, `(6,3,3,5)` — not yet done, no
+commands issued.
 
 ## Status
 
