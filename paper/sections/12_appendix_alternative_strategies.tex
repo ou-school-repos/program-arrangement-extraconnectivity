@@ -179,3 +179,24 @@ claims, and should not be read as evidence toward
 Proposition~\ref{prop:universal} itself; the exhaustive computational
 sweep (Appendix~\ref{app:engine}) remains the only supporting evidence
 for the proposition as of this writing.
+
+\paragraph{Two further named directions, flagged at the same evidentiary
+stage as dual-compression above.} Two classical tools were suggested
+as possible replacements for the failed local decompositions: an
+entropy/Shearer's-Lemma bound on the coordinate projections
+$U_p(V')$, and a fractional linear-programming relaxation of the
+isoperimetric problem with its dual. Neither has been written down for
+$A(n,k)$, let alone checked against a single swept row, and both carry
+a specific, identifiable risk rather than a generic one: $C(R)$ and
+$E(R)$ are staircase functions of bit-length and popcount, and the
+subadditivity lemma underlying \S\ref{sec:sandwich} is a carry identity
+in binary addition, not a smooth or continuous relation --- a
+continuous relaxation (LP duality) or a smooth bound (entropy) is not
+guaranteed to recover an exact integer staircase, and may instead
+certify only a nearby, weaker constant. This is a structural-analogy
+suggestion, exactly like the dual-compression direction above: worth
+recording so a future attempt does not restart from nothing, but with
+no construction, no written-down dual or entropy functional, and no
+check against the exhaustive sweep performed. Until that check exists,
+neither direction should be read as progress toward
+Proposition~\ref{prop:universal}.
