@@ -702,6 +702,42 @@ sketches has a confirmed, closed path to Proposition 5.3; the
 exhaustive computational evidence (30+ rows, no counterexample) remains
 the _only_ supporting evidence for the proposition.
 
+### Entropy/Shearer candidate: tested and killed (2026-09-13)
+
+Before writing any entropy argument by hand, the natural candidate
+functional was checked empirically first, per this document's own
+methodology. Definition tested: for V' with |V'|=R, per coordinate p
+let {c_r} be the fiber sizes (vertices of V' sharing each root at p),
+and H_p(V') = -Σ_r (c_r/R)log2(c_r/R) (Shannon entropy of the
+root-distribution). Candidate conjecture: **the Hamming Ball minimizes
+S(V') = Σ_p H_p(V') among all R-subsets** — the natural entropy
+analogue of `thm:defect` (which the Hamming Ball maximizes for D).
+
+Exhaustively checked over all R-subsets of A(5,3), R=2,3,4 (1770,
+34220, 487635 subsets respectively — the same territory as the
+existing sweep): **false at R=3.** The true minimizer is
+{(0,1,2),(0,1,3),(0,1,4)} (two coordinates fixed, one varying) with
+S=3.169925, strictly below the Hamming Ball's S=3.421554.
+
+Worse than merely "wrong minimizer": checking `boundary_metrics` on
+both shows the direction is backwards for the actual target. Both
+configurations achieve the same maximal defect D=2=E(3) (ties exist at
+R=3), but:
+
+|                | S (entropy)   | D   | X   | \|∂V'\|                       |
+| -------------- | ------------- | --- | --- | ----------------------------- |
+| Hamming Ball   | 3.42 (higher) | 2   | 1   | 11 (smaller, correct optimum) |
+| entropy-argmin | 3.17 (lower)  | 2   | 0   | 12 (larger)                   |
+
+The configuration with strictly _lower_ total root-distribution entropy
+has a strictly _larger_ boundary. So this functional does not merely
+fail to recover the exact C(R)+mE(R) staircase (the smooth-vs-discrete
+risk already flagged) — it fails to correlate with boundary size in
+the required direction on the first non-trivial case tested. This
+specific candidate is dead; it does not, by itself, rule out some other
+entropy-type functional (a different random variable, a different
+weighting) — none has been proposed or tested.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is

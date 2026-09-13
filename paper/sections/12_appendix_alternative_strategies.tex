@@ -193,10 +193,17 @@ subadditivity lemma underlying \S\ref{sec:sandwich} is a carry identity
 in binary addition, not a smooth or continuous relation --- a
 continuous relaxation (LP duality) or a smooth bound (entropy) is not
 guaranteed to recover an exact integer staircase, and may instead
-certify only a nearby, weaker constant. This is a structural-analogy
-suggestion, exactly like the dual-compression direction above: worth
-recording so a future attempt does not restart from nothing, but with
-no construction, no written-down dual or entropy functional, and no
-check against the exhaustive sweep performed. Until that check exists,
-neither direction should be read as progress toward
-Proposition~\ref{prop:universal}.
+certify only a nearby, weaker constant. The LP-dual direction remains
+entirely unwritten. The most natural entropy candidate, however, has
+since been checked and killed: taking $H_p(V')$ as the Shannon entropy
+of the root-distribution (fiber sizes) at coordinate $p$ and
+$S(V')=\sum_p H_p(V')$, the conjecture that the Hamming Ball minimizes
+$S(V')$ --- the entropy analogue of Theorem~\ref{thm:defect} --- is
+false already at $R=3$ in $A(5,3)$ (exhaustively checked over all
+$487{,}635$ subsets at $R\le4$): the true minimizer
+$\{(0,1,2),(0,1,3),(0,1,4)\}$ achieves $S=3.17$ against the Hamming
+Ball's $S=3.42$, while having a \emph{larger} boundary ($12$ vs.\ $11$)
+--- the functional does not merely miss the exact staircase, it
+disagrees with the target in direction on the first case tested. This
+rules out that specific functional, not entropy methods in general; no
+other entropy-type candidate has been proposed or tested.
