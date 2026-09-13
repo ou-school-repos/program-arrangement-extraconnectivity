@@ -1468,6 +1468,131 @@ one representative case, not the general occurrence question), the
 non-perfect-matching case (e.g. `(3,4)`, `T=1`), and the long-standing
 deficit bound in the non-embeddable regime.
 
+### Non-perfect-matching trace, A(6,3) c_a=3, c_b=4
+
+`check_amortized_slack` extended (commit `29815a3`) to histogram
+`(T, B_ab+B_ba)` over all margin=0 pairs, not just report the first
+witness — confirming a fixed split is genuinely fixed, not an artifact
+of witness selection. Run: `./check_amortized_slack 6 3 3 4`. `ΔE=3`,
+`ΔC=4`, so the constant-term target is `T+(B_ab+B_ba)=ΔE+ΔC=7`. Result:
+2160/2160 margin=0 pairs land in exactly one bucket, `T=1,
+B_ab+B_ba=6`.
+
+Witness: `F_a={(0,1,2),(0,1,3),(0,4,2)}`, `F_b={(5,1,2),(5,1,3),(5,4,2),
+(5,4,3)}`. `F_b` is the full `Q_2` `{5}×{1,4}×{2,3}`; `F_a` is the same
+`Q_2` shape at position-0 value `0`, **minus its fourth corner**
+`(0,4,3)`. The 3 present vertices of `F_a` still pair off with 3 of
+`F_b`'s 4 vertices via position-0 flips — a matching, `X=ΔE=3`,
+`B_ab=3` (all of `F_a`), `B_ba=3` (the 3 matched `F_b` vertices),
+`B_ab+B_ba=6`.
+
+The missing corner `(0,4,3)` is the `T=1` witness itself: it is
+adjacent to `F_b` via `(5,4,3)` (position-0 flip, so `(0,4,3)∈∂F_b`)
+and *also* adjacent to `F_a` via `(0,1,3)` (position-1 flip
+`1↔4`, so `(0,4,3)∈∂F_a`) — it sits in `I`. But it is not
+distance-1-explained: its `F_a`-neighbor `(0,1,3)` and its
+`F_b`-neighbor `(5,4,3)` differ in *two* coordinates (positions 0 and
+1), not one, so no real cross-edge stitches them together. That is
+exactly the `T` count firing.
+
+**Mechanical reading: `T` counts the ghosts of missing corners.**
+Whenever the smaller fiber is a Hamming ball with one corner absent
+relative to a full subcube, that missing corner becomes a *phantom*
+shared external target — reachable at distance 1 from both sides
+independently, but not stitched by any actual edge. Both traced cases
+are consistent with the sharper identity `T=ΔC-ΔE`
+(`(4,4)`: `ΔE=4,ΔC=4,T=0`; `(3,4)`: `ΔE=3,ΔC=4,T=1`) — but this
+refinement is **conditional on the cross-edges forming a perfect
+matching** (`B_ab+B_ba=2X=2ΔE`, observed in both witnesses, not proven
+in general); it is a consequence of the already-established
+`T+(B_ab+B_ba)=ΔE+ΔC` identity plus that matching property, not an
+independently-checked fact.
+
+This generalizes the `(4,4)` case cleanly: perfect-matching/`T=0` is
+the special case where both fibers are complete subcube corners;
+whenever one fiber is a proper Hamming ball short of a full corner
+(the general case for non-power-of-2 `R`), the shortfall shows up as a
+`T`-ghost rather than a missing edge. Not yet checked: whether `T`
+always equals exactly the count of missing corners for more than one
+missing vertex, or for both fibers simultaneously incomplete.
+
+### Non-embeddable regime: three deficit mechanisms
+
+`check_amortized_slack` extended again (commit `b75a2fa`) to track the
+`(T, B_ab+B_ba)` histogram over the *dynamic worst-margin* bucket
+(the least-negative margin actually achieved) rather than only
+`margin=0`, so the same tool traces the crushed regime where margin=0
+pairs don't exist at all. Two cells isolate the two ways embeddability
+fails: `(5,3,4,4)` has `k=3≥⌈log₂8⌉=3` but `m=2<3` ("alphabet
+starvation"); `(7,3,5,5)` has `m=4≥⌈log₂10⌉=4` but `k=3<4` ("coordinate
+starvation").
+
+**m-crush, `A(5,3)` c_a=c_b=4.** `worst=-6` (`Delta=12`, so
+`combined=6`); all 180 worst-margin pairs land in `T=0,
+B_ab+B_ba=4`. Witness: `F_a={(0,1,2),(0,1,3),(0,4,2),(0,4,3)}` =
+`{0}×{1,4}×{2,3}`, `F_b={(1,0,2),(1,0,3),(1,4,2),(1,4,3)}` =
+`{1}×{0,4}×{2,3}` — both full `Q_2`s, but their position-1 alphabets
+(`{1,4}` vs `{0,4}`) share only the symbol `4`. Hand-checking all 16
+pairs: only `(0,4,2)-(1,4,2)` and `(0,4,3)-(1,4,3)` are adjacent
+(`X=2`, not `ΔE=4`) — the 4 `F_a` vertices with position-1`=1` have
+**no partner at all** in `F_b`, since `F_b` never uses symbol `1`
+there. Cross-edges aren't merely fewer than expected; half are
+**structurally impossible**. `B_ab+B_ba=4` (one touch per side per real
+edge), and back-solving `I=combined-(B_ab+B_ba)=2`, fully accounted for
+by the 2 real edges (`T=0`, nothing left over). The deficit lands in
+missing `B`/edges: `m=2` free symbols force the two fibers to each
+pick their own position-1 pair, overlapping in only one place.
+
+**k-crush, `A(7,3)` c_a=c_b=5.** `worst=-2` (`Delta=25`, so
+`combined=23`); 45,360 worst-margin pairs split into two buckets:
+`T=0,B_ab+B_ba=10` (15,120 pairs) and `T=1,B_ab+B_ba=9` (30,240 pairs)
+— both summing to `10=ΔE+ΔC` despite `margin≠0`, i.e. that sum is not
+by itself a signal of criticality here.
+
+Witness (bucket 1): `F_a={(0,1,2),(0,1,3),(0,4,2),(0,4,3),(5,1,2)}`
+(the familiar `{0}×{1,4}×{2,3}` `Q_2` plus a bridge vertex `(5,1,2)`),
+`F_b={(5,1,3),(6,1,2),(6,1,3),(6,4,2),(6,4,3)}` (`{6}×{1,4}×{2,3}` plus
+bridge `(5,1,3)`). Hand-checking all 25 pairs finds **7** actual
+cross-edges (not `ΔE=5`): `A1-B2, A2-B1, A2-B3, A3-B4, A4-B5, A5-B1,
+A5-B2`. Because `c_a=c_b=5` and the two bridge vertices add extra
+incidences, every vertex on *both* sides ends up touched regardless of
+the edge-multiplicity mismatch — `B_ab=5`, `B_ba=5` (full saturation on
+both sides, `B_ab+B_ba=10`). Back-solving: `I=combined-10=13`, and
+`T=0` means `D1=I=13`. If this were the critical case, `D1` should be
+`ΔE·(m-1)=5·3=15` — instead it is **exactly 2 short**, matching the
+margin precisely. **The deficit lands in `D1` itself, not in missing
+edges or unsaturated `B`**: both fibers do achieve full mutual
+saturation (unlike the m-crush case), but the distance-1 targets those
+edges generate are not all distinct — some coincide, because there
+isn't a 4th free coordinate to keep them apart. The `ΔE·(m-1)` formula
+assumes each cross-edge's `(m-1)` fresh-symbol targets are independent
+of every other cross-edge's; the k-crush is exactly the case where
+that independence assumption breaks.
+
+The second bucket (`T=1, B_ab+B_ba=9`) shows the same total shortfall
+re-expressed with one unit moved from `B` into a `T`-type ghost instead
+— a further compensation pattern on top of saturation, not traced
+vertex-by-vertex here.
+
+**Summary — three distinct deficit mechanisms, not one:**
+
+| regime | what breaks | where the deficit lands |
+|---|---|---|
+| m-crush (alphabet starvation) | fibers can't agree on symbols for a shared axis | missing `B`/edges (some become structurally impossible) |
+| k-crush, saturated | fibers saturate each other, but run out of a coordinate to keep distance-1 targets distinct | `D1` falls short of `ΔE·(m-1)` |
+| k-crush, ghost-compensated | same shortfall, partially re-expressed | split between `D1` and `T` |
+
+**Scope: this is a mechanistic account of two specific cells, not a
+general deficit formula.** It explains *why* margin goes negative in
+each observed case and gives the mechanism a name, but does not yet
+predict the *magnitude* of the deficit as a closed-form function of
+`(n,k,c_a,c_b)`, nor establish that these are the only two failure
+modes for larger/unbalanced splits. The long-standing non-embeddable
+deficit-bound problem (12+ data points, `-1` to `-10`, no formula) is
+still open; this section narrows *what kind* of formula to look for
+(likely two regime-dependent pieces, one for each crush type, rather
+than one uniform expression) but does not supply one.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
