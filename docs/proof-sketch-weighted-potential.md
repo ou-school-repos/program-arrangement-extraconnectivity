@@ -331,7 +331,7 @@ change Δ Φ = ΔX + (m+1)ΔD when v is added back.
    `min((k−s)m, 2N₂)`, and that whichever cap is small enough to be the
    binding one always keeps `ΔX + (m+1)s ≤ ΔC(R) + m·popcount(R−1)`
    satisfied — i.e., that a configuration cannot simultaneously have
-   large (k−s)m (small s, so cheap ΔD) *and* large N₂ (many distance-2
+   large (k−s)m (small s, so cheap ΔD) _and_ large N₂ (many distance-2
    neighbors near v, which should itself require existing structure that
    already costs D_old/X_old budget). **This trade-off has not been
    proved.** Only two data points support it so far — the sparse R=2 case
@@ -377,14 +377,54 @@ This approach's main appeal is a single global argument with no per-layer
 casework; its main open question is whether such an f and such a
 domination bound actually exist — nothing here rules out that they don't.
 
-### Status of both sketches
+### Strategy 4 sketch: Dual root-compression via averaging (2026-09-12, untried)
 
-Both are recorded as starting points, not results. Strategy 3 is judged
-the more promising of the two to work out first, because steps 1–2 of its
-induction reuse already-verified Lean machinery (`sum_unique_roots_lower_bound`,
-`E_add_min_le`) and a partially-relevant existing computation (the Fracture
-Gap theorem), leaving a narrower, better-scoped open step (step 4) than
-Strategy 2's from-scratch invariant search.
+Inspired by Pinto's proof of the Bollobás-Leader directed-path conjectures
+(arXiv:1504.07079), which resolves an analogous single-operator-fails
+obstacle on the hypercube Q_n. Pinto defines two compression operators
+C_i (push down: `C_i(S) = {x ∈ S : x∖{i} ∈ S}`) and D_i (push up:
+`D_i(S) = S ∪ {x : x∪{i} ∈ S}`) on subsets of Q_n. Neither is
+individually monotone for the directed edge/vertex boundary, but he
+proves `|∂→(S)| ≥ ½(|∂→(C_i(S))| + |∂→(D_i(S))|)`, which forces at least
+one of the two to be no worse than S even though neither is
+unconditionally so. Iterating over i = 1..n converges to a down-set with
+boundary no larger than the original.
+
+This is structurally the same shape of obstacle as A(n,k)'s root
+compression: the single guarded-symbol compression already tried and
+refuted (`compressSet`, A(4,2) counterexample raising boundary 5→7) is
+one operator that individually fails, exactly as Pinto's C_i and D_i
+individually fail on some sets in Q_n. **Untried question:** does a pair
+of dual root-compression operators exist on A(n,k) — analogous to C_i/D_i
+but respecting the injectivity constraint — such that neither is
+monotone for X + (m+1)D alone, but an averaging inequality like Pinto's
+forces at least one to be non-worsening? This has not been attempted;
+even finding the right candidate pair of operators (one "concentrate
+toward smaller root" and one "concentrate toward larger root," suitably
+guarded for injectivity) is open, let alone proving an averaging bound
+for them.
+
+This approach's appeal is that it directly targets the coordinate-
+tangling obstacle (Step 5) that stalled the original single-operator
+compression, using a technique proven to work around the analogous
+single-operator failure on Q_n; its risk is that the injectivity
+constraint may block the averaging identity's proof in a way that has no
+counterpart in Q_n (Pinto's proof leans on set-complement symmetry
+between C_i and D_i that may not survive the "no repeated symbol"
+restriction).
+
+### Status of all sketches
+
+None of the four are results. Strategy 3 is judged the most advanced in
+practice: its steps 1–2 reuse already-verified Lean machinery
+(`sum_unique_roots_lower_bound`, `E_add_min_le`), and its open step (a
+bound on ΔX) now has a proved special case (ΔX=0 at adjacency) and one
+still-conjectural general trade-off, both recorded above. Strategy 4 is
+the newest and completely unexplored beyond the analogy; it is flagged
+because the averaging technique is a good structural match for the
+coordinate-tangling failure mode, not because any part of it has been
+attempted on A(n,k). Strategy 2 remains a from-scratch invariant search
+with no candidate potential yet shown to work.
 
 ## Status
 
