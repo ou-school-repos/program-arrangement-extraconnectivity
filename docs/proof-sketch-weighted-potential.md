@@ -993,9 +993,7 @@ The "margin widens as sizes grow" conclusion drawn from this table does
 
 </details>
 
-**Corrected table** (`src/check_amortized_slack.cpp`, same 13
-comparable cells plus the two that already had no tight fiber of size
-5 — see below):
+**Corrected table**, extended to 17 cells (`src/check_amortized_slack.cpp`):
 
 | cell (n,k,c_a,c_b) | Delta | max(I+B_ba+B_ab−Delta) found |
 | ------------------ | ----- | ----------------------------- |
@@ -1012,20 +1010,43 @@ comparable cells plus the two that already had no tight fiber of size
 | (6,3,3,4)          | 13    | 0                              |
 | (6,3,4,4)          | 16    | 0                              |
 | (7,3,4,4)          | 20    | 0                              |
+| (6,3,2,3)          | 9     | 0                              |
+| (6,3,4,5)          | 17    | −5                             |
+| (6,3,5,5)          | 20    | −8                             |
+| (7,3,3,3)          | 15    | 0                              |
 
 **This is a materially different picture than the first pass, not just
 a smaller margin.** The corrected quantity hits the bound **exactly**
-(margin 0, i.e. S(V')=0 exactly at that split) in 11 of 13 cells — the
-inequality is *tight*, not comfortably loose. Only (5,3,3,3) and
-(5,3,4,4) go strictly negative, and by less than the first-pass table
-claimed (−2 and −6, not −5 and −8). Zero violations (margin > 0) found
-in any cell. This still counts as evidence the corrected critical-case
-lemma is plausible, but the "growing margin" story is dead: the real
-signature so far is an inequality living right at its own boundary,
-which is a harder thing to prove analytically than something with slack
-to spare — equality that tight, that often, is usually explained by a
-clean bijective/counting argument, not an inequality with room in it.
-No such argument has been found yet.
+(margin 0, i.e. S(V')=0 exactly at that split) in 13 of 17 cells — the
+inequality is *tight*, not comfortably loose. Zero violations
+(margin > 0) found anywhere. Equality that consistent is usually
+explained by a clean bijective/counting argument, not a slack
+inequality with room in it — and the 4 negative cells now pin down
+exactly when that argument would have to break:
+
+**Sharp pattern found, 17/17 cells, zero exceptions:** margin = 0 iff
+`n−k ≥ ⌈log₂(c_a+c_b)⌉` — i.e. iff the *combined* size R = c_a+c_b is
+itself small enough for a Hamming ball to embed in A(n,k) — and margin
+< 0 iff `n−k < ⌈log₂ R⌉`. This holds regardless of whether the
+*individual* fibers c_a, c_b are themselves at, below, or above their
+own marginal embedding size: (6,3,4,5) has c_a=4 comfortably
+non-marginal (⌈log₂4⌉=2<3=n−k) and c_b=5 exactly marginal
+(⌈log₂5⌉=3=n−k), yet still goes negative (−5), because R=9 needs
+⌈log₂9⌉=4>3=n−k; (5,3,1,3) has c_b=3 exactly marginal
+(⌈log₂3⌉=2=n−k) but stays at margin 0, because R=4 needs
+⌈log₂4⌉=2=n−k, still embeddable. It is the union's embeddability, not
+either fiber's, that controls the sign. Also consistent with the
+earlier-noted (5,3,4,5)/(5,3,5,5) edge cases: those aren't just "no
+tight fiber of size 5" curiosities, they're the same embeddability
+threshold acting on a single fiber instead of the union.
+
+This reframes the open lemma sharply: **prove that for tight F_a, F_b
+with c_a+c_b embeddable in A(n,k), I+B_ba+B_ab = Delta exactly** (a
+bijective/counting claim, not an inequality), and **separately bound
+the deficit when c_a+c_b exceeds embeddability** (where the four data
+points give −2,−5,−6,−8 — not yet enough to see a clean closed form,
+but not simply "unboundedly bad" either). Neither has been attempted
+analytically yet; this is 17 data points and a pattern, not a proof.
 
 margin=0 at (1,1) is not a coincidence to explain away: it is exactly
 the R=2 case (an adjacent pair achieving rhs(2) exactly, S(V')=0 by
@@ -1071,22 +1092,23 @@ corrected quantity); results are the corrected table above, not the
 struck-through one.
 
 **What is still missing before this is a lemma, let alone a proof:** (a)
-an actual argument for _why_ I + B_ba + B_ab ≤ Delta when fibers are
-tight, and — now the sharper question — why it holds with *equality* in
-11 of 13 tested cells rather than merely holding; the natural guess is
-still that tight fibers are highly root-concentrated, which should
-structurally cap boundary interference, but this has not been shown,
-and an equality this consistent suggests a bijective or counting
-argument is the right tool, not a slack-based inequality; (b) the
-direct-adjacency correction term is now characterized exactly (the
-identity above) but not yet proven from first principles independent of
-the computational check; (c) even granting (a) and (b), an amortized
-induction also needs to handle the non-tight case (S(F_a),
-S(F_b) > 0) in general, not just confirm one already-known witness has
-enough margin. `scripts/check_amortized_slack.py` (still I-only, now
-known to undercount — a fix note has not yet been added to it) and
-`src/check_amortized_slack.cpp` are both set up to extend the
-critical-case table further for whoever picks this up next.
+a bijective/counting proof of I + B_ba + B_ab = Delta exactly whenever
+c_a+c_b is Hamming-ball-embeddable (13 of 17 cells, 0 exceptions) — the
+sharp embeddability pattern above turns "why does equality hold so
+often" into a precise, checkable target rather than a vague hunch, but
+the argument itself has not been attempted; (b) a bound (not yet even
+conjectured in closed form) on the deficit Delta − (I+B_ba+B_ab) when
+c_a+c_b exceeds embeddability — 4 data points (−2,−5,−6,−8) is not
+enough to guess a formula; (c) the direct-adjacency correction term is
+now characterized exactly (the identity above) but not yet proven from
+first principles independent of the computational check; (d) even
+granting (a)–(c), an amortized induction also needs to handle the
+non-tight case (S(F_a), S(F_b) > 0) in general, not just confirm one
+already-known witness has enough margin. `scripts/check_amortized_slack.py`
+(I-only, now marked superseded in its own docstring) and
+`src/check_amortized_slack.cpp` (the corrected, canonical tool) are both
+set up to extend the critical-case table further for whoever picks this
+up next.
 
 ## Status
 
