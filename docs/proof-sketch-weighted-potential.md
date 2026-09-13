@@ -445,18 +445,63 @@ b, so D acts as a genuine partial (non-global) relabeling rather than a
 whole-set automorphism, before either accepting or discarding this
 operator pair.
 
+### Strategy 3's per-step marginal induction is refuted (2026-09-13)
+
+The marginal induction as originally framed — prove a purely local
+per-step inequality `ΔX + (m+1)s ≤ ΔC(R) + m·popcount(R-1)` and let
+strong induction on R do the rest — is **false in general**, confirmed by
+an explicit, fully hand-verified counterexample, not merely a case where
+the crude ΔX bound was too generous.
+
+A(5,3) (k=3, m=2), R: 2→3. v=[1,2,3]. V_old={u1,u2} with u1=[1,2,4]
+(sharing root (1,2) at p=3 with v, so s=1) and u2=[4,5,3] (sharing no
+root with v). Verified directly via per-coordinate `coord_boundary`
+computation (not naive neighbor-list overlap, which over-counts: two
+V-members sharing a root both border the same external point through
+the *same* coordinate, contributing bd_mult=1, not 2 — this tripped up
+the first pass of verification and was caught and corrected before
+accepting the result):
+
+- D_old=0, X_old=0 (u1, u2 share no roots and no external neighbors).
+- D(V')=1, X(V')=2 (external vertices [4,2,3] and [1,5,3] each have
+  bd_mult=2, hit via p=1 from v and p=2 from u2, and vice versa —
+  genuine cross-coordinate collisions). Boundary=13, cross-checked
+  against Rkm−Φ = 18−5 = 13.
+- Marginal step: ΔX=2, s=1, m=2. LHS = 2+3(1) = 5.
+  RHS = ΔC(3)+m·popcount(2) = 2+2(1) = 4. **5 ≤ 4 is false.**
+- Global check still holds: Φ(V')=5 ≤ C(3)+m·E(3)=7, with slack banked
+  entirely from the R=1→2 step (u1,u2 placed at distance 3, costing 0
+  defect/collision there, banking the full ΔC(2)+mΔE(2)=3 available at
+  that step).
+
+**Implication.** This is not a case the crude `(k-s)m` bound merely
+overestimates — the actual, correctly-computed ΔX genuinely violates the
+per-step target. No tightening of the ΔX bound alone can fix this: the
+per-step inequality is false as stated, for a configuration with
+verified D_old=0. Any repair must abandon step-locality — e.g. an
+amortized/potential-method argument (bank surplus from early steps,
+spend it on later deficits) rather than requiring every step to
+individually satisfy the marginal bound. Note that proving the amortized
+(cumulative) version directly is a rephrasing of the *original* global
+claim (the per-step terms telescope back into X(V')+(m+1)D(V') ≤
+C(R)+mE(R)), so this refutation removes the main advantage marginal
+induction offered — reducing an R-vertex claim to a 1-vertex check — not
+just one candidate bound within it.
+
 ### Status of all sketches
 
-None of the four are results. Strategy 3 is judged the most advanced in
-practice: its steps 1–2 reuse already-verified Lean machinery
-(`sum_unique_roots_lower_bound`, `E_add_min_le`), and its open step (a
-bound on ΔX) now has a proved special case (ΔX=0 at adjacency) and one
-still-conjectural general trade-off, both recorded above. Strategy 4 is
-the newest and completely unexplored beyond the analogy; it is flagged
-because the averaging technique is a good structural match for the
-coordinate-tangling failure mode, not because any part of it has been
-attempted on A(n,k). Strategy 2 remains a from-scratch invariant search
-with no candidate potential yet shown to work.
+None of the four are results. Strategy 3's originally-hoped-for
+step-locality is now refuted (see above); any continuation needs a
+genuinely amortized argument, which has not been attempted. Its early
+machinery (steps 1–2, reusing `sum_unique_roots_lower_bound` and
+`E_add_min_le`) and the proved ΔX=0-at-adjacency lemma remain valid
+building blocks, but the induction skeleton built on top of them does
+not close as originally planned. Strategy 4 is unexplored beyond one
+failed candidate operator pair. Strategy 2 remains a from-scratch
+invariant search with no candidate potential yet shown to work. As of
+this writing, none of the four sketches has a viable, non-refuted path
+to closing Proposition 5.3; the exhaustive computational evidence (30+
+rows, no counterexample) remains the only supporting evidence.
 
 ## Status
 

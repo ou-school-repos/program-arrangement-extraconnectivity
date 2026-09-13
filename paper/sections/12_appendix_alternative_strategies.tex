@@ -33,10 +33,18 @@ removed (proved directly from the one-coordinate-difference property of
 adjacency, independent of $n,k,R$). A second, dimension-independent cap
 $\Delta X \le 2(R-1)$ also holds, from the fact that only vertices at
 Hamming distance $2$ from $v$ can contribute to $\Delta X$ via a fresh
-root. Whether $\min\big((k-s)m,\,2(R-1)\big)$ always suffices to close the
-induction is conjectured but unproved; only two supporting configurations
-have been checked (see \texttt{docs/proof-sketch-weighted-potential.md}
-for the derivations and the open reconciliation with $\Delta \Cconst(R)$).
+root. \textbf{This per-step marginal inequality is refuted.} An explicit
+configuration in $A(5,3)$ ($k=3,m=2$, $R:2\to3$), with $D_{old}=0$
+verified directly, achieves $\Delta X=2$, $s=1$, giving LHS $=5 >$
+RHS $=4$: the per-step bound is false, not merely loose. The global
+inequality still holds for that configuration only because surplus
+banked at an earlier step compensates; see
+\texttt{docs/proof-sketch-weighted-potential.md} for the full computation.
+Consequently the appeal of this direction — reducing an $R$-vertex claim
+to a single-vertex marginal check via strong induction — does not survive
+as originally framed. A repair would need an amortized argument that
+explicitly carries banked surplus between steps, which has not been
+attempted and is not obviously simpler than the original claim.
 
 \paragraph{Dual root-compression via averaging.}
 Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
@@ -63,15 +71,19 @@ the required domination bound, has been established; it is not known
 whether a suitable $f$ exists.
 
 \medskip
-\noindent Of the three, the marginal-induction direction is judged most
-advanced in practice, since its early steps reuse machinery already
-mechanized in Lean (Lemma~\ref{lem:subadditivity} and
-Theorem~\ref{thm:defect}'s induction) and its open step now has a partial
-derivation rather than being untouched. The dual-compression direction is
-flagged as a promising untried structural analogy, precisely because it
-targets the coordinate-tangling obstacle that stalled the original
-single-operator compression, but nothing on $A(n,k)$ has been attempted
-for it yet. The Lyapunov direction remains a from-scratch invariant
-search with no candidate potential shown to work. These are research
-opinions, not mathematical claims, and should not be read as evidence
-toward Proposition~\ref{prop:universal} itself.
+\noindent None of the three directions currently has a viable,
+non-refuted path to closing Proposition~\ref{prop:universal}. The
+marginal-induction direction's per-step approach is refuted outright (see
+above); its early machinery (Lemma~\ref{lem:subadditivity},
+Theorem~\ref{thm:defect}'s induction skeleton, and the proved
+$\Delta X=0$-at-adjacency lemma) remains valid, but the induction built on
+top of it does not close as planned, and an amortized replacement is
+untried. The dual-compression direction's one tested candidate operator
+pair failed its own averaging inequality and degenerated into a
+graph automorphism on the example checked; no non-degenerate candidate
+has been proposed. The Lyapunov direction remains a from-scratch
+invariant search with no candidate potential shown to work. These are
+research opinions, not mathematical claims, and should not be read as
+evidence toward Proposition~\ref{prop:universal} itself; the exhaustive
+computational sweep (Appendix~\ref{app:engine}) remains the only
+supporting evidence for the proposition as of this writing.
