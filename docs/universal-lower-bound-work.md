@@ -82,8 +82,8 @@ X(V)\le\bigl(C(R)-E(R)\bigr)+(m+1)\bigl(E(R)-D(V)\bigr).
 $$
 
 For the Hamming ball this is equality, since
-$D(\mathrm{HB}\_R)=E(R)$ and
-$X(\mathrm{HB}\_R)=C(R)-E(R)$. This is strictly weaker than the refuted
+$D(\mathrm{HB}_R)=E(R)$ and
+$X(\mathrm{HB}_R)=C(R)-E(R)$. This is strictly weaker than the refuted
 dimension-independent inequality $X(V)+D(V)\le C(R)$. It is a candidate
 for the missing mathematical lemma, not an established claim; the next task is
 to seek either a proof or a counterexample to it.
