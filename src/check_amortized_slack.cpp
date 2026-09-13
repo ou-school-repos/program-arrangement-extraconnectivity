@@ -102,6 +102,20 @@ bool testBit(const Bits &b, int i) {
 // neighbor-of-w-in-Fb. Those are the "distance-2 channel" targets
 // (docs/proof-sketch-weighted-potential.md, subcube-intersection
 // attack, corrected constant-term identity T+(B_ab+B_ba)=ΔE+ΔC).
+// X: the number of direct cross-edges (u,v), u in Fa, v in Fb,
+// adjacent. Computed by summing, over u in Fa, |nbrMask[u] ∩ Fb| --
+// distinct from B_ba/B_ab, which count touching *vertices*, not edges.
+int compute_X(const Bits &membersA, const Bits &membersB,
+              const std::vector<Bits> &nbrMask, int N) {
+    int X = 0;
+    for (int u = 0; u < N; ++u) {
+        if (!testBit(membersA, u))
+            continue;
+        X += popcountAnd(nbrMask[u], membersB);
+    }
+    return X;
+}
+
 int compute_T(const Bits &ebA, const Bits &ebB, const Bits &membersA,
               const Bits &membersB, const std::vector<Bits> &nbrMask, int N,
               std::size_t words) {
@@ -260,6 +274,11 @@ int main(int argc, char **argv) {
     std::size_t identity_checked = 0;
     std::size_t identity_holds = 0;
     std::size_t identity_first_violation_reported = 0;
+    std::size_t x_checked = 0;
+    std::size_t x_holds = 0;
+    std::size_t d1_holds = 0;
+    std::size_t mechanism_first_violation_reported = 0;
+    const int m = n - k;
     auto t0 = std::chrono::steady_clock::now();
 
     for (std::size_t i = 0; i < tightA.size(); ++i) {
@@ -306,6 +325,32 @@ int main(int argc, char **argv) {
                               << " b_ab=" << b_ab << " b_ba=" << b_ba
                               << " lhs=" << lhs << " dE+dC=" << rhs_val << "\n";
                 }
+
+                // Sharper (non-tautological) mechanism check: does the
+                // cross-edge count actually equal dE, and do those edges'
+                // (m-1) fresh-symbol targets actually account for D1
+                // cleanly (no collisions), rather than the net T+B
+                // identity above merely balancing via compensating
+                // errors? See advisor review, docs/proof-sketch-
+                // weighted-potential.md subcube-intersection attack.
+                const int X = compute_X(membersA, membersB, nbrMask, N);
+                const int D1 = shared - T; // I - T, the distance-1-
+                                           // attributed share of I
+                ++x_checked;
+                const bool x_ok = (static_cast<std::int64_t>(X) == dE);
+                const bool d1_ok = (static_cast<std::int64_t>(D1) ==
+                                    dE * static_cast<std::int64_t>(m - 1));
+                if (x_ok)
+                    ++x_holds;
+                if (d1_ok)
+                    ++d1_holds;
+                if ((!x_ok || !d1_ok) &&
+                    mechanism_first_violation_reported < 5) {
+                    ++mechanism_first_violation_reported;
+                    std::cerr << "  mechanism mismatch: X=" << X << " dE=" << dE
+                              << " D1=" << D1 << " dE*(m-1)=" << (dE * (m - 1))
+                              << "\n";
+                }
             }
         }
         if ((i + 1) % 200 == 0) {
@@ -328,11 +373,18 @@ int main(int argc, char **argv) {
     std::cout << "  margin=0 pairs: " << margin_zero_pairs
               << "; T+(B_ab+B_ba)=dE+dC identity holds " << identity_holds
               << "/" << identity_checked << "\n";
+    std::cout << "  mechanism checks (m=" << m << "): X=dE holds " << x_holds
+              << "/" << x_checked << "; D1=dE*(m-1) holds " << d1_holds << "/"
+              << x_checked << "\n";
     if (worst > 0)
         std::cout << "*** CRITICAL-CASE VIOLATION (I+B_ba+B_ab >= Delta) "
                      "***\n";
     if (identity_checked > 0 && identity_holds != identity_checked)
         std::cout << "*** T+(B_ab+B_ba)=dE+dC IDENTITY VIOLATED on "
                   << (identity_checked - identity_holds) << " pair(s) ***\n";
+    if (x_checked > 0 && (x_holds != x_checked || d1_holds != x_checked))
+        std::cout << "*** MECHANISM CHECK FAILED (X!=dE or D1!=dE*(m-1)) "
+                     "on some pair(s) -- net identity may be masking "
+                     "compensating errors ***\n";
     return 0;
 }
