@@ -107,8 +107,9 @@ and `python3 scripts/check_universal_lower_bound.py --profile extended`. This
 remains finite evidence, not a proof.
 
 The C++ cross-check is built with `make universal_check` and invoked as, for
-example, `./universal_check 7 2 5`. It has a five-million-subset safety limit;
-the purpose is faster exhaustive evidence, not an unbounded claim.
+example, `./universal_check 7 2 5`. It has a 250-million-subset default
+safety limit; a deliberate larger run can supply `--max-subsets LIMIT`. The
+purpose is faster exhaustive evidence, not an unbounded claim.
 
 The candidate is most naturally stated as the following weighted extremal
 claim, with \(m=n-k\):
@@ -138,7 +139,7 @@ For fixed \((R,n,k)\), the proved fiber identity rewrites the boundary exactly
 as
 
 \[
-  |\partial V|=Rk(n-k)-\bigl(X(V)+(n-k+1)D(V)\bigr).
+|\partial V|=Rk(n-k)-\bigl(X(V)+(n-k+1)D(V)\bigr).
 \]
 
 Consequently, a compression is monotone for the weighted potential exactly

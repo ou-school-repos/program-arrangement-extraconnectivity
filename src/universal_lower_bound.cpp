@@ -263,12 +263,21 @@ int parse_positive(const char *text, const char *name) {
     return static_cast<int>(value);
 }
 
+std::uint64_t parse_limit(const char *text) {
+    char *end = nullptr;
+    const unsigned long long value = std::strtoull(text, &end, 10);
+    if (*text == '\0' || *end != '\0' || value == 0)
+        throw std::invalid_argument(std::string("invalid subset limit: ") +
+                                    text);
+    return static_cast<std::uint64_t>(value);
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
-    constexpr std::uint64_t default_limit = 5'000'000;
-    if (argc != 4) {
-        std::cerr << "Usage: " << argv[0] << " n k R\n"
+    constexpr std::uint64_t default_limit = 250'000'000;
+    if (argc != 4 && argc != 6) {
+        std::cerr << "Usage: " << argv[0] << " n k R [--max-subsets LIMIT]\n"
                   << "Exhaustively checks all R-subsets of A(n,k); limit: "
                   << default_limit << " subsets.\n";
         return 2;
@@ -277,6 +286,12 @@ int main(int argc, char **argv) {
         const int n = parse_positive(argv[1], "n");
         const int k = parse_positive(argv[2], "k");
         const int size = parse_positive(argv[3], "R");
+        std::uint64_t subset_limit = default_limit;
+        if (argc == 6) {
+            if (std::string(argv[4]) != "--max-subsets")
+                throw std::invalid_argument("expected --max-subsets LIMIT");
+            subset_limit = parse_limit(argv[5]);
+        }
         if (k > n)
             throw std::invalid_argument("k must be at most n");
         std::uint64_t vertex_count = 1;
@@ -288,10 +303,11 @@ int main(int argc, char **argv) {
             vertex_count *= static_cast<std::uint64_t>(n - i);
         }
         const std::uint64_t combinations =
-            choose_capped(static_cast<int>(vertex_count), size, default_limit);
-        if (combinations > default_limit)
+            choose_capped(static_cast<int>(vertex_count), size, subset_limit);
+        if (combinations > subset_limit)
             throw std::invalid_argument(
-                "too many subsets; use the Python checker for a targeted run");
+                "subset count exceeds the configured limit; rerun with "
+                "--max-subsets LIMIT");
         Checker(n, k, size).run();
     } catch (const std::exception &error) {
         std::cerr << "error: " << error.what() << '\n';
