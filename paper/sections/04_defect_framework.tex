@@ -110,16 +110,27 @@ extremal framework.
 \end{proposition}
 
 \begin{remark}
-These propositions encode the extremal content of the Kruskal-Katona shadow
-theorem \cite{kruskal1963number,katona1968theorem,harper1966optimal} applied to
-the arrangement graph fiber structure. Proposition~\ref{prop:hb-eval} is
+These propositions encode the extremal content of a vertex-isoperimetric
+compression theorem applied to the arrangement graph fiber structure: Harper's
+edge-isoperimetric theorem \cite{harper1966optimal} for the binary ($n=2$)
+case, and the more general Bollob\'{a}s--Leader compression theorem for
+vertex-isoperimetric inequalities on $n$-ary Hamming graphs
+\cite{bollobas1991vertex} for $n > 2$. The Kruskal-Katona shadow theorem
+\cite{kruskal1963number,katona1968theorem} is a related but distinct result
+about uniform set systems (binary layers of the hypercube); it is not by
+itself sufficient for the $n$-ary transfer required here (see the discussion
+of this citation issue in the proof-sketch notes accompanying this project).
+Proposition~\ref{prop:hb-eval} is
 computationally verified through $R \le 160$ by constructing $\mathrm{HB}_R$ and
 enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}).
 Proposition~\ref{prop:universal} is tested exhaustively over connected
 $R$-vertex subsets for $R \le 10$ by enumerating every non-isomorphic connected
-$R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3). Because
-the proposition quantifies over \emph{all} $R$-vertex subsets, including
-disconnected ones, this is only partial computational evidence; it remains
+$R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3), and
+separately over \emph{all} (including disconnected) $R$-vertex subsets, for
+$R \le 6$ across 26 parameter rows of $A(n,k)$ (up to $3.24\times10^9$ subsets
+in a single row), with no counterexample found in either search. Because
+both searches are bounded in $R$, this remains only partial computational
+evidence; the proposition is
 open, not yet proven, for general $R$. Conceptually,
 Section~\ref{sec:sandwich}'s asymptotic-dominance argument explains why, once
 $n-k$ is large relative to the fixed cluster size $R$, no sub-optimal topology's

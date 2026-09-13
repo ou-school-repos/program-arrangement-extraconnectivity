@@ -37,5 +37,8 @@ thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient
 to guarantee the formula's exactness for all valid dimensions.
 Proposition~\ref{prop:universal} quantifies over \emph{all} subsets, whereas
 the \texttt{nauty}-based search tests connected $R$-vertex subsets for
-$R \le 10$; it is therefore partial evidence rather than a verification of the
-universal proposition.
+$R \le 10$; a separate exhaustive checker (\texttt{universal\_check},
+\texttt{src/universal\_lower\_bound.cpp}) tests \emph{all} subsets, including
+disconnected ones, for $R \le 6$ across 26 parameter rows of $A(n,k)$. Both
+are therefore partial evidence rather than a verification of the universal
+proposition for general $R$.
