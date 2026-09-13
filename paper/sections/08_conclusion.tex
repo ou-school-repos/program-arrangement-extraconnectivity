@@ -1,10 +1,45 @@
 \section{Conclusion}
 
-The Algebraic Defect Framework provides a conditional exact boundary formula for
-the minimum external boundary of $R$-element subsets of $A(n,k)$ for all $R$,
-subject to two open propositions. Replacing previously used geometric tools with
-a verified algebraic framework, the approach yields fixed-topology asymptotic
-Hamming-ball dominance and a partial defect-spectrum classification. Closing the
-Universal Boundary Inequality (Proposition~\ref{prop:universal}) and
-establishing the reduction from boundary minimization to exact
-$(R{-}1)$-extraconnectivity remain the principal open problems.
+This paper's contribution divides cleanly into what is proved outright and what
+remains conditional, and the two should not be conflated.
+
+\textbf{Proved unconditionally.} The Algebraic Defect Framework itself ---
+the root/fiber decomposition of the external boundary into a term linear in
+$(n-k)$ minus a topology-dependent correction (Section~\ref{sec:defect}), and
+the subadditivity lemma underlying it --- is established outright and
+mechanized in Lean~4, independent of either open proposition below. On top of
+it, the Fixed-Topology Asymptotic Penalty (Theorem~\ref{thm:penalty}) is an
+unconditional theorem: for every fixed sub-optimal topology, the Hamming ball's
+boundary advantage grows without bound as $n-k \to \infty$, which Cheng,
+Lipt\'ak, and Tian's exhaustive small-case computations
+\cite{cheng2022extraconnectivity} did not establish in general. The partial
+defect-spectrum classification of Section~\ref{sec:fracture} (the Topological
+Funnel, its primary and secondary fractures, and Theorem~\ref{thm:classification})
+is likewise proved on paper from Harper's edge-isoperimetric theorem, not
+merely observed computationally.
+
+\textbf{Conditional.} Combining these unconditional results into a single
+exact closed-form boundary formula valid at \emph{every} finite $R$ --- not
+just asymptotically --- requires the Universal Boundary Inequality
+(Proposition~\ref{prop:universal}), which remains open in full generality
+despite exhaustive computational support (Section~\ref{sec:defect}) and,
+as detailed in Appendix~\ref{app:alt-strategies}, a substantive obstruction: the sharpest
+currently available bound on shared external neighbors between two split
+fibers is already tight at the configuration that refutes the natural
+induction arguments, so closing the proposition requires a genuinely amortized
+argument, not a sharper local one. A second, independent gap --- the
+boundary-to-extraconnectivity reduction relating minimum-boundary sets to
+exact $(R{-}1)$-extraconnectivity --- is likewise open and is not addressed by
+the Lean formalization, whose capstone theorem is confined to external-neighbor
+sets of $R$-element subsets.
+
+\textbf{Net assessment.} Relative to \cite{cheng2022extraconnectivity}'s exact
+computation of small-$g$ extraconnectivity cases ($g \le 6$), this paper does
+not yet supply new unconditional extraconnectivity values for larger $g$: that
+depends on closing Proposition~\ref{prop:universal}. What it does supply is a
+mechanized theory that reduces the general problem to two explicitly isolated,
+precisely characterized open statements, an unconditional proof that the
+Hamming ball dominates asymptotically regardless of how those statements
+resolve, and a documented account of exactly why the obvious paths to closing
+Proposition~\ref{prop:universal} fail. Closing that proposition, and the
+boundary-to-extraconnectivity reduction, remain the principal open problems.

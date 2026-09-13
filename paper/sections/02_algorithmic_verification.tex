@@ -22,11 +22,19 @@ boundaries for arbitrary $R$ and dimensions.
 		\midrule
 		2   & 1          & 1            & $(2k-1)(n-k)-1$        & Cheng et al. \cite{cheng2022extraconnectivity} \\
 		4   & 4          & 4            & $(4k-4)(n-k)-4$        & Cheng et al. \cite{cheng2022extraconnectivity} \\
-		8   & 12         & 12           & $(8k-12)(n-k)-12$      & \textbf{New (Engine / Lean 4)}                 \\
-		16  & 32         & 32           & $(16k-32)(n-k)-32$     & \textbf{New (Engine / Lean 4)}                 \\
+		8   & 12         & 12           & $(8k-12)(n-k)-12$      & \textbf{New: value engine-verified}$^\dagger$  \\
+		16  & 32         & 32           & $(16k-32)(n-k)-32$     & \textbf{New: value engine-verified}$^\dagger$  \\
 		\bottomrule
 	\end{tabular}
 \end{table}
+	\noindent $^\dagger$\small The listed value is the Hamming ball's own boundary,
+	confirmed by direct construction and enumeration (unconditional, valid to
+	$R \le 260$; Appendix~\ref{app:engine}). That this value is the
+	\emph{global minimum} over all $R$-element subsets --- not merely the
+	Hamming ball's own boundary --- is the content of
+	Proposition~\ref{prop:universal} (Section~\ref{sec:defect}), which remains
+	open in general; the $R=8$ row falls within this section's exhaustive
+	connected-subgraph search ($R\le10$), but the $R=16$ row does not.
 
 \noindent \small \textit{Notably, our closed-form evaluation reveals a geometric
 symmetry for perfect hypercubes ($R=2^d$): the defect mirrors the external
@@ -39,5 +47,5 @@ subsumes the ad-hoc topological cases manually discovered by Cheng et al.\
 constructions were initial segments of the lexicographic Hamming Ball. Moreover,
 as dimensions scale ($k,\, n{-}k \to \infty$), the constants $\Cconst(R)$ and
 $\Eseq(R)$ become negligible relative to the leading $R \cdot k(n-k)$ term,
-confirming the asymptotic limits conjectured
+consistent with the asymptotic limits conjectured
 in~\cite{cheng2022extraconnectivity}.
