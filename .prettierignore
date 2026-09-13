@@ -5,10 +5,5 @@ pr-comments*.md
 
 # docs/ is math/Lean-notation-heavy throughout (V', F_a, B_ba, X_cross,
 # ...): every file mixes bare underscores in identifiers with real
-# _emphasis_ spans, which prettier's markdown emphasis normalizer
-# repeatedly mis-scopes, corrupting content (e.g. c_a+c_b -> c*a+c_b) --
-# not merely reformatting. At least 5 files were already hit before this
-# was caught. Ignoring the whole directory rather than files one at a
-# time, since every file here is written in the same notation and any of
-# them is equally exposed.
+# _emphasis_ spans, which prettier's markdown emphasis normalizer breaks
 docs/**/*.md

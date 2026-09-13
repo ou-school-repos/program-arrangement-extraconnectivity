@@ -28,7 +28,10 @@ BIN_UNIVERSAL = universal_check
 SRC_SLACK = src/check_amortized_slack.cpp
 BIN_SLACK = check_amortized_slack
 
-SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK)
+SRC_UNIQUENESS = src/check_uniqueness.cpp
+BIN_UNIQUENESS = check_uniqueness
+
+SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK) $(SRC_UNIQUENESS)
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
@@ -99,7 +102,7 @@ endef
 ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 .PHONY: build
-build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK)	##H @Build Compile all binaries
+build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS)	##H @Build Compile all binaries
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
 $(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
@@ -116,6 +119,11 @@ $(BIN_UNIVERSAL): $(SRC_UNIVERSAL)	##H @Dev Build the all-subsets UniversalLower
 	@$(call print_success,Build complete.)
 
 $(BIN_SLACK): $(SRC_SLACK)	##H @Dev Build the amortized-slack critical-case checker (Prop 5.3)
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_UNIQUENESS): $(SRC_UNIQUENESS)	##H @Dev Build the tight-fiber Hamming-ball-uniqueness checker
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
@@ -329,7 +337,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
