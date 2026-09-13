@@ -1328,9 +1328,56 @@ above: `X=ΔE` is a count over configurations that already are
 margin=0, and says nothing about *why* margin=0 is unbeatable, so it
 still cannot be a step inside the induction.
 
-**Still open:** proving `X=ΔE` from Hamming-ball structure directly
-(currently observed, not derived), and the long-standing deficit bound
-in the non-embeddable regime.
+**`X=ΔE` derived, conditionally (2026-09-13, same session).** For any
+disjoint partition `V'=F_a⊔F_b` (no tightness assumed yet), edge
+double-counting over the split gives, unconditionally,
+
+```
+D(V') = D(F_a) + D(F_b) + X
+```
+
+where `D(S)=|E_int(S)|` is defect (internal edges). If `F_a` and `F_b`
+are each tight (`S(F_a)=S(F_b)=0`), that pins `D(F_a)=E_seq(c_a)`,
+`D(F_b)=E_seq(c_b)` (tightness of a set pins its boundary, and the
+boundary is a function of defect plus a collision correction — the
+`rhs(c)` formula's own shape, `(ck-E_seq(c))m - C_constant(c)`, is
+built from exactly these two pieces). If, *additionally*, `V'` itself
+is tight — which is precisely what margin=0 (`I+B_ba+B_ab=Delta`)
+gives via the slack identity, since `S(V')=S(F_a)+S(F_b)+Delta-(margin
+quantity)=0` when the margin is exactly `Delta` — then `D(V')` is
+likewise pinned to `E_seq(c_a+c_b)`. Substituting all three:
+
+```
+X = E_seq(c_a+c_b) - E_seq(c_a) - E_seq(c_b) = ΔE
+```
+
+**This is real but conditional, not unconditional**: it proves "margin=0
+⟹ X=ΔE", the converse of what the 7-cell sweep measured (`X=ΔE`
+observed *on* margin=0 pairs) — so together they show the two
+directions agree, but neither establishes *that* margin=0 occurs in
+the first place. That remains exactly the open question this whole
+section is circling. Notably, **the uniqueness conjecture is not
+needed** for this derivation — it goes entirely through defect *values*
+(`D(F)=E_seq(c)`), never through the fibers' actual shape, so the
+"tight implies Hamming-ball-isomorphic" open question (`check_uniqueness.cpp`)
+is orthogonal to it, not a dependency (a simplification over how the
+previous entry framed things).
+
+**Lean infrastructure check:** `proofs/Arrangement/ArrangementExtraconnectivity.lean`
+does not contain this `X=ΔE` statement, but has adjacent machinery —
+`E_seq_add_bound`/`E_seq_list_sum_le` (lines 299-329) prove the
+*inequality* `E_seq(a)+E_seq(b)+min(a,b) ≤ E_seq(a+b)` (and its list
+generalization with a correction term), which is the same
+defect-additivity shape as the `D(V')=D(F_a)+D(F_b)+X` decomposition
+above, but as a bound holding for *all* configurations, not an equality
+restricted to the tight case. No claim here that the derivation
+"checks out" against the Lean file beyond this — it is compatible with,
+not yet expressed in terms of, that existing lemma.
+
+**Still open:** whether/when margin=0 actually occurs (the original,
+unresolved question — this derivation explains the mechanism given
+margin=0, not the occurrence of margin=0 itself), and the long-standing
+deficit bound in the non-embeddable regime.
 
 ## Status
 
