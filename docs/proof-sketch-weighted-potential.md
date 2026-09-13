@@ -1411,9 +1411,61 @@ relevant: `sandwich_lower_bound_proven` (proved) vs.
 ground, while the collision-side bound the uniqueness-conjecture
 dependency above needs is exactly the still-open half.
 
-**Still open:** whether/when margin=0 actually occurs (the original,
-unresolved question — this derivation explains the mechanism given
-margin=0, not the occurrence of margin=0 itself), and the long-standing
+**Explicit coordinate trace, A(6,3) c_a=c_b=4 (2026-09-13, same
+session).** Extended `check_amortized_slack.cpp` with a `(T,
+B_ab+B_ba)` histogram (keyed per margin=0 pair) plus a witness
+vertex-tuple pair per distinct bucket, to check whether the split is
+constant before trusting a single hand trace. Result: **all 270
+margin=0 pairs land in exactly one bucket, `T=0, B_ab+B_ba=8`** — the
+split is constant for this `(c_a,c_b)`, so the witness below is
+representative, not cherry-picked.
+
+Witness: `F_a = {(0,1,2),(0,1,3),(0,4,2),(0,4,3)}`,
+`F_b = {(5,1,2),(5,1,3),(5,4,2),(5,4,3)}`. This is a `Q_3` subcube cut
+in half by position 0 (`{0,5}`), with positions 1 (`{1,4}`) and 2
+(`{2,3}`) shared between the halves. Every cross-edge is
+`(0,y,z)↔(5,y,z)` for the four `(y,z)∈{1,4}×{2,3}` pairs — a **perfect
+matching**, `X=4=ΔE` cross-edges, each vertex touching exactly one
+partner on the other side. That perfect-matching structure is exactly
+why `B_ab=B_ba=4` (total 8): each of the 4 cross-edges contributes 1
+touching-vertex to each side, with no vertex absorbing more than one
+cross-edge (contrast the A(4,2) `(1,3)` counterexample from the first
+attempt, where `F_a`'s single vertex *did* absorb two, because there
+the fibers weren't a matched bipartition of a single subcube). And
+`T=0` because no external vertex is reachable by one flip from each
+side independently except the matched partner itself, already counted
+at distance 1 — the merge uses up all three dimensions' alternation
+exactly, leaving no room for a distance-2 "wraparound" collision.
+
+**Mechanical reading of the m-threshold.** Building this `Q_3` needs
+one fresh (unused-at-the-base-tuple) symbol per dimension: position 0's
+alternate (`5`), position 1's alternate (`4`), position 2's alternate
+(`3`) — 3 fresh symbols total, i.e. `m≥3`, matching `⌈log₂8⌉=3` from
+the embeddability rule exactly. The `A(5,3)` comparison run confirms
+this isn't just a quantitative worsening but a **qualitative
+disappearance**: at `m=2`, margin=0 pairs vanish entirely (0/0, `worst`
+stuck at `-6` — not merely below 0, the *tight-pair population itself*
+never reaches margin=0) for this `(c_a,c_b)`. Mechanically: with only 2
+fresh symbols available, at most 2 of the 3 needed dimension-alternates
+can be assigned without reusing a symbol across two positions, which
+breaks the disjoint-subcube structure the merge needs — consistent
+with, though not yet a full proof of, why `m<⌈log₂R⌉` forces a
+deficit.
+
+**Scope of this trace — not yet a general argument.** This confirms
+the mechanism for one `(c_a,c_b)=(4,4)`, a power-of-2-sized, exactly
+balanced split producing a clean `Q_2⊔Q_2→Q_3` structure with a perfect
+matching. Not yet checked: whether every margin=0 configuration is a
+perfect-matching subcube split (the `(3,4)` split earlier in this
+section had `T=1`, so *some* margin=0 configurations are not
+perfect-matching — that case needs its own trace), and whether the
+"3 fresh symbols, one per dimension" counting argument generalizes
+correctly to non-power-of-2 `R` and unbalanced `(c_a,c_b)`.
+
+**Still open:** whether/when margin=0 actually occurs in general (the
+original, unresolved question — this trace explains the mechanism for
+one representative case, not the general occurrence question), the
+non-perfect-matching case (e.g. `(3,4)`, `T=1`), and the long-standing
 deficit bound in the non-embeddable regime.
 
 ## Status
