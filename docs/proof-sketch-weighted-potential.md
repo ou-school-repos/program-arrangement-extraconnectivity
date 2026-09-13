@@ -855,6 +855,55 @@ attempt the open aggregation bound itself — it only pins down, at the
 kernel level, the two facts any future attempt at that bound has to
 remain consistent with.
 
+#### A candidate (c_a,c_b,m)-bound on |I|, and why it can't be the missing piece (2026-09-13)
+
+**Candidate:** `|I| ≤ c_a·c_b·f(m)`, where `f(m) = max(m-1, 2)` for
+`m≥2` and `f(1) = 1`. `f(m)` is exactly `max_I` at `c_a=c_b=1`
+(single-pair case), confirmed by full exhaustive search over all pairs
+for `m = 1..6` (independent of `k`: A(5,3) and A(6,4) both give `f(2) =
+2`) — it is the closed form the two channels predict: channel 1
+(`m-1`, linear) dominates for `m≥3`; channel 2's fixed 0/1/2 cap
+dominates at `m=2`; `m=1` is a genuine singularity (too few free
+symbols for channel 2's second gate to fire independently).
+
+**Verified as a valid upper bound in every tested cell, tight only in
+a small-merge regime, then strictly loose:** exhaustive search over
+`(c_a,c_b)` up to `(4,4)` in A(4,3)/A(5,3)/A(6,3)/A(7,3) (two
+independent runs, matching) gives exact ties at `(1,1)`, `(1,2)`,
+`(1,3)`, `(2,2)` for every `m` tested — including the `(2,2)`
+swap-pair counterexample from Strategy 3b hitting it exactly (`|I|=8`
+at `m=2,3`, `|I|=12` at `m=4`) — then strictly loose once either side
+reaches 3 or the sizes are lopsided: `(1,4)`/`(4,1)` cap at `f(m)·1·3`
+not `f(m)·1·4` (the single-vertex boundary itself has only `mk`
+slots — a separate, trivial cap that binds here); `(3,2)` in A(5,3)
+gives `9 < 12`; `(3,3)` in A(4,3) gives `7 < 9`, with the shortfall
+traced (by hand, for that exact witness) to individual pairs failing
+to _simultaneously_ realize their per-pair maximum, not to the
+overcounting collision effect flagged above (the naive pair-sum there
+equals `|I|` exactly — no collisions occurred, and it still fell 2
+short of the product bound). Zero violations found in 18 tested cells,
+across two independent implementations.
+
+**Why this is as far as a `(c_a,c_b,m)`-only bound on `|I|` can
+usefully go.** The bound is tight exactly in the small-merge regime an
+induction step would actually use — and there, tightness is fatal:
+the `(2,2)` swap pair achieves `|I|=8` matching the bound exactly,
+which is the _same_ configuration where the naive per-split induction
+was refuted (`S=8 > 6`, Strategy 3b's original counterexample). A
+sharper `(c_a,c_b,m)`-bound on `|I|` cannot rescue the induction
+skeleton, because the current bound already reproduces the refuting
+witness at full tightness — there is no daylight left to close in that
+direction. `|I| ≤ f(c_a,c_b,m)` is therefore _necessary but not
+sufficient_ for `S ≤` the recombination budget. The missing margin is
+not overcounting or a looser-than-needed `|I|` bound; it is **fiber
+slack** — the gap between `rhs(F_a)+rhs(F_b)` and what those two
+fibers' true combined capacity actually is when split off from a
+larger `V'`. That reframes the trailhead: the tractable open question
+is no longer "bound `|I|` from `(c_a,c_b,m)`" (answered, to the extent
+that answer can help) but "bound the slack lost by splitting a set
+into two fibers," i.e. amortizing `S` directly rather than continuing
+to sharpen the `|I|` side of the inequality.
+
 ### The symmetric/spread counterexample hunt (2026-09-13): vacuity at scale, starvation at the frontier
 
 A proposed adversarial program: beat the universal lower bound with highly symmetric "spread" sets (orthogonal arrays, finite-geometry designs) deployed at R values where the Hamming ball is claimed to be least efficient. Closed off on two independent grounds, both verified computationally:
