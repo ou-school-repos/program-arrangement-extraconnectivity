@@ -44,7 +44,10 @@ program exhaustively tests the all-subsets quantifier in `UniversalLowerBound`.
 `scripts/check_universal_lower_bound.py` was added specifically for this
 purpose. It enumerates literal subsets of the finite vertex set, computes the
 Lean definition of `external_neighbors`, and uses the natural-number-truncated
-right-hand side of the proposition.
+right-hand side of the proposition. `src/universal_lower_bound.cpp` provides a
+separate C++ implementation of the same exhaustive fiber calculation for
+larger bounded sweeps; small rows must agree with the Python oracle before its
+output is treated as evidence.
 
 ### Exhaustive small-slack checks
 
@@ -102,6 +105,10 @@ larger. No counterexample is presently known from this search. The reproducible
 commands are `python3 scripts/check_universal_lower_bound.py --profile small`
 and `python3 scripts/check_universal_lower_bound.py --profile extended`. This
 remains finite evidence, not a proof.
+
+The C++ cross-check is built with `make universal_check` and invoked as, for
+example, `./universal_check 7 2 5`. It has a five-million-subset safety limit;
+the purpose is faster exhaustive evidence, not an unbounded claim.
 
 The candidate is most naturally stated as the following weighted extremal
 claim, with \(m=n-k\):

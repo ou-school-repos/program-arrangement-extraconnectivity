@@ -22,7 +22,10 @@ SITE_OUT   = site.zip
 SRC_PRED  = src/predict.cpp
 BIN_PRED  = predict
 
-SRCS      = $(SRC_OPT) $(SRC_PRED)
+SRC_UNIVERSAL = src/universal_lower_bound.cpp
+BIN_UNIVERSAL = universal_check
+
+SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL)
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
@@ -93,7 +96,7 @@ endef
 ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 .PHONY: build
-build: $(BIN_OPT) $(BIN_PRED)	##H @Build Compile all binaries
+build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL)	##H @Build Compile all binaries
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
 $(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
@@ -102,6 +105,11 @@ $(BIN_OPT): $(ARRANGEMENT_HDRS)
 $(BIN_OPT) $(BIN_PRED): %: src/%.cpp
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) $(EXTRA_CFLAGS) $(LDFLAGS) -o $@ $< $(EXTRA_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_UNIVERSAL): $(SRC_UNIVERSAL)	##H @Dev Build the all-subsets UniversalLowerBound checker
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -121,6 +129,7 @@ benchmark: build	##H @Run Benchmark search for R=2..$(R)
 .PHONY: run/predict
 run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
 	./$(BIN_PRED) $(R)
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
