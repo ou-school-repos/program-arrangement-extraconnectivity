@@ -1667,6 +1667,95 @@ using the case-split by mechanism above and the unconditional `X≤ΔE`
 bound as building blocks — rather than to keep searching for the exact
 scalar deficit as a function of `(n,k,c_a,c_b)`.
 
+### The shadow/absorption mapping for `T` (analytic phase, Front 3)
+
+Picking up the "Front 3" plan above (bound `T+B_{ba}+B_{ab}-2X ≤
+ΔC-ΔE`, the ghost-capacity target): four further margin=0 witnesses
+were hand-traced (`A(6,3)` `c=3,3` two buckets, `c=3,5`, `c=6,2`) to
+find the general mechanism behind `T`. The result generalizes the
+single-missing-corner picture from the `(4,4)`/`(3,4)` traces above
+into three distinct archetypes, defined via a **bridging-coordinate
+projection**: fix the coordinate along which `F_a` and `F_b` sit at
+different symbols (`F_a` at symbol `x`, `F_b` at symbol `y`, in the
+simplest two-slice case), and let `φ_{x→y}` be the map that flips only
+that coordinate from `x` to `y`. Then:
+
+- `X = |F_a ∩ φ⁻¹(F_b)|` — the direct matching edges are exactly the
+  vertices of `F_a` whose translated image is an actual `F_b` member.
+- The **unabsorbed shadow** of `F_a` is `F_a \ φ⁻¹(F_b)`: the vertices
+  whose translated image is *not* an `F_b` member. Each such image
+  lands either on empty space or is itself absorbed by other structure;
+  which one determines the archetype.
+
+**Archetype 1 — the joint hole (true ghost).** Witnessed directly in
+`A(6,3)` `c_a=2,c_b=5`: `F_a∪F_b` forms a complete `Q_3` minus exactly
+one vertex, and that missing vertex is the `T=1` ghost, reachable from
+both fibers via genuinely different (non-mutually-adjacent) routes —
+one flip from `F_a`, a *different* flip from `F_b`. This is the clean
+case: the shadow lands in empty space with nothing else going on.
+
+**Archetype 2 — exact complement (perfect absorption, `T=0`).**
+Witnessed in `A(6,3)` `c_a=6,c_b=2`: `F_b` is *precisely* the two
+corners missing from `F_a`'s otherwise-complete 6-of-8 `Q_3`. Every
+unabsorbed-shadow vertex of `F_a` lands exactly on an `F_b` member —
+there is no leftover hole anywhere in `F_a∪F_b`, so `T=0` trivially and
+the entire budget shows up as extra `B` (`B_ab=4,B_ba=2`) instead. This
+is the same family as the `(3,3)` bucket-A trace (two fibers missing
+*the same* corner shape, canceling with `T=0`), just via full absorption
+rather than mutual non-overlap.
+
+**Archetype 3 — swapped holes (displaced ghosts).** Witnessed in
+`A(6,3)` `c_a=3,c_b=3` bucket B: `F_a`'s natural missing corner is a
+literal member of `F_b`, and vice versa — the two fibers have traded
+holes. Hand-computing the full boundaries (18+18 vertices) found the
+actual `T=2` ghosts are **not** at either fiber's hole; they are at
+`(5,1,2)` and `(5,4,2)` — the translated images of two of `F_a`'s own
+*members* (not its hole) that happen not to land on `F_b` members
+either. So swapping holes doesn't cancel the shadow, it displaces it
+one level: the ghosts appear at ordinary members' images rather than at
+the hole's image, because the hole's own image is occupied by the
+other fiber's absorbed vertex, forcing the accounting to shift to a
+different pair of images.
+
+**Open: does the mapping handle two simultaneous ghosts on one fiber,
+and can they merge onto the same target?** No witness with a genuinely
+multi-hole, multi-ghost configuration has been found yet. An attempted
+probe (`A(6,3)` `c_a=6,c_b=2`, chosen to have `F_a` missing 2 corners)
+turned out to be the degenerate exact-complement case (Archetype 2)
+rather than a multi-ghost case, after a very expensive scan
+(`C(120,6)≈3.65×10⁹`, the largest single tight-fiber scan this repo has
+run) — a concrete illustration of the point below. Finding a genuine
+two-ghost witness by guessing `(n,k,c_a,c_b)` and hoping the shape
+appears is exactly the wrong tool for the question: what's needed is a
+targeted existence search (`F_a,F_b` disjoint, both tight, `T≥2`), which
+is a natural fit for a CP-SAT/SMT model — not yet written, but sketched
+in this session's discussion: boolean membership variables `x_v,y_v`
+per vertex, cardinality constraints (`Σx_v=c_a`, `Σy_v=c_b`),
+disjointness, reified boundary indicators per vertex to encode the
+`|∂F_a|=rhs(c_a)` and `|∂F_b|=rhs(c_b)` tightness constraints, reified
+shared/absorbed indicators for `I`, `B_ab`, `B_ba`, and `T≥2` as the
+solve target (or objective) directly, rather than filtering it out of
+a blind enumeration after the fact. This is a natural fit precisely
+because the earlier `(6,3,6,2)` miss shows the failure mode of guessing
+cells: the tight-fiber fraction at that scale is astronomically thin
+(`1080/3.65×10⁹≈3×10⁻⁵`), so a constraint solver's propagation has much
+more room to prune than at the smaller cells traced so far. **This is
+flagged as the next concrete step, not yet attempted**, and is the
+natural point at which this attack should switch tools from exhaustive
+enumeration to constraint search.
+
+**Scope.** These three archetypes were found by hand-tracing five
+witnesses across four cells; they are not claimed to be exhaustive.
+The general shadow/projection framing (`X`, unabsorbed shadow,
+absorption vs. non-absorption vs. displacement) is a good organizing
+picture consistent with everything traced so far, and the target
+inequality `T+B_{ba}+B_{ab}-2X≤ΔC-ΔE` holds (with equality at
+margin=0, by the already-established identity, and strictly in the
+crushed-regime witnesses checked earlier in this document) on every
+witness — but no proof that these three archetypes are the only ones,
+nor a formal argument bounding `T` in general from the shadow
+structure, has been attempted yet.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
