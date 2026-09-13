@@ -542,9 +542,9 @@ one open, concretely-scoped question:
    verified the way every other claim in this document has been.
 
 4. **A specific R=20 adversarial construction (k=3) was checked and
-   collapses.** F_a = {(1,y,3): y∈Y}, F_b = {(2,z,3): z∈Z}, |Y|=|Z|=10,
+   collapses.** F*a = {(1,y,3): y∈Y}, F_b = {(2,z,3): z∈Z}, |Y|=|Z|=10,
    Y∩Z=∅. All 100 pairs are genuinely distance-2, but every pair sharing
-   the same z (or same y) generates the *same* collision target — bd_mult
+   the same z (or same y) generates the \_same* collision target — bd_mult
    counts distinct coordinates, not pairs, so 100 raw pair-interactions
    collapse to X_cross=20, comfortably under the slack of 63 at m=20.
    **This collapse is a property of k=3 specifically, not of A(n,k) in
@@ -554,11 +554,11 @@ one open, concretely-scoped question:
    targets.
 
 5. **A k=5 counter-construction shows the collapse is not universal.**
-   Fix a base tuple over positions 2–5; let F_a={u_i} and F_b={v_i} for
+   Fix a base tuple over positions 2–5; let F*a={u_i} and F_b={v_i} for
    i=2..5, where u_i (resp. v_i) is the base with position i replaced by
    a fresh symbol α_i (resp. β_i), and position 1 fixed to a (resp. b).
    Only matched pairs (u_i,v_i) are distance-2 (mismatched i≠j give
-   distance 3, contributing 0), and each matched pair uses a *different*
+   distance 3, contributing 0), and each matched pair uses a \_different*
    q=i, so their targets don't coincide. Hand-checked at k=5, n=14, m=9:
    4 valid pairs, X_cross=8, no collapse — confirmed distinct from the
    k=3 collapse case.
@@ -586,12 +586,48 @@ one open, concretely-scoped question:
    been found in any case checked so far, but no proof of the trade-off
    as a general law exists either.
 
-**Status: open, not resolved either way.** The next required test is
-either (a) an explicit small-m, large-k construction attempting to
-spread collisions across many q's without the alphabet cost observed in
-point 5, to see if the apparent trade-off is real or an artifact of one
-construction, or (b) a genuine general upper bound on X_cross proven
-from fiber sizes and m alone, closing the question outright.
+7. **Φ collapses to the boundary — X is not an independent adversarial
+   target.** Combining three identities already established above:
+   `total_coord_edges = |∂V| + X`, `total_coord_edges = U(m+1) - Rk`,
+   and `D = Rk - U`, gives
+
+   ```
+   Φ = X + (m+1)D
+     = [U(m+1) - Rk - |∂V|] + (m+1)(Rk - U)
+     = mRk - |∂V|
+   ```
+
+   The U terms cancel identically. So Φ ≤ C(R) + mE(R) is _equivalent_,
+   term for term, to |∂V| ≥ (Rk - E(R))(n-k) - C(R) — `UniversalLowerBound`
+   itself, with no slack introduced or removed by the translation.
+
+   Consequence: "maximize X_cross while keeping m small" (the natural
+   next adversarial construction to try after points 4-6) is **not a
+   new test**. At fixed R, k, m, maximizing X is identically minimizing
+   |∂V| — the original problem restated. A construction with large
+   X_cross but also large |∂V| proves nothing; only |∂V| ever mattered.
+   This also explains the tautology caught earlier in point 3/Strategy
+   3b's first attempt: any identity-check on a Φ-partition is true by
+   construction, because Φ carries no content beyond the boundary size.
+
+   Two arenas were considered and rejected for this reason before the
+   identity was found: A(5,4) (m=1) has zero symbol freedom — the one
+   remaining symbol per coordinate is forced, so no "reuse" experiment
+   is even possible there — and A(6,4) at small R is already inside the
+   exhaustive sweep (`scripts/sweep_universal_lower_bound.sh`, rows
+   `run 6 4 2`, `run 6 4 3`), so a hand-built subset there is guaranteed
+   to satisfy the inequality trivially and tests nothing new.
+
+**Status: open, not resolved either way.** Point 7 rules out one
+entire class of future experiments (anything phrased as "push X_cross
+up while keeping m/k favorable") as vacuous, since X and |∂V| are not
+independently controllable. The remaining non-vacuous form of the
+question, in boundary language rather than through X and D: **how many
+of F_a's external neighbors get absorbed (cease to be external) when
+F_b is unioned in?** That count is a genuine, non-tautological
+quantity with the same meaning at every (n,k), and bounding it from
+fiber sizes and m alone — not bounding X_cross directly — is what
+would actually close Strategy 3b's recombination step.
 
 ### Status of all sketches
 

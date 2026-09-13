@@ -84,6 +84,27 @@ open; no construction achieving spread at small $m$ and large $k$, nor
 any violation of the recombination bound, has been found. This direction
 remains open, not refuted, but not confirmed either.
 
+The natural next adversarial attempt --- maximizing $X_{\text{cross}}$
+while keeping $m$ small and $k$ large --- turns out not to be an
+independent test. Combining $\mathrm{total\_coord\_edges} = |\partial
+V| + X$, $\mathrm{total\_coord\_edges} = U(m+1) - Rk$, and $D = Rk - U$
+gives $\Phi = X + (m+1)D = mRk - |\partial V|$: the $U$ terms cancel
+identically, so $\Phi \le \Cconst(R) + m\Eseq(R)$ is exactly
+Proposition~\ref{prop:universal} restated, term for term. At fixed
+$R,k,m$, maximizing $X$ \emph{is} minimizing $|\partial V|$ --- the
+original problem, not a new adversarial target --- so a construction
+with large $X_{\text{cross}}$ but also large boundary demonstrates
+nothing. This is also the root cause of the tautological verification
+noted above: any identity check on a $\Phi$-partition is true by
+construction, since $\Phi$ carries no information beyond $|\partial
+V|$. The non-vacuous form of the open question, stated directly in
+boundary language: how many of one fiber's external neighbors are
+absorbed (cease to be external) when the other fiber is unioned in.
+That count is genuinely non-tautological and shares the same meaning
+across all $(n,k)$; bounding it from fiber sizes and $m$ alone, rather
+than bounding $X_{\text{cross}}$ directly, is what would close the
+recombination step.
+
 \paragraph{Dual root-compression via averaging.}
 Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
 conjectures on the hypercube \cite{pinto2015directed}, where two
