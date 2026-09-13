@@ -124,6 +124,42 @@ false, dimension-independent combined-waste bound. A viable proof must show
 that the Hamming ball maximizes this **weighted** fiber-overlap potential; a
 proof merely maximizing collisions or merely maximizing defect is insufficient.
 
+## Third Math Audit (2026-09-12, extended sweep)
+
+The exhaustive C++ verifier (`universal_check`) now covers 24 parameter rows,
+including the 190,578,024-subset A(6,3) R=5 case and the 61,949,040-subset
+A(6,5) R=3 case. 17 rows were cross-checked against the Python oracle
+(`check_universal_lower_bound.py`); 7 C++-only rows exceeded the Python
+1-million-subset safety cap. No counterexample was found in any row.
+
+### Observed tightness pattern
+
+The weighted inequality is **tight** (minimum compensated slack = 0) in every
+tested row where R is small relative to the vertex set size. Tightness has been
+observed in the following regimes:
+
+| n−k | Tight rows                 | Non-tight rows                                       |
+| --- | -------------------------- | ---------------------------------------------------- |
+| 1   | A(3,2) R=2                 | A(3,2) R=3; A(4,3) R=3–6; A(5,4) R=3–4; A(6,5) R=2–3 |
+| 2   | A(5,3) R=3–4; A(6,4) R=2–3 | A(5,3) R=5                                           |
+| 3   | A(6,3) R=3–5               | —                                                    |
+| 5   | A(7,2) R=3–4               | A(7,2) R=5–6                                         |
+| 6   | A(8,2) R=3–4               | —                                                    |
+
+In the non-tight rows, positive slack is observed and grows with R for fixed
+n−k. This pattern is consistent with the conjecture that the Hamming ball is
+the unique boundary minimizer at small R, with alternative topologies becoming
+competitive but never beating the bound at larger R.
+
+**Important caveat:** Tightness means some enumerated subset achieves equality.
+It does **not** establish that the Hamming ball is the unique minimizer —
+several non-isomorphic subsets can attain the same boundary value. The current
+checker does not classify minimizers up to arrangement-graph automorphism.
+
+In every tested row, a boundary minimizer was connected; the best disconnected
+set had no smaller boundary. This is evidence only, not a reduction from
+all subsets to connected subsets.
+
 ### Current recommendation
 
 Keep `UniversalLowerBound` quantified over **all** subsets. The new exhaustive
