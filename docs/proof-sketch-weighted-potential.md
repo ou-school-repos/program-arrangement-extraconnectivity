@@ -1632,6 +1632,34 @@ Refuted immediately by a second pair: `A(4,2)` c=4,4 gives
 `combined=5`, not `4`. `combined` also depends on the split, not just
 `(n,k,m)`.
 
+**Additional data points (2026-09-13, long-running sweep, recorded
+for completeness).** `./sweep_deficit 6 3 5 5   7 3 4 6` (real
+102m8.795s — the most expensive `sweep_deficit` run to date, well
+past the earlier ones, because `A(7,3)` has `N=210` vertices and both
+its tight-fiber enumerations are large):
+
+```
+n   k   ca   cb   R    m     ceilog2 dk   dm   Delta   worst   deficit
+6   3   5    5    10   3     4       1    1    20      -8      8
+7   3   4    6    10   4     4       1    0    22      -2      2
+```
+
+Both values match the *existing* pattern exactly rather than adding a
+new exception: `A(6,3)` c=5,5 lands at `(dk,dm)=(1,1)` with
+`deficit=8`, the same value already recorded for `A(4,2)` c=4,4 at
+that same `(dk,dm)` pair (and *not* the `deficit=5` of the known
+`(dk,dm)=(1,1)` counterexample `A(6,3)` c=4,5 — so `(dk,dm)=(1,1)`
+now has two witnesses giving 8 and one giving 5, i.e. it is genuinely
+multi-valued, not just refuted by a single outlier). `A(7,3)` c=4,6
+lands at `(dk,dm)=(1,0)` with `deficit=2`, matching the earlier
+`A(7,3)` c=5,5 value at that same pair exactly. Net effect: no new
+refutation, but confirmation that `(dk,dm)=(1,0)` is stable across at
+least one split change on the same `(n,k)`, while `(dk,dm)=(1,1)` is
+not stable across splits even on different `(n,k)` — sharpening
+Hypothesis 1's failure mode (splits matter at some `(dk,dm)` pairs and
+apparently not at others) without yet suggesting what distinguishes
+them.
+
 **Conclusion of the empirical phase.** Two hand-picked separability
 guesses, each briefly consistent with the data on hand, were both
 refuted by the very next targeted cell. This is a weak enough hit rate
