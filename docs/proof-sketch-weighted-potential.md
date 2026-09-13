@@ -1351,28 +1351,65 @@ likewise pinned to `E_seq(c_a+c_b)`. Substituting all three:
 X = E_seq(c_a+c_b) - E_seq(c_a) - E_seq(c_b) = ΔE
 ```
 
-**This is real but conditional, not unconditional**: it proves "margin=0
-⟹ X=ΔE", the converse of what the 7-cell sweep measured (`X=ΔE`
-observed *on* margin=0 pairs) — so together they show the two
-directions agree, but neither establishes *that* margin=0 occurs in
-the first place. That remains exactly the open question this whole
-section is circling. Notably, **the uniqueness conjecture is not
-needed** for this derivation — it goes entirely through defect *values*
-(`D(F)=E_seq(c)`), never through the fibers' actual shape, so the
-"tight implies Hamming-ball-isomorphic" open question (`check_uniqueness.cpp`)
-is orthogonal to it, not a dependency (a simplification over how the
-previous entry framed things).
+**Correction (caught immediately after, before further work built on
+it): the claim above that "tightness alone pins `D(F_a)=E_seq(c_a)`,
+no uniqueness conjecture needed" is wrong.** Tightness pins
+`external_neighbors(F_a)`, and by the repo's own decomposition
+(`external_neighbors V' + cross_collisions V' + R·k = U(V')·(n−k+1)`,
+line 39) that pins a *combination* of defect and collision count, not
+defect alone. Excluding the possibility of a low-defect/high-collision
+fiber that still hits the same boundary value — i.e. ruling out exactly
+what `check_uniqueness.cpp`'s docstring calls out as open — requires an
+independent upper bound on collisions, which is the unformalized
+Kruskal-Katona path (`docs/collision-axiom-roadmap.md`,
+`hypercube_fracture_gap_conjecture` in the Lean file). So the fiber-side
+substitutions `D(F_a)=E_seq(c_a)`, `D(F_b)=E_seq(c_b)` **do** depend on
+the uniqueness conjecture after all — the previous paragraph's claim to
+the contrary is retracted, not just softened.
 
-**Lean infrastructure check:** `proofs/Arrangement/ArrangementExtraconnectivity.lean`
-does not contain this `X=ΔE` statement, but has adjacent machinery —
-`E_seq_add_bound`/`E_seq_list_sum_le` (lines 299-329) prove the
-*inequality* `E_seq(a)+E_seq(b)+min(a,b) ≤ E_seq(a+b)` (and its list
-generalization with a correction term), which is the same
-defect-additivity shape as the `D(V')=D(F_a)+D(F_b)+X` decomposition
-above, but as a bound holding for *all* configurations, not an equality
-restricted to the tight case. No claim here that the derivation
-"checks out" against the Lean file beyond this — it is compatible with,
-not yet expressed in terms of, that existing lemma.
+**What the Lean check below actually buys, correctly stated this time.**
+`sum_unique_roots_lower_bound` (line 632) is a *proved* theorem, no
+tightness hypothesis, giving `D(S) ≤ E_seq(|S|)` for every subset `S`.
+Applied to `V'=F_a⊔F_b` this gives, unconditionally in `V'`:
+
+```
+X = D(V') - D(F_a) - D(F_b) ≤ E_seq(c_a+c_b) - D(F_a) - D(F_b)
+```
+
+so if `F_a`, `F_b` are tight *and* the uniqueness conjecture holds for
+them (`D(F_a)=E_seq(c_a)`, `D(F_b)=E_seq(c_b)`):
+
+```
+X ≤ ΔE
+```
+
+**unconditionally in whether `V'` itself is tight** — that dependency
+(needing `D(V')=E_seq(c_a+c_b)` exactly) is genuinely removed by this
+Lean lemma, replaced by the weaker, already-proved `≤`. The honest
+summary: `X ≤ ΔE` for any two tight fibers, conditional only on
+tight-fiber defect-maximality (the uniqueness conjecture, still open,
+0 counterexamples across 5 exhaustive sizes) — not on margin=0 of the
+union. Combined with the 7-cell sweep's `X=ΔE` observation restricted
+to margin=0 pairs, the open question sharpens to: does `X` ever fall
+*strictly below* `ΔE` on a non-margin-0 tight pair (which the bound
+allows but nothing yet rules out), and is that exactly what produces
+the non-embeddable regime's deficit?
+
+**Lean infrastructure check (corrected — the load-bearing lemma is a
+different one than first identified):** `sum_unique_roots_lower_bound`
+(line 632 of `ArrangementExtraconnectivity.lean`) is a **proved**
+theorem (strong induction on `R`, no hypotheses beyond `V'.card = R`)
+giving exactly `D(V') ≤ E_seq(|V'|)` for every subset — this is the
+lemma the `X ≤ ΔE` bound above actually rests on, not
+`E_seq_add_bound`/`E_seq_list_sum_le` (lines 299-329), which are a
+separate, more specialized superadditivity tool used inside that
+theorem's own induction, not something to invoke directly here. Also
+relevant: `sandwich_lower_bound_proven` (proved) vs.
+`sandwich_upper_bound_conjecture` and `hypercube_fracture_gap_conjecture`
+(both still open, the latter marked "TODO(review)" in the file itself)
+— confirms the "defect ≤ E_seq" direction used above is on solid
+ground, while the collision-side bound the uniqueness-conjecture
+dependency above needs is exactly the still-open half.
 
 **Still open:** whether/when margin=0 actually occurs (the original,
 unresolved question — this derivation explains the mechanism given
