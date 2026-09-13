@@ -46,6 +46,31 @@ as originally framed. A repair would need an amortized argument that
 explicitly carries banked surplus between steps, which has not been
 attempted and is not obviously simpler than the original claim.
 
+\paragraph{Coordinate-partition induction on $\Phi$ (Strategy 3b).}
+Distinct from the refuted marginal peeling above: Theorem~\ref{thm:defect}'s
+actual proof never isolates a single vertex — it partitions all of $V'$
+by symbol at one coordinate into fibers, recurses on each smaller fiber,
+and bounds the recombination via Lemma~\ref{lem:subadditivity}. Whether
+this skeleton closes for $\Phi=X+(m+1)D$ is untested territory distinct
+from the peeling refutation above. A first attempt at verifying it
+computed the recombination penalty by subtracting fiber totals from an
+already-known $\Phi(V')$, which is tautological (true by construction for
+any partition, independent of whether the induction actually closes). A
+genuine geometric bound was then derived for the 2-fiber cross-collision
+term: $X_{\text{cross}} \le \min\big(c_ac_b,\,(k-1)\min(c_a,c_b)\big)$ for
+fibers of size $c_a,c_b$, which is independent of $k$ for fixed small
+fiber sizes (an initial claim that this term grows unboundedly with $k$
+was an error in combining two constraints additively rather than by
+minimum). However, this bound is likely too loose at scale: the marginal
+slack $\Delta\Cconst(R)+m\Delta\Eseq(R)$ for a single split is
+$O(\log R)$, while $c_ac_b$ for a balanced split is $O(R^2)$ and even the
+refined bound is $O(R)$ for fixed $k$ — numerically, at $R=20$ balanced
+$(10,10)$ the slack is $6$ (at $m=1$) against bounds of $100$ and $40$.
+Whether the true worst-case $X_{\text{cross}}$ (not these loose
+combinatorial bounds) stays near $O(\log R)$ is unresolved; no explicit
+moderate-$R$ adversarial fiber pair has been hand-verified. This
+direction is open, not refuted, but not confirmed either.
+
 \paragraph{Dual root-compression via averaging.}
 Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
 conjectures on the hypercube \cite{pinto2015directed}, where two
@@ -71,19 +96,22 @@ the required domination bound, has been established; it is not known
 whether a suitable $f$ exists.
 
 \medskip
-\noindent None of the three directions currently has a viable,
-non-refuted path to closing Proposition~\ref{prop:universal}. The
-marginal-induction direction's per-step approach is refuted outright (see
-above); its early machinery (Lemma~\ref{lem:subadditivity},
-Theorem~\ref{thm:defect}'s induction skeleton, and the proved
-$\Delta X=0$-at-adjacency lemma) remains valid, but the induction built on
-top of it does not close as planned, and an amortized replacement is
-untried. The dual-compression direction's one tested candidate operator
-pair failed its own averaging inequality and degenerated into a
-graph automorphism on the example checked; no non-degenerate candidate
-has been proposed. The Lyapunov direction remains a from-scratch
-invariant search with no candidate potential shown to work. These are
-research opinions, not mathematical claims, and should not be read as
-evidence toward Proposition~\ref{prop:universal} itself; the exhaustive
-computational sweep (Appendix~\ref{app:engine}) remains the only
-supporting evidence for the proposition as of this writing.
+\noindent None of these directions currently has a confirmed, closed
+path to Proposition~\ref{prop:universal}. Marginal peeling's per-step
+approach is refuted outright; its early machinery
+(Lemma~\ref{lem:subadditivity}, Theorem~\ref{thm:defect}'s induction
+skeleton, and the proved $\Delta X=0$-at-adjacency lemma) remains valid,
+but the induction built on top of it does not close as planned, and an
+amortized replacement is untried. Coordinate-partition induction
+(Strategy 3b) is a distinct, not-yet-refuted skeleton with only loose
+recombination bounds checked so far, which appear too weak at scale; it
+is open, not confirmed. The dual-compression direction's one tested
+candidate operator pair failed its own averaging inequality and
+degenerated into a graph automorphism on the example checked; no
+non-degenerate candidate has been proposed. The Lyapunov direction
+remains a from-scratch invariant search with no candidate potential
+shown to work. These are research opinions, not mathematical claims, and
+should not be read as evidence toward Proposition~\ref{prop:universal}
+itself; the exhaustive computational sweep (Appendix~\ref{app:engine})
+remains the only supporting evidence for the proposition as of this
+writing.

@@ -453,12 +453,12 @@ strong induction on R do the rest — is **false in general**, confirmed by
 an explicit, fully hand-verified counterexample, not merely a case where
 the crude ΔX bound was too generous.
 
-A(5,3) (k=3, m=2), R: 2→3. v=[1,2,3]. V_old={u1,u2} with u1=[1,2,4]
+A(5,3) (k=3, m=2), R: 2→3. v=[1,2,3]. V*old={u1,u2} with u1=[1,2,4]
 (sharing root (1,2) at p=3 with v, so s=1) and u2=[4,5,3] (sharing no
 root with v). Verified directly via per-coordinate `coord_boundary`
 computation (not naive neighbor-list overlap, which over-counts: two
 V-members sharing a root both border the same external point through
-the *same* coordinate, contributing bd_mult=1, not 2 — this tripped up
+the \_same* coordinate, contributing bd_mult=1, not 2 — this tripped up
 the first pass of verification and was caught and corrected before
 accepting the result):
 
@@ -478,30 +478,88 @@ accepting the result):
 overestimates — the actual, correctly-computed ΔX genuinely violates the
 per-step target. No tightening of the ΔX bound alone can fix this: the
 per-step inequality is false as stated, for a configuration with
-verified D_old=0. Any repair must abandon step-locality — e.g. an
+verified D*old=0. Any repair must abandon step-locality — e.g. an
 amortized/potential-method argument (bank surplus from early steps,
 spend it on later deficits) rather than requiring every step to
 individually satisfy the marginal bound. Note that proving the amortized
-(cumulative) version directly is a rephrasing of the *original* global
+(cumulative) version directly is a rephrasing of the \_original* global
 claim (the per-step terms telescope back into X(V')+(m+1)D(V') ≤
 C(R)+mE(R)), so this refutation removes the main advantage marginal
 induction offered — reducing an R-vertex claim to a 1-vertex check — not
 just one candidate bound within it.
 
+### Strategy 3b: coordinate-partition induction on Φ (2026-09-13, unresolved)
+
+Distinct from the refuted single-vertex marginal peeling: `thm:defect`'s
+actual proof partitions all of V' by symbol at one coordinate p into
+fibers {F_α}, recurses on each (smaller) fiber, and bounds the
+recombination via subadditivity — no vertex is ever peeled off in
+isolation. Whether this same skeleton closes for Φ=X+(m+1)D (not just D)
+was tested and is presently unresolved, with one confirmed dead end and
+one open, concretely-scoped question:
+
+1. **A first "verification" was caught as tautological.** Computing the
+   recombination penalty (X*cross, ΔD_cross) *by subtracting the known
+   fiber totals from the already-computed Φ(V')* makes the identity
+   Φ(V')=ΣΦ(F*α)+penalty hold by construction for any partition of any
+   set — checking it against the target is circular, since it just
+   restates Φ(V')≤target using an answer already in hand. A real test
+   requires bounding the penalty from fiber sizes alone, _before_ knowing
+   Φ(V').
+
+2. **A geometric a priori bound was derived and is basically sound.**
+   For 2-fiber partition F_a, F_b (sizes c_a, c_b) at coordinate p, a
+   cross-collision requires u∈F_a, v∈F_b at Hamming distance exactly 2
+   (differing at p and one other coordinate q), which forces
+   X_cross ≤ c_a·c_b (each pair contributes ≤1) and, from a per-vertex
+   degree argument (each v has at most k−1 candidate partners, one per
+   q≠p), also X_cross ≤ (k−1)·min(c_a,c_b). The combined bound is
+   min(c_a c_b, (k−1)·min(c_a,c_b)). An initial claim that this bound
+   grows unboundedly with k (making the approach "doomed") was itself an
+   error — it came from summing the two constraints instead of taking
+   their minimum; properly combined, the bound is k-independent for
+   fixed, small fiber sizes.
+
+3. **The real obstacle is an asymptotic scale mismatch, not
+   k-dependence.** ΔC(R)+mΔE(R) (the marginal slack for a single 2-way
+   split) is O(log R) — it depends only on popcount(R−1) and
+   bitlength(R−1). But c_a·c_b for a roughly balanced split is O(R²), and
+   even the refined (k−1)·min(c_a,c_b) bound is O(R) for fixed k. Checked
+   numerically at R=20, balanced (10,10) split: slack = 3+3m (=6 at
+   m=1), while c_a c_b=100 and (k−1)min bound=40 at k=5 — both far
+   exceed the slack. The two small checks that appeared to work (R=3
+   split (2,1), R=4 split (2,2)) do not reveal this, since both are too
+   small for the O(R²) vs O(log R) gap to show up.
+
+   **This does not prove Strategy 3b is dead** — it only shows the
+   generic combinatorial upper bounds on X_cross (pairwise count, degree
+   count) are too loose to confirm the inequality at moderate-to-large R.
+   Whether the _true, tightly-argued_ worst-case X_cross for a genuine
+   adversarial fiber pair stays down near O(log R) — the way earlier
+   "crude bound achievable but the trade-off saves it" patterns played
+   out elsewhere in this document — has not been checked. No explicit
+   adversarial configuration at R≈10–20 has been hand-constructed and
+   verified the way every other claim in this document has been.
+
+**Status: open, not resolved either way.** The next required test is a
+hand-built moderate-R (≈10–20) adversarial fiber pair, computed directly
+(not via the tautological subtraction method), to see whether real
+X_cross values approach the loose bounds above or stay far below them.
+
 ### Status of all sketches
 
-None of the four are results. Strategy 3's originally-hoped-for
-step-locality is now refuted (see above); any continuation needs a
-genuinely amortized argument, which has not been attempted. Its early
-machinery (steps 1–2, reusing `sum_unique_roots_lower_bound` and
-`E_add_min_le`) and the proved ΔX=0-at-adjacency lemma remain valid
-building blocks, but the induction skeleton built on top of them does
-not close as originally planned. Strategy 4 is unexplored beyond one
-failed candidate operator pair. Strategy 2 remains a from-scratch
-invariant search with no candidate potential yet shown to work. As of
-this writing, none of the four sketches has a viable, non-refuted path
-to closing Proposition 5.3; the exhaustive computational evidence (30+
-rows, no counterexample) remains the only supporting evidence.
+None of the four are unqualified results. Strategy 3 (single-vertex
+marginal peeling) is refuted (see above); any continuation needs a
+genuinely amortized argument, which has not been attempted. Strategy 3b
+(coordinate-partition induction on Φ) is a distinct, not-yet-refuted
+skeleton reusing `thm:defect`'s real proof structure, but the
+recombination penalty has only loose (and possibly too loose) bounds
+checked so far — see above. Strategy 4 is unexplored beyond one failed
+candidate operator pair. Strategy 2 remains a from-scratch invariant
+search with no candidate potential yet shown to work. As of this
+writing, none of the four/five sketches has a confirmed, closed path to
+Proposition 5.3; the exhaustive computational evidence (30+ rows, no
+counterexample) remains the only supporting evidence.
 
 ## Status
 
