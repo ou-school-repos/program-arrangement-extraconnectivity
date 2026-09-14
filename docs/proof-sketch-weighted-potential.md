@@ -1853,8 +1853,9 @@ Two visible contributors are `012` and `053`: they are shared external
 targets for the isolated `N_4`--`F_b` calculation, but become members of
 `F_a` and hence direct-absorption targets in the full calculation.  The
 number 4 is nevertheless an aggregate inclusion--exclusion correction,
-not a proved bijection with four particular vertices.  No sign or
-packing theorem for `J` is known.  Consequently a proposed
+not a proved bijection with four particular vertices.  A sign theorem for
+`J` is proved in the subsequent tripartite calibration; no useful packing
+or upper-bound theorem for `J` is known.  Consequently a proposed
 pure-fiber-tree proof needs an interface-aware coupled potential; raw
 local losses cannot be summed.
 
@@ -1942,6 +1943,148 @@ by changing coordinate 2.  It belongs to no single three-colour root
 clique.  Hence a root-local upper bound would need a canonical ownership
 rule plus explicitly bounded multi-root corner gadgets; summing only
 root-clique contributions would miss valid interface mass.
+
+### Single-fiber collision--defect adversary (2026-09-14)
+
+`src/search_single.cpp` is a CP-SAT model for one subset
+`F subseteq V(A(n,k))`. It reifies membership, external boundary, and
+occupancy of every coordinate root. For `R=|F|`, `m=n-k`, and `O(F)`
+the number of occupied coordinate roots, it computes exactly
+
+```
+D(F) = R*k - O(F),
+X(F) = (m+1)*O(F) - R*k - |boundary(F)|.
+```
+
+Thus `X` is the collision term in the boundary identity, not simply a
+count of distance-two pairs. Put `deltaD=E(R)-D(F)`. The
+`collision-excess` objective is `X-(m+1)*deltaD`.  It probes the stronger
+experimental refinement
+
+> **Zero-base refinement (candidate; unproved).**
+> `X(F) <= (m+1)*(E(|F|)-D(F))` for every `F subseteq V(A(n,k))`.
+
+The exact slack identity is
+
+```
+S(F) = [C(R)-E(R)] + (m+1)*(E(R)-D(F)) - X(F).
+```
+
+Therefore the proposition-equivalent collision statement is the weaker
+and correct target
+
+> **Deficit-compensated collision inequality (candidate; unproved).**
+> `X(F) <= [C(R)-E(R)] + (m+1)*(E(R)-D(F))`.
+
+The binary arithmetic term `C(R)-E(R)` is zero at powers of two and is
+generally positive between powers of two; it is the collision allowance
+already used by an ideal partial Hamming ball.  A positive
+`collision-excess` refutes only the zero-base refinement.  It refutes the
+proposition-equivalent inequality only when it exceeds `C(R)-E(R)`.
+The certified finite results below are evidence, not a general proof or a
+justified pure-tree telescoping argument.
+
+All reported runs use an exact `--defect-deficit=q` constraint and return
+`OPTIMAL`. The `A(6,3)` rows at deficits 2 and 3 initially reached the
+old 60-second limit, then were rerun with no limit and certified.
+
+#### `A(6,3)`, `R=6`, `m=3`
+
+Here `E(6)=7`, `C(6)-E(6)=2`, and the proposition-equivalent bound is
+`X <= 2+4*deltaD`.  The displayed residual uses the stronger zero-base
+refinement `X <= 4*deltaD`.
+
+| `deltaD` | `D(F)` | maximum `X(F)` | `X-4*deltaD` | `S(F)` |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 6 | 4 | 0 | 2 |
+| 2 | 5 | 6 | -2 | 4 |
+| 3 | 4 | 8 | -4 | 6 |
+| 4 | 3 | 11 | -5 | 7 |
+
+The deficit-one maximizer is
+`{012,053,412,413,452,453}`. It has 12 occupied roots, boundary 26,
+and `X=4*12-18-26=4`. This is the same six-vertex fiber in the `6+2`
+interface equality witness. It refutes the stronger empirical guess
+`X <= 2*deltaD`; the `deltaD=4` result `X=11` also refutes an exact
+`X=2*deltaD` pattern.
+
+#### `A(5,3)`, `R=6`, `m=2`
+
+Here `C(6)-E(6)=2`; the proposition-equivalent bound is
+`X <= 2+3*deltaD`.  The displayed residual uses the stronger zero-base
+refinement `X <= 3*deltaD`.
+
+| `deltaD` | `D(F)` | maximum `X(F)` | `X-3*deltaD` | `S(F)` |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 6 | 2 | -1 | 3 |
+| 2 | 5 | 4 | -2 | 4 |
+| 3 | 4 | 6 | -3 | 5 |
+
+#### Restrictive `m=1` tests
+
+For `m=1`, the zero-base refinement is `X <= 2*deltaD`; the exact target
+also includes the size-dependent allowance `C(R)-E(R)`.
+Complete feasible defect-deficit frontiers were certified in
+`A(4,3)` for the selected sizes:
+
+| `R` | `deltaD` values in order | corresponding maximum `X` values | maximum `X-2*deltaD` |
+| ---: | --- | --- | ---: |
+| 4 | 1, 2, 3, 4 | 0, 2, 3, 4 | -2 |
+| 5 | 1, 2, 3, 4, 5 | 1, 2, 3, 4, 6 | -1 |
+| 6 | 1, 2, 3, 4, 5, 6, 7 | 0, 1, 2, 4, 5, 6, 9 | -2 |
+
+As a zero-deficit calibration, `A(4,3)`, `R=3`, `deltaD=0` was also
+optimized and returned `X=0` (with `S(F)=1`) at
+`{012,013,023}`. Thus a positive arithmetic term `C(R)-E(R)` need not
+appear as collision mass; it may remain as genuine boundary slack.
+
+The first higher-dimensional `m=1` test also certified
+`A(5,4)`, `R=4`, `deltaD=1`: `D=3`, `X=0`,
+`X-2*deltaD=-2`, and `S(F)=2`, attained by
+`{0123,0124,3104,3124}`. These finite frontiers contain no candidate
+violation of either the stronger refinement or the exact target, but are
+not an exhaustive verification of all sizes or a proof of either claim.
+
+#### Coordinate-local empty-slice audit
+
+For a split at coordinate `c`, identify `S_i` with its projection `Q_i`
+in the local arrangement graph.  Let `P_i` be the occupied transversal
+projections compatible with symbol `i`; compatibility is essential:
+`P_i = {x in pi_c(S) : i notin x}`.  If `L_c` counts the transversal
+empty slots which also lie in a local boundary, the exact incidence
+identity is
+
+```
+X(S) - sum_i X(S_i) = L_c.
+```
+
+The immune transversal slots are
+
+```
+sum_i |P_i \ (Q_i union boundary_local(Q_i))|
+ = N_transversal - L_c.
+```
+
+Empty slices contribute their whole compatible `P_i` to this quantity.
+`search_single --objective=local-residual` fixes coordinate 0 and
+maximizes the unresolved amount
+
+```
+m*R - dC_0 - m*dE_0 - V_0,
+```
+
+where `V_0` is the exact contribution from empty compatible slices.
+Positive output is a finite witness that void slots alone do not close the
+coordinate step.  Nonpositive output is only a finite-cell result; it is
+not a proof of a universal void-cover inequality.
+
+For `A(4,3)`, `R=6`, the unrestricted local-residual optimizer returned
+`OPTIMAL` value 0.  Its witness concentrated all six vertices in one
+coordinate-0 slice, with `|pi|=6`, `V_0=6`, and required gap 6, so the
+empty slices cover the coordinate step sharply.  In contrast, the
+previous high-deficit `deltaD=7` collision optimizer had zero void slots
+in every coordinate, but its required gaps were negative; those
+`void=vacuous` reports provide no geometric void-cover evidence.
 
 ## Status
 
