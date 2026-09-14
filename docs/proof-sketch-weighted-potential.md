@@ -1784,6 +1784,165 @@ witness — but no proof that these three archetypes are the only ones,
 nor a formal argument bounding `T` in general from the shadow
 structure, has been attempted yet.
 
+### Pure-fiber interface calculation: the `A(6,3)`, `6+2` equality witness (2026-09-14)
+
+The CP-SAT `amortized` search found the following **FEASIBLE equality
+witness** (not an optimality certificate):
+
+```
+F_a = {012, 053, 412, 413, 452, 453}
+F_b = {013, 052}
+```
+
+It has `L = I + B_ba + B_ab = 18`, recombination budget
+`Delta(6,2) = 14`, and fiber slacks `S(F_a)=S(F_b)=2`.  Thus it realizes
+the equality `18 = 14 + 2 + 2`.  Its six direct cross-edges explain all
+12 shared external targets (`T=0`); this is a sharp example, but not a
+proof that 18 is the cell maximum.
+
+The useful local subblocks are
+
+```
+N_0 = {012, 053},       N_4 = {412, 413, 452, 453},
+F_b = {013, 052}.
+```
+
+`N_0` and `F_b` are the diagonal pairs of the alternating four-cycle
+`{012,013,053,052}`.  Their interaction has
+`L(N_0,F_b)=12` against `Delta(2,2)=8`, while
+`S(N_0)=S(F_b)=2`; hence this is a local equality block.  It is
+coordinate-tangled: its four cycle edges alternate between coordinates
+1 and 2, so it cannot be accounted for in a single root clique.
+
+The apparently separate tight four-cycle `N_4` has an isolated
+interaction with `F_b` satisfying
+
+```
+|boundary(N_4)| = 20,  |boundary(F_b)| = 16,
+|boundary(N_4 union F_b)| = 26,
+L(N_4,F_b) = 10 = Delta(4,2).
+```
+
+This does **not** make the two interactions additive.  Define, for
+disjoint sets, the exact boundary-loss functional
+
+```
+L(A,C) = |boundary(A)| + |boundary(C)| - |boundary(A union C)|.
+```
+
+It agrees with `I+B_ba+B_ab`.  Therefore the exact interface correction
+is the definition
+
+```
+J(A,B;C) = L(A,C) + L(B,C) - L(A union B,C),
+```
+
+or equivalently
+
+```
+L(A union B,C) = L(A,C) + L(B,C) - J(A,B;C).
+```
+
+For this witness,
+
+```
+L(N_0,F_b) + L(N_4,F_b) - L(F_a,F_b) = 12 + 10 - 18 = 4.
+```
+
+Two visible contributors are `012` and `053`: they are shared external
+targets for the isolated `N_4`--`F_b` calculation, but become members of
+`F_a` and hence direct-absorption targets in the full calculation.  The
+number 4 is nevertheless an aggregate inclusion--exclusion correction,
+not a proved bijection with four particular vertices.  No sign or
+packing theorem for `J` is known.  Consequently a proposed
+pure-fiber-tree proof needs an interface-aware coupled potential; raw
+local losses cannot be summed.
+
+The separate defect/collision ledger is also signed.  Here `m+1=4`,
+`D(F_a)=6<E(6)=7`, and `D(F_b)=0<E(2)=1`.  With the boundary identity,
+the two slacks satisfy
+
+```
+S(F_a) = 4*(7-6) - X(F_a) = 2,
+S(F_b) = 4*(1-0) - X(F_b) = 2,
+```
+
+so `X(F_a)=X(F_b)=2`.  Collision mass offsets defect-derived slack in
+this example; it is not an independently nonnegative resource to which
+cross-fiber loss can be charged.
+
+### Tripartite interface calibration (2026-09-14)
+
+`src/search_triples.cpp` is a CP-SAT optimizer for the symmetric
+third-order boundary interface of three pairwise-disjoint sets:
+
+```
+J(A,B;C) = d(A)+d(B)+d(C)-d(AuB)-d(AuC)-d(BuC)+d(AuBuC),
+```
+
+where `d(S)=|boundary(S)|`.  Equivalently,
+`J(A,B;C)=L(A,C)+L(B,C)-L(AuB,C)`.  The following runs were made in
+`A(5,3)`; `OPTIMAL` is a finite-cell certificate and `FEASIBLE` is only
+an incumbent at the stated time limit.
+
+| sizes | constraints | objective | status | value |
+| --- | --- | --- | --- | --- |
+| 1+1+1 | none | min `J` | OPTIMAL | 0 |
+| 1+1+1 | none | max `J` | OPTIMAL | 3 |
+| 2+2+2 | none | min `J` | FEASIBLE, 120 s | 0 |
+| 2+2+2 | none | max `J` | FEASIBLE, 120 s | 6 |
+| 2+2+2 | individually tight | min `J` | OPTIMAL | 0 |
+| 2+2+2 | individually tight | max `J` | OPTIMAL | 3 |
+| 2+2+3 | individually tight, `A(5,3)` | max `J` | OPTIMAL | 4 |
+| 2+2+2 | individually tight, `A(6,3)` | max `J` | OPTIMAL | 8 |
+
+The nonnegativity question is actually settled directly, without a
+solver.  For each vertex `w`, let `a,b,c` say whether `w` has a neighbor
+in `A,B,C`, respectively.  The per-vertex contribution to `J` is:
+
+- `a*b*c` when `w` lies outside all three sets;
+- `b*c` when `w` lies in `A`;
+- `a*c` when `w` lies in `B`;
+- `a*b` when `w` lies in `C`.
+
+Thus every contribution is 0 or 1, and `J(A,B;C) >= 0` for arbitrary
+pairwise-disjoint sets in any loopless graph.  It counts exactly the
+three-way external targets and the category-flipper vertices.  The
+remaining substantive computational question is how large `J` can be,
+and whether a useful upper bound follows from coupled pure-fiber slack
+and root-incidence data.
+
+The `A(6,3)` maximum is particularly diagnostic:
+
+```
+A = {012,013},  B = {512,513},  C = {412,413}.
+```
+
+It decomposes into the two coordinate-0 root cliques with roots `12` and
+`13`.  In each root clique, one member from each color contributes three
+category-flipper units, and the fourth available symbol gives one
+three-way external-target unit, for four units per root and `J=8` in
+total.  Thus `J` is nonnegative but is not bounded by a small
+cardinality-only constant; a viable interface bound must retain ambient
+root-fiber capacity (hence dependence on `m=n-k`) or equivalent
+incidence information.
+
+Root cliques nevertheless do **not** give a decomposition of `J`.  The
+certified tight `A(5,3)`, `2+2+3` maximizer is
+
+```
+A = {012,013},  B = {042,043},  C = {021,023,041},  J=4.
+```
+
+The contributors `013`, `023`, and `043` form one three-colour root
+clique (delete coordinate 1, root `03`) and account for three units.
+But `042` is a fourth, coordinate-tangled category flipper: it is
+adjacent to `012` in `A` by changing coordinate 1 and to `041` in `C`
+by changing coordinate 2.  It belongs to no single three-colour root
+clique.  Hence a root-local upper bound would need a canonical ownership
+rule plus explicitly bounded multi-root corner gadgets; summing only
+root-clique contributions would miss valid interface mass.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is

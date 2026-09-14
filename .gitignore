@@ -19,6 +19,7 @@ check_amortized_slack
 check_uniqueness
 sweep_deficit
 search_ghosts
+search_triples
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
