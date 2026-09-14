@@ -20,6 +20,7 @@ check_uniqueness
 sweep_deficit
 search_ghosts
 search_triples
+search_single
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

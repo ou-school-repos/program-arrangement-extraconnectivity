@@ -44,6 +44,8 @@ SRC_GHOSTS = src/search_ghosts.cpp
 BIN_GHOSTS = search_ghosts
 SRC_TRIPLES = src/search_triples.cpp
 BIN_TRIPLES = search_triples
+SRC_SINGLE = src/search_single.cpp
+BIN_SINGLE = search_single
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 
@@ -118,7 +120,7 @@ endef
 ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 .PHONY: build
-build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES)	##H @Build Compile all binaries
+build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE)	##H @Build Compile all binaries
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
 $(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
@@ -155,6 +157,11 @@ $(BIN_GHOSTS): $(SRC_GHOSTS)	##H @Dev Build the optional OR-Tools CP-SAT ghost m
 	@$(call print_success,Build complete.)
 
 $(BIN_TRIPLES): $(SRC_TRIPLES)	##H @Dev Build the optional OR-Tools CP-SAT tripartite interface adversary
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_CFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_SINGLE): $(SRC_SINGLE)	##H @Dev Build the optional OR-Tools CP-SAT one-fiber defect/collision adversary
 	@$(call print_info,Building $@ with OR-Tools)
 	$(CXX) $(CXXFLAGS) $(ORTOOLS_CFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)
