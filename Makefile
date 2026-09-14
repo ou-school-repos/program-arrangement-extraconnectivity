@@ -34,6 +34,14 @@ BIN_UNIQUENESS = check_uniqueness
 SRC_SWEEP_DEFICIT = src/sweep_deficit.cpp
 BIN_SWEEP_DEFICIT = sweep_deficit
 
+# Optional dependency: this target is deliberately not part of `make build`.
+# Install OR-Tools separately, then override these if its package uses
+# non-standard include/library paths.
+SRC_GHOSTS = src/search_ghosts.cpp
+BIN_GHOSTS = search_ghosts
+ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
+ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
+
 SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK) $(SRC_UNIQUENESS) $(SRC_SWEEP_DEFICIT)
 
 # Build modes (set once, below in Build section)
@@ -105,7 +113,7 @@ endef
 ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 .PHONY: build
-build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT)	##H @Build Compile all binaries
+build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS)	##H @Build Compile all binaries
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
 $(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
@@ -134,6 +142,11 @@ $(BIN_UNIQUENESS): $(SRC_UNIQUENESS)	##H @Dev Build the tight-fiber Hamming-ball
 $(BIN_SWEEP_DEFICIT): $(SRC_SWEEP_DEFICIT)	##H @Dev Build the multi-cell worst-margin deficit sweep (Prop 5.3)
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_GHOSTS): $(SRC_GHOSTS)	##H @Dev Build the optional OR-Tools CP-SAT ghost maximizer
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_CFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

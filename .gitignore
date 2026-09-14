@@ -18,6 +18,7 @@ universal_check
 check_amortized_slack
 check_uniqueness
 sweep_deficit
+search_ghosts
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
