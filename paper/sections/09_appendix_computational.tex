@@ -1,4 +1,4 @@
-\section{Computational Bounds and Visualizations}
+\section{Computational Bounds and Visualizations}\label{app:computational}
 
 Exhaustive enumeration of connected subgraphs becomes intractable beyond $R=7$.
 Figure~\ref{fig:complexity} illustrates the efficiency of our $O(R^3 \log R)$
@@ -92,3 +92,23 @@ ball.
 		\bottomrule
 	\end{tabular}
 \end{table}
+
+\subsection{CP-SAT diagnostic searches}
+
+In addition to exhaustive enumeration, the repository contains bounded
+CP-SAT models intended as adversarial diagnostics, not as substitutes for a
+universal proof.  The single-fiber model optimizes the exact collision and
+defect quantities and can fix a defect shortfall.  It also reports the
+proposition-equivalent residual
+\[X-\bigl(\Cconst(R)-\Eseq(R)\bigr)-(m+1)\bigl(\Eseq(R)-D\bigr).
+\]
+The tripartite model optimizes the third-order boundary interface used in
+Lemma~\ref{lem:interface-subadditivity}.  A coordinate-local model maximizes
+the empty-slice residual described in Appendix~\ref{app:alt-strategies}.
+
+For all such searches, an \texttt{OPTIMAL} status certifies the stated optimum
+only for that finite $(n,k,R)$ instance; a \texttt{FEASIBLE} status is merely
+an incumbent under the selected time limit.  The certified frontiers and their
+witnesses are maintained in the accompanying research log.  They provide
+counterexample hunting and structural examples, but do not verify
+Proposition~\ref{prop:universal} for arbitrary parameters.

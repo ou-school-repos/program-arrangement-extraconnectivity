@@ -11,10 +11,16 @@ is immune to the injectivity constraint because it never attempts to reassign
 symbols---it merely observes the fiber structure that the set $V'$ already
 induces.
 
-Concretely, we count global algebraic roots. The sum $U(V')$ represents the
-total number of 1-dimensional ``fibers'' (coordinate-aligned cliques) that
-intersect our set $V'$. Each root $r$ acts as a fixed backbone that our set
-projects onto along a specific dimension.
+Concretely, let $\mathcal R(V')$ be the set of global coordinate roots
+(coordinate-aligned cliques) meeting $V'$, and write
+$U(V')=|\mathcal R(V')|$.  Each root is a clique of size $n-k+1$.  Every
+vertex of $V'$ belongs to exactly one root in each of the $k$ coordinate
+directions, so
+\begin{equation}\label{eq:root-membership}
+ \sum_{\rho\in\mathcal R(V')}|V'\cap\rho|=k|V'|.
+\end{equation}
+The defect is $D(V')=k|V'|-U(V')$, as defined in
+Section~\ref{sec:preliminaries}.
 
 The framework utilizes a double-counting correction. By counting the available
 alphabet symbols, every unique root $r \in U_p(V')$ can be extended to exactly
@@ -27,13 +33,28 @@ $E_{\mathrm{cand}}$:
 	                  & = U(V') \cdot (n-k) - D(V').
 \end{align}
 
-Because external neighbors may be hit by multiple dimensions, we subtract the
-\emph{Cross-Collisions} $X(V')$ to retrieve the exact boundary of unique
-vertices. We formally define $X(V')$ as the sum of over-counted boundary
-adjacencies:
+By \eqref{eq:root-membership}, the first line of \eqref{eq:ecand} is also
+\[
+ \sum_{\rho\in\mathcal R(V')}
+ \bigl((n-k+1)-|V'\cap\rho|\bigr),
+\]
+the number of root--external-vertex incidences.  Because external neighbors
+may be reached through multiple \emph{coordinate
+roots}, we subtract the \emph{cross-collision} mass $X(V')$ to retrieve the
+exact boundary of unique vertices. For $w\in\extbd(V')$, let
+\[\mu_{V'}(w)=\bigl|\{p\in[k]:\text{the coordinate-}p
+\text{ root through }w\text{ is occupied by }V'\}\bigr|.\]
+Thus $\mu_{V'}(w)$ counts distinct coordinate directions, not the number of
+adjacent members of $V'$: several members can occupy the same root clique.
+We define
 \begin{equation}\label{eq:cross-collision}
-	X(V') = \sum_{v \in \extbd(V')} (\text{deg}_{V'}(v) - 1).
+X(V') = \sum_{w \in \extbd(V')} (\mu_{V'}(w) - 1).
 \end{equation}
+
+Counting those same incidences at their external endpoint gives
+\[E_{\mathrm{cand}}
+=\sum_{w\in\extbd(V')}\mu_{V'}(w)
+=|\extbd(V')|+X(V').\]
 
 The exact boundary size is then:
 \begin{equation}\label{eq:boundary}
@@ -108,6 +129,63 @@ extremal framework.
 		X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R).
 	\end{equation}
 \end{proposition}
+
+\begin{lemma}[Deficit-compensated collision reduction]\label{lem:collision-reduction}
+Let $m=n-k$, let $R=|V'|$, and write
+$\delta_D=\Eseq(R)-D(V')$. Then Proposition~\ref{prop:universal} for $V'$
+is equivalent to
+\begin{equation}\label{eq:deficit-compensated-collision}
+X(V') \leq \Cconst(R)-\Eseq(R)+(m+1)\delta_D.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Substitute $U(V')=Rk-D(V')$ into \eqref{eq:boundary}, subtract the
+right-hand side of \eqref{eq:universal-bound}, and rearrange.
+\end{proof}
+
+Lemma~\ref{lem:collision-reduction} isolates the unresolved extremal
+statement in a form that separates the intrinsic partial-layer allowance
+$\Cconst(R)-\Eseq(R)$ from the additional allowance supplied by a defect
+shortfall. It is an equivalent reformulation, not a proof of
+Proposition~\ref{prop:universal}.
+
+\begin{lemma}[Interface subadditivity]\label{lem:interface-subadditivity}
+For pairwise-disjoint vertex sets $A,B,C$ in any loopless graph, where
+$\partial X=N(X)\setminus X$, define
+$\mathcal{L}(A,C)=|\partial A|+|\partial C|-|\partial(A\cup C)|$. Then
+\[\mathcal{L}(A\cup B,C)\leq\mathcal{L}(A,C)+\mathcal{L}(B,C).\]
+\end{lemma}
+
+\begin{proof}
+The difference between the right- and left-hand sides is
+\[
+J=|\partial A|+|\partial B|+|\partial C|-|\partial(A\cup B)|
+-|\partial(A\cup C)|-|\partial(B\cup C)|+|\partial(A\cup B\cup C)|.
+\]
+For a vertex outside $A\cup B\cup C$, its contribution is $abc$; for a
+vertex in $A$, $B$, or $C$, it is respectively $bc$, $ac$, or $ab$, where
+$a,b,c\in\{0,1\}$ record whether that vertex has a neighbor in the named
+set. Every contribution is nonnegative.
+\end{proof}
+
+\paragraph{Coordinate-local incidence route (unverified dictionary).}
+Fix a coordinate $c$ and project the symbol slices $S_i$ to local sets
+$Q_i\subseteq V(A(n-1,k-1))$.  For $x\in\pi_c(S)$ with $i\notin x$, let
+$x^{(i)}$ be the global vertex obtained by reinserting $i$ at coordinate $c$.
+The sweep argument must use an explicit incidence set rather than identify a
+global boundary vertex with a local-boundary vertex implicitly; one natural
+candidate is
+\[
+ \mathcal I_c=\{(i,x):x\in\pi_c(S),\ i\notin x,\
+ x\in\partial_{\mathrm{loc}}Q_i\}.
+\]
+The proposed relation between $X(S)-\sum_iX(Q_i)$ and
+$|\mathcal I_c|$ has not yet been verified with consistent local/global
+boundary conventions, and is not used as a lemma here.  Establishing the
+appropriate incidence identity, followed by a coverage-avoidance inequality,
+remains open.  The finite CP-SAT searches reported in
+Appendix~\ref{app:computational} are diagnostic evidence only.
 
 \begin{remark}
 These propositions encode the extremal content of a vertex-isoperimetric

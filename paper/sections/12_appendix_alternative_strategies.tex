@@ -393,3 +393,50 @@ achieved interference is strictly below $\Delta$ whenever the
 embeddability gate fails, argued by case-split on the three mechanisms
 above --- rather than a proof of that magnitude in closed form; no such
 argument has yet been attempted.
+
+\paragraph{Coordinate-local incidence route (current).}
+The preceding failed partition induction bounded a whole-fiber
+recombination term and is not revived here.  A different exact identity begins
+with a split of a set $S$ into symbol slices $S_i$ at one coordinate.  If
+$Q_i$ is the projected local slice, an explicit local/global incidence
+dictionary is still required before one may assert an identity for the
+increment $X(S)-\sum_iX(Q_i)$; Section~\ref{sec:defect} records this as an
+open bookkeeping step rather than a proved lemma.
+For a slice label $i$, only projections avoiding $i$ are compatible; writing
+$P_i=\{x\in\pi_c(S):i\notin x\}$, the corresponding immune slots are
+\[\sum_i\left|P_i\setminus\bigl(Q_i\cup\partial_{\mathrm{loc}}Q_i\bigr)\right|.
+\]
+This has a useful exact contribution from the empty slices.  Let $U$ be the
+set of sweep-coordinate symbols used by $S$, put $s=|U|$, and let
+$E=[n]\setminus U$.  Since $Q_i=\varnothing$ for $i\in E$, double counting
+pairs $(x,i)$ with $x\in\pi_c(S)$, $i\in E$, and $i\notin x$ gives
+\[
+ I_{\mathrm{empty}}
+ =\sum_{i\in E}|P_i|
+ =\sum_{x\in\pi_c(S)}|E\setminus\operatorname{supp}(x)|.
+\]
+Here a projection $x$ contains $k-1$ symbols, so it has $m+1=n-k+1$
+compatible sweep-coordinate symbols.  At most $s$ of those compatible
+symbols lie in $U$; consequently
+\[
+ I_{\mathrm{empty}}
+ \ge |\pi_c(S)|\max\{0,m+1-s\}.
+\]
+Equality holds when every projection avoids every used sweep symbol, namely
+$U\cap\operatorname{supp}(x)=\varnothing$ for all $x\in\pi_c(S)$.  Thus the
+nonempty slices need only cover the residual
+\[
+ \max\{0,\,mR-\Delta C-m\Delta E-I_{\mathrm{empty}}\}.
+\]
+The unresolved local statement is that the full immune-slot sum is at least
+$mR-\Delta C-m\Delta E$.  Empty slices contribute all of their compatible
+$P_i$ automatically, but high-support slices can have no such contribution.
+
+The CP-SAT program \texttt{search\_single} includes a coordinate-0
+\texttt{local-residual} objective maximizing the amount not supplied by these
+empty compatible slices.  It returned an optimum of $0$ for
+$A(4,3)$ with $R=6$, but this is only a finite-cell diagnostic.  In a separate
+high-deficit witness, every coordinate had zero void slots while the arithmetic
+requirement was negative, so the audit was vacuous rather than evidence of a
+general void-cover theorem.  This route is therefore a precisely stated open
+coverage problem, not a completed proof strategy.
