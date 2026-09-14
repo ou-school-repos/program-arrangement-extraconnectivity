@@ -20,7 +20,7 @@ This project generalizes and extends the 2022 case-by-case analysis of Cheng, Li
   - **Hardware-Accelerated SWAR:** Packing symbols into 5-bit nibbles and using `__builtin_ctzll` for $O(1)$ vertex diffing.
   - **Nauty Symmetry Pruning:** Applying McKay's canonical labeling on a 4-colored bipartite graph to prune isomorphic $S_n \times S_R$ branches.
   - **Multi-Tier Deduplication:** Utilizing a fast local hash table for sibling nodes, 128-bit hashes for mid-level deduplication, and zero-allocation processing for leaf nodes to eliminate memory overhead.
-- **Formal Verification (Lean 4):** The stable Lean build machine-verifies the algebraic defect framework, core arithmetic, and explicit Hamming-ball construction. The final extremal combinatorics step is not yet discharged unconditionally; it remains isolated behind `UniversalLowerBound` and `HBCrossCollisions`.
+- **Formal Verification (Lean 4):** The stable Lean build machine-verifies the algebraic defect framework, core arithmetic, explicit Hamming-ball construction, and its collision evaluation. The remaining extremal-combinatorics dependency is `UniversalLowerBound`.
 
 ## 4. Conclusion
 

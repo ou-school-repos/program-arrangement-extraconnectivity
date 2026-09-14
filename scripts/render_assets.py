@@ -4,6 +4,7 @@ import subprocess
 
 
 def to_bin(i, d):
+    """Return the d-bit zero-padded binary string for integer i."""
     return bin(i)[2:].zfill(d)
 
 

@@ -1,0 +1,54 @@
+\section{The Topological Funnel and Open Problems}\label{sec:funnel}
+
+Theorem~\ref{thm:classification} reveals a striking geometric structure in the
+space of achievable defect values. At the sparse limit ($D = R-1$), the number
+of valid connected topologies is the number of non-isomorphic trees on $R$
+vertices, which grows exponentially (OEIS A000055). As the defect increases, the
+geometric constraints imposed by root-sharing progressively tighten the design
+space, creating a \emph{Topological Funnel} that narrows monotonically until it
+is conjectured to collapse to a single topology---the Hamming Ball---at the
+dense limit $D = \Eseq(R)$. At powers of $2$, the funnel exhibits a discrete
+fracture: the gap
+$\gamma(R) = d - 1$ excises an entire band of defect values, forcing a
+discontinuous jump from the second-best topology to the unique optimum. Similar
+secondary fractures emerge just below near-powers of $2$ (e.g., $R=2^d-1$).
+
+\begin{conjecture}[Multiplicity of Achievable Defects]\label{conj:multiplicity}
+For each $R$ and each achievable defect $D \in \mathcal{D}(R)$, let $M(R, D)$
+denote the number of non-isomorphic connected $R$-vertex subgraphs of $A(n,k)$
+with defect exactly $D$. Then:
+	\begin{enumerate}
+\item $M(R, \Eseq(R)) = 1$ for all $R \ge 2$ (the Hamming Ball is the unique
+maximizer).
+\item $M(R, D)$ is non-decreasing as $D$ decreases from $\Eseq(R)$ toward $R-1$.
+	\end{enumerate}
+\end{conjecture}
+
+Our exhaustive enumeration confirms both parts for all $R \le 10$.
+
+\paragraph{The openness of Proposition~\ref{prop:universal} is not a
+formality.} This elaborates the brief remark following
+Proposition~\ref{prop:universal} in Section~\ref{sec:defect}. It is tempting
+to read Proposition~\ref{prop:universal} as a routine generalization of the
+vertex-isoperimetric compression theorems it invokes, closed by the same
+techniques with more bookkeeping. Attempts recorded in full in
+Appendix~\ref{app:alt-strategies} (the two-channel shared-neighbor analysis,
+the $(c_a,c_b,n-k)$ aggregation bound, and its exhaustive verification) show
+this is not the case.
+Every induction skeleton tried so far --- marginal peeling, coordinate-partition
+splitting --- fails on an explicit small counterexample, not merely a bound
+that is too weak: in $A(5,3)$, splitting a 4-vertex configuration into two
+swap-pair fibers $F_a, F_b$ produces $8$ genuinely shared external neighbors
+against a $6$-unit recombination budget, and no refinement of the
+shared-neighbor count itself can close that gap, because the same
+configuration realizes the sharpest $(c_a,c_b,n-k)$-bound on shared neighbors
+exactly. The bound survives there only because $F_a$ and $F_b$ each carry
+banked boundary slack of their own ($3$ apiece) that happens to more than
+cover the $2$-unit deficit --- an amortized, not a local, phenomenon. Whether
+every possible split of every configuration inherits enough such slack to
+cover its own recombination penalty is exactly as open as
+Proposition~\ref{prop:universal} itself; it is, in fact, one precise
+restatement of it. This is what is meant by calling the proposition open
+rather than merely unproven-for-now: the obstruction is a genuine
+global/local tension in the fiber structure, not a gap expected to close with
+a longer computation or a sharper application of known compression results.

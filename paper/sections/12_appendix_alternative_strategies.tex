@@ -1,0 +1,500 @@
+\section{Future ideas for Proving the Universal Boundary Inequality}\label{app:alt-strategies}
+
+\begin{quote}
+\textit{Everything in this appendix is a research sketch, not a result.
+Nothing here is proven, checked, or claimed to be correct; it is recorded
+only so that future work on Proposition~\ref{prop:universal} does not
+restart from nothing. Neither strategy below has been carried past an
+informal whiteboard stage.}
+\end{quote}
+
+The coordinate-root compression approach outlined in the accompanying
+research notes (\texttt{docs/proof-\allowbreak sketch-\allowbreak weighted-potential.md}) stalls
+on a coordinate-tangling obstacle: a local compression move at position
+$p$ unavoidably scrambles roots at every other position $q \neq p$, and no
+argument to date bounds that scatter damage tightly enough to recover
+monotonicity of $X(V') + (m+1)D(V')$. Three alternative directions are
+sketched below.
+
+\paragraph{Marginal induction with partial-layer tracking.}
+This direction extends the proof skeleton already used for
+Theorem~\ref{thm:defect} (proven by strong induction on $R$, partitioning
+$V'$ by a coordinate and applying Lemma~\ref{lem:subadditivity}), carrying
+the joint quantity $\Phi = X + (m+1)D$ instead of $D$ alone. Stripping a
+vertex $v$ with $s$ roots shared with the remaining $R-1$ vertices gives
+$\Delta D = s$ exactly; closing the induction would require bounding
+$\Delta X$ as a function of $s$ and $m$ alone, so that
+$\Delta X + (m+1)s \le \Delta \Cconst(R) + m \cdot \Delta \Eseq(R)$. A
+partial result toward this bound has since been derived (not yet
+mechanized in Lean): writing out the marginal change in
+$\mathrm{total\_coord\_edges}$ gives $\Delta X \le (k-s)m$ unconditionally,
+and separately $\Delta X = 0$ whenever $v$ is adjacent to the vertex
+removed (proved directly from the one-coordinate-difference property of
+adjacency, independent of $n,k,R$). A second, dimension-independent cap
+$\Delta X \le 2(R-1)$ also holds, from the fact that only vertices at
+Hamming distance $2$ from $v$ can contribute to $\Delta X$ via a fresh
+root. \textbf{This per-step marginal inequality is refuted.} An explicit
+configuration in $A(5,3)$ ($k=3,m=2$, $R:2\to3$), with $D_{old}=0$
+verified directly, achieves $\Delta X=2$, $s=1$, giving LHS $=5 >$
+RHS $=4$: the per-step bound is false, not merely loose. The global
+inequality still holds for that configuration only because surplus
+banked at an earlier step compensates; see
+\texttt{docs/proof-sketch-weighted-potential.md} for the full computation.
+Consequently the appeal of this direction — reducing an $R$-vertex claim
+to a single-vertex marginal check via strong induction — does not survive
+as originally framed. A repair would need an amortized argument that
+explicitly carries banked surplus between steps, which has not been
+attempted and is not obviously simpler than the original claim.
+
+\paragraph{Coordinate-partition induction on $\Phi$ (Strategy 3b).}
+Distinct from the refuted marginal peeling above: Theorem~\ref{thm:defect}'s
+actual proof never isolates a single vertex — it partitions all of $V'$
+by symbol at one coordinate into fibers, recurses on each smaller fiber,
+and bounds the recombination via Lemma~\ref{lem:subadditivity}. Whether
+this skeleton closes for $\Phi=X+(m+1)D$ is untested territory distinct
+from the peeling refutation above. A first attempt at verifying it
+computed the recombination penalty by subtracting fiber totals from an
+already-known $\Phi(V')$, which is tautological (true by construction for
+any partition, independent of whether the induction actually closes). A
+genuine geometric bound was then derived for the 2-fiber cross-collision
+term: $X_{\text{cross}} \le \min\big(c_ac_b,\,(k-1)\min(c_a,c_b)\big)$ for
+fibers of size $c_a,c_b$, which is independent of $k$ for fixed small
+fiber sizes (an initial claim that this term grows unboundedly with $k$
+was an error in combining two constraints additively rather than by
+minimum). However, this bound is likely too loose at scale: the marginal
+slack $\Delta\Cconst(R)+m\Delta\Eseq(R)$ for a single split is
+$O(\log R)$, while $c_ac_b$ for a balanced split is $O(R^2)$ and even the
+refined bound is $O(R)$ for fixed $k$ — numerically, at $R=20$ balanced
+$(10,10)$ the slack is $6$ (at $m=1$) against bounds of $100$ and $40$.
+Whether the true worst-case $X_{\text{cross}}$ (not these loose
+combinatorial bounds) stays near $O(\log R)$ is unresolved. Two explicit
+constructions at $k=3$ and $k=5$ have since been hand-verified: at $k=3$
+($R=20$, balanced $(10,10)$ split), all $100$ candidate pairs collapse
+onto only $20$ distinct collision targets, because $\mathrm{bd\_mult}$
+counts distinct coordinates, not pairs, and $k=3$ leaves only one
+non-partition coordinate for every pair to route through. A $k=5$
+construction (matched pairs routed through $k-1=4$ \emph{different}
+coordinates) avoids this collapse entirely, disproving collapse as a
+general law — but it required $O(k)$ fresh alphabet symbols to keep each
+pair's coordinate distinct, which forced $m$ large enough to supply them
+in the one instance checked, and the resulting $X_{\text{cross}}$ still
+sat comfortably under slack there. Whether this alphabet cost is a
+necessary trade-off or an artifact of that one construction is itself
+open; no construction achieving spread at small $m$ and large $k$ was
+found in the search that produced these two examples. \textbf{The naive
+per-split induction itself is refuted}, however: see below.
+
+The natural next adversarial attempt --- maximizing $X_{\text{cross}}$
+while keeping $m$ small and $k$ large --- turns out not to be an
+independent test. Combining $\mathrm{total\_coord\_edges} = |\partial
+V| + X$, $\mathrm{total\_coord\_edges} = U(m+1) - Rk$, and $D = Rk - U$
+gives $\Phi = X + (m+1)D = mRk - |\partial V|$: the $U$ terms cancel
+identically, so $\Phi \le \Cconst(R) + m\Eseq(R)$ is exactly
+Proposition~\ref{prop:universal} restated, term for term. At fixed
+$R,k,m$, maximizing $X$ \emph{is} minimizing $|\partial V|$ --- the
+original problem, not a new adversarial target --- so a construction
+with large $X_{\text{cross}}$ but also large boundary demonstrates
+nothing. This is also the root cause of the tautological verification
+noted above: any identity check on a $\Phi$-partition is true by
+construction, since $\Phi$ carries no information beyond $|\partial
+V|$. The non-vacuous form of the open question, stated directly in
+boundary language: how many of one fiber's external neighbors are
+absorbed (cease to be external) when the other fiber is unioned in.
+That count is genuinely non-tautological and shares the same meaning
+across all $(n,k)$; bounding it from fiber sizes and $m$ alone, rather
+than bounding $X_{\text{cross}}$ directly, is what would close the
+recombination step.
+
+\textbf{The naive per-split induction is refuted}, on the same footing
+as the marginal-peeling refutation above, by an explicit,
+independently-verified counterexample. An exhaustive sweep of all
+coordinate 2-way splits of every $R$-subset of $A(5,3)$ up to $R=4$
+found $810$ splits (of $4{,}074{,}840$ checked) where the recombination
+penalty $S$ exceeds the per-split slack $m\Delta\Eseq(R)+\Delta\Cconst(R)$.
+The worst case, $V' = \{(0,1,2),(0,2,1),(0,3,4),(0,4,3)\}$ in $A(5,3)$
+($n=5,k=3,m=2,R=4$) split into two disjoint ``swap pairs''
+$F_a=\{(0,1,2),(0,2,1)\}$, $F_b=\{(0,3,4),(0,4,3)\}$, gives
+$|\partial F_a|=|\partial F_b|=12$ with $D=X=0$ in each fiber, while
+$|\partial V'|=16$, so $S = 12+12-16 = 8$ against a bound of
+$m\cdot 2 + 2 = 6$ --- a deficit of $2$. Decomposing $S$ shows it is
+\emph{entirely} cross-target collision ($X_{\text{cross}}=8$,
+$\Delta D_{\text{cross}}=0$): the two fibers share $8$ common external
+neighbors and neither fiber's boundary otherwise reaches into the
+other. The global inequality still holds ($|\partial V'|=16 \ge 12$)
+only because each fiber individually carries slack ($12-9=3$ each,
+totaling $6$, absorbing the deficit of $2$ with room to spare) --- not
+because the per-split bound holds. This is the direct analogue, for
+the partition skeleton, of the marginal-peeling refutation: the naive
+induction does not close step-by-step, and a repair would again require
+an amortized argument banking slack across the recursion, which has not
+been attempted for either skeleton.
+
+\paragraph{Dual root-compression via averaging.}
+Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
+conjectures on the hypercube \cite{pinto2015directed}, where two
+compression operators that each individually fail to shrink a directed
+boundary are shown to satisfy an averaging inequality forcing at least
+one of them to be non-worsening. The single guarded-symbol compression
+already refuted on $A(n,k)$ (Section~\ref{sec:nogo}) is one such
+individually-failing operator; whether a dual pair of root-compression
+operators exists on $A(n,k)$, respecting the injectivity constraint, for
+which an analogous averaging bound holds for $X+(m+1)D$, is entirely
+untried. This is flagged only as a structural analogy worth investigating
+for the coordinate-tangling obstacle; no candidate operator pair has been
+proposed.
+
+\paragraph{A global Lyapunov function on fiber multisets.}
+This direction proposes a potential $\Psi(V') = \sum_{p=1}^k \sum_r
+f(|F_{p,r}|)$ over the multiset of fiber sizes at every coordinate, for
+some convex $f$ --- a different functional from $\Phi=X+(m+1)D$ above,
+not a renaming of it. Whether a single root-compression move's local
+gain (from concentrating vertices into larger fibers at one coordinate)
+always dominates its collateral loss (from scrambling roots at every
+other coordinate) is the open question. The $\Phi$-collapse identity
+above says nothing about $\Psi$: it shows $\Phi$ carries no information
+beyond $|\partial V|$, but $\Psi$ is a genuinely different quantity, and
+this direction remains untouched by that result. Neither the link
+between $\Psi$ and $X+(m+1)D$, nor the required domination bound, has
+been established; it is not known whether a suitable $f$ exists.
+
+\medskip
+\noindent None of these directions currently has a confirmed, closed
+path to Proposition~\ref{prop:universal}. Both induction skeletons
+tried are refuted in their naive, per-step form: marginal peeling's
+per-vertex bound (Lemma~\ref{lem:subadditivity},
+Theorem~\ref{thm:defect}'s induction skeleton, and the proved
+$\Delta X=0$-at-adjacency lemma remain valid, but the induction built on
+top does not close as planned), and coordinate-partition induction's
+per-split recombination bound (an explicit, independently-verified
+counterexample in $A(5,3)$ shows $S$ can exceed the per-split slack by
+$2$, with the global inequality surviving only via slack banked in the
+sub-fibers). Neither has an attempted amortized replacement. The
+dual-compression direction's one tested candidate operator pair failed
+its own averaging inequality and degenerated into a graph automorphism
+on the example checked; no non-degenerate candidate has been proposed.
+The Lyapunov direction ($\Psi$ over fiber-size multisets, distinct from
+$\Phi$) remains a from-scratch invariant search with no candidate
+potential shown to work. These are research opinions, not mathematical
+claims, and should not be read as evidence toward
+Proposition~\ref{prop:universal} itself; the exhaustive computational
+sweep (Appendix~\ref{app:engine}) remains the only supporting evidence
+for the proposition as of this writing.
+
+\paragraph{Two further named directions, flagged at the same evidentiary
+stage as dual-compression above.} Two classical tools were suggested
+as possible replacements for the failed local decompositions: an
+entropy/Shearer's-Lemma bound on the coordinate projections
+$U_p(V')$, and a fractional linear-programming relaxation of the
+isoperimetric problem with its dual. Neither has been written down for
+$A(n,k)$, let alone checked against a single swept row, and both carry
+a specific, identifiable risk rather than a generic one: $C(R)$ and
+$E(R)$ are staircase functions of bit-length and popcount, and the
+subadditivity lemma underlying \S\ref{sec:sandwich} is a carry identity
+in binary addition, not a smooth or continuous relation --- a
+continuous relaxation (LP duality) or a smooth bound (entropy) is not
+guaranteed to recover an exact integer staircase, and may instead
+certify only a nearby, weaker constant. Both natural candidates have
+since been checked empirically and killed, in each case faster than the
+hand algebra would have taken.
+
+The most natural entropy candidate: taking $H_p(V')$ as the Shannon
+entropy of the root-distribution (fiber sizes) at coordinate $p$ and
+$S(V')=\sum_p H_p(V')$, the conjecture that the Hamming Ball minimizes
+$S(V')$ --- the entropy analogue of Theorem~\ref{thm:defect} --- is
+false already at $R=3$ in $A(5,3)$ (exhaustively checked over all
+$487{,}635$ subsets at $R\le4$): the true minimizer
+$\{(0,1,2),(0,1,3),(0,1,4)\}$ achieves $S=3.17$ against the Hamming
+Ball's $S=3.42$, while having a \emph{larger} boundary ($12$ vs.\ $11$)
+--- the functional does not merely miss the exact staircase, it
+disagrees with the target in direction on the first case tested.
+
+The natural LP relaxation fares worse: minimizing $\sum_w y_w$ subject
+to $y_w \ge x_v - x_w$ for every edge, $\sum_v x_v = R$, $0\le x\le1$,
+solved exactly (\texttt{scipy.optimize.linprog}, HiGHS) for $A(4,3)$
+and $A(5,3)$, $R=2,3,4$, against the true integer-optimal boundary from
+exhaustive search, gives LP optimum \emph{exactly zero in every case}
+--- not a weaker constant but no information at all. The uniform
+fractional point $x_v=R/N$ is always feasible and forces every edge
+difference to zero, so $y\equiv0$ satisfies every constraint; the
+relaxation has no mechanism forcing spread mass to generate boundary.
+Consequently there is no dual certificate to examine, and the earlier
+``banked slack looks like a dual certificate'' framing had nothing to
+attach to.
+
+Neither result rules out a more sophisticated version of either tool
+(a different entropy functional; an LP with symmetry-breaking or
+higher-order constraints), but no such candidate has been proposed.
+
+\paragraph{The open problem, restated as a capacity/pigeonhole
+aggregation bound (corrected).} An initial version of this paragraph
+claimed only distance-2 pairs between $F_a$ and $F_b$ contribute shared
+external neighbors, citing the $\Delta X=0$-at-adjacency lemma to
+dismiss distance-1 pairs. That was a category error: the lemma concerns
+a different setting (single-vertex marginal peeling, not two fixed
+disjoint fibers) and is false here --- checked directly in $A(6,3)$,
+$F_a=\{(0,1,2)\}$, $F_b=\{(3,1,2)\}$ (distance-1, sharing a root at
+$p=0$) gives $|\partial F_a\cap\partial F_b|=2=m-1$, nonzero.
+
+The corrected picture has two channels. \textbf{Channel 1 (distance-1,
+root-sharing), genuinely $m$-linear:} if $u\in F_a,v\in F_b$ share a
+root at $p$, every extension not already used is a shared external
+neighbor: exactly $m+1-|\{u_p,v_p\}|=m-1$ of them (generally
+$m+1-|A_r\cup B_r|$ for larger co-occupying groups). This is the only
+channel whose count is literally linear in $m$; it vanishes correctly
+at $m=1$. \textbf{Channel 2 (distance-2, midpoint), gated but
+$m$-free per pair:} for $u,v$ differing at $p$ and one other coordinate
+$q$, the candidate $w$ (swapping $u$'s value at $p$ to $\beta=v_p$) is
+valid \emph{iff} $\beta\ne u_q$, and the mirrored candidate iff
+$\alpha\ne v_q$ --- \emph{two independent conditions}, verified
+directly: $A(5,3)$, $u=(0,1,3)$, $v=(1,2,3)$ has $\beta=1=u_q$ (first
+candidate invalid) but $\alpha=0\ne v_q=2$ (second valid), giving
+exactly one shared neighbor, not zero or two. $m$ does not enter this
+per-pair condition.
+
+Finally, the aggregation is not pair-disjoint: distinct pairs can
+generate the same target, the same $k=3$ collapse mechanism established
+elsewhere in this appendix, so the per-pair sum over channel 2 is only
+an upper bound, not an exact count. The open problem, correctly scoped:
+bound $|\partial F_a\cap\partial F_b|$ from $(c_a,c_b,m)$ alone, as the
+union of both channels adjusted for their mutual overcounting --- not
+simply ``sum a 0--2 count over distance-2 pairs,'' which both
+undercounts (omitting channel 1) and overcounts (ignoring collisions)
+simultaneously. No such bound has been derived or attempted. $m$ enters
+through two distinct, now-identified mechanisms: root-sharing capacity
+(channel 1) and cross-pair symbol supply for spreading (channel 2, via
+the unproven collapse/spread trade-off); a correct bound must account
+for both and their interaction. This remains the cleanest surviving
+open question after this appendix's testing, and its own first draft
+undercounting the problem's difficulty is worth remembering when
+reading the next attempt at it too.
+
+\paragraph{The symmetric/spread counterexample hunt (2026-09-13):
+vacuity at scale, starvation at the frontier.} A natural program to
+beat the bound is to construct highly symmetric, ``spread'' sets ---
+orthogonal arrays, finite-geometry designs --- that avoid concentrating
+on a single fiber, and to deploy them at the $R$ where the Hamming ball
+is claimed to be least efficient. Two independent facts close that
+program off. \emph{Vacuity at scale.} With the correct right-hand side
+$\mathrm{rhs}(n,k,R)=(Rk-\Eseq(R))\,(n-k)-\Cconst(R)$, one has
+$\mathrm{rhs}(7,3,29)=5$ and $\mathrm{rhs}(7,3,R)\le 0$ for every
+$R\ge 30$ ($-41$ at $R=42$): in $A(7,3)$ the inequality asserts nothing
+past $R\approx 29$, so ``beaten at scale'' is structurally impossible
+there. The mechanism is generic for fixed $k$: $Rk-\Eseq(R)$ behaves
+like $R\left(k-\tfrac12\log_2 R\right)$, eventually turning negative
+against the growing correction constant, so the bound's content is
+confined to roughly $R\le 2^k$. \emph{Starvation at the frontier.}
+Where the bound bites --- $A(6,3)$, $A(7,3)$ at $R\in\{6,7,8\}$, with
+targets $24,25,24$ and $35,37,36$ --- a pairwise-distance-2 set has no
+internal edges, so its external boundary is approximately
+$R\cdot k(n-k)$ minus modest overlap, far above the tight target:
+greedy spread sets at those sizes give boundaries $42$--$77$ against
+targets $24$--$37$, and randomized search ($60{,}000$ sets per cell)
+with an independent $20{,}000$-set rerun found no $R$-set below target.
+The strongest structured candidate, the orthogonal-array family
+$\{(a,b,a+b)\bmod 7\}$ in $A(7,3)$ (30 injective triples, pairwise
+distance $\ge 2$), was checked exhaustively over all
+$\binom{30}{9}=14{,}307{,}150$ nine-element subsets: minimal external
+boundary $71$, strictly above the target $40$ at $R=9$. These probes are
+random/structured rather than exhaustive (the exhaustive sweep stops at
+$R=5$ for $k=3$), so they do not prove the bound at the frontier; they
+refute the specific ``try harder designs at scale'' program, whose
+target regime is empty.
+
+\paragraph{The amortized-slack decomposition, an unconditional
+cross-edge bound, and three crush mechanisms (2026-09-13 session):
+refines, but does not close, the capacity/pigeonhole paragraph above.}
+For a disjoint split $V'=F_a\sqcup F_b$, define the slack
+$S(X)=|\partial X|-\mathrm{rhs}(|X|)$ against the conjectured bound and
+$\Delta=\mathrm{rhs}(c_a)+\mathrm{rhs}(c_b)-\mathrm{rhs}(c_a+c_b)$. The
+exact identity
+$S(V')=S(F_a)+S(F_b)+\Delta-(I+B_{ba}+B_{ab})$ holds for \emph{any}
+disjoint split (no adjacency assumption needed), where
+$I=|\partial F_a\cap\partial F_b|$ and $B_{ba}=|F_b\cap\partial F_a|$,
+$B_{ab}=|F_a\cap\partial F_b|$ are direct-adjacency crossover counts
+(an earlier draft of this identity omitted $B_{ba},B_{ab}$ and
+undercounted whenever the fibers share a direct edge). When both
+fibers are individually tight ($S(F_a)=S(F_b)=0$), the critical-case
+inequality $S(V')\ge0$ becomes exactly $I+B_{ba}+B_{ab}\le\Delta$: this
+is the non-vacuous form of the aggregation bound called for in the
+paragraph above, now stated with the direct-adjacency terms the
+earlier framing was missing.
+
+One direction of this closes unconditionally. Writing $X$ for the
+number of direct cross-edges between $F_a$ and $F_b$ and $D(S)$ for
+the internal-edge count (defect) of a subset $S$, edge double-counting
+gives $D(V')=D(F_a)+D(F_b)+X$ for any disjoint split. Combined with
+$D(S)\le\Eseq(|S|)$ for every subset (proved unconditionally by strong
+induction on $R$, no tightness hypothesis, in the Lean development's
+\texttt{sum\_unique\_roots\_lower\_bound}), this gives
+$X\le\Eseq(c_a+c_b)-D(F_a)-D(F_b)$ for any disjoint split, and
+$X\le\Delta\Eseq:=\Eseq(c_a+c_b)-\Eseq(c_a)-\Eseq(c_b)$ specifically
+when both fibers are themselves tight and Hamming-ball-isomorphic in
+defect (the latter substitution depends on the repository's own open
+\texttt{uniqueness\_conjecture} --- whether a tight fiber can achieve
+its boundary minimum with defect strictly below $\Eseq(c)$ by
+compensating by cross-collision count --- which remains unresolved;
+see \texttt{src/check\_uniqueness.cpp}, 0 counterexamples across 5
+exhaustive sizes, not a proof). $X\le\Delta\Eseq$ was also confirmed
+empirically as an equality ($X=\Delta\Eseq$) across every margin-zero
+pair checked (7 cells, $5{,}124$ pairs).
+
+Exhaustive checks establish a two-sided gate on when $I+B_{ba}+B_{ab}$
+reaches $\Delta$ exactly (margin $0$) versus falls strictly below it
+(margin $<0$, a deficit): margin $=0$ iff $k\ge\lceil\log_2R\rceil$
+\emph{and} $n-k\ge\lceil\log_2R\rceil$ ($28/28$ balanced-split cells
+checked, plus every hand-traced witness below), matching exactly when
+a Hamming ball of size $R$ admits a subcube bipartition. At margin
+$0$, hand-traced coordinate witnesses (a balanced power-of-2 split in
+$A(6,3)$, $c_a=c_b=4$, and an unbalanced split, $c_a=3,c_b=4$) show
+the mechanism directly: cross-edges form a matching realizing
+$X=\Delta\Eseq$, and any corner missing from a fiber relative to a
+complete subcube generates exactly one ``ghost'' shared external
+target reachable at distance $1$ from both fibers but not stitched by
+an actual edge --- consistent with, though not proved to imply in
+general, the refined identity $T=\Delta\Cconst-\Delta\Eseq$ (where $T$
+counts such ghosts), conditional on the observed matching property
+$B_{ab}+B_{ba}=2X$.
+
+When the gate fails, three distinct, hand-verified mechanisms were
+found for where the resulting deficit lands, not one uniform
+phenomenon: (i) \emph{alphabet starvation} ($n-k<\lceil\log_2R\rceil$,
+$k$ sufficient): the two fibers cannot agree on a shared axis's
+symbol set, so some cross-edges become structurally impossible and the
+deficit lands in missing $B_{ab}+B_{ba}$ (witnessed in $A(5,3)$,
+$c_a=c_b=4$); (ii) \emph{coordinate starvation, saturated}
+($k<\lceil\log_2R\rceil$, $n-k$ sufficient): both fibers saturate each
+other (every vertex touched) but the cross-edges' distance-$1$ targets
+are no longer all distinct for lack of a free coordinate to keep them
+apart, so the deficit lands in the distance-1-attributed target count
+falling short of $\Delta\Eseq\cdot(m-1)$ (witnessed in $A(7,3)$,
+$c_a=c_b=5$); (iii) \emph{coordinate starvation, ghost-compensated}:
+the same shortfall re-expressed with a unit moved into a $T$-type
+ghost instead (a second bucket of the same cell). A single scalar
+deficit magnitude as a function of $(n,k,c_a,c_b)$ was sought and not
+found: two hand-picked separability hypotheses --- deficit as a
+function of the two starvation gaps alone, and (after correcting an
+arithmetic error, $\Eseq(9)=13$ not $12$) the achieved interference
+$I+B_{ab}+B_{ba}$ as a function of $(n,k,m)$ alone independent of the
+$(c_a,c_b)$ split --- each looked consistent with the data on hand and
+were each refuted by the very next targeted test cell. Full witnesses,
+the refuted hypotheses, and the tooling
+(\texttt{src/check\_amortized\_slack.cpp},
+\texttt{src/sweep\_deficit.cpp}) are recorded in
+\texttt{docs/proof-sketch-weighted-potential.md}.
+
+This narrows, but does not close, the open aggregation bound above: it
+supplies an unconditional half ($X\le\Delta\Eseq$, modulo the
+uniqueness conjecture for the fiber-defect substitution), names three
+distinct mechanisms by which the non-embeddable regime generates
+surplus slack rather than deficit toward the global inequality, and
+rules out two specific closed-form guesses for the deficit's
+magnitude. What remains is a structural inequality --- that the
+achieved interference is strictly below $\Delta$ whenever the
+embeddability gate fails, argued by case-split on the three mechanisms
+above --- rather than a proof of that magnitude in closed form; no such
+argument has yet been attempted.
+
+\paragraph{Coordinate-local incidence route (current).}
+The preceding failed partition induction bounded a whole-fiber
+recombination term and is not revived here.  A different exact identity begins
+with a split of a set $S$ into symbol slices $S_i$ at one coordinate.  If
+$Q_i$ is the projected local slice, Lemma~\ref{lem:local-collision}
+establishes the exact identity $X(S)-\sum_i X(Q_i)=L_c$, where $L_c$
+counts empty transversal slots lying in a local boundary.
+For a slice label $i$, only projections avoiding $i$ are compatible; writing
+$P_i=\{x\in\pi_c(S):i\notin x\}$, the corresponding immune slots are
+\[\sum_i\left|P_i\setminus\bigl(Q_i\cup\partial_{\mathrm{loc}}Q_i\bigr)\right|.
+\]
+This has a useful exact contribution from the empty slices.  Let $U$ be the
+set of sweep-coordinate symbols used by $S$, put $s=|U|$, and let
+$E=[n]\setminus U$.  Since $Q_i=\varnothing$ for $i\in E$, double counting
+pairs $(x,i)$ with $x\in\pi_c(S)$, $i\in E$, and $i\notin x$ gives
+\[
+ I_{\mathrm{empty}}
+ =\sum_{i\in E}|P_i|
+ =\sum_{x\in\pi_c(S)}|E\setminus\operatorname{supp}(x)|.
+\]
+Here a projection $x$ contains $k-1$ symbols, so it has $m+1=n-k+1$
+compatible sweep-coordinate symbols.  At most $s$ of those compatible
+symbols lie in $U$; consequently
+\[
+ I_{\mathrm{empty}}
+ \ge |\pi_c(S)|\max\{0,m+1-s\}.
+\]
+Equality holds when every projection avoids every used sweep symbol, namely
+$U\cap\operatorname{supp}(x)=\varnothing$ for all $x\in\pi_c(S)$.  Thus the
+nonempty slices need only cover the residual
+\[
+ \max\{0,\,mR-\Delta C-m\Delta E-I_{\mathrm{empty}}\}.
+\]
+The unresolved local statement is that the full immune-slot sum is at least
+$mR-\Delta C-m\Delta E$.  Empty slices contribute all of their compatible
+$P_i$ automatically, but high-support slices can have no such contribution.
+
+The CP-SAT program \texttt{search\_single} includes a coordinate-0
+\texttt{local-residual} objective maximizing the amount not supplied by these
+empty compatible slices.  It returned an optimum of $0$ for
+$A(4,3)$ with $R=6$, but this is only a finite-cell diagnostic.  In a separate
+high-deficit witness, every coordinate had zero void slots while the arithmetic
+requirement was negative, so the audit was vacuous rather than evidence of a
+general void-cover theorem.  This route is therefore a precisely stated open
+coverage problem, not a completed proof strategy.
+
+\paragraph{Empirical closure: the three-stool trap architecture.}
+Three independent computational campaigns --- exhaustive corpus, Swiss-cheese
+hole-punching, and core-plus-crumbs injection --- totalling 3,796 adversarial
+sets across $A(4,3)$, $A(5,3)$, and $A(6,3)$, found zero counterexamples to
+the coordinate-local inequality and revealed a rigid trap architecture with
+three components.
+
+\emph{Pool envelope.}
+For every slice $i$ at every coordinate, the local collision count satisfies
+$L_{c,i}\le|P_i|-R_i$, where $P_i$ is the compatible projection pool and
+$R_i$ the slice size.  This is tight across 4,806 slices with
+$L_{c,i}>0$ up to $R=19$ and at every $R_i$ from 1 to 19.  A slice can
+swallow at most its un-occupied compatible projections; the envelope is
+saturated when every compatible projection not already in the slice is
+eaten by a local collision.
+
+\emph{Failure of edge-gradient charging.}
+A natural union-bound approach --- charging each local collision to its
+projection edges --- is catastrophic.  The ratio of total gradient to
+$L_c$ reaches $64\times$ on the corpus, with 404 sufficiency failures.
+The loosest cases occur at $R=3$ in $A(4,3)$, where single-slice sets
+have $R_i=3$ and $L_{c,i}=1$, but the union-bound overcount yields
+gradients up to 64.  The core obstruction: local graph geometry scales
+faster than global subadditivity ($\Delta C+m\Delta E$).  Any successful
+charging argument must operate globally per symbol, not locally per edge.
+
+\emph{Strictness conjecture ($L_c>0\implies S>0$).}
+The most striking empirical discovery.  Define the colliding slack as
+$S=\Delta C+m\Delta E-(m+1)\cdot\mathrm{conc}-L_c$.  The 159 zero-slack sets
+are all collision-free ($L_c=0$): pure single-slice sets and full
+transversals.  The moment $L_c>0$, the slack is at least~1.  This held
+across every configuration three adversarial archetypes could devise:
+random sampling (3,449 sets), Swiss-cheese hole-punching (197 sets), and
+core-plus-crumbs injection at $A(5,3)$ and $A(6,3)$ (150 sets).
+Minimum colliding slack~$=1$ in all three campaigns.  The adversary is
+mathematically trapped: to starve the subadditivity penalty they must
+concentrate vertices in a saturated core, but a saturated core leaves no
+void space to swallow slots; fracturing the set to create collision mass
+causes the hypercube's arithmetic to overpay by at least one full unit.
+
+\[
+\begin{array}{lrrr}
+\hline
+\text{Probe} & \text{Sets} & \text{Fails} & \text{Min coll.\ slack} \\
+\hline
+\text{Exhaustive + random + structured} & 3{,}449 & 0 & 1 \\
+\text{+ Swiss cheese} & 3{,}646 & 0 & 1 \\
+\text{+ Core+crumbs} & 3{,}796 & 0 & 1 \\
+\hline
+\end{array}
+\]
+
+The strictness conjecture is empirically decisive but unproved.  A proof
+would require showing that any set with $L_c>0$ necessarily has
+$\Delta C+m\Delta E>(m+1)\cdot\mathrm{conc}+L_c$.  The pool envelope is a
+necessary ingredient (bounding collision mass per slice), but closing the
+gap requires a global argument that the overpayment is at least~1 when
+any slice has $L_{c,i}>0$.

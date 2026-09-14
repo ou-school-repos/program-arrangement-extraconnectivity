@@ -17,3 +17,7 @@ trim_trailing_whitespace = true
 [Makefile]
 indent_size = 4
 indent_style = tab
+
+[*.sh]
+indent_size = 4
+indent_style = tab

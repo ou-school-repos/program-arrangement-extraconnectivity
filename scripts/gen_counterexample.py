@@ -24,11 +24,15 @@ def make_graph():
 
 
 def boundary(G, S):
+    """Return the external boundary of vertex set S: nodes outside S adjacent to it."""
     S_set = set(S)
     return {v for v in G.nodes if v not in S_set and any(u in S_set for u in G[v])}
 
 
 def draw_panel(ax, G, pos, S, bnd, title, bnd_color, legend_label, notes):
+    """
+    Draw one before/after panel: graph G with set S, boundary bnd, and annotations.
+    """
     S_set, bnd_set = set(S), set(bnd)
     gray = [v for v in G.nodes if v not in S_set and v not in bnd_set]
 
@@ -134,6 +138,7 @@ def draw_panel(ax, G, pos, S, bnd, title, bnd_color, legend_label, notes):
 
 
 def main():
+    """Build the before/after compression panels and save the counterexample GIF."""
     G = make_graph()
     verts_sorted = sorted(G.nodes)
     pos = {}

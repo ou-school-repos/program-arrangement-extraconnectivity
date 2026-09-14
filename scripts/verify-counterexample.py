@@ -39,6 +39,7 @@ def verify(R: int, vertices: list[str], expected_nk1: int, expected_const: int) 
 
     # Check connectivity via BFS
     def adjacent(a: str, b: str) -> bool:
+        """Two vertices are adjacent iff they differ in exactly one position."""
         return sum(1 for x, y in zip(a, b) if x != y) == 1
 
     visited = {vertices[0]}

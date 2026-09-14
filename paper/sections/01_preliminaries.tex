@@ -1,0 +1,145 @@
+\section{Preliminaries}
+
+\begin{definition}[Notation]
+	We denote the set $\{1, 2, \dots, m\}$ by $[m]$.
+\end{definition}
+
+\begin{definition}[Arrangement Graph]
+The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow
+[n] \}$ (injective functions) and edge set $E = \{ \{u, v\} : |\{p \in [k] : u_p
+\neq v_p\}| = 1 \}$.
+\end{definition}
+
+To move to an adjacent vertex in $A(n,k)$, one selects one of the $k$ active
+coordinates and replaces its symbol with one of the $(n-k)$ unused symbols from
+the alphabet. Every vertex therefore has exactly $k(n-k)$ neighbors, and the
+factor $(n-k)$ governs how rapidly the boundary scales with the network
+dimensions.
+
+\begin{definition}[Unique Roots and Defect]
+For each position $p \in [k]$, a \emph{root} $r$ is a sequence of $k-1$ distinct
+symbols. In $A(n,k)$, each root defines a 1-dimensional clique (a line) of size
+$n-k+1$ obtained by filling the missing coordinate with any available symbol.
+The \emph{unique roots} at $p$, denoted $U_p(V')$, are the distinct 1D-cliques
+that intersect the set $V'$ at coordinate $p$:
+	\begin{equation}\label{eq:unique-roots}
+		U_p(V') = \{ (v_1, \ldots, v_{p-1},\, v_{p+1}, \ldots, v_k) : v \in V' \}
+	\end{equation}
+That is, each root is the $(k{-}1)$-tuple formed by taking a vertex $v \in V'$
+and deleting its $p$-th coordinate. The sum of unique roots $U(V') =
+\sum_{p=1}^k |U_p(V')|$ counts the total number of distinct coordinate-aligned
+lines that $V'$ touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ counts
+how many times two vertices in $V'$ share the same root, i.e., it acts as an
+algebraic proxy for the number of internal edges within $V'$. For
+hypercube-embedded subsets (where no two vertices share more than one root) this
+equality is exact; for dense cliques it serves as a robust algebraic lower bound
+on the physical edge count that naturally prevents over-counting.
+\end{definition}
+
+\begin{definition}[External Boundary]
+For a subset $V' \subseteq V(A(n,k))$, the \emph{external boundary} $\extbd(V')$
+is the set of vertices not in $V'$ that are adjacent to at least one vertex in
+$V'$:
+	\begin{equation}\label{eq:ext-boundary}
+		\extbd(V') = \{ w \in V  -  V' : \exists\, v \in V',\; \{v,w\} \in E \}.
+	\end{equation}
+	Its cardinality $|\extbd(V')|$ is the quantity we seek to minimize.
+\end{definition}
+
+Under Propositions~\ref{prop:universal} and~\ref{prop:hb-eval}, the
+boundary-minimizing subset is the \emph{lexicographic Hamming Ball}: the first
+$R$ binary strings $0, 1, \ldots, R-1$, embedded as vertices via their binary
+expansions into the coordinate slots of $A(n,k)$. The conditional
+boundary formula (Theorem~\ref{thm:main}) depends on two constants
+that emerge from building this ball vertex by vertex.
+
+\begin{definition}[Hamming Ball and its Constants]\label{def:constants}
+The \emph{lexicographic Hamming Ball} $\mathrm{HB}_R$ consists of the first $R$
+vertices in colexicographic (binary) order. When vertex $i$ $(i \ge 1)$ joins
+$\mathrm{HB}_{i}$, it occupies the $d_i = \lceil \log_2(i+1) \rceil$-th
+dimension level of the embedding hypercube and therefore interacts with exactly
+$d_i$ coordinates of the existing ball, of which $\mathrm{popcount}(i)$ are
+\emph{shared roots}---coordinates where vertex $i$ agrees with a vertex already
+in $\mathrm{HB}_{i}$, creating an internal (defect) link.
+
+	Summing over all vertices yields two key constants:
+	\begin{align}
+		\Eseq(R)   & = \sum_{i=0}^{R-1} \mathrm{popcount}(i)                         &  & \text{(cumulative binary weight, OEIS A000788 \cite{oeis_A000788})}, \label{eq:eseq} \\
+		\Cconst(R) & = (R-1) + \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - \Eseq(R) &  & \text{(boundary correction constant)}. \label{eq:cconst-def}
+	\end{align}
+The quantity $\Eseq(R)$ is the maximum defect achievable by any $R$-element
+subset (Theorem~\ref{thm:defect}), and $\Cconst(R)$ is the total waste of the
+boundary-minimizing ball (Proposition~\ref{prop:hb-eval}), satisfying
+$\Cconst(R) = \Eseq(R) + X(\mathrm{HB}_R)$ by construction, where $X$ denotes
+the cross-collision count (defined formally in Section~\ref{sec:defect}).
+\end{definition}
+
+\begin{example}
+To visualize ``filling the missing coordinate,'' consider a root $r$ in
+$A(10,5)$ where $4$ symbols are fixed (e.g., \texttt{B,C,D,E}). The missing
+coordinate can be filled by any of the remaining $10 - 5 + 1 = 6$ available
+symbols. This single root physically expands into a 1D-clique (a line) of 6
+vertices:
+
+	\begin{figure}[H]
+		\centering
+		\begin{tikzpicture}[scale=0.9, font=\small, node distance=0.15cm]
+			% Root definition
+			\node[anchor=east, font=\bfseries] at (-0.5, 0.3) {Root $r$:};
+			\draw[thick, fill=gray!20] (0,0) rectangle (1,0.6);
+			\node at (0.5,0.3) {?};
+			\draw[thick, fill=gray!10] (1,0) rectangle (5,0.6);
+			\node at (1.5,0.3) {\texttt{B}};
+			\node at (2.5,0.3) {\texttt{C}};
+			\node at (3.5,0.3) {\texttt{D}};
+			\node at (4.5,0.3) {\texttt{E}};
+
+			% Expansion arrow
+			\draw[->, >=Stealth, ultra thick] (5.2, 0.3) -- (6.3, 0.3) node[midway, above] {Fill};
+
+			% Stack of vertices
+			\node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v1) at (8, 1.8) {\texttt{[A,B,C,D,E]} $\in V'$};
+			\node[draw, thick, fill=blue!20, minimum width=2.8cm, minimum height=0.5cm] (v2) at (8, 1.1) {\texttt{[F,B,C,D,E]} $\in V'$};
+
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v3) at (8, 0.4) {\texttt{[G,B,C,D,E]} $\notin V'$};
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v4) at (8, -0.3) {\texttt{[H,B,C,D,E]} $\notin V'$};
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v5) at (8, -1.0) {\texttt{[I,B,C,D,E]} $\notin V'$};
+			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v6) at (8, -1.7) {\texttt{[J,B,C,D,E]} $\notin V'$};
+		\end{tikzpicture}
+		\caption{A single root expanding into a 1D-clique in $A(10,5)$. Vertices
+		already in $V'$ form internal defect links, while the remaining empty
+		slots generate the external boundary.}
+		\label{fig:fill_example}
+	\end{figure}
+\end{example}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=1.0, font=\small]
+		% Draw the "Root" (the fixed part)
+		\node[anchor=east] at (-0.5,0.3) {Root $r$:};
+		\draw[thick, fill=gray!10] (0,0) rectangle (4,0.6);
+		\node at (0.5,0.3) {$s_1$}; \node at (1.5,0.3) {$s_2$}; \node at (2.5,0.3) {$\dots$};
+		\draw[fill=white, dashed] (3.1,0.1) rectangle (3.9,0.5);
+		\node at (3.5,0.3) {hole};
+
+		% Dimension label
+		\draw[<->, >=Stealth] (0,-0.4) -- (4,-0.4) node[midway, below] {$k-1$ fixed symbols};
+
+		% Draw the "Fiber" (the extensions)
+		\node (v1) at (7,1.2) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{A}]$};
+		\node (v2) at (7,0.3) [draw, rounded corners, fill=blue!10] {$[s_1, s_2, \dots, \mathbf{B}]$};
+		\node (v3) at (7,-0.6) [draw, rounded corners, fill=white] {$[s_1, s_2, \dots, \mathbf{C}]$};
+
+		\draw[->, >=Stealth, thick] (4.1,0.3) -- (v1.west);
+		\draw[->, >=Stealth, thick] (4.1,0.3) -- (v2.west);
+		\draw[->, >=Stealth, thick] (4.1,0.3) -- (v3.west);
+
+		\node[anchor=west, text=blue!70!black] at (9, 0.75) {Vertices in $V'$};
+		\node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
+	\end{tikzpicture}
+	\caption{Two vertices sharing the same root (fixed $k{-}1$ symbols) are
+	adjacent in $A(n,k)$. Each shared root adds one to the defect $D$ instead
+	of exposing a new boundary vertex.}
+	\label{fig:fiber}
+\end{figure}
