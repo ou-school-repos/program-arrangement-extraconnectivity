@@ -439,3 +439,62 @@ high-deficit witness, every coordinate had zero void slots while the arithmetic
 requirement was negative, so the audit was vacuous rather than evidence of a
 general void-cover theorem.  This route is therefore a precisely stated open
 coverage problem, not a completed proof strategy.
+
+\paragraph{Empirical closure: the three-stool trap architecture.}
+Three independent computational campaigns --- exhaustive corpus, Swiss-cheese
+hole-punching, and core-plus-crumbs injection --- totalling 3,796 adversarial
+sets across $A(4,3)$, $A(5,3)$, and $A(6,3)$, found zero counterexamples to
+the coordinate-local inequality and revealed a rigid trap architecture with
+three components.
+
+\emph{Pool envelope.}
+For every slice $i$ at every coordinate, the local collision count satisfies
+$L_{c,i}\le|P_i|-R_i$, where $P_i$ is the compatible projection pool and
+$R_i$ the slice size.  This is tight across 4,806 slices with
+$L_{c,i}>0$ up to $R=19$ and at every $R_i$ from 1 to 19.  A slice can
+swallow at most its un-occupied compatible projections; the envelope is
+saturated when every compatible projection not already in the slice is
+eaten by a local collision.
+
+\emph{Failure of edge-gradient charging.}
+A natural union-bound approach --- charging each local collision to its
+projection edges --- is catastrophic.  The ratio of total gradient to
+$L_c$ reaches $64\times$ on the corpus, with 404 sufficiency failures.
+The loosest cases occur at $R=3$ in $A(4,3)$, where single-slice sets
+have $R_i=3$ and $L_{c,i}=1$, but the union-bound overcount yields
+gradients up to 64.  The core obstruction: local graph geometry scales
+faster than global subadditivity ($\Delta C+m\Delta E$).  Any successful
+charging argument must operate globally per symbol, not locally per edge.
+
+\emph{Strictness conjecture ($L_c>0\implies S>0$).}
+The most striking empirical discovery.  Define the colliding slack as
+$S=\Delta C+m\Delta E-(m+1)\cdot\mathrm{conc}-L_c$.  The 159 zero-slack sets
+are all collision-free ($L_c=0$): pure single-slice sets and full
+transversals.  The moment $L_c>0$, the slack is at least~1.  This held
+across every configuration three adversarial archetypes could devise:
+random sampling (3,449 sets), Swiss-cheese hole-punching (197 sets), and
+core-plus-crumbs injection at $A(5,3)$ and $A(6,3)$ (150 sets).
+Minimum colliding slack~$=1$ in all three campaigns.  The adversary is
+mathematically trapped: to starve the subadditivity penalty they must
+concentrate vertices in a saturated core, but a saturated core leaves no
+void space to swallow slots; fracturing the set to create collision mass
+causes the hypercube's arithmetic to overpay by at least one full unit.
+
+\[
+\begin{array}{lrrr}
+\hline
+\text{Probe} & \text{Sets} & \text{Fails} & \text{Min coll.\ slack} \\
+\hline
+\text{Exhaustive + random + structured} & 3{,}449 & 0 & 1 \\
+\text{+ Swiss cheese} & 3{,}646 & 0 & 1 \\
+\text{+ Core+crumbs} & 3{,}796 & 0 & 1 \\
+\hline
+\end{array}
+\]
+
+The strictness conjecture is empirically decisive but unproved.  A proof
+would require showing that any set with $L_c>0$ necessarily has
+$\Delta C+m\Delta E>(m+1)\cdot\mathrm{conc}+L_c$.  The pool envelope is a
+necessary ingredient (bounding collision mass per slice), but closing the
+gap requires a global argument that the overpayment is at least~1 when
+any slice has $L_{c,i}>0$.

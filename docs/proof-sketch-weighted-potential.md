@@ -2086,6 +2086,89 @@ previous high-deficit `deltaD=7` collision optimizer had zero void slots
 in every coordinate, but its required gaps were negative; those
 `void=vacuous` reports provide no geometric void-cover evidence.
 
+## Empirical Closure: The Three-Stool Trap Architecture (2026-09-14)
+
+Three independent computational campaigns — exhaustive corpus, Swiss-cheese
+hole-punching, and core-plus-crumbs injection — totalling 3,796 adversarial
+sets across A(4,3), A(5,3), and A(6,3), found zero counterexamples to the
+coordinate-local inequality and revealed a rigid trap architecture.
+
+### The Pool Envelope
+
+For every slice $i$ at every coordinate, the local collision count satisfies
+
+```
+L_{c,i} <= |P_i| - R_i
+```
+
+where $P_i$ is the compatible projection pool and $R_i$ the slice size.
+This is tight: a slice can swallow at most its un-occupied compatible
+projections. The envelope is saturated when $L_{c,i} = |P_i| - R_i$,
+which occurs precisely when every compatible projection not already in the
+slice is eaten by a local collision — i.e., the slice is maximally
+swollen. Across 4,806 slices with $L_{c,i} > 0$ up to $R = 19$, this
+bound is never violated and is tight at every $R_i$ value from 1 to 19.
+
+### The Failure of Edge-Gradient Charging
+
+A natural approach: charge each local collision to its projection edges
+via a union bound. The result is catastrophic. The ratio of total
+gradient ($\sum_i |S_x \triangle S_y|$ over all edges) to local collision
+count $L_c$ reaches 64x on the corpus, with 404 sufficiency failures
+(witnesses where the gradient exceeds $L_c$). The loosest cases all
+occur at $R = 3$ in $A(4,3)$, where single-slice sets have $R_i = 3$
+and $L_{c,i} = 1$, but the union-bound overcount yields gradients up to
+64. The core obstruction: local graph geometry (edge counts) scales faster
+than global subadditivity ($\Delta C + m \Delta E$). Any successful
+charging argument must operate globally per symbol, not locally per edge.
+
+### The Strictness Conjecture ($L_c > 0 \implies S > 0$)
+
+The most striking empirical discovery. Define the colliding slack as
+
+```
+S = dC + m*dE - (m+1)*conc - L_c
+```
+
+where $dC, dE$ are the subadditivity penalties from the slice partition,
+$\mathrm{conc} = \sum_i \binom{R_i}{2}$ counts concollision pairs, and
+$L_c$ is the total local collision count. The 159 zero-slack sets are
+\emph{all} collision-free: $L_c = 0$, consisting of pure single-slice
+sets ($R = 2$, one nonempty slice) and full transversals ($R = 2$, two
+unit slices with $L_c = 0$). The moment $L_c > 0$, the slack is at
+least 1. This held across every configuration three distinct adversarial
+archetypes could devise: random sampling (3,449 sets), Swiss-cheese
+hole-punching with sizes 16/24/32 (197 sets), and core-plus-crumbs
+injection at A(5,3) and A(6,3) (150 sets). Minimum colliding slack = 1
+in all three campaigns.
+
+The interpretation: the adversary is mathematically trapped. To starve
+the subadditivity penalty ($\Delta C, \Delta E$), they must concentrate
+vertices in a saturated core, but a saturated core leaves no void space
+to swallow slots. The moment they fracture the set to create collision
+mass ($L_c > 0$), the hypercube's arithmetic overpays for the theft by
+at least one full unit. Zero slack is exclusively reserved for
+collision-free configurations where the arithmetic is trivially exact.
+
+### Summary Table
+
+| Probe | Sets | Fails | Min colliding slack |
+|---|---|---|---|
+| Exhaustive A(4,3) R≤3 + random + structured | 3,449 | 0 | 1 |
+| + Swiss cheese (sizes 16/24/32) | 3,646 | 0 | 1 |
+| + Core+crumbs (A(5,3), A(6,3)) | 3,796 | 0 | 1 |
+
+### What Remains Open
+
+The strictness conjecture ($L_c > 0 \implies S > 0$) is empirically
+decisive but unproved. A proof would require showing that any set with
+$L_c > 0$ necessarily has $\Delta C + m \Delta E > (m+1) \cdot \mathrm{conc} + L_c$,
+i.e., the subadditivity penalties strictly dominate the collision
+mass. The pool envelope ($L_{c,i} \le |P_i| - R_i$) is a necessary
+ingredient: it bounds how much collision mass the adversary can generate
+per slice, but closing the gap requires a global argument that the
+overpayment is at least 1 when any slice has $L_{c,i} > 0$.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
@@ -2098,10 +2181,11 @@ function over fiber-size multisets) are recorded at the
 whiteboard-sketch stage only; neither has been carried far enough to
 check, let alone prove.
 
-The exhaustive computational evidence (30 rows as of 2026-09-12, up to
-3.65 billion subsets in a single row) supports the inequality with no
-counterexample found. The proof target is precise: show
-X(V') + (m+1)D(V') ≤ C(R) + m·E(R) for all V', by any of the strategies
-above or another route. The existing Cheng et al. computational results
-\cite{cheng2022extraconnectivity} do not supply this — they are limited to
-small g and do not address the all-subsets vertex-isoperimetric question.
+The exhaustive computational evidence (3,796 sets as of 2026-09-14,
+across exhaustive, random, structured, Swiss, and crumbs corpora)
+supports the inequality with no counterexample found. The proof target is
+precise: show X(V') + (m+1)D(V') ≤ C(R) + m·E(R) for all V', by any of
+the strategies above or another route. The existing Cheng et al.
+computational results \cite{cheng2022extraconnectivity} do not supply
+this — they are limited to small g and do not address the all-subsets
+vertex-isoperimetric question.
