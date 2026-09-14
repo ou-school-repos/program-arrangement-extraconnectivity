@@ -16,22 +16,25 @@
 #include <string>
 #include <vector>
 
-#include "ortools/sat/cp_model.h"
 #include "ortools/sat/cp_model_solver.h"
+#include "ortools/sat/cp_model.h"
+#include "ortools/sat/cp_model.pb.h"
+#include "ortools/sat/sat_parameters.pb.h"
 
 namespace {
 
-using operations_research::Model;
 using operations_research::sat::BoolVar;
 using operations_research::sat::CpModelBuilder;
 using operations_research::sat::CpSolverResponse;
 using operations_research::sat::CpSolverStatus;
 using operations_research::sat::LinearExpr;
+using operations_research::sat::Model;
 using operations_research::sat::NewSatParameters;
 using operations_research::sat::Not;
 using operations_research::sat::SatParameters;
 using operations_research::sat::SolutionIntegerValue;
 using operations_research::sat::SolveCpModel;
+using operations_research::sat::CpSolverStatus_Name;
 
 std::int64_t e_seq(int size) {
     std::int64_t total = 0;
@@ -84,7 +87,7 @@ BoolVar iff_any(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
         return result;
     }
     model.AddBoolOr(literals).OnlyEnforceIf(result);
-    std::vector<operations_research::sat::Literal> negatives;
+    std::vector<BoolVar> negatives;
     negatives.reserve(literals.size());
     for (BoolVar literal : literals)
         negatives.push_back(Not(literal));
@@ -93,13 +96,13 @@ BoolVar iff_any(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
 }
 
 BoolVar iff_all(CpModelBuilder &model,
-                const std::vector<operations_research::sat::Literal> &literals) {
+                const std::vector<BoolVar> &literals) {
     BoolVar result = model.NewBoolVar();
     model.AddBoolAnd(literals).OnlyEnforceIf(result);
-    std::vector<operations_research::sat::Literal> negated;
+    std::vector<BoolVar> negated;
     negated.reserve(literals.size());
     for (const auto literal : literals)
-        negated.push_back(literal.Negated());
+        negated.push_back(literal.Not());
     model.AddBoolOr(negated).OnlyEnforceIf(Not(result));
     return result;
 }
@@ -151,7 +154,7 @@ int main(int argc, char **argv) {
     for (int id = 0; id < count; ++id) {
         in_a[id] = cp.NewBoolVar();
         in_b[id] = cp.NewBoolVar();
-        cp.AddAtMostOne(in_a[id], in_b[id]);
+        cp.AddAtMostOne({in_a[id], in_b[id]});
         sum_a += in_a[id];
         sum_b += in_b[id];
     }
