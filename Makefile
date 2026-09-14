@@ -9,6 +9,10 @@ CXX      = g++
 CXXFLAGS = -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -fopenmp
 LDFLAGS  =
 
+# Machine-local configuration (such as an /opt OR-Tools installation) belongs
+# in the ignored .env file and overrides defaults below.
+-include .env
+
 SRC_OPT   = src/arrangement.cpp
 BIN_OPT   = arrangement
 R         ?= 8
