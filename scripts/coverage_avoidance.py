@@ -170,7 +170,7 @@ def analyze(A, S, c=0):
 
 
 def corpus():
-    """Shared corpus: exhaustive A(4,3) R<=3, random sets, structured sets."""
+    """Shared corpus: exhaustive, random, structured, Swiss, crumbs."""
     random.seed(7)
     A43, A53, A63 = Arr(4, 3), Arr(5, 3), Arr(6, 3)
     out = []
@@ -219,6 +219,73 @@ def corpus():
                     S.append(tuple([cands[j % len(cands)]] + list(x)))
             if len(S) >= 3:
                 out.append((f"rr-{A.n}-{t}", A, tuple(S)))
+    # Swiss cheese: dense BFS-ball base, 2-3 slices with 1-3 holes each.
+    for A in (A53, A63):
+        for nb in (10, 16, 22, 30):
+            for t in range(25):
+                start = random.choice(A.V)[1:]
+                order = [start]
+                seen = {start}
+                queue = [start]
+                while queue:
+                    x = queue.pop(0)
+                    for y in nbrs(x, A.n):
+                        if len(set(y)) == len(y) and y not in seen:
+                            seen.add(y)
+                            queue.append(y)
+                            order.append(y)
+                ball = order[: min(nb, len(order))]
+                compat = {i: [x for x in ball if i not in set(x)] for i in range(A.n)}
+                cands = [i for i in range(A.n) if len(compat[i]) >= 5]
+                if len(cands) < 2:
+                    continue
+                ns = min(len(cands), random.choice([2, 3]))
+                S = []
+                for i in random.sample(cands, ns):
+                    nh = random.choice([1, 2, 3])
+                    holes = random.sample(compat[i], min(nh, len(compat[i]) - 1))
+                    for x in compat[i]:
+                        if x not in holes:
+                            S.append((i,) + x)
+                if len(S) >= 6:
+                    tag = f"swiss-{A.n}-{len(ball)}-{t}"
+                    out.append((tag, A, tuple(S)))
+    # Core + crumbs: dominant slice with 1-2 holes, tiny crumb slices
+    # biased onto the hole roots to force support variation.
+    for A in (A53, A63):
+        for nb in (16, 24, 32):
+            for t in range(25):
+                start = random.choice(A.V)[1:]
+                order = [start]
+                seen = {start}
+                queue = [start]
+                while queue:
+                    x = queue.pop(0)
+                    for y in nbrs(x, A.n):
+                        if len(set(y)) == len(y) and y not in seen:
+                            seen.add(y)
+                            queue.append(y)
+                            order.append(y)
+                ball = order[: min(nb, len(order))]
+                compat = {i: [x for x in ball if i not in set(x)] for i in range(A.n)}
+                sizes = [len(compat[i]) for i in range(A.n)]
+                core = sizes.index(max(sizes))
+                if len(compat[core]) < 8:
+                    continue
+                holes = random.sample(compat[core], random.choice([1, 2]))
+                S = [(core,) + x for x in compat[core] if x not in holes]
+                others = [i for i in range(A.n) if i != core]
+                ns_c = random.choice([1, 2, 3])
+                for i in random.sample(others, min(len(others), ns_c)):
+                    nk = random.choice([1, 2])
+                    at_hole = [x for x in holes if x in compat[i]]
+                    rest = [x for x in compat[i] if x not in holes]
+                    random.shuffle(rest)
+                    for x in (at_hole + rest)[:nk]:
+                        S.append((i,) + x)
+                if len(S) >= 8:
+                    tag = f"crumb-{A.n}-{len(ball)}-{t}"
+                    out.append((tag, A, tuple(S)))
     return out
 
 
