@@ -169,23 +169,20 @@ $a,b,c\in\{0,1\}$ record whether that vertex has a neighbor in the named
 set. Every contribution is nonnegative.
 \end{proof}
 
-\paragraph{Coordinate-local incidence route (unverified dictionary).}
-Fix a coordinate $c$ and project the symbol slices $S_i$ to local sets
-$Q_i\subseteq V(A(n-1,k-1))$.  For $x\in\pi_c(S)$ with $i\notin x$, let
-$x^{(i)}$ be the global vertex obtained by reinserting $i$ at coordinate $c$.
-The sweep argument must use an explicit incidence set rather than identify a
-global boundary vertex with a local-boundary vertex implicitly; one natural
-candidate is
-\[
- \mathcal I_c=\{(i,x):x\in\pi_c(S),\ i\notin x,\
- x\in\partial_{\mathrm{loc}}Q_i\}.
-\]
-The proposed relation between $X(S)-\sum_iX(Q_i)$ and
-$|\mathcal I_c|$ has not yet been verified with consistent local/global
-boundary conventions, and is not used as a lemma here.  Establishing the
-appropriate incidence identity, followed by a coverage-avoidance inequality,
-remains open.  The finite CP-SAT searches reported in
-Appendix~\ref{app:computational} are diagnostic evidence only.
+\begin{lemma}[Coordinate-local collision identity]\label{lem:local-collision}
+Fix a coordinate $c$ and partition $S\subseteq V(A(n,k))$ into symbol slices $S_i$.
+Regard each $S_i$ as its projection $Q_i$ in the local arrangement graph $A(n-1,k-1)$.
+Let $L_c$ be the number of empty transversal slots which lie in a local boundary $\partial_{\mathrm{loc}}Q_i$.
+Then
+\[X(S)-\sum_i X(Q_i)=L_c.\]
+\end{lemma}
+
+\begin{proof}
+The global boundary $\partial S$ decomposes as the disjoint union of the lifted local boundaries and the empty transversal slots. The number of local boundary vertices that are also empty transversal slots is exactly $L_c$. By inclusion--exclusion, $|\partial S|=\sum_i|\partial_{\mathrm{loc}}Q_i| + \text{(empty transversal slots)} - L_c$.
+The occupied-root count splits exactly as $U(S)=|\pi_c(S)|+\sum_i U(Q_i)$. Substituting these along with $|S|=\sum_i|Q_i|$ into the exact boundary formula \eqref{eq:boundary} cancels the local boundary terms entirely, leaving exactly $X(S)-\sum_i X(Q_i)=L_c$.
+\end{proof}
+
+The remaining step to resolve Proposition~\ref{prop:universal} via this route is a coverage-avoidance inequality bounding $L_c$. This inequality remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational} are diagnostic evidence only.
 
 \begin{remark}
 These propositions encode the extremal content of a vertex-isoperimetric

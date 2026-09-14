@@ -2062,7 +2062,7 @@ The immune transversal slots are
 
 ```
 sum_i |P_i \ (Q_i union boundary_local(Q_i))|
- = N_transversal - L_c.
+ = N_transversal - R - L_c.
 ```
 
 Empty slices contribute their whole compatible `P_i` to this quantity.
