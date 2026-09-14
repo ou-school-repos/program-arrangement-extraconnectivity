@@ -182,6 +182,25 @@ The global boundary $\partial S$ decomposes as the union of the lifted local bou
 The occupied-root count splits exactly as $U(S)=|\pi_c(S)|+\sum_i U(Q_i)$. Substituting these along with $|S|=\sum_i|Q_i|$ into the exact boundary formula \eqref{eq:boundary} cancels the local boundary terms entirely, leaving exactly $X(S)-\sum_i X(Q_i)=L_c$.
 \end{proof}
 
+\begin{lemma}[Pool envelope]\label{lem:pool-envelope}
+With the notation of Lemma~\ref{lem:local-collision}, write
+$P_i=\{x\in\pi_c(S):i\notin x\}$ for the compatible projection pool at
+slice $i$, and let $L_{c,i}$ denote the contribution of slice $i$ to
+$L_c$ (the number of empty transversal slots in $P_i\setminus Q_i$ that
+lie in $\partial_{\mathrm{loc}}Q_i$).  Then
+\begin{equation}\label{eq:pool-envelope}
+	L_{c,i}\le|P_i|-R_i.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Every empty transversal slot counted by $L_{c,i}$ is a projection
+$x\in\pi_c(S)$ with $i\notin x$ (hence $x\in P_i$) that is not already
+occupied by the slice $S_i$ (hence $x\notin Q_i$).  Therefore the
+swallowed slots form a subset of $P_i\setminus Q_i$, giving
+$L_{c,i}\le|P_i\setminus Q_i|=|P_i|-|Q_i|=|P_i|-R_i$.
+\end{proof}
+
 The remaining step to resolve Proposition~\ref{prop:universal} via this route is a coverage-avoidance inequality bounding $L_c$. This inequality remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational} are diagnostic evidence only.
 
 \begin{remark}

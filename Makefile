@@ -243,7 +243,7 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
 	find . -not -path '*/.lake/*' -name '*.md' -exec sed -i 's/[[:space:]]*$$//' {} +
-	-prettier -w .
+	-prettier -w $$(git ls-files .clang-format '*.json' '.*.y*ml' '*.md')
 	-black $$(git ls-files '*.py')
 	-isort $$(git ls-files '*.py')
 	-pre-commit run --all-files
