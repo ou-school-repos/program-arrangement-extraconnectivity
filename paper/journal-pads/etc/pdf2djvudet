@@ -40,7 +40,9 @@ for f in "$@"; do
     # We pull the existing metadata, and force our PDF_MOD_DATE into a "source_mod" field.
     # This ensures that if the PDF changes, this line changes.
     TEMP_META_RAW="$TMPDIR_PDD/temp_meta_raw.txt"
-    djvused "$OUT" -e 'select 1; print-meta' > "$TEMP_META_RAW"
+    # Document-level metadata lives in the shared-annotations component.  Read
+    # and write that same component so title/author fields are preserved.
+    djvused "$OUT" -e 'select-shared-ant; print-meta' > "$TEMP_META_RAW"
     # grep -v exits 1 when its output is empty -- i.e. every metadata line
     # matched (and was excluded), or there was no metadata at all -- which
     # is an expected outcome here, not a failure; any other nonzero status
@@ -55,7 +57,7 @@ for f in "$@"; do
     fi
     printf 'source_mod\t"%s"\n' "$PDF_MOD_DATE" >> "$TEMP_META"
 
-    djvused "$OUT" -e "select 1; set-meta \"$TEMP_META\"" -s
+    djvused "$OUT" -e "select-shared-ant; set-meta \"$TEMP_META\"" -s
 
     # 5. SYNC FILESYSTEM MODIFIED DATE
     # This makes the .djvu match the .pdf on the disk level

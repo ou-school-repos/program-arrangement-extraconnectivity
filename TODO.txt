@@ -26,9 +26,12 @@ Paper-wise — still open:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The remaining live capstone hypothesis tracked in docs/lean-proof-status.md is
-UniversalLowerBound, the Lean-side stand-in for prop:universal in the paper.
-HBCrossCollisions is supplied internally by CrossTop's direct proof.
+The live capstone hypotheses tracked in docs/lean-proof-status.md are
+UniversalLowerBound, the Lean-side stand-in for prop:universal in the paper,
+and HBCrossCollisions.  CrossTop contains a direct candidate proof for the
+latter, but it remains an explicit capstone parameter until its supporting
+interface and unstable-scaffold work is reconciled (see
+docs/collision-axiom-roadmap.md).
 
 Note also CollisionAdjustedBound is refuted and superseded, while
 sub_optimal_penalty is vacuously sound but depends on that false hypothesis and

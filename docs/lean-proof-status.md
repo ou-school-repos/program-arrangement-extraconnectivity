@@ -35,9 +35,11 @@ declarations.
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`                   | PROVEN     |
 | Lower Bound              | `UniversalLowerBound` (universal bound)                              | HYPOTHESIS |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN     |
-| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)                | PROVEN\*   |
+| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)                | CONDITIONAL\* |
 
-\*Conditional only on `UniversalLowerBound` (see below).
+\*Conditional on `UniversalLowerBound` and `HBCrossCollisions` until the
+direct collision proof and remaining supporting scaffold are reconciled and
+wired into the public capstone (see below).
 Harper's Theorem is proven but **not in the dependency chain** of the
 capstone theorem. The defect-based proof bypasses it entirely via algebraic
 subadditivity of E_seq.
@@ -56,7 +58,7 @@ arrangement_extraconnectivity_minimum
   │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
   │    └─ hamming_ball_eval           (exact boundary evaluation)
   │         ├─ hb_total_coord_edges   (from total_coord_edges_eq)
-  │         └─ hb_cross_collisions_closed
+  │         └─ HBCrossCollisions [HYPOTHESIS]
   └─ UniversalLowerBound [HYPOTHESIS] (universal lower bound)
 ```
 
@@ -76,15 +78,14 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
   exhaustively for $R \le 10$ using `arrangement`. The configured predictor
   ceiling is 260, but the complete sweep through that ceiling is still pending.
 
-### 2. Hamming-ball collision evaluation
+### 2. Hamming-ball collision evaluation (`HBCrossCollisions`)
 
-`CrossTop.lean` proves `hb_cross_collisions_closed` directly for every
-nonempty Hamming ball. Its bridge lemmas identify boundary multiplicities with
-hypercube degrees, and the final arithmetic step is non-recursive. The public
-capstone handles the empty ball separately and uses this theorem for `R ≥ 1`.
-
-The earlier binary-reflection driver is retained under `unstable/` as an
-archival research route; it is not on the public proof path.
+`CrossTop.lean` contains a direct candidate theorem
+`hb_cross_collisions_closed` for nonempty Hamming balls.  The public capstone
+does not yet import and consume that theorem; it continues to require
+`HBCrossCollisions` explicitly.  The direct route can be promoted only after
+the remaining `CrossRecurrence` interface and unstable-scaffold obligations
+are reconciled, at which point the hypothesis parameter should be removed.
 
 ### Superseded: `CollisionAdjustedBound` / `sub_optimal_penalty`
 
@@ -128,9 +129,10 @@ The following high-level results are **mechanically proven inside Lean**;
 the public capstone remains conditional only on the universal lower bound:
 
 - **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven
-  constructor; the public route supplies its Hamming-ball collision evaluation
-  internally.
-- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines the direct Hamming-ball evaluation with `UniversalLowerBound` to squeeze the exact minimum cut.
+  constructor, conditional on its explicit `HBCrossCollisions` argument.
+- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`):
+  Combines `UniversalLowerBound` and the explicit Hamming-ball collision
+  interface to squeeze the exact minimum cut.
 
 ## Novel Contributions
 

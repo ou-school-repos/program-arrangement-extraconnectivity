@@ -16,11 +16,15 @@ require.
 
 ## Current Status
 
-- **`HBCrossCollisions` is proven on the direct path.** `CrossTop.lean`
-  proves `hb_cross_collisions_closed` for every `R ≥ 1`, and the public
-  capstone handles `R = 0` with the empty set. The canonical capstone API no
-  longer accepts a collision-evaluation parameter.
-- **Why the driver route is superseded, not just alternative.** The strong
+- **`HBCrossCollisions` is not yet on the stable capstone path.**
+  `CrossTop.lean` contains a direct proof candidate
+  (`hb_cross_collisions_closed`) for every `R ≥ 1`, but the public capstone
+  still accepts `HBCrossCollisions` as an explicit hypothesis.  It must remain
+  an interface until the supporting proof work is reconciled, including the
+  `CrossRecurrence` route and the remaining unstable-scaffold obligations.
+  Only then should the direct route be promoted, its hypothesis removed from
+  `arrangement_extraconnectivity_minimum`, and the status changed to proven.
+- **Why the driver route remains research scaffolding.** The strong
   induction driver `hb_cross_collisions_of_recurrence` in
   `CrossCollisionsResearch.lean` is complete and reduces `HBCrossCollisions` to
   three interface lemmas — `CrossBaseOne` and `CrossDimStable` are proven, but
@@ -29,15 +33,15 @@ require.
   `HBCrossCollisions(m)` itself (the RHS of `CrossRecurrence` is a set
   cardinality whose evaluation _is_ the theorem at the smaller size `m`), so
   the driver would be handing itself its own conclusion as a hypothesis with
-  nothing new supplied. `CrossTop` sidesteps this: it is a direct,
+  nothing new supplied. `CrossTop` proposes a direct,
   non-recursive closed-form identity with its own combinatorial proof (a
   vertex is double-counted in the top-heavy ball's boundary iff it is a cube
   vertex; every top-strip cube vertex has multiplicity ≥ 1 via its "bottom
   partner"; summing the excess multiplicity reduces to a plain edge-boundary
   count in one lower dimension). `CrossRecurrence` and its driver have been
   archived to `docs/archive/CrossRecurrenceDriver.lean` for reference but
-  should be treated as deprecated, not as the live path — do not invest
-  further proof effort there.
+  remains a required reconciliation point before the direct route can be
+  promoted into the stable capstone.
 - **Formula values verified** via `predict --verify R` (predict.cpp) for
   `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
   `arrangement` nauty-based search covers
@@ -157,12 +161,16 @@ route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 ### What remains
 
-The direct route is complete. The remaining capstone dependency is
-`UniversalLowerBound`.
+The direct route must be reconciled with the remaining recurrence and unstable
+scaffold obligations, then wired into the public capstone to discharge the
+`HBCrossCollisions` parameter.  `UniversalLowerBound` remains the separate
+universal-boundary obligation.
 
 ## Total Remaining Estimated Effort
 
-**`HBCrossCollisions`**: proven by the direct `CrossTop.lean` route.
+**`HBCrossCollisions`**: still an explicit capstone hypothesis.  The direct
+`CrossTop.lean` route and the remaining recurrence/scaffold obligations must
+be reconciled before it can be discharged and removed from the capstone API.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares,
