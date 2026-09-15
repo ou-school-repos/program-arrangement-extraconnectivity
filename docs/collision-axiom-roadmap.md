@@ -58,14 +58,19 @@ require.
   Exhaustive C++ testing now covers 24 parameter rows (up to 190M subsets)
   with no counterexample. The standard guarded symbol compression is known to
   increase boundary on a two-vertex `A(4,2)` example, so it cannot establish
-  this candidate; see `docs/universal-lower-bound-work.md`.  Three further
+  this candidate; see `docs/universal-lower-bound-work.md`.  Four further
   candidate proof mechanisms have been closed by finite counterexamples:
   edge-gradient charging overcounts collision mass, single-vertex
-  hole-filling does not preserve its slack, and the tested guarded
+  hole-filling does not preserve its slack, the tested guarded
   Pinto-style dual-compression pair has no admissible non-worsening branch on
-  finite witnesses.  These closures do not alter any Lean interface; a global
-  fiber-multiset Lyapunov proof or a fundamentally different compression
-  operator remains to be formalized.
+  finite witnesses, and the additive convex fiber-size Lyapunov ansatz
+  Ψ_f(V') = Σ_s N_s(V') w_s is refuted by a normalized LP diagnostic
+  (`scripts/lyapunov_profile_check.py`): the embedded-cube equalities
+  alone are algebraically inconsistent for A(5,3)/A(6,3), and A(4,3)
+  equality weights violate the corpus lower bound.  These closures do not
+  alter any Lean interface; a non-additive Lyapunov extension (R-dependent
+  weights, coordinate-coupled terms, or multi-root intersection terms) or
+  a fundamentally different compression operator remains to be formalized.
 
 ## Immediate Lean Work Queue
 

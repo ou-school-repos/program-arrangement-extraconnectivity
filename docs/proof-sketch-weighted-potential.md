@@ -348,7 +348,7 @@ fully proved special case (ΔX=0 at adjacency) and one still-conjectural
 general trade-off, but closing the induction for all R, s still requires
 either proving that trade-off or finding a counterexample to it.
 
-### Strategy 2 sketch: Global Lyapunov function on fiber multisets
+### Strategy 2 sketch: Global Lyapunov function on fiber multisets (refuted by LP)
 
 1. **State space.** Let 𝓕(V') be the multiset of nonzero fiber sizes
    across all k coordinates: 𝓕(V') = ⋃ₚ {|F\_{p,r}| : r ∈ U_p(V')}.
@@ -373,9 +373,25 @@ either proving that trade-off or finding a counterexample to it.
    loss summed over q ≠ p, for every possible compression move. Neither
    (a) nor (b) has been attempted formally.
 
-This approach's main appeal is a single global argument with no per-layer
-casework; its main open question is whether such an f and such a
-domination bound actually exist — nothing here rules out that they don't.
+**LP refutation (2026-09-15).** The additive convex potential
+Ψ_f(V') = Σ_s N_s(V') w_s, where N_s counts coordinate roots with
+exactly s members, was tested via a normalized feasibility LP
+(`scripts/lyapunov_profile_check.py`). Constraints: (i) Ψ(H_R) =
+C(R)+mE(R) for every embedded Hamming cube that fits, (ii)
+Φ(V') ≤ Ψ(V') ≤ C(R)+mE(R) on the full adversarial corpus, (iii)
+discrete convexity of w. Results:
+
+- A(5,3) and A(6,3): the Hamming-ball equalities alone are
+  algebraically inconsistent — R=1 forces w_1=0, R=2 forces w_2=3 (or
+  4), but R=3 then requires 2w_2 = 7 (or 9), which contradicts.
+- A(4,3): equalities admit (w_1,w_2) = (0,2), but the corpus set
+  {012, 023} gives Φ=1, Ψ=0, violating the lower cap.
+
+No convex potential of this additive fiber-size form can simultaneously
+match the Hamming-ball target and sandwich Φ on even these finite cases.
+The surviving Strategy 2 space requires a non-additive feature:
+R-dependent weights, coordinate-coupled terms, or explicit multi-root
+intersection terms.
 
 ### Strategy 4: Tested guarded dual root-compression candidate (refuted)
 
@@ -698,11 +714,17 @@ better, as R grows relative to the graph. See
 full diagnosis (two obstructions: injectivity blockage, and an observed
 1-for-1 defect/collision exchange that a fixed (m+1):1-weighted
 potential never rewards). Strategy 2 (Lyapunov over fiber-size
-multisets, Ψ) remains a from-scratch invariant search with no candidate
-potential yet shown to work. As of this writing, none of the four
-sketches has a confirmed, closed path to Proposition 5.3; the
-exhaustive computational evidence (30+ rows, no counterexample) remains
-the _only_ supporting evidence for the proposition.
+multisets, Ψ) has been tested via a normalized LP diagnostic and the
+additive convex ansatz is refuted: the embedded-cube equalities are
+algebraically inconsistent for A(5,3)/A(6,3), and A(4,3) equality
+weights violate the corpus lower bound (see
+`scripts/lyapunov_profile_check.py`). A non-additive extension
+(R-dependent weights, coordinate-coupled terms, or multi-root
+intersection terms) remains open but has no candidate. As of this
+writing, none of the four sketches has a confirmed, closed path to
+Proposition 5.3; the exhaustive computational evidence (30+ rows, no
+counterexample) remains the _only_ supporting evidence for the
+proposition.
 
 ### Entropy/Shearer candidate: tested and killed (2026-09-13)
 
@@ -2239,10 +2261,11 @@ hole-filling induction attempted after that is also refuted (see above).
 The tested dual-compression candidate (Strategy 4) is refuted for its one
 guarded operator pair -- see
 `docs/archive/strategy4-dual-compression-averaging-abandoned.md`. The
-Lyapunov function over fiber-size multisets (Strategy 2) remains at the
-whiteboard-sketch stage only, with no candidate potential yet checked. A
-fundamentally different compression operator that does not merely alter the
-selection rule for this guarded pair also remains open.
+Lyapunov function over fiber-size multisets (Strategy 2) has been tested
+via a normalized LP diagnostic: the additive convex ansatz is refuted
+(added to the "tested and killed" record below). A fundamentally
+different compression operator that does not merely alter the selection
+rule for this guarded pair also remains open.
 
 The exhaustive computational evidence (3,796 sets as of 2026-09-14,
 across exhaustive, random, structured, Swiss, and crumbs corpora)
