@@ -410,4 +410,5 @@ def main():
         show(s, tag, r, rows)
 
 
-main()
+if __name__ == "__main__":
+    main()

@@ -77,11 +77,17 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 - Computationally confirmed via `predict --verify R` through $R \le 160$ and
   exhaustively for $R \le 10$ using `arrangement`. The configured predictor
   ceiling is 260, but the complete sweep through that ceiling is still pending.
-- The recently tested edge-gradient, single-vertex hole-filling, and guarded
-  dual-compression candidates are finite counterexamples to proposed proof
-  mechanisms, not changes to this statement.  Consequently no Lean theorem
-  or axiom is removed or added: `UniversalLowerBound` remains the same
-  explicit hypothesis until a valid global proof is found.
+- The recently tested edge-gradient, single-vertex hole-filling, guarded
+  dual-compression, and additive fiber-size Lyapunov candidates are finite
+  counterexamples to proposed proof mechanisms, not changes to this
+  statement.  Consequently no Lean theorem or axiom is removed or added:
+  `UniversalLowerBound` remains the same explicit hypothesis until a valid
+  global proof is found.  The Strategy 2 LP diagnostic
+  (`scripts/lyapunov_profile_check.py`) refutes the additive convex
+  potential Ψ_f(V') = Σ_r f(|V' ∩ F_r|) even with Hamming-ball
+  normalization: the embedded-cube equalities alone are algebraically
+  inconsistent for A(5,3) and A(6,3), and A(4,3) admits equality weights
+  that violate the corpus lower bound on an explicit witness.
 
 ### 2. Hamming-ball collision evaluation (`HBCrossCollisions`)
 
