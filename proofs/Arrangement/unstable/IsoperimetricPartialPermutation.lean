@@ -7,17 +7,34 @@
   eventually remove the two axioms in ArrangementExtraconnectivity.lean:
     1. external_neighbors_collision_bound
     2. hamming_ball_eval
+  This module defines sequence compression operators for arrangement
+  graph vertices and proves their algebraic properties.  Sections 1-3
+  (shift operator, set compression, injectivity/cardinality preservation)
+  are fully proven with no remaining proof obligations.
 
-  STATUS: SCAFFOLD — core definitions with proof obligations as sorry.
+  **STATUS: PROVEN INCOMPLETE, ABANDONED APPROACH.**  Section 4 contains
+  a worked counterexample showing that geometric compression does NOT
+  decrease the external boundary for arrangement graphs (boundary can
+  increase from 5→7 in A(4,2)).  This makes Sections 5-6 (Colex
+  convergence → Isoperimetric Theorem) impossible via this route.  The
+  file documents why the "Algebraic Defect Squeeze" architecture in
+  ArrangementExtraconnectivity.lean (E_seq subadditivity) is necessary
+  instead.  No sorry terms remain; all existing proofs close.
+
+  The capstone hypothesis interfaces that this module was intended to
+  discharge are now:
+    - `UniversalLowerBound` (universal boundary inequality)
+    - `HBCrossCollisions` (proven unconditionally by CrossTop.lean)
+
   See docs/collision-axiom-roadmap.md for the full formalization roadmap.
 
   ARCHITECTURE:
-  - Section 1: Sequence Shift (local, single-vertex operation)
-  - Section 2: Set-Wise Compression (global, conditional on V')
-  - Section 3: Compression preserves injectivity and cardinality
-  - Section 4: Compression does not increase external boundary
-  - Section 5: Colex ordering for ArrVertex and convergence
-  - Section 6: The Isoperimetric Theorem (replaces both axioms)
+  - Section 1: Sequence Shift (local, single-vertex operation) [PROVEN]
+  - Section 2: Set-Wise Compression (global, conditional on V') [PROVEN]
+  - Section 3: Compression preserves injectivity and cardinality [PROVEN]
+  - Section 4: Counterexample — compression does NOT decrease boundary
+  - Section 5: (never written — blocked by Section 4 counterexample)
+  - Section 6: (never written — blocked by Section 4 counterexample)
 -/
 
 import Arrangement.ArrDefs

@@ -33,8 +33,14 @@ def support_proj {n k : ℕ} (V' : Finset (ArrVertex n k)) : Finset (Finset (Fin
 
 /--
   The support projection is a uniform set family of size `k` (Sized k).
-  TODO(review): this file is only a scaffold; it does not establish the shadow
-  inequality or colex correspondence claimed in the roadmap.
+
+  STATUS: SCAFFOLD ONLY.  This file defines the support projection
+  (`support_proj`) and proves it produces a `k`-uniform family.  It does
+  NOT establish the shadow inequality or colex correspondence needed for
+  the Kruskal-Katona–based approach to `UniversalLowerBound`.  The
+  support-projection route was abandoned after its central transfer
+  inequality was refuted by counterexample (see
+  `docs/archive/collision-axiom-support-projection-abandoned.md`).
 -/
 lemma support_proj_sized {n k : ℕ} (V' : Finset (ArrVertex n k)) :
     Set.Sized k (support_proj V' : Set (Finset (Fin n))) := by
