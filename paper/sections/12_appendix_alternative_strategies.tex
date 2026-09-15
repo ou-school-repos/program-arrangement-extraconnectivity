@@ -498,3 +498,66 @@ $\Delta C+m\Delta E>(m+1)\cdot\mathrm{conc}+L_c$.  The pool envelope is a
 necessary ingredient (bounding collision mass per slice), but closing the
 gap requires a global argument that the overpayment is at least~1 when
 any slice has $L_{c,i}>0$.
+
+\paragraph{Two induction skeletons for the strictness conjecture, both
+falsified.}
+Two further attempts to close the strictness conjecture directly ---
+rather than via edge-gradient charging --- were tested computationally
+against the same adversarial corpus and are recorded here so the next
+attempt does not repeat them.
+
+\emph{Single-vertex hole-filling induction.}
+Walk from an arbitrary $S$ up to a saturated, collision-free state
+($L_c=0$, slack $\ge0$ trivially) one vertex at a time, filling a
+swallowed slot $(i,x)$ at each step.  This proves $S\ge0$ if and only if
+slack is non-increasing along the walk, since only that polarity bounds
+$\mathrm{slack}(S)$ below by $\mathrm{slack}(S_{\mathrm{final}})\ge0$.
+Tested against 7,836 individual hole-fill steps drawn from the full
+3,796-set corpus: the universal form ($\Delta\mathrm{slack}\le0$ at
+every step) fails on 22\% of steps, and the weaker existential form
+(some safe hole at every stage) fails outright on 212 of 2,318 sets with
+$L_c>0$.  The minimal witness is $R=4$ in $A(4,3)$,
+$S=\{(0,1,3),(1,3,2),(2,3,0),(3,0,1)\}$: exactly one swallowed slot, one
+possible move, and that move strictly increases slack.  The mechanism is
+a concentration cliff: filling the hole leaves $|\pi|$ unchanged (a
+genuine invariant, verified with zero violations across all 7,836
+steps) while $R$ increases, so $\mathrm{conc}=R-|\pi|$ jumps from~$0$
+to~$1$ and immediately incurs the full $(m+1)$ penalty.  The local
+geometric refund from destroying one collision ($\alpha=1$) is
+structurally too small to pay a toll of $m+1\ge2$.  Filling a hole can
+also \emph{increase} $L_c$ elsewhere (the destroyed slot's new vertex
+projects its own local boundary, swallowing previously-safe slots
+nearby), so $\alpha$ is not even bounded below by~$0$ in general.
+Single-vertex induction, in either direction, is closed.
+
+\emph{Dual root-compression averaging.}
+Following Pinto's resolution of an analogous single-operator-fails
+obstacle for the Bollob\'as--Leader directed-path conjecture, a pair of
+cardinality-preserving operators $C,D$ keyed to a symbol pair $(a,b)$
+was tested against $\Phi(V')=X(V')+(m+1)D_{\mathrm{defect}}(V')$: $C$
+is guarded compression ($b\to a$, skipped when $a$ is already present);
+$D$ is the same except a full transposition $(a\,b)$ is applied when
+guard-blocked.  On small graphs ($A(4,2)$--$A(6,3)$, $R\le9$, 1,052
+trials) a non-worsening move exists for a single sampled pair 83.5\% of
+the time, rising to 98\% once every valid $(a,b)$ is tried; three
+residual witnesses, all in $A(4,3)$ ($m=n-k=1$), were initially read as
+a degenerate corner worth a base-case exception.  A targeted stress test
+at $m\ge2$ and larger $R$ ($A(5,3)$/$A(6,3)$, $R\in\{15,20,30\}$,
+random and Swiss-cheese configurations, existence checked over every
+valid $(a,b,\mathrm{op})$) refutes that reading: existence fails on 69\%
+of trials, including cases where \emph{no} combination produces a valid
+set at all, because every guarded replacement collapses two vertices
+onto an existing one.  The failure rate worsens, not improves, as $R$
+grows relative to the graph --- the opposite of what an $m=1$ carve-out
+would predict.  Two distinct obstructions recur throughout: injectivity
+blockage (most symbol pairs are invalid at high density) and an exact
+one-for-one defect/collision exchange on valid moves, which a fixed
+$(m+1){:}1$-weighted potential never rewards.  This operator pair is
+closed; a revival would need either a guard condition with a genuine
+fallback when both symbols are saturated, or a potential whose local
+exchange rate matches the one-for-one trade these moves actually
+produce.
+
+Full autopsies, exact witnesses, and reproduction scripts are recorded
+in \texttt{docs/archive/bridge1-hole-filling-induction-abandoned.md} and
+\texttt{docs/archive/strategy4-dual-compression-averaging-abandoned.md}.
