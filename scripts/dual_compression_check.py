@@ -190,10 +190,20 @@ def main():
     exist_fails = [f for f in fails if not f[-1]]
     print(f"non-degenerate trials tested: {tested}")
     print(f"degenerate (all/none contain b) skipped: {degenerate_skipped}")
-    print(f"averaging inequality Phi(V)<=avg(Phi(C),Phi(D)) holds: {avg_holds}/{tested}")
-    print(f"EXISTENCE (max(PhiC,PhiD) >= Phi0) holds: {tested - both_worsen}/{tested}")
-    print(f"both C and D strictly decrease Phi (existence fails): {both_worsen}/{tested}")
-    print(f"averaging failures: {len(fails)}  (of those, existence also fails: {len(exist_fails)})")
+    print(
+        f"averaging inequality Phi(V)<=avg(Phi(C),Phi(D)) holds: {avg_holds}/{tested}"
+    )
+    print(
+        "EXISTENCE (max(PhiC,PhiD) >= Phi0) holds: "
+        f"{tested - both_worsen}/{tested}"
+    )
+    print(
+        f"both C and D strictly decrease Phi (existence fails): {both_worsen}/{tested}"
+    )
+    print(
+        f"averaging failures: {len(fails)} "
+        f"(of those, existence also fails: {len(exist_fails)})"
+    )
     for n, k, R, a, b, V, p0, pc, pd, safe in fails[:10]:
         tag = "EXIST-OK" if safe else "EXIST-FAIL"
         print(
@@ -218,8 +228,13 @@ def main():
         checked += 1
         if best is None or best < p0:
             still_fail += 1
-            print(f"  STILL FAILS over ALL pairs: A({n},{k}) R={R} V'={V} Phi0={p0} best={best}")
-    print(f"checked {checked} single-pair-existence-failures against all symbol pairs")
+            print(
+                f"  STILL FAILS over ALL pairs: A({n},{k}) R={R} V'={V} "
+                f"Phi0={p0} best={best}"
+            )
+    print(
+        f"checked {checked} single-pair-existence-failures against all symbol pairs"
+    )
     print(f"still fail (no (a,b,op) rescues it): {still_fail}/{checked}")
 
 

@@ -70,16 +70,18 @@ corner —
 ### Second result (`m≥2`, larger `R`, density stress test): the `m=1` reading was wrong
 
 `scripts/dual_compression_m_stress.py`: `A(5,3)` (`m=2`) and `A(6,3)`
-(`m=3`) at `R ∈ {15,20,30}`, random + Swiss-cheese (dense ball with
-holes) + deliberately unbalanced constructions, existence checked over
+(`m=3`) at `R ∈ {15,20,30}`, random and Swiss-cheese (dense ball with
+holes) constructions, existence checked over
 *every* valid `(a,b,op)` combination (the full criterion, not a single
 sampled pair).
 
-**186 of 270 trials (69%) fail existence** — far worse than the small-`R`
+**193 of 270 trials (71%) fail existence** — far worse than the small-`R`
 `m=1` sample. Several failures have **`best=None`**: at `R=15` in a
-60-vertex graph, *no* `(a,b,op)` combination produces a valid `R`-element
-set at all, because every guarded replacement collapses two vertices
-onto the same output.
+60-vertex graph, no move remains after the candidate's non-degeneracy and
+validity filters. In the reported examples this arises from guarded
+replacements colliding with existing image vertices. Thus `best=None` means
+``no admissible non-degenerate move for this candidate,'' not an
+unqualified claim that no set-preserving operation of any kind exists.
 
 So the `m=1` framing was an artifact of testing only small, sparse sets.
 Both obstruction mechanisms diagnosed above get *worse*, not better, as

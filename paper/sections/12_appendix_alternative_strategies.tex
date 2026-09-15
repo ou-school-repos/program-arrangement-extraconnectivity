@@ -138,10 +138,11 @@ one of them to be non-worsening. The single guarded-symbol compression
 already refuted on $A(n,k)$ (Section~\ref{sec:nogo}) is one such
 individually-failing operator; whether a dual pair of root-compression
 operators exists on $A(n,k)$, respecting the injectivity constraint, for
-which an analogous averaging bound holds for $X+(m+1)D$, is entirely
-untried. This is flagged only as a structural analogy worth investigating
-for the coordinate-tangling obstacle; no candidate operator pair has been
-proposed.
+which an analogous averaging bound holds for $X+(m+1)D$, remains open. One
+concrete cardinality-preserving guarded pair has now been tested and
+falsified; the finite diagnostic record appears below. Thus this remains a
+structural analogy worth investigating, but only with a fundamentally
+different operator design.
 
 \paragraph{A global Lyapunov function on fiber multisets.}
 This direction proposes a potential $\Psi(V') = \sum_{p=1}^k \sum_r
@@ -169,9 +170,10 @@ per-split recombination bound (an explicit, independently-verified
 counterexample in $A(5,3)$ shows $S$ can exceed the per-split slack by
 $2$, with the global inequality surviving only via slack banked in the
 sub-fibers). Neither has an attempted amortized replacement. The
-dual-compression direction's one tested candidate operator pair failed
-its own averaging inequality and degenerated into a graph automorphism
-on the example checked; no non-degenerate candidate has been proposed.
+dual-compression direction's one tested guarded candidate operator pair
+fails both its averaging inequality and its all-pair existence condition on
+finite witnesses. No fundamentally different non-degenerate candidate has
+been proposed.
 The Lyapunov direction ($\Psi$ over fiber-size multisets, distinct from
 $\Phi$) remains a from-scratch invariant search with no candidate
 potential shown to work. These are research opinions, not mathematical
@@ -528,7 +530,8 @@ structurally too small to pay a toll of $m+1\ge2$.  Filling a hole can
 also \emph{increase} $L_c$ elsewhere (the destroyed slot's new vertex
 projects its own local boundary, swallowing previously-safe slots
 nearby), so $\alpha$ is not even bounded below by~$0$ in general.
-Single-vertex induction, in either direction, is closed.
+This single-vertex hole-fill candidate is closed. A different nonlocal move
+or potential is not ruled out.
 
 \emph{Dual root-compression averaging.}
 Following Pinto's resolution of an analogous single-operator-fails
@@ -539,18 +542,20 @@ is guarded compression ($b\to a$, skipped when $a$ is already present);
 $D$ is the same except a full transposition $(a\,b)$ is applied when
 guard-blocked.  On small graphs ($A(4,2)$--$A(6,3)$, $R\le9$, 1,052
 trials) a non-worsening move exists for a single sampled pair 83.5\% of
-the time, rising to 98\% once every valid $(a,b)$ is tried; three
-residual witnesses, all in $A(4,3)$ ($m=n-k=1$), were initially read as
-a degenerate corner worth a base-case exception.  A targeted stress test
+the time.  Among the 174 sampled-pair failures, retrying every admissible
+$(a,b)$ rescues 171 (a conditional 98\% rescue rate), leaving three
+all-pair residual witnesses in $A(4,3)$ ($m=n-k=1$).  Those residuals
+were initially read as a degenerate corner worth a base-case exception. A targeted stress test
 at $m\ge2$ and larger $R$ ($A(5,3)$/$A(6,3)$, $R\in\{15,20,30\}$,
 random and Swiss-cheese configurations, existence checked over every
-valid $(a,b,\mathrm{op})$) refutes that reading: existence fails on 69\%
-of trials, including cases where \emph{no} combination produces a valid
-set at all, because every guarded replacement collapses two vertices
-onto an existing one.  The failure rate worsens, not improves, as $R$
+admissible $(a,b,\mathrm{op})$) refutes that reading: existence fails on 71\%
+of trials, including cases where the candidate's non-degeneracy and
+validity filters leave no admissible move. In the reported examples,
+guarded replacements collide with existing image vertices. The failure rate
+worsens, not improves, as $R$
 grows relative to the graph --- the opposite of what an $m=1$ carve-out
 would predict.  Two distinct obstructions recur throughout: injectivity
-blockage (most symbol pairs are invalid at high density) and an exact
+blockage (most symbol pairs are invalid at high density) and an observed
 one-for-one defect/collision exchange on valid moves, which a fixed
 $(m+1){:}1$-weighted potential never rewards.  This operator pair is
 closed; a revival would need either a guard condition with a genuine

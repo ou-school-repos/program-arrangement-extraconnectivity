@@ -377,7 +377,7 @@ This approach's main appeal is a single global argument with no per-layer
 casework; its main open question is whether such an f and such a
 domination bound actually exist — nothing here rules out that they don't.
 
-### Strategy 4 sketch: Dual root-compression via averaging (2026-09-12, untried)
+### Strategy 4: Tested guarded dual root-compression candidate (refuted)
 
 Inspired by Pinto's proof of the Bollobás-Leader directed-path conjectures
 (arXiv:1504.07079), which resolves an analogous single-operator-fails
@@ -394,15 +394,10 @@ This is structurally the same shape of obstacle as A(n,k)'s root
 compression: the single guarded-symbol compression already tried and
 refuted (`compressSet`, A(4,2) counterexample raising boundary 5→7) is
 one operator that individually fails, exactly as Pinto's C_i and D_i
-individually fail on some sets in Q_n. **Untried question:** does a pair
-of dual root-compression operators exist on A(n,k) — analogous to C_i/D_i
-but respecting the injectivity constraint — such that neither is
-monotone for X + (m+1)D alone, but an averaging inequality like Pinto's
-forces at least one to be non-worsening? This has not been attempted;
-even finding the right candidate pair of operators (one "concentrate
-toward smaller root" and one "concentrate toward larger root," suitably
-guarded for injectivity) is open, let alone proving an averaging bound
-for them.
+individually fail on some sets in Q_n. The concrete cardinality-preserving
+candidate below was tested. It is refuted as a universal mechanism; this
+does **not** rule out a different dual pair of operators respecting
+injectivity.
 
 This approach's appeal is that it directly targets the coordinate-
 tangling obstacle (Step 5) that stalled the original single-operator
@@ -439,11 +434,9 @@ automorphism π=(1 3) applied to all of V'. Automorphisms trivially
 preserve Φ and boundary for any set, so Φ(D(V'))=Φ(V') here proves
 nothing about whether D does useful compressive work — it only shows D
 degenerated into a no-op symmetry because R=2 and both vertices shared
-the swapped symbol. **This candidate pair has not been meaningfully
-tested.** The next test needs R≥3 with at least one vertex not containing
-b, so D acts as a genuine partial (non-global) relabeling rather than a
-whole-set automorphism, before either accepting or discarding this
-operator pair.
+the swapped symbol. Subsequent non-degenerate tests settle the candidate
+pair: see the empirical closure below and
+`docs/archive/strategy4-dual-compression-averaging-abandoned.md`.
 
 ### Strategy 3's per-step marginal induction is refuted (2026-09-13)
 
@@ -697,7 +690,7 @@ telescopes back to Proposition 5.3 rather than simplifying it. Strategy
 4 (dual-compression) has a tested candidate operator pair, and it is
 refuted: existence of a non-worsening move holds 83.5% of the time on a
 sampled-pair basis (small graphs, R≤9), and even under the best-choice
-criterion (every (a,b,op) combination), existence fails on 69% of
+criterion (every (a,b,op) combination), existence fails on 71% of
 stress trials at m≥2, R=15-30 — the failure rate gets *worse*, not
 better, as R grows relative to the graph. See
 `docs/archive/strategy4-dual-compression-averaging-abandoned.md` for the
@@ -2198,7 +2191,41 @@ computationally against the full 3,796-set corpus
   different times.
 
 Full autopsy in `docs/archive/bridge1-hole-filling-induction-abandoned.md`.
-Single-vertex induction, in either direction, is closed.
+This single-vertex hole-fill candidate is closed; a different nonlocal move
+or potential is not ruled out.
+
+### Dual Root-Compression Candidate: Falsified
+
+The specific cardinality-preserving Pinto-style pair described in Strategy 4
+was tested rather than left as a metaphor. For its guarded replacement
+operator `C` and guard-repair operator `D`, the literal averaging condition
+already fails in 380/1,052 non-degenerate small-cell trials. The weaker
+condition actually needed for an induction -- that *some* admissible choice
+of ordered symbol pair and of `C` or `D` does not decrease
+`Phi = X + (m+1)D` -- also fails.
+
+The small-cell check has two different denominators that must not be
+confused. A randomly selected symbol pair admits a non-decreasing branch in
+878/1,052 trials (83.5%). Among the 174 trials whose originally selected
+pair failed, an exhaustive retry over all admissible symbol pairs rescues
+171, leaving three all-pair witnesses in $A(4,3)$ at $R=7,8$. Their best
+outcome lowers `Phi` by at least one. They exhibit both failure mechanisms:
+
+1. **Injectivity blockage.** Most symbol pairs produce duplicate image
+   vertices and are not admissible moves.
+2. **Defect--collision exchange.** A valid move can trade one unit of defect
+   for one collision. Since defect has coefficient $m+1$ in `Phi`, that
+   exchange lowers `Phi` by at least one.
+
+The apparent small-cell concentration at $m=1$ is not a valid base-case
+carve-out. A larger finite stress test over random and Swiss-cheese sets in
+$A(5,3)$ and $A(6,3)$, for $R\in\{15,20,30\}$, finds 193 failures among 270
+tested sets when every admissible `(a,b,C/D)` choice is considered. In some
+cases the candidate's non-degeneracy and validity filters leave no admissible
+move. This is finite diagnostic evidence, not a theorem about all operator
+pairs, but it refutes this one guarded pair as a universal compression
+mechanism. Full data, witnesses, and the precise scope of the filters are
+recorded in `docs/archive/strategy4-dual-compression-averaging-abandoned.md`.
 
 ## Status
 
@@ -2208,13 +2235,13 @@ replacements attempted since (marginal peeling and coordinate-partition
 induction) are refuted in their naive form — see "Status of all
 sketches" above for the final state of the board. The single-vertex
 hole-filling induction attempted after that is also refuted (see above).
-Dual-compression averaging (Strategy 4) has since been tried and
-refuted for its one tested operator pair — see
+The tested dual-compression candidate (Strategy 4) is refuted for its one
+guarded operator pair -- see
 `docs/archive/strategy4-dual-compression-averaging-abandoned.md`. The
 Lyapunov function over fiber-size multisets (Strategy 2) remains at the
-whiteboard-sketch stage only, with no candidate potential yet checked; a
-fresh dual-compression operator pair (not just a new (a,b) selection
-rule) is also still open.
+whiteboard-sketch stage only, with no candidate potential yet checked. A
+fundamentally different compression operator that does not merely alter the
+selection rule for this guarded pair also remains open.
 
 The exhaustive computational evidence (3,796 sets as of 2026-09-14,
 across exhaustive, random, structured, Swiss, and crumbs corpora)

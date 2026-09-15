@@ -2,8 +2,8 @@
 """Targeted stress test: does the dual-compression existence gap (Strategy 4)
 reappear at m=n-k >= 2 for larger R, or is it confined to m=1?
 
-Tests A(5,3) (m=2) and A(6,3) (m=3) at R in {15, 20, 30}, with random,
-Swiss-cheese (dense ball + holes), and unbalanced/jagged constructions,
+Tests A(5,3) (m=2) and A(6,3) (m=3) at R in {15, 20, 30}, with random and
+Swiss-cheese (dense ball + holes) constructions,
 using the FULL existence criterion (best achievable Phi over every valid
 (a,b,op), not just one random pair) -- the criterion that actually
 matters for the induction.
@@ -14,14 +14,7 @@ Run:  python3 scripts/dual_compression_m_stress.py
 import itertools
 import random
 
-from dual_compression_check import (
-    best_over_all_pairs,
-    boundary_metrics,
-    build_fibers,
-    compress_c,
-    compress_d,
-    phi,
-)
+from dual_compression_check import best_over_all_pairs, build_fibers
 
 
 def neighbors(v, n):
@@ -53,25 +46,6 @@ def swiss_cheese(vertices, adj, n, R, hole_frac, rng):
     return tuple(rng.sample(order, R))
 
 
-def unbalanced(vertices, n, k, R, rng):
-    """One near-singleton coordinate, others clustered -- mimics the m=1
-    witnesses' fiber-shape imbalance."""
-    # cluster on coordinate 0's root, but force coordinate (k-1) roots distinct
-    by_last = {}
-    for v in vertices:
-        by_last.setdefault(v[-1], []).append(v)
-    pools = list(by_last.values())
-    rng.shuffle(pools)
-    out = []
-    for pool in pools:
-        if len(out) >= R:
-            break
-        out.append(rng.choice(pool))
-    if len(out) < R:
-        return None
-    return tuple(sorted(set(out))[:R]) if len(set(out)) >= R else None
-
-
 def main():
     rng = random.Random(23)
     total = 0
@@ -93,11 +67,6 @@ def main():
                     s = swiss_cheese(vertices, adj, n, R, hf, rng)
                     if s:
                         trials.append(s)
-            for _ in range(15):
-                s = unbalanced(vertices, n, k, R, rng)
-                if s:
-                    trials.append(s)
-
             for V in {t for t in trials if len(set(t)) == R}:
                 p0, best = best_over_all_pairs(V, fibers, k, m, n)
                 total += 1

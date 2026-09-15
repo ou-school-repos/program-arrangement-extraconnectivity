@@ -30,7 +30,7 @@ Run:  python3 scripts/hole_filling_check.py
 
 from collections import Counter
 
-from coverage_avoidance import Arr, analyze, corpus
+from coverage_avoidance import analyze, corpus
 
 
 def slack(r):
@@ -74,7 +74,19 @@ def swallowed_slots(A, S, c=0):
     return out
 
 
-def all_steps(total_steps, delta_hist, alpha_hist, beta_ge_0, violations_pi_unchanged, min_delta, min_ctx, tag, A, S, r0):
+def all_steps(
+    total_steps,
+    delta_hist,
+    alpha_hist,
+    beta_ge_0,
+    violations_pi_unchanged,
+    min_delta,
+    min_ctx,
+    tag,
+    A,
+    S,
+    r0,
+):
     """Evaluate every hole-fill step for one set; return per-set best (min) delta."""
     pi0 = r0["pi"]
     holes = swallowed_slots(A, S)
@@ -166,7 +178,9 @@ def main():
     print(f"delta_slack >= 0: {delta_hist[True]}  delta_slack < 0: {delta_hist[False]}")
     print(f"alpha (Lc drop) histogram: {dict(sorted(alpha_hist.items()))}")
     print(f"beta >= 0 in {beta_ge_0}/{total_steps} steps")
-    print(f"|pi| changed on hole-fill (predicted impossible): {violations_pi_unchanged}")
+    print(
+        f"|pi| changed on hole-fill (predicted impossible): {violations_pi_unchanged}"
+    )
     if min_ctx:
         tag, v, alpha, beta, r0, r1 = min_ctx
         print(f"\nworst single step: tag={tag} v={v} alpha={alpha} beta={beta}")
@@ -174,10 +188,12 @@ def main():
         print(f"  after:  R={r1['R']} pi={r1['pi']} Lc={r1['Lc']} slack={slack(r1)}")
         print(f"  delta_slack = {slack(r1) - slack(r0)}")
 
-    print(f"\n--- existence (greedy) check ---")
+    print("\n--- existence (greedy) check ---")
     print(f"sets with Lc>0 and >=1 hole: {sets_with_holes}")
     print(f"sets with >=1 safe hole (best delta_slack <= 0): {sets_with_safe_hole}")
-    print(f"sets with NO safe hole (every hole-fill increases slack): {len(exist_fail)}")
+    print(
+        f"sets with NO safe hole (every hole-fill increases slack): {len(exist_fail)}"
+    )
     for tag, best_delta, r0 in exist_fail[:15]:
         print(
             f"  EXIST-FAIL {tag}: R={r0['R']} pi={r0['pi']} Lc={r0['Lc']} "
