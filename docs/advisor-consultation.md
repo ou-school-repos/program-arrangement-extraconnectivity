@@ -82,17 +82,63 @@ arrangement graph $A(n,k)$:
   the linear subadditivity surplus, even restricted to the actual slice
   pairs the induction needs.
 
+**5. N-ary Collision-Ceiling Lemma ($C_{\text{constant}}$ as Upper Bound on
+Cross-Collisions)**
+
+* **The Approach:** Since `E_seq_list_sum_le` successfully generalized the
+  2-way subadditivity $E(x)+E(y)+\min(x,y) \le E(x+y)$ to $n$-ary partitions
+  and closed the Defect Bound unconditionally, try the same move for
+  $C_{\text{constant}}$: bound $\text{cross\_collisions}(F_s)$ per fiber by
+  $C(c_s) - D(F_s)$, hoping $n$-ary summation over fibers would close the
+  gap between the proven Defect Bound and the still-hypothesis
+  `UniversalLowerBound`.
+* **The Obstruction:** The per-fiber bound fails at every granularity, not
+  just at the top level. Recursively splitting Star Graph subsets at each
+  disagreeing coordinate and re-checking the bound at every fiber, at every
+  depth: in $A(5,2)$ a size-4 hub fiber already violates
+  $X(F) \le C(|F|) - D(F)$ ($X=2 > C-D=1$); in $A(6,3)$ the violation grows
+  with fiber size (size-8 fiber: $X=10$ vs $C-D=7$, slack $-5$; size-10
+  fiber: $X=18$ vs $C-D=10$, slack $-8$). Unlike $E_{\text{seq}}$
+  subadditivity — a structural property of binary addition, proven
+  unconditionally via `E_add_min_le` — $C_{\text{constant}}$ has no
+  analogous subadditivity: the Star Graph's hub-vertex cross-collision
+  accumulation scales faster than $C(R)-D$ at every scale, not just $l=[R]$.
+* **Conclusion:** Any proof that bounds `cross_collisions` through
+  $C_{\text{constant}}$ as an arithmetic ceiling is doomed, whether globally
+  (already refuted by the Star Graph at $R=8$, $n=15$, $k=7$:
+  $X+D=28 > C(8)=12$, per `docs/lean-proof-status.md`'s "Superseded" note)
+  or per-fiber (refuted here at $l \ge 2$). This is structurally stronger
+  than Items 1-4: those killed specific proof strategies (local edits,
+  additive fiber potentials, carry maps, slice merging); this kills an
+  entire *shape* of argument. The open gap in `UniversalLowerBound` is not
+  "find the right arithmetic surplus for `cross_collisions`" — it is that
+  the true invariant bounding `cross_collisions` is not $C_{\text{constant}}$-shaped
+  at all.
+
 ### Next Steps
 
 The exhaustive data proves the inequality is true, but the proof *cannot*
-rely on graph edits, 1D fiber sums, direct carry-mapping, or slice-merge
-induction. The true invariant is hiding in a deeper, non-additive
-structural property of $A(n,k)$ — likely requiring a global, submodular
-analysis of $C(R) + mE(R)$ directly against the global transversal
-structure.
+rely on graph edits, 1D fiber sums, direct carry-mapping, slice-merge
+induction, or any $C_{\text{constant}}$-as-ceiling bound on
+`cross_collisions`, at any granularity. The true invariant is hiding in a
+deeper, non-additive structural property of $A(n,k)$ — likely requiring a
+global, submodular analysis of $C(R) + mE(R)$ directly against the global
+transversal structure, or a route to `cross_collisions` that never passes
+through $C_{\text{constant}}$ as an upper bound.
+
+Note also (confirmed against `docs/lean-proof-status.md`): `UniversalLowerBound`
+is a live *hypothesis interface*, not a proven theorem — Layers 1-3
+(`E_add_min_le`, `E_seq_list_sum_le`, `defect_fiber_bound`,
+`sum_unique_roots_lower_bound`) and Layer 4 (`total_coord_edges_eq`) are all
+proven unconditionally, but they bound the algebraic *defect*
+$D(V') = Rk - \text{sum\_unique\_roots}(V')$ and relate it to
+`total_coord_edges`, not `external_neighbors` directly. The missing link is
+exactly `cross_collisions`, and Item 5 shows the most natural route to it
+(reusing the $E_{\text{seq}}$ list-lemma machinery) is closed.
 
 We propose clearing the whiteboard of local geometric operators and
-refocusing entirely on constructing a non-additive global invariant.
+refocusing entirely on constructing a non-additive global invariant for
+`cross_collisions` that does not route through $C_{\text{constant}}$.
 
 ### Reproducing
 
@@ -102,5 +148,7 @@ python3 docs/archive/lyapunov_profile_check.py         # item 2
 python3 scripts/dual_compression_check.py              # item 1 (compression variant)
 # item 3: carry-mapping decomposition (scratch, not yet committed as a script)
 python3 scripts/cross_collision_bound.py --profile quick   # item 4, unrestricted
-# item 4, restricted to slice pairs: scratch script, not yet committed
+python3 scripts/slice_cross_collision.py               # item 4, restricted to slice pairs
+python3 scripts/carry_decomposition_check.py           # item 3, carry-mass decomposition
+python3 scripts/star_fiber_collision.py                # item 5, n-ary collision ceiling
 ```
