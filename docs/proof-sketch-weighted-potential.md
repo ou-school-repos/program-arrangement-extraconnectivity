@@ -694,8 +694,16 @@ amortized/potential-method repair, and — as noted for Strategy 3 above
 — any such repair that explicitly carries banked surplus across steps
 is provably equivalent in strength to the original global claim, i.e.
 telescopes back to Proposition 5.3 rather than simplifying it. Strategy
-4 (dual-compression) is unexplored beyond one failed, degenerate
-candidate operator pair. Strategy 2 (Lyapunov over fiber-size
+4 (dual-compression) has a tested candidate operator pair, and it is
+refuted: existence of a non-worsening move holds 83.5% of the time on a
+sampled-pair basis (small graphs, R≤9), and even under the best-choice
+criterion (every (a,b,op) combination), existence fails on 69% of
+stress trials at m≥2, R=15-30 — the failure rate gets *worse*, not
+better, as R grows relative to the graph. See
+`docs/archive/strategy4-dual-compression-averaging-abandoned.md` for the
+full diagnosis (two obstructions: injectivity blockage, and an exact
+1-for-1 defect/collision exchange that a fixed (m+1):1-weighted
+potential never rewards). Strategy 2 (Lyapunov over fiber-size
 multisets, Ψ) remains a from-scratch invariant search with no candidate
 potential yet shown to work. As of this writing, none of the four
 sketches has a confirmed, closed path to Proposition 5.3; the
@@ -2200,10 +2208,13 @@ replacements attempted since (marginal peeling and coordinate-partition
 induction) are refuted in their naive form — see "Status of all
 sketches" above for the final state of the board. The single-vertex
 hole-filling induction attempted after that is also refuted (see above).
-The two remaining unexplored directions (dual-compression averaging and
-the Lyapunov function over fiber-size multisets) are recorded at the
-whiteboard-sketch stage only; neither has been carried far enough to
-check, let alone prove.
+Dual-compression averaging (Strategy 4) has since been tried and
+refuted for its one tested operator pair — see
+`docs/archive/strategy4-dual-compression-averaging-abandoned.md`. The
+Lyapunov function over fiber-size multisets (Strategy 2) remains at the
+whiteboard-sketch stage only, with no candidate potential yet checked; a
+fresh dual-compression operator pair (not just a new (a,b) selection
+rule) is also still open.
 
 The exhaustive computational evidence (3,796 sets as of 2026-09-14,
 across exhaustive, random, structured, Swiss, and crumbs corpora)
