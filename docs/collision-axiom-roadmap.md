@@ -64,13 +64,13 @@ require.
   hole-filling does not preserve its slack, the tested guarded
   Pinto-style dual-compression pair has no admissible non-worsening branch on
   finite witnesses, and the additive convex fiber-size Lyapunov ansatz
-  Ψ_f(V') = Σ_s N_s(V') w_s is refuted by a normalized LP diagnostic
-  (`scripts/lyapunov_profile_check.py`): the embedded-cube equalities
-  alone are algebraically inconsistent for A(5,3)/A(6,3), and A(4,3)
-  equality weights violate the corpus lower bound.  These closures do not
-  alter any Lean interface; a non-additive Lyapunov extension (R-dependent
-  weights, coordinate-coupled terms, or multi-root intersection terms) or
-  a fundamentally different compression operator remains to be formalized.
+  Ψ_f(V') = Σ_s N_s(V') w_s is dead — refuted by both LP infeasibility
+  and a closed-form 4-cycle argument (the R=1,2 anchors lock w_1=0,
+  w_2=m+1, giving Ψ=4(m+1) < 8m=Φ for every 4-cycle when m≥2).
+  These closures do not alter any Lean interface; a global structural
+  approach (submodular analysis of C(R)+mE(R) directly, rather than
+  vertex-by-vertex or fiber-by-fiber construction) remains to be
+  formalized.
 
 ## Immediate Lean Work Queue
 

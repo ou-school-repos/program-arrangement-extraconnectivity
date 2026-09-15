@@ -387,11 +387,20 @@ discrete convexity of w. Results:
 - A(4,3): equalities admit (w_1,w_2) = (0,2), but the corpus set
   {012, 023} gives Φ=1, Ψ=0, violating the lower cap.
 
-No convex potential of this additive fiber-size form can simultaneously
-match the Hamming-ball target and sandwich Φ on even these finite cases.
-The surviving Strategy 2 space requires a non-additive feature:
-R-dependent weights, coordinate-coupled terms, or explicit multi-root
-intersection terms.
+**Structural 4-cycle kill (no computation needed).** Even without the
+LP, a purely algebraic argument refutes the entire additive family.
+Anchor the weights: R=1 forces k·w_1 ≤ C(1)+mE(1)=0, so w_1=0.
+R=2 forces w_2 ≥ Φ(R=2)=m+1 and w_2 ≤ C(2)+mE(2)=m+1, so w_2=m+1
+exactly. Now consider a 4-cycle (square of 4 vertices) in A(n,k):
+its profile has N_2=4, all other active fibers size 1. The locked
+potential evaluates Ψ = 4w_2 = 4(m+1). But the adversarial load is
+Φ = X + (m+1)D = 4(m-1) + 4(m+1) = 8m. The sandwich Φ ≤ Ψ requires
+8m ≤ 4m+4, i.e. m ≤ 1. For m ≥ 2 (the only interesting range),
+every 4-cycle is a counterexample. The root cause: a purely additive
+function over individual fibers is blind to cross-fiber collisions —
+two fibers of size 2 contribute the same w_2 whether they are parallel
+(X=0) or locked in a 4-cycle (X=4m-4). The potential must know about
+fiber intersections to pay for X.
 
 ### Strategy 4: Tested guarded dual root-compression candidate (refuted)
 
@@ -714,13 +723,12 @@ better, as R grows relative to the graph. See
 full diagnosis (two obstructions: injectivity blockage, and an observed
 1-for-1 defect/collision exchange that a fixed (m+1):1-weighted
 potential never rewards). Strategy 2 (Lyapunov over fiber-size
-multisets, Ψ) has been tested via a normalized LP diagnostic and the
-additive convex ansatz is refuted: the embedded-cube equalities are
-algebraically inconsistent for A(5,3)/A(6,3), and A(4,3) equality
-weights violate the corpus lower bound (see
-`scripts/lyapunov_profile_check.py`). A non-additive extension
-(R-dependent weights, coordinate-coupled terms, or multi-root
-intersection terms) remains open but has no candidate. As of this
+multisets, Ψ) is dead: the additive convex ansatz is refuted both by
+LP infeasibility on the normalized corpus and by a purely algebraic
+4-cycle argument — the locked weights w_1=0, w_2=m+1 from R=1,2
+anchors leave Ψ = 4(m+1) < 8m = Φ for every 4-cycle when m ≥ 2.
+The root cause is that a sum of independent fiber potentials is blind
+to cross-fiber collisions (see full autopsy above). As of this
 writing, none of the four sketches has a confirmed, closed path to
 Proposition 5.3; the exhaustive computational evidence (30+ rows, no
 counterexample) remains the _only_ supporting evidence for the
@@ -2261,11 +2269,12 @@ hole-filling induction attempted after that is also refuted (see above).
 The tested dual-compression candidate (Strategy 4) is refuted for its one
 guarded operator pair -- see
 `docs/archive/strategy4-dual-compression-averaging-abandoned.md`. The
-Lyapunov function over fiber-size multisets (Strategy 2) has been tested
-via a normalized LP diagnostic: the additive convex ansatz is refuted
-(added to the "tested and killed" record below). A fundamentally
-different compression operator that does not merely alter the selection
-rule for this guarded pair also remains open.
+Lyapunov function over fiber-size multisets (Strategy 2) is dead: the
+additive convex ansatz is refuted by both LP infeasibility and a
+closed-form 4-cycle argument showing the locked potential is
+structurally blind to cross-fiber collisions (see full autopsy above).
+A fundamentally different compression operator that does not merely
+alter the selection rule for this guarded pair also remains open.
 
 The exhaustive computational evidence (3,796 sets as of 2026-09-14,
 across exhaustive, random, structured, Swiss, and crumbs corpora)
