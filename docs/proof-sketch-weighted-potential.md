@@ -2169,15 +2169,39 @@ ingredient: it bounds how much collision mass the adversary can generate
 per slice, but closing the gap requires a global argument that the
 overpayment is at least 1 when any slice has $L_{c,i} > 0$.
 
+### Single-Vertex Hole-Filling Induction: Falsified
+
+A third induction was proposed for the strictness conjecture: walk from
+`S` up to a saturated, collision-free state one vertex at a time by
+filling swallowed slots, and show slack is non-increasing along the walk
+(the only polarity that would actually bound `Slack(S)` below). Tested
+computationally against the full 3,796-set corpus
+(`scripts/hole_filling_check.py`, 7,836 individual hole-fill steps):
+
+- Universal ("every fill is safe") fails on 22% of steps, worst single
+  step `ΔSlack = +6`.
+- The assumed per-hole geometric refund `α ≥ 1` is false — filling one
+  hole can *create* new swallowed slots elsewhere (`α` as low as `-2`).
+- Existential ("some fill is safe") also fails: **212 of 2,318** sets
+  with `L_c > 0` have *no* safe hole at all. Minimal witness: `A4r-R4-2`
+  (`R=4` in `A(4,3)`), one hole, one possible move, and that move
+  strictly increases slack — a binary-digit phase misalignment between
+  the global `R` and the local `R_i` crossing power-of-two boundaries at
+  different times.
+
+Full autopsy in `docs/archive/bridge1-hole-filling-induction-abandoned.md`.
+Single-vertex induction, in either direction, is closed.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is
 stalled on the coordinate-tangling obstacle. Both induction-based
 replacements attempted since (marginal peeling and coordinate-partition
 induction) are refuted in their naive form — see "Status of all
-sketches" above for the final state of the board. The two remaining
-unexplored directions (dual-compression averaging and the Lyapunov
-function over fiber-size multisets) are recorded at the
+sketches" above for the final state of the board. The single-vertex
+hole-filling induction attempted after that is also refuted (see above).
+The two remaining unexplored directions (dual-compression averaging and
+the Lyapunov function over fiber-size multisets) are recorded at the
 whiteboard-sketch stage only; neither has been carried far enough to
 check, let alone prove.
 
