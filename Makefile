@@ -48,6 +48,7 @@ SRC_SINGLE = src/search_single.cpp
 BIN_SINGLE = search_single
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
+ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
 
 SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK) $(SRC_UNIQUENESS) $(SRC_SWEEP_DEFICIT)
 
@@ -153,17 +154,17 @@ $(BIN_SWEEP_DEFICIT): $(SRC_SWEEP_DEFICIT)	##H @Dev Build the multi-cell worst-m
 
 $(BIN_GHOSTS): $(SRC_GHOSTS)	##H @Dev Build the optional OR-Tools CP-SAT ghost maximizer
 	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_CFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)
 
 $(BIN_TRIPLES): $(SRC_TRIPLES)	##H @Dev Build the optional OR-Tools CP-SAT tripartite interface adversary
 	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_CFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)
 
 $(BIN_SINGLE): $(SRC_SINGLE)	##H @Dev Build the optional OR-Tools CP-SAT one-fiber defect/collision adversary
 	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_CFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -375,7 +376,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
