@@ -16,6 +16,8 @@ disable = [
     "too-many-locals",
     "too-many-statements",
     "too-many-nested-blocks",
+    "too-many-arguments",
+    "too-many-positional-arguments",
     "invalid-name",
 ]
 # `external_bench.py` imports its sibling `compare_bench` as a bare module,

@@ -30,10 +30,12 @@ from itertools import combinations
 
 
 def e_seq(size: int) -> int:
+    """A000788: sum of popcount(j) for j in range(size)."""
     return sum(value.bit_count() for value in range(size))
 
 
 def c_constant(size: int) -> int:
+    """C(R) = (R-1) + sum_bit_length(R) - E_seq(R)."""
     if size == 0:
         return 0
     return (
@@ -42,10 +44,12 @@ def c_constant(size: int) -> int:
 
 
 def rhs(n: int, k: int, R: int) -> int:
+    """Minimum-boundary conjecture: (R*k - E(R))*(n-k) - C(R)."""
     return (R * k - e_seq(R)) * (n - k) - c_constant(R)
 
 
 def neighbors(vertex: tuple[int, ...], alphabet_size: int) -> set[tuple[int, ...]]:
+    """All single-substitution neighbors of an injective k-tuple."""
     result: set[tuple[int, ...]] = set()
     used = set(vertex)
     for position in range(len(vertex)):
@@ -55,15 +59,17 @@ def neighbors(vertex: tuple[int, ...], alphabet_size: int) -> set[tuple[int, ...
     return result
 
 
-def build_adjacency(vertices: list[tuple[int, ...]], n: int):
-    adj = {}
+def build_adjacency(vertices: list[tuple[int, ...]], n: int) -> dict:
+    """Map each vertex to its set of single-substitution neighbors."""
+    adj: dict = {}
     for v in vertices:
         adj[v] = neighbors(v, n)
     return adj
 
 
-def build_fibers(vertices: list[tuple[int, ...]], k: int):
-    fibers = [dict() for _ in range(k)]
+def build_fibers(vertices: list[tuple[int, ...]], k: int) -> list[dict]:
+    """Build k coordinate-fiber dicts: fibers[p][root] = {vertices sharing root}."""
+    fibers = [{} for _ in range(k)]
     for v in vertices:
         for p in range(k):
             root = v[:p] + v[p + 1 :]
@@ -158,7 +164,7 @@ def run_check(n: int, k: int, a: int, b: int, adj: dict, verbose: bool = False):
 
 
 def run_full_boundary_check(
-    n: int, k: int, a: int, b: int, adj: dict, fibers: list, verbose: bool = False
+    n: int, k: int, a: int, b: int, adj: dict, verbose: bool = False
 ):
     """Check the correct merge inequality with all three overlap terms.
 
@@ -188,6 +194,7 @@ def run_full_boundary_check(
     arith_budget = m * delta_E - delta_C
 
     worst_slack = None
+    worst_pair: tuple | None = None
     n_pairs = 0
     n_violations = 0
 
@@ -293,6 +300,7 @@ PROFILES = {
 
 
 def main():
+    """Entry point: parse args and run cross-collision bound checks."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -369,9 +377,7 @@ def main():
 
         if args.full:
             print("\n  --- Full boundary merge check ---")
-            result2 = run_full_boundary_check(
-                n, k, a, b, adj, build_fibers(vertices, k), verbose=args.verbose
-            )
+            result2 = run_full_boundary_check(n, k, a, b, adj, verbose=args.verbose)
             status2 = (
                 "PASS"
                 if result2["n_violations"] == 0
