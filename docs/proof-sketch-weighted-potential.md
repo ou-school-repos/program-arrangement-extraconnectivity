@@ -690,11 +690,12 @@ telescopes back to Proposition 5.3 rather than simplifying it. Strategy
 4 (dual-compression) has a tested candidate operator pair, and it is
 refuted: existence of a non-worsening move holds 83.5% of the time on a
 sampled-pair basis (small graphs, R≤9), and even under the best-choice
-criterion (every (a,b,op) combination), existence fails on 71% of
+criterion (every (a,b,op) combination), existence fails on 193/270
+(71.5%) of
 stress trials at m≥2, R=15-30 — the failure rate gets *worse*, not
 better, as R grows relative to the graph. See
 `docs/archive/strategy4-dual-compression-averaging-abandoned.md` for the
-full diagnosis (two obstructions: injectivity blockage, and an exact
+full diagnosis (two obstructions: injectivity blockage, and an observed
 1-for-1 defect/collision exchange that a fixed (m+1):1-weighted
 potential never rewards). Strategy 2 (Lyapunov over fiber-size
 multisets, Ψ) remains a from-scratch invariant search with no candidate

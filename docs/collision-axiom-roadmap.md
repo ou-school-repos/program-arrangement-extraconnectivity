@@ -58,7 +58,14 @@ require.
   Exhaustive C++ testing now covers 24 parameter rows (up to 190M subsets)
   with no counterexample. The standard guarded symbol compression is known to
   increase boundary on a two-vertex `A(4,2)` example, so it cannot establish
-  this candidate; see `docs/universal-lower-bound-work.md`.
+  this candidate; see `docs/universal-lower-bound-work.md`.  Three further
+  candidate proof mechanisms have been closed by finite counterexamples:
+  edge-gradient charging overcounts collision mass, single-vertex
+  hole-filling does not preserve its slack, and the tested guarded
+  Pinto-style dual-compression pair has no admissible non-worsening branch on
+  finite witnesses.  These closures do not alter any Lean interface; a global
+  fiber-multiset Lyapunov proof or a fundamentally different compression
+  operator remains to be formalized.
 
 ## Immediate Lean Work Queue
 

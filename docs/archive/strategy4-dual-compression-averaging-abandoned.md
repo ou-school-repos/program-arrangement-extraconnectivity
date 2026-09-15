@@ -75,7 +75,7 @@ holes) constructions, existence checked over
 *every* valid `(a,b,op)` combination (the full criterion, not a single
 sampled pair).
 
-**193 of 270 trials (71%) fail existence** — far worse than the small-`R`
+**193 of 270 trials (71.5%) fail existence** — far worse than the small-`R`
 `m=1` sample. Several failures have **`best=None`**: at `R=15` in a
 60-vertex graph, no move remains after the candidate's non-degeneracy and
 validity filters. In the reported examples this arises from guarded
