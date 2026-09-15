@@ -87,33 +87,38 @@ Cross-Collisions)**
 
 * **The Approach:** Since `E_seq_list_sum_le` successfully generalized the
   2-way subadditivity $E(x)+E(y)+\min(x,y) \le E(x+y)$ to $n$-ary partitions
-  and closed the Defect Bound unconditionally, try the same move for
-  $C_{\text{constant}}$: bound $\text{cross\_collisions}(F_s)$ per fiber by
-  $C(c_s) - D(F_s)$, hoping $n$-ary summation over fibers would close the
-  gap between the proven Defect Bound and the still-hypothesis
+  (aggregate form: $\sum_s E(c_s) + R - y \le E(R)$) and closed the Defect
+  Bound unconditionally, try the same move for $C_{\text{constant}}$: an
+  aggregate, $y$-coupled bound on `cross_collisions` over a fiber partition,
+  $X(V') \le \sum_s (C(c_s) - D(F_s)) + (R - y)$, hoping this would close
+  the gap between the proven Defect Bound and the still-hypothesis
   `UniversalLowerBound`.
-* **The Obstruction:** The per-fiber bound fails at every granularity, not
-  just at the top level. Recursively splitting Star Graph subsets at each
-  disagreeing coordinate and re-checking the bound at every fiber, at every
-  depth: in $A(5,2)$ a size-4 hub fiber already violates
-  $X(F) \le C(|F|) - D(F)$ ($X=2 > C-D=1$); in $A(6,3)$ the violation grows
-  with fiber size (size-8 fiber: $X=10$ vs $C-D=7$, slack $-5$; size-10
-  fiber: $X=18$ vs $C-D=10$, slack $-8$). Unlike $E_{\text{seq}}$
-  subadditivity — a structural property of binary addition, proven
-  unconditionally via `E_add_min_le` — $C_{\text{constant}}$ has no
-  analogous subadditivity: the Star Graph's hub-vertex cross-collision
-  accumulation scales faster than $C(R)-D$ at every scale, not just $l=[R]$.
-* **Conclusion:** Any proof that bounds `cross_collisions` through
-  $C_{\text{constant}}$ as an arithmetic ceiling is doomed, whether globally
-  (already refuted by the Star Graph at $R=8$, $n=15$, $k=7$:
-  $X+D=28 > C(8)=12$, per `docs/lean-proof-status.md`'s "Superseded" note)
-  or per-fiber (refuted here at $l \ge 2$). This is structurally stronger
-  than Items 1-4: those killed specific proof strategies (local edits,
-  additive fiber potentials, carry maps, slice merging); this kills an
-  entire *shape* of argument. The open gap in `UniversalLowerBound` is not
-  "find the right arithmetic surplus for `cross_collisions`" — it is that
-  the true invariant bounding `cross_collisions` is not $C_{\text{constant}}$-shaped
-  at all.
+* **The Obstruction:** A first pass tested a per-fiber, non-aggregate form
+  with no $y$ term at all ($X(F_s) \le C(c_s) - D(F_s)$ on each fiber in
+  isolation) and found only depth-0 (whole-set) violations — a scoping bug
+  an advisor review caught, since depth-0 just re-derives the already-known
+  global Star Graph refutation on smaller instances and says nothing about
+  genuine fiber splits. Correcting this (tracking depth $\ge 1$ separately,
+  and testing the actual aggregate $y$-coupled analogue on both Star Graphs
+  and denser random subsets) shows the failure is real but narrower than
+  first claimed: it is absent for small/sparse configurations
+  ($A(4,2)$; most $A(5,2)$ random draws) but appears reliably once $m \ge 2$
+  and density rises — e.g. $A(6,3)$, random seed 4: $R=12$, $X=26$ vs.
+  aggregate RHS $=9$; $A(5,3)$, random seed 3: $X=20$ vs. RHS $=9$. The
+  weaker variant without the $-D$ term ($X(V') \le \sum_s C(c_s) + (R-y)$)
+  is more forgiving but fails under the same conditions once density rises
+  further (e.g. $A(6,2)$, all random draws).
+* **Conclusion:** The $E_{\text{seq}}$ list-lemma trick does not transfer to
+  $C_{\text{constant}}$, even in its correct aggregate, $y$-coupled form —
+  it fails specifically once $m \ge 2$ and fiber density is nontrivial,
+  matching the same $m \ge 2$ threshold seen in Item 4. This is structurally
+  stronger than Items 1-4: those killed specific proof strategies (local
+  edits, additive fiber potentials, carry maps, slice merging); this rules
+  out an entire *shape* of argument — bounding `cross_collisions` through
+  $C_{\text{constant}}$ as an arithmetic ceiling, whether globally (already
+  refuted by the Star Graph at $R=8$, $n=15$, $k=7$: $X+D=28 > C(8)=12$, per
+  `docs/lean-proof-status.md`'s "Superseded" note) or via the fiber-partition
+  aggregate that made the $E_{\text{seq}}$ version work.
 
 ### Next Steps
 
