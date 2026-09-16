@@ -986,27 +986,37 @@ int main(int argc, char **argv) {
                               << " (baseline was " << base_value << ")\n";
             } else if (is_feasible(pinned.response)) {
                 std::cout << "    pin G=0: FEASIBLE (movable)\n";
-                // Print positive states from pinned solution.
-                std::vector<int> pin_order(states.size());
-                std::iota(pin_order.begin(), pin_order.end(), 0);
-                std::sort(pin_order.begin(), pin_order.end(),
-                    [&](int l, int r) {
-                        return SolutionIntegerValue(pinned.response, pinned.g[l]) >
-                               SolutionIntegerValue(pinned.response, pinned.g[r]);
-                    });
-                bool any_positive = false;
-                for (const int idx : pin_order) {
-                    const std::int64_t val =
-                        SolutionIntegerValue(pinned.response, pinned.g[idx]);
-                    if (val == 0)
-                        break;
-                    if (!any_positive) {
-                        std::cout << "    alternative assignment:\n";
-                        any_positive = true;
+                // Re-solve with minimize_sum_g to find where credit relocates.
+                SolveResult optimized = build_and_solve(
+                    mode, true, g_cap, workers, time_limit,
+                    choices_by_subset, parent_states, state_index, singleton_state,
+                    pin);
+                if (is_feasible(optimized.response)) {
+                    std::vector<int> opt_order(states.size());
+                    std::iota(opt_order.begin(), opt_order.end(), 0);
+                    std::sort(opt_order.begin(), opt_order.end(),
+                        [&](int l, int r) {
+                            return SolutionIntegerValue(optimized.response, optimized.g[l]) >
+                                   SolutionIntegerValue(optimized.response, optimized.g[r]);
+                        });
+                    const char *label = optimized.response.status() == CpSolverStatus::OPTIMAL
+                        ? "relocated assignment (min sum G="
+                        : "relocated assignment (non-optimal, sum G=";
+                    bool any_positive = false;
+                    for (const int idx : opt_order) {
+                        const std::int64_t val =
+                            SolutionIntegerValue(optimized.response, optimized.g[idx]);
+                        if (val == 0)
+                            break;
+                        if (!any_positive) {
+                            std::cout << "    relocated assignment (min sum G="
+                                      << optimized.response.objective_value() << "):\n";
+                            any_positive = true;
+                        }
+                        std::cout << "      G=" << val << " state=";
+                        print_state(states[idx]);
+                        std::cout << '\n';
                     }
-                    std::cout << "      G=" << val << " state=";
-                    print_state(states[idx]);
-                    std::cout << '\n';
                 }
             } else {
                 std::cout << "    pin G=0: UNKNOWN (solver timed out)\n";
