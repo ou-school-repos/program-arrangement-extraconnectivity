@@ -2292,12 +2292,22 @@ paper), `scripts/sweep_boundary.py`, `scripts/partial_star_sweep.py`, and
   and is an open combinatorial question, not resolved here.
 
 ### Safe Parameter Regime ($m \le 4$)
-While the unrestricted universal lower bound fails at higher scales (crossing
-$R_{\text{fail}}$), the hypercube embedding condition $k \ge \lceil \log_2 R \rceil$
-and $n-k \ge \lceil \log_2 R \rceil$ restricts $R$ such that $R \le 2^m$. For $m \le 4$,
-this entire range lies strictly below the failure threshold. Thus, the paper's main
-examples and applications remain mathematically rigorous without requiring a global fix
-for arbitrarily large $m$.
+
+The unrestricted universal lower bound fails at $R_{\text{fail}} = 1 + j_{\text{fail}} \cdot m$, where
+$j_{\text{fail}}$ drifts as $O(\log m)$. However, the hypercube embedding condition requires
+$R \le 2^m$. For $m \le 4$, we have $2^m < R_{\text{fail}}$:
+
+| $m$ | $2^m$ (embed max) | $R_{\text{fail}}$ | Safe margin | Status |
+|---|---|---|---|---|
+| 2 | 4 | 17 | +13 | Unconditionally Safe ($A(10,8)$ has $m=2$) |
+| 3 | 8 | 19 | +11 | Unconditionally Safe ($A(6,3), A(7,4), A(9,6)$ have $m=3$) |
+| 4 | 16 | 25 | +9 | Unconditionally Safe ($A(8,4)$ has $m=4$) |
+| 5 | 32 | 26 | -6 | Crossover / Open frontier ($R \le 25$ safe) |
+
+Thus for $m \le 4$, ALL embeddable $R$ have the Hamming Ball as the unambiguous
+minimizer. The paper's canonical examples ($A(6,3)$, $A(7,4)$, $A(8,4)$, $A(9,6)$,
+$A(10,8)$) all have $m \le 4$, so the main theorem is unconditionally useful for
+every example in the paper. The general case ($m \ge 5$) remains open.
 
 ## Status
 

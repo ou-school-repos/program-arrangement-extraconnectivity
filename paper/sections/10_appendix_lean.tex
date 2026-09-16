@@ -16,18 +16,9 @@ theorem but are not yet mechanized. The entire graph theory of $A(n,k)$ is
 formalized from first principles; rather than declaring the unproved bounds as
 global axioms, we express the remaining capstone dependency by parameterizing
 the final exact boundary-minimum theorem with the explicit
-\texttt{UniversalLowerBound} hypothesis --- a statement about
-\texttt{external\_neighbors}, i.e. Theorem~\ref{thm:main}(i)--(ii), not about
-the graph's extraconnectivity metric itself (Section~\ref{sec:defect}'s
-remark and Section~\ref{sec:funnel} discuss why that further reduction is
-independently open). The direct proof supplies
-\texttt{HBCrossCollisions}. This cleanly isolates the classical extremal set
-theory from the novel algebraic machinery
-while ensuring that the compiled theorems are completely transparent, verified,
-and free of raw, uninstantiated axiom commands. The active capstone hypothesis
-is \texttt{RestrictedLowerBound}, which gates the boundary inequality under
-the hypercube embedding conditions --- a statement about
-\texttt{external\_neighbors}, i.e. Theorem~\ref{thm:main}(i)--(ii), not about
+\texttt{RestrictedLowerBound} hypothesis --- a statement about
+\texttt{external\_neighbors} under the hypercube embedding conditions, i.e.
+Theorem~\ref{thm:main}(i)--(ii), not about
 the graph's extraconnectivity metric itself (Section~\ref{sec:defect}'s
 remark and Section~\ref{sec:funnel} discuss why that further reduction is
 independently open). The direct proof supplies
