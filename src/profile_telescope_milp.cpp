@@ -3,6 +3,7 @@
 // Usage:
 //   ./profile_telescope_milp n k
 //       [--mode=per-set|relaxed-state|exact-menu]
+//       [--star-only]
 //       [--max-r=R] [--max-sets=N] [--g-cap=N]
 //       [--time-limit=SECONDS] [--workers=N]
 //
@@ -15,6 +16,10 @@
 //                 parent state and identical split menu impose identical
 //                 disjunctive constraints, so retaining one is exactly
 //                 equivalent.  Compression is auditable.
+//
+// --star-only  Use one radius-one Star of size --max-r, together with its
+//              closure under all nontrivial coordinate-fiber splits.  This
+//              is a finite Star-closure probe, not an all-subsets search.
 
 #include <algorithm>
 #include <cstdint>
@@ -254,6 +259,85 @@ std::vector<Subset> fibers_of(const Subset &subset, const std::vector<Vertex> &v
     return result;
 }
 
+// ---- Star Graph -----------------------------------------------------------
+
+Subset star_graph_center(int k) {
+    Subset center(k);
+    for (int i = 0; i < k; ++i)
+        center[i] = i;
+    return center;
+}
+
+Subset star_graph(const std::vector<Vertex> &vertices, int k, int size) {
+    const Vertex center = star_graph_center(k);
+    // Find center index.
+    int center_id = -1;
+    for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+        if (vertices[i] == center) {
+            center_id = i;
+            break;
+        }
+    }
+    if (center_id < 0)
+        return {};
+
+    // Collect neighbors of center (differ at exactly one position).
+    std::vector<int> neighbors;
+    for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+        if (i == center_id)
+            continue;
+        int diff = 0;
+        for (int p = 0; p < k; ++p)
+            diff += (vertices[i][p] != center[p]) ? 1 : 0;
+        if (diff == 1)
+            neighbors.push_back(i);
+    }
+    if (size < 1 || size > 1 + static_cast<int>(neighbors.size()))
+        return {};
+    Subset result;
+    result.push_back(center_id);
+    for (int i = 0; i < size - 1; ++i)
+        result.push_back(neighbors[i]);
+    std::sort(result.begin(), result.end());
+    return result;
+}
+
+std::vector<Subset> star_closure(const std::vector<Vertex> &vertices, int k,
+                                 int max_r) {
+    Subset center = star_graph(vertices, k, max_r);
+    if (center.empty())
+        return {};
+
+    std::set<Subset> seen;
+    std::vector<Subset> pool;
+    std::vector<Subset> queue;
+    auto enqueue = [&](const Subset &s) {
+        if (seen.count(s))
+            return;
+        seen.insert(s);
+        pool.push_back(s);
+        if (static_cast<int>(s.size()) >= 2)
+            queue.push_back(s);
+    };
+    enqueue(center);
+
+    while (!queue.empty()) {
+        Subset current = queue.back();
+        queue.pop_back();
+        for (int position = 0; position < k; ++position) {
+            const std::vector<Subset> fibers =
+                fibers_of(current, vertices, position);
+            if (fibers.size() < 2)
+                continue;
+            for (const Subset &fiber : fibers) {
+                if (static_cast<int>(fiber.size()) <= max_r)
+                    enqueue(fiber);
+            }
+        }
+    }
+    return pool;
+}
+
 // ---- Menu ----------------------------------------------------------------
 
 Menu menu_of(const std::vector<Transition> &choices) {
@@ -451,6 +535,7 @@ int main(int argc, char **argv) {
     std::string mode = "per-set";
     bool print_positive_g = false;
     bool minimize_sum_g = false;
+    bool star_only = false;
     for (int argument = 3; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--mode=", 0) == 0)
@@ -469,6 +554,8 @@ int main(int argc, char **argv) {
             print_positive_g = true;
         else if (option == "--minimize-sum-g")
             minimize_sum_g = true;
+        else if (option == "--star-only")
+            star_only = true;
         else {
             std::cerr << "Unknown option: " << option << '\n';
             return 1;
@@ -486,21 +573,36 @@ int main(int argc, char **argv) {
 
     const std::vector<Vertex> vertices = vertices_of(n, k);
     max_r = std::min(max_r, static_cast<int>(vertices.size()));
-    const std::int64_t estimate = subset_count_bounded(
-        static_cast<int>(vertices.size()), max_r, max_sets);
-    if (estimate > max_sets) {
-        std::cerr << "Refusing to enumerate more than --max-sets=" << max_sets
-                  << " subsets (raise the cap explicitly).\n";
-        return 1;
-    }
 
-    std::cout << "Enumerating " << estimate << " subsets of A(" << n << "," << k
-              << ") through R=" << max_r << "; mode=" << mode
-              << "; workers=" << workers
-              << ", time limit=" << time_limit << " s.\n";
     std::vector<Subset> subsets;
-    subsets.reserve(static_cast<std::size_t>(estimate));
-    enumerate_subsets(static_cast<int>(vertices.size()), max_r, &subsets);
+    if (star_only) {
+        subsets = star_closure(vertices, k, max_r);
+        if (subsets.empty()) {
+            const int capacity = 1 + k * (n - k);
+            std::cerr << "--star-only requires 1 <= --max-r <= " << capacity
+                      << " for A(" << n << "," << k << ").\n";
+            return 1;
+        }
+        std::cout << "Star closure of A(" << n << "," << k << ") through R="
+                  << max_r << ": " << subsets.size() << " sets; mode=" << mode
+                  << "; workers=" << workers
+                  << ", time limit=" << time_limit << " s.\n";
+    } else {
+        const std::int64_t estimate = subset_count_bounded(
+            static_cast<int>(vertices.size()), max_r, max_sets);
+        if (estimate > max_sets) {
+            std::cerr << "Refusing to enumerate more than --max-sets="
+                      << max_sets
+                      << " subsets (raise the cap explicitly).\n";
+            return 1;
+        }
+        std::cout << "Enumerating " << estimate << " subsets of A(" << n << ","
+                  << k << ") through R=" << max_r << "; mode=" << mode
+                  << "; workers=" << workers
+                  << ", time limit=" << time_limit << " s.\n";
+        subsets.reserve(static_cast<std::size_t>(estimate));
+        enumerate_subsets(static_cast<int>(vertices.size()), max_r, &subsets);
+    }
 
     // Register all states.
     std::map<State, int> state_index;
