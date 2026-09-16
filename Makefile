@@ -46,6 +46,8 @@ SRC_TRIPLES = src/search_triples.cpp
 BIN_TRIPLES = search_triples
 SRC_SINGLE = src/search_single.cpp
 BIN_SINGLE = search_single
+SRC_PROFILE_TELESCOPE = src/profile_telescope_milp.cpp
+BIN_PROFILE_TELESCOPE = profile_telescope_milp
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
@@ -163,6 +165,11 @@ $(BIN_TRIPLES): $(SRC_TRIPLES)	##H @Dev Build the optional OR-Tools CP-SAT tripa
 	@$(call print_success,Build complete.)
 
 $(BIN_SINGLE): $(SRC_SINGLE)	##H @Dev Build the optional OR-Tools CP-SAT one-fiber defect/collision adversary
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_PROFILE_TELESCOPE): $(SRC_PROFILE_TELESCOPE)	##H @Dev Build the bounded CP-SAT profile-telescope feasibility probe
 	@$(call print_info,Building $@ with OR-Tools)
 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)

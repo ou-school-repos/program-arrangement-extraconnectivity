@@ -18,8 +18,6 @@ Scope: finite certificates only.  Not a universal theorem.
 import itertools
 from collections import defaultdict
 
-from scipy.optimize import Bounds, LinearConstraint, milp
-
 # ---------------------------------------------------------------------------
 # Arithmetic
 # ---------------------------------------------------------------------------
@@ -473,119 +471,8 @@ def main():
                 f" ({inconsistent}/{total_multi} inconsistent)"
             )
 
-    # ================================================================
-    # Phase 2c: MILP feasibility for profile-only G
-    # ================================================================
-    print("\n" + "=" * 60)
-    print("PHASE 2c: MILP feasibility for profile-only G(state)")
-    print("=" * 60)
-
-    for n, k in [(4, 2), (4, 3), (5, 2)]:
-        m = n - k
-        max_r = {4: 6, 5: 5}.get(n, 4)
-        print(f"\n--- A({n},{k}) m={m} max_r={max_r} ---")
-
-        all_sets = all_subsets(n, k, max_r)
-        pool = set(all_sets)
-        for V in list(pool):
-            if len(V) >= 2:
-                for p_val in range(k):
-                    fibers = defaultdict(list)
-                    for v in V:
-                        fibers[v[p_val]].append(v)
-                    if len(fibers) > 1:
-                        for fv in fibers.values():
-                            ft = tuple(sorted(fv))
-                            pool.add(ft)
-
-        transitions = []
-        all_states = set()
-        for V in pool:
-            if len(V) < 2:
-                continue
-            phi_V = phi(V, n, k, m)
-            P_R = potential(len(V), m)
-            st = compute_state(V, k)
-            all_states.add(st)
-            v_transitions = []
-            for p_val in range(k):
-                fibers = defaultdict(list)
-                for v in V:
-                    fibers[v[p_val]].append(v)
-                if len(fibers) < 2:
-                    continue
-                children = tuple(tuple(sorted(fv)) for fv in fibers.values())
-                child_states = tuple(compute_state(c, k) for c in children)
-                for cs in child_states:
-                    all_states.add(cs)
-                sum_phi_F = sum(phi(fv, n, k, m) for fv in fibers.values())
-                sum_P_c = sum(potential(len(fv), m) for fv in fibers.values())
-                gap_val = (P_R - sum_P_c) - (phi_V - sum_phi_F)
-                v_transitions.append((gap_val, child_states))
-            if v_transitions:
-                transitions.append((st, v_transitions))
-
-        state_list = sorted(all_states)
-        state_idx = {s: i for i, s in enumerate(state_list)}
-        S = len(state_list)
-
-        M = 100.0
-        total_binary = sum(len(vt) for _, vt in transitions)
-        N = S + total_binary
-
-        c_obj = [0.0] * N
-
-        lb = [0.0] * S + [0.0] * total_binary
-        ub = [float("inf")] * S + [1.0] * total_binary
-        bounds = Bounds(lb=lb, ub=ub)
-
-        integrality = [0] * S + [2] * total_binary
-
-        A_rows = []
-        b_ub_vals = []
-
-        for _st, v_trans in transitions:
-            row = [0.0] * N
-            for j in range(len(v_trans)):
-                row[S + j] = -1.0
-            A_rows.append(row)
-            b_ub_vals.append(-1.0)
-
-        bin_offset = 0
-        for st, v_trans in transitions:
-            si = state_idx[st]
-            for j, (gap_val, child_states) in enumerate(v_trans):
-                row = [0.0] * N
-                row[si] = 1.0
-                for cs in child_states:
-                    row[state_idx[cs]] = -1.0
-                row[S + bin_offset] = M
-                A_rows.append(row)
-                b_ub_vals.append(M)
-                bin_offset += 1
-
-        constraints = LinearConstraint(A_rows, ub=b_ub_vals)
-
-        result = milp(
-            c_obj,
-            constraints=constraints,
-            integrality=integrality,
-            bounds=bounds,
-        )
-
-        if result.success:
-            g_vals = result.x[:S]
-            g_profile = {state_list[i]: g_vals[i] for i in range(S)}
-            print(f"  FEASIBLE (status={result.status})")
-            print(f"  {S} profile states, {len(transitions)} sets")
-            print(f"  G range: [{min(g_vals):.2f}, {max(g_vals):.2f}]")
-            top = sorted(g_profile.items(), key=lambda x: -x[1])[:5]
-            for st, gv in top:
-                print(f"    G={gv:.2f} state={st}")
-        else:
-            print(f"  INFEASIBLE (status={result.status})")
-            print(f"  {S} profile states, {len(transitions)} sets")
-            print("  No profile-only G(state) satisfies all transitions")
+    print("\nPhase 2c is implemented by the bounded C++ CP-SAT probe:")
+    print("  ./profile_telescope_milp n k --max-r=R --time-limit=SECONDS")
 
 
 if __name__ == "__main__":
