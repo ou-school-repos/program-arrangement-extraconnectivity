@@ -52,6 +52,29 @@ def split(vertices, position):
     return tuple(tuple(sorted(fiber)) for _, fiber in sorted(fibers.items()))
 
 
+def pairwise_cross_corners(vertices, k):
+    """Return Q(V), the sum of valid empty pairwise projection corners.
+
+    For each labelled coordinate pair, take two occupied projection cells in
+    different rows and columns.  Each unoccupied crossed cell whose two symbols
+    are distinct is counted once.  Q deliberately retains only pairwise data;
+    it is a proposed diagnostic statistic, not assumed to equal X.
+    """
+    total = 0
+    for first in range(k):
+        for second in range(first + 1, k):
+            cells = {(vertex[first], vertex[second]) for vertex in vertices}
+            corners = set()
+            for (row_a, col_a), (row_b, col_b) in itertools.combinations(cells, 2):
+                if row_a == row_b or col_a == col_b:
+                    continue
+                for corner in ((row_a, col_b), (row_b, col_a)):
+                    if corner[0] != corner[1] and corner not in cells:
+                        corners.add(corner)
+            total += len(corners)
+    return total
+
+
 def main():
     """Parse arguments, enumerate splits, and report envelope violations."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -59,6 +82,11 @@ def main():
     parser.add_argument("k", type=int)
     parser.add_argument("--max-r", type=int, required=True)
     parser.add_argument("--show", type=int, default=5)
+    parser.add_argument(
+        "--test-pairwise-q",
+        action="store_true",
+        help="also compare the pairwise cross-corner statistic Q(V) with X(V)",
+    )
     args = parser.parse_args()
 
     if args.n < 1 or args.k < 1 or args.k > args.n or args.max_r < 2:
@@ -70,6 +98,9 @@ def main():
     tested = failures = 0
     max_excess = None
     examples = []
+    pairwise_min_difference = None
+    pairwise_max_difference = None
+    pairwise_examples = []
 
     print(
         f"Testing Delta_X <= (m-1)(c_max-1) on A({args.n},{args.k}), "
@@ -79,6 +110,21 @@ def main():
         for combination in itertools.combinations(vertices, size):
             parent = tuple(combination)
             parent_x = cross_collisions(parent, args.n, args.k)
+            if args.test_pairwise_q:
+                q_value = pairwise_cross_corners(parent, args.k)
+                q_difference = q_value - parent_x
+                if (
+                    pairwise_min_difference is None
+                    or q_difference < pairwise_min_difference
+                ):
+                    pairwise_min_difference = q_difference
+                if (
+                    pairwise_max_difference is None
+                    or q_difference > pairwise_max_difference
+                ):
+                    pairwise_max_difference = q_difference
+                if q_difference != 0 and len(pairwise_examples) < args.show:
+                    pairwise_examples.append((parent, parent_x, q_value))
             for position in range(args.k):
                 children = split(parent, position)
                 if len(children) < 2:
@@ -109,6 +155,16 @@ def main():
             f"  p={position} sizes={sizes} Delta_X={delta_x} "
             f"envelope={envelope} excess={excess}"
         )
+
+    if args.test_pairwise_q:
+        print(
+            f"Q(V) - X(V) range: [{pairwise_min_difference}, {pairwise_max_difference}]"
+        )
+        print(f"Q(V) != X(V) examples: {len(pairwise_examples)}")
+        for parent, x_value, q_value in pairwise_examples:
+            print("PAIRWISE-Q MISMATCH")
+            print(f"  V={parent}")
+            print(f"  X={x_value} Q={q_value} Q-X={q_value - x_value}")
 
     return 1 if failures else 0
 
