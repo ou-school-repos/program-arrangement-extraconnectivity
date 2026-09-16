@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
     constexpr int cutoff = 297;
 
     int start_lb = 0;
+    double time_limit_seconds = 3600.0;
     if (argc > 1) {
         try {
             start_lb = std::stoi(argv[1]);
@@ -63,6 +64,19 @@ int main(int argc, char **argv) {
         }
         if (start_lb < 0 || start_lb > cutoff) {
             std::cerr << "lower bound must be between 0 and " << cutoff << "\n";
+            return 2;
+        }
+    }
+    if (argc > 2) {
+        try {
+            time_limit_seconds = std::stod(argv[2]);
+        } catch (const std::exception &) {
+            std::cerr << "usage: " << argv[0]
+                      << " [proven-lower-bound] [time-limit-seconds]\n";
+            return 2;
+        }
+        if (time_limit_seconds <= 0) {
+            std::cerr << "time limit must be positive\n";
             return 2;
         }
     }
@@ -123,7 +137,6 @@ int main(int argc, char **argv) {
     model.AddLessOrEqual(boundary_expr, cutoff);
     if (start_lb > 0)
         model.AddGreaterOrEqual(boundary_expr, start_lb);
-    model.Minimize(boundary_expr);
 
     // One pinned vertex is symmetry-safe because A(10,5) is vertex-transitive.
     const Vertex origin = {0, 1, 2, 3, 4};
@@ -136,17 +149,34 @@ int main(int argc, char **argv) {
 
     Model solver;
     SatParameters parameters;
-    parameters.set_num_search_workers(8);
-    // No solver time limit: stop externally or when CP-SAT proves the cutoff.
+    parameters.set_num_search_workers(6);
+    parameters.set_max_time_in_seconds(time_limit_seconds);
     parameters.set_log_search_progress(true);
     solver.Add(NewSatParameters(parameters));
+    auto boundary_size = [&](const operations_research::sat::CpSolverResponse &response) {
+        std::vector<bool> selected_flags(vertices.size(), false);
+        for (std::size_t id = 0; id < selected.size(); ++id)
+            selected_flags[id] = SolutionBooleanValue(response, selected[id]);
+        std::vector<bool> external(vertices.size(), false);
+        for (std::size_t u = 0; u < adjacency.size(); ++u) {
+            if (!selected_flags[u])
+                continue;
+            for (const int v : adjacency[u])
+                if (!selected_flags[v])
+                    external[v] = true;
+        }
+        int count = 0;
+        for (const bool value : external)
+            count += value;
+        return count;
+    };
     solver.Add(NewFeasibleSolutionObserver(
         [&](const operations_research::sat::CpSolverResponse &response) {
             const char *temporary = "checkpoint_solution.txt.tmp";
             std::ofstream output(temporary);
             if (!output)
                 return;
-            output << "boundary " << response.objective_value() << '\n';
+            output << "boundary " << boundary_size(response) << '\n';
             for (std::size_t id = 0; id < selected.size(); ++id) {
                 if (!SolutionBooleanValue(response, selected[id]))
                     continue;
@@ -163,6 +193,6 @@ int main(int argc, char **argv) {
     std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
     if (response.status() == CpSolverStatus::OPTIMAL ||
         response.status() == CpSolverStatus::FEASIBLE)
-        std::cout << "boundary: " << response.objective_value() << '\n';
+        std::cout << "boundary: " << boundary_size(response) << '\n';
     return 0;
 }
