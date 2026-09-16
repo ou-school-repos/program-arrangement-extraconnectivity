@@ -159,6 +159,45 @@ uniformly, and whether it admits a closed form formalizable in Lean, remains
 open.  These are finite computational certificates only and do not alter
 Proposition~\ref{prop:universal} or its formal hypothesis status.
 
+\paragraph{Full-Star spine: an exact restricted-family calculation.}
+There is nevertheless an exact calculation for the maximally symmetric star
+subfamily. In $A(k+m,k)$, let $S_j$ consist of a centre vertex together with
+all $m$ radius-one leaves in each of its first $j$ coordinate directions. Thus
+$|S_j|=1+jm$. Splitting any active coordinate gives one hub fiber $S_{j-1}$
+and $m$ singleton fibers. Direct root counting gives
+\[
+ D(S_j)=jm.
+\]
+Moreover, every unordered pair of active coordinates contributes
+$m(m-1)$ cross-collisions: choose distinct replacement symbols for the two
+coordinates, producing an external vertex reached from the two corresponding
+leaves. There are no other collisions in this family, hence
+\[
+ X(S_j)=m(m-1)\binom{j}{2}.
+\]
+Consequently, the geometric overhead of the spine split is exactly
+\[
+ \Phi(S_j)-\Phi(S_{j-1})=m\bigl((m-1)j+2\bigr),
+\]
+and its raw gap is
+\[
+ \operatorname{gap}_j=P(1+jm)-P(1+(j-1)m)
+                    -m\bigl((m-1)j+2\bigr).
+\]
+This gives necessary constraints on any correction that follows this particular
+spine. If its root is assigned zero correction and $g_j$ denotes the credit
+assigned to $S_j$, then the least nonnegative backward assignment obeys
+\[
+ g_k=0,\qquad g_{j-1}=\max\{0,\,g_j-\operatorname{gap}_j\}.
+\]
+It is a reflected cumulative-gap recurrence, not a closed form for a universal
+profile-state potential. The accompanying diagnostic
+\texttt{scripts/full\_star\_spine.py} verifies these identities for sampled
+parameters. Its observed credits can grow rapidly and depend sensitively on
+the binary structure of $P$; this rules out interpreting the correction as a
+small bounded patch. The calculation concerns only this symmetric subfamily
+and does not prove the transition inequality for arbitrary sets or menus.
+
 \paragraph{Dual root-compression via averaging.}
 Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
 conjectures on the hypercube \cite{pinto2015directed}, where two
