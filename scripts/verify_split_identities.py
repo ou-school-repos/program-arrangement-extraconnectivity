@@ -4,6 +4,7 @@
 import argparse
 import itertools
 import math
+import sys
 from collections import defaultdict
 
 
@@ -43,15 +44,53 @@ def main():
     parser.add_argument("--k", type=int, required=True)
     parser.add_argument("--max-r", type=int, required=True)
     parser.add_argument("--max-sets", type=int, default=100000)
+    parser.add_argument("--input", help="Tuple file, or - for stdin")
     args = parser.parse_args()
     if not 1 <= args.k <= args.n or args.max_r < 2 or args.max_sets < 1:
         parser.error("require n >= k >= 1, max-r >= 2, max-sets >= 1")
     count = math.perm(args.n, args.k)
     max_r = min(args.max_r, count)
     estimate = sum(math.comb(count, r) for r in range(2, max_r + 1))
-    if estimate > args.max_sets:
+    if not args.input and estimate > args.max_sets:
         parser.error(f"pool has {estimate} sets; raise --max-sets explicitly")
-    vertices = tuple(itertools.permutations(range(args.n), args.k))
+    explicit = None
+    if args.input:
+        try:
+            source = (
+                sys.stdin if args.input == "-" else open(args.input, encoding="utf-8")
+            )
+            try:
+                lines = [line.strip() for line in source if line.strip()]
+            finally:
+                if source is not sys.stdin:
+                    source.close()
+            explicit = tuple(
+                (
+                    tuple(map(int, line.replace(",", " ").split()))
+                    if " " in line or "," in line
+                    else tuple(map(int, line))
+                )
+                for line in lines
+            )
+        except (OSError, ValueError) as error:
+            parser.error(str(error))
+        if (
+            not explicit
+            or len(set(explicit)) != len(explicit)
+            or any(
+                len(v) != args.k
+                or len(set(v)) != args.k
+                or any(not 0 <= c < args.n for c in v)
+                for v in explicit
+            )
+        ):
+            parser.error("require distinct injective k-tuples in the alphabet")
+        max_r = len(explicit)
+    vertices = (
+        explicit
+        if explicit is not None
+        else tuple(itertools.permutations(range(args.n), args.k))
+    )
     adjacency = {
         vertex: tuple(
             tuple(
@@ -65,9 +104,14 @@ def main():
     }
     budgets = [0] + [potential(r, args.n - args.k) for r in range(1, max_r + 1)]
     tested_sets = tested_splits = all_negative = 0
-    for size in range(2, max_r + 1):
+    for size in ([len(explicit)] if explicit is not None else range(2, max_r + 1)):
         size_negative = 0
-        for parent in itertools.combinations(vertices, size):
+        pool = (
+            [explicit]
+            if explicit is not None
+            else itertools.combinations(vertices, size)
+        )
+        for parent in pool:
             parent_d, parent_x, roots, directions = statistics(
                 parent, adjacency, args.k
             )
@@ -96,6 +140,14 @@ def main():
                     print("directions:", directions, "mu:", dict(multiplicities))
                     return 1
                 tested_splits += 1
+                if explicit is not None:
+                    surplus = budgets[size] - sum(budgets[len(f)] for f in children)
+                    gap = surplus - delta_x - (args.n - args.k + 1) * delta_d
+                    print(
+                        f"p={position}: sizes={sorted(map(len, children))} "
+                        f"surplus={surplus} dX={delta_x} dD={delta_d} "
+                        f"gap={gap}"
+                    )
                 if len(children) > 1:
                     surplus = budgets[size] - sum(budgets[len(f)] for f in children)
                     gaps.append(surplus - delta_x - (args.n - args.k + 1) * delta_d)
