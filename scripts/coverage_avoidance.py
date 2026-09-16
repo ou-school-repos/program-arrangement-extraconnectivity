@@ -16,6 +16,7 @@ import random
 from collections import defaultdict
 
 from lib import neighbors as arrangement_neighbors
+from lib import swallowed_boundary
 
 
 def popcount(j):
@@ -65,14 +66,7 @@ def analyze(A, S, c=0):
     locN = {}
     for x in pi:
         locN[x] = [y for y in arrangement_neighbors(x, n) if len(set(y)) == len(y)]
-    blo = {}
-    for i in range(n):
-        b = set()
-        for y in Q[i]:
-            for z in arrangement_neighbors(y, n):
-                if len(set(z)) == len(z) and z not in Q[i]:
-                    b.add(z)
-        blo[i] = b
+    blo = swallowed_boundary(Q, n)
     Lc_i = {i: (P[i] - Q[i]) & blo[i] for i in range(n)}
     Lc = sum(len(v) for v in Lc_i.values())
     # (1) swallow iff, per empty slot

@@ -4,6 +4,8 @@
 import os
 import subprocess
 
+from lib import write_cube_edges, write_graph_header
+
 
 def to_bin(i, d):
     """Return the d-bit zero-padded binary string for integer i."""
@@ -22,14 +24,8 @@ def gen_comparison_dot(d, output):
     with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Comparison_{d} {{\n")
         label = f'"Stability Analysis (R={R})\\nOptimal vs Fractured"'
-        f.write(
-            f"  graph [label={label},"
-            f" labelloc=t,"
-            f' fontname="Helvetica-bold",'
-            f" fontsize=20];\n"
-        )
-        f.write(
-            '  node [fontname="Helvetica", style=filled, shape=circle, width=0.6];\n'
+        write_graph_header(
+            f, label, 'fontname="Helvetica", style=filled, shape=circle, width=0.6'
         )
         f.write("  edge [penwidth=1.2];\n")
 
@@ -39,11 +35,7 @@ def gen_comparison_dot(d, output):
         f.write("    color=blue; fontcolor=blue; style=dashed;\n")
         for i in range(R):
             f.write(f'    o{i} [fillcolor=lightblue, label="{to_bin(i, d)}"];\n')
-        for i in range(R):
-            for bit in range(d):
-                j = i ^ (1 << bit)
-                if i < j:
-                    f.write(f"    o{i} -- o{j};\n")
+        write_cube_edges(f, "o", d, R)
         f.write("  }\n")
 
         # Fractured Cluster
@@ -52,11 +44,7 @@ def gen_comparison_dot(d, output):
         f.write("    color=red; fontcolor=red; style=dashed;\n")
         for i in range(R - 1):
             f.write(f'    f{i} [fillcolor=lightpink, label="{to_bin(i, d)}"];\n')
-        for i in range(R - 1):
-            for bit in range(d):
-                j = i ^ (1 << bit)
-                if i < j < R - 1:
-                    f.write(f"    f{i} -- f{j};\n")
+        write_cube_edges(f, "f", d, R - 1)
 
         # The Fractured/Splintered Node
         lbl = to_bin(R - 1, d)

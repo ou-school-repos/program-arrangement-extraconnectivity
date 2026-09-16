@@ -3,6 +3,8 @@
 
 import sys
 
+from lib import write_cube_edges, write_graph_header
+
 
 def gen_hypercube_dot(d, output):
     """
@@ -13,18 +15,10 @@ def gen_hypercube_dot(d, output):
     with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Hypercube_{d} {{\n")
         label = f'"Optimal {d}-Cube (R={R}, E={E})"'
-        f.write(
-            f"  graph [label={label},"
-            f" labelloc=t,"
-            f' fontname="Helvetica-bold",'
-            f" fontsize=20];\n"
+        write_graph_header(
+            f, label, 'fontname="Helvetica", style=filled, fillcolor=lightblue'
         )
-        f.write('  node [fontname="Helvetica", style=filled, fillcolor=lightblue];\n')
-        for i in range(R):
-            for bit in range(d):
-                j = i ^ (1 << bit)
-                if i < j:
-                    f.write(f"    {i} -- {j};\n")
+        write_cube_edges(f, "", d, R)
         f.write("}\n")
 
 
@@ -39,20 +33,10 @@ def gen_fracture_dot(d, output):
     with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Fracture_{d} {{\n")
         label = f'"Fractured {d}-Cube (R={R}, E={E_max})"'
-        f.write(
-            f"  graph [label={label},"
-            f" labelloc=t,"
-            f' fontname="Helvetica-bold",'
-            f" fontsize=20];\n"
-        )
-        f.write('  node [fontname="Helvetica", style=filled];\n')
+        write_graph_header(f, label, 'fontname="Helvetica", style=filled')
 
         # Core: (R-1) subset of d-cube
-        for i in range(R - 1):
-            for bit in range(d):
-                j = i ^ (1 << bit)
-                if i < j < R - 1:
-                    f.write(f"    f{i} -- f{j};\n")
+        write_cube_edges(f, "f", d, R - 1)
 
         # Splintered vertex (connected via only 1 edge to maintain connectivity)
         f.write(f'    f{R - 1} [fillcolor=orange, label="N{R - 1}\\n(Splintered)"];\n')

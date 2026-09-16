@@ -12,7 +12,7 @@ import itertools
 import math
 
 from lib import arithmetic_potential as P
-from lib import coord_boundary_and_roots, f_func
+from lib import coord_boundary_and_roots, coordinate_roots, f_func
 
 
 def diagnose_l3(m_val):
@@ -142,14 +142,8 @@ def check_master_inequality_forms(m_val):
 
         for vertices in combos:
             # Compute D, X, mu_sum
-            D = 0
-            all_roots = []
-            for p in range(k):
-                roots = set()
-                for vertex in vertices:
-                    roots.add(vertex[:p] + vertex[p + 1 :])
-                all_roots.append(roots)
-                D += R - len(roots)
+            all_roots = coordinate_roots(vertices, k)
+            D = sum(R - len(roots) for roots in all_roots)
 
             # Compute mu_sum
             multiplicity = {}

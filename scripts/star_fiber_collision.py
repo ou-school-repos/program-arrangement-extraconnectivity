@@ -37,21 +37,7 @@ Run:  python3 scripts/star_fiber_collision.py
 import itertools
 import random
 
-
-def neighbors(v, n):
-    """Return all one-coordinate substitutions of ``v``."""
-    used = set(v)
-    out = set()
-    for p in range(len(v)):
-        for a in range(n):
-            if a not in used:
-                out.add(v[:p] + (a,) + v[p + 1 :])
-    return out
-
-
-def e_seq(R):
-    """Return the cumulative binary popcount below ``R``."""
-    return sum(bin(i).count("1") for i in range(R))
+from lib import e_seq, neighbors
 
 
 def sum_bit_length(R):

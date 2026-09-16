@@ -14,7 +14,7 @@ import random
 from collections import defaultdict
 
 from lib import arithmetic_potential as P
-from lib import coord_boundary_and_roots, f_func
+from lib import coord_boundary_and_roots, coordinate_roots, f_func
 
 
 def compute_p1(vertices, k):
@@ -31,14 +31,8 @@ def full_statistics(vertices, n, k):
     R = len(vertices)
 
     # Defect
-    D = 0
-    all_roots = []
-    for p in range(k):
-        roots = set()
-        for vertex in vertices:
-            roots.add(vertex[:p] + vertex[p + 1 :])
-        all_roots.append(roots)
-        D += R - len(roots)
+    all_roots = coordinate_roots(vertices, k)
+    D = sum(R - len(roots) for roots in all_roots)
 
     # Cross-collisions and per-coordinate data
     directions = []

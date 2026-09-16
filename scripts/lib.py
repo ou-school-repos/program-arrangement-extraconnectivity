@@ -132,6 +132,47 @@ def split(vertices, position: int):
     return tuple(tuple(sorted(fiber)) for _, fiber in sorted(fibers.items()))
 
 
+def coordinate_roots(vertices, dimension: int):
+    """Return the distinct coordinate roots, grouped by position."""
+    return [
+        {vertex[:position] + vertex[position + 1 :] for vertex in vertices}
+        for position in range(dimension)
+    ]
+
+
+def swallowed_boundary(root_fibers, alphabet_size: int):
+    """Return external roots adjacent to each coordinate root fiber."""
+    return {
+        symbol: {
+            neighbor
+            for root in roots
+            for neighbor in neighbors(root, alphabet_size)
+            if len(set(neighbor)) == len(neighbor) and neighbor not in roots
+        }
+        for symbol, roots in root_fibers.items()
+    }
+
+
+def write_graph_header(stream, label: str, node_style: str) -> None:
+    """Write common Graphviz graph and node declarations."""
+    stream.write(
+        f"  graph [label={label},"
+        " labelloc=t,"
+        ' fontname="Helvetica-bold",'
+        " fontsize=20];\n"
+    )
+    stream.write(f"  node [{node_style}];\n")
+
+
+def write_cube_edges(stream, prefix: str, dimension: int, limit: int) -> None:
+    """Write edges of the induced cube on ``range(limit)``."""
+    for index in range(limit):
+        for bit in range(dimension):
+            neighbor = index ^ (1 << bit)
+            if index < neighbor < limit:
+                stream.write(f"    {prefix}{index} -- {prefix}{neighbor};\n")
+
+
 def boundary_metrics(subset, fibers):
     """Return external boundary, coordinate defect, and collision excess."""
     members = set(subset)

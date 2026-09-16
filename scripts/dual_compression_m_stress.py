@@ -15,17 +15,7 @@ import itertools
 import random
 
 from dual_compression_check import best_over_all_pairs, build_fibers
-
-
-def neighbors(v, n):
-    """Return all one-coordinate substitutions of ``v``."""
-    used = set(v)
-    out = set()
-    for p in range(len(v)):
-        for a in range(n):
-            if a not in used:
-                out.add(v[:p] + (a,) + v[p + 1 :])
-    return out
+from lib import neighbors
 
 
 def swiss_cheese(vertices, adj, _n, R, hole_frac, rng):
