@@ -1,93 +1,85 @@
 #!/usr/bin/env python3
-"""Probe whether the Phi-vs-P deficit telescopes.
+"""Exact DP evaluation of the maximum possible telescoping potential G(V).
 
-Test on arbitrary subsets of A(n,k), not just Star Graphs.  For each
-set V' and each coordinate split, record:
+To prove Phi(V) <= P(|V|) by induction without giving up slack, we need a
+state function G(V) >= 0 such that at SOME valid coordinate split p:
+    Phi(V) + G(V) <= P(|V|) + sum(G(F_s))
+which mathematically rearranges to:
+    G(V) <= gap(V, p) + sum(G(F_s))
 
-    gap = P_surplus - overhead
+By defining G(V) as the MAXIMUM over all p of [gap(V, p) + sum(G(F_s))],
+we find the absolute ceiling for any valid telescoping potential.
+If G(V) drops below 0 for any set, it mathematically proves that NO
+state function G (exotic or otherwise) can save the exact zero-slack bound.
 
-where overhead = Phi(V') - sum Phi(F_s) and
-      P_surplus = P(R) - sum P(c_s).
-
-Then test candidate telescoping corrections G(state) such that
-    Phi(V') + G(state(V')) <= P(R) + G(state(parent))
-holds at every split, with G bounded and computable from the
-fiber-state data (t, fiber sizes, etc.).
+Scope: This certifies the exact bound for the tested Star-closure instances
+only — not all subsets, not profile-only potentials, not parameter-uniform
+theorems.  The certificate is split-tree-dependent.
 """
 
-import itertools
-import math
-import random
-from collections import Counter, defaultdict
-
-# ---------------------------------------------------------------------------
-# Arithmetic primitives
-# ---------------------------------------------------------------------------
+from collections import defaultdict
 
 
-def sbl(R):
-    """sum(bit_length(i) for 1 <= i < R)."""
-    return sum(value.bit_length() for value in range(1, R))
+def sbl(size):
+    """Sum of bit_length(i) for 1 <= i < size."""
+    return sum(value.bit_length() for value in range(1, size))
 
 
-def e_seq(R):
+def e_seq(size):
     """Cumulative popcount, OEIS A000788."""
-    return sum(value.bit_count() for value in range(R))
+    return sum(value.bit_count() for value in range(size))
 
 
-def c_constant(R):
-    """Hamming-ball collision constant C(R)."""
-    if R == 0:
+def c_constant(size):
+    """Hamming-ball collision constant C(size)."""
+    if size == 0:
         return 0
-    return R - 1 + sbl(R) - e_seq(R)
+    return size - 1 + sbl(size) - e_seq(size)
 
 
-def potential(R, m):
-    """P(R) = C(R) + m * E(R)."""
-    return c_constant(R) + m * e_seq(R)
-
-
-# ---------------------------------------------------------------------------
-# Geometry primitives
-# ---------------------------------------------------------------------------
+def potential(size, overhang):
+    """P(R) = C(R) + m * E(R) where m = overhang."""
+    return c_constant(size) + overhang * e_seq(size)
 
 
 def neighbors(vertex, alphabet_size):
-    """Neighbors of an injective tuple in the arrangement graph."""
+    """Neighbors in the arrangement graph."""
     used = set(vertex)
     result = set()
-    for pos in range(len(vertex)):
-        for sym in range(alphabet_size):
-            if sym not in used:
-                result.add(vertex[:pos] + (sym,) + vertex[pos + 1 :])
+    for position in range(len(vertex)):
+        for symbol in range(alphabet_size):
+            if symbol not in used:
+                result.add(vertex[:position] + (symbol,) + vertex[position + 1 :])
     return result
 
 
-def cross_collisions(vertices, n, k):
+def cross_collisions(vertices, alphabet_size, dimension):
     """Root-incidence excess over the external vertex boundary."""
-    vset = set(vertices)
-    total = 0
+    vertex_set = set(vertices)
+    coordinate_boundary_size = 0
     external = set()
-    for p in range(k):
+    for position in range(dimension):
         directional = set()
-        for v in vertices:
-            used = set(v)
-            for a in range(n):
-                if a not in used:
-                    w = v[:p] + (a,) + v[p + 1 :]
-                    if w not in vset:
-                        directional.add(w)
-        total += len(directional)
-        external |= directional
-    return total - len(external)
+        for vertex in vertices:
+            used = set(vertex)
+            for symbol in range(alphabet_size):
+                if symbol not in used:
+                    candidate = vertex[:position] + (symbol,) + vertex[position + 1 :]
+                    if candidate not in vertex_set:
+                        directional.add(candidate)
+        coordinate_boundary_size += len(directional)
+        external.update(directional)
+    return coordinate_boundary_size - len(external)
 
 
-def defect(vertices, k):
+def defect(vertices, dimension):
     """R*k minus the total number of occupied coordinate roots."""
     root_count = 0
-    for p in range(k):
-        root_count += len({v[:p] + v[p + 1 :] for v in vertices})
-    return len(vertices) * k - root_count
+    for position in range(dimension):
+        root_count += len(
+            {vertex[:position] + vertex[position + 1 :] for vertex in vertices}
+        )
+    return len(vertices) * dimension - root_count
 
 
 def phi(vertices, n, k, m):
@@ -95,334 +87,105 @@ def phi(vertices, n, k, m):
     return cross_collisions(vertices, n, k) + (m + 1) * defect(vertices, k)
 
 
-# ---------------------------------------------------------------------------
-# Set generators
-# ---------------------------------------------------------------------------
-
-
-def star_graph(n, k, size):
-    """Radius-one star centered at tuple(range(k))."""
-    center = tuple(range(k))
-    available = sorted(neighbors(center, n))
-    if size <= 0 or size > 1 + len(available):
-        return None
-    return [center] + available[: size - 1]
-
-
-def random_subset(n, k, size, seed):
-    """Uniformly random k-permutations of {0..n-1}."""
-    verts = list(itertools.permutations(range(n), k))
-    rng = random.Random(seed)
-    if size > len(verts):
-        return None
-    return rng.sample(verts, size)
-
-
-def hamming_ball(n, k, size):
-    """Greedy ball: start from center, add nearest neighbors."""
-    center = tuple(range(k))
-    ball = [center]
-    candidate_pool = set(neighbors(center, n))
-    while len(ball) < size and candidate_pool:
-        best = min(
-            candidate_pool,
-            key=lambda v: -sum(
-                1 for b in ball if sum(a != b_ for a, b_ in zip(v, b)) <= 1
-            ),
-        )
-        ball.append(best)
-        candidate_pool.discard(best)
-        candidate_pool |= neighbors(best, n) - set(ball)
-    if len(ball) < size:
-        return None
-    return ball
-
-
-def cliques(n, k, size):
-    """Build by greedily adding vertices sharing roots with existing set."""
-    center = tuple(range(k))
-    ball = [center]
-    pool = set(neighbors(center, n)) - {center}
-    while len(ball) < size and pool:
-        best = max(
-            pool,
-            key=lambda v: sum(
-                1
-                for b in ball
-                if any(v[:p] + v[p + 1 :] == b[:p] + b[p + 1 :] for p in range(k))
-            ),
-        )
-        ball.append(best)
-        pool.discard(best)
-        pool |= neighbors(best, n) - set(ball)
-    if len(ball) < size:
-        return None
-    return ball
-
-
-# ---------------------------------------------------------------------------
-# Split analysis
-# ---------------------------------------------------------------------------
-
-
-def analyze_split(vertices, n, k, m, coord):
-    """Analyze splitting vertices at coordinate coord."""
-    fibers = {}
-    for v in vertices:
-        fibers.setdefault(v[coord], []).append(v)
-    if len(fibers) < 2:
-        return None
-
-    R = len(vertices)
-    t = len(fibers)
-    sizes = tuple(sorted(len(f) for f in fibers.values()))
-
-    phi_V = phi(vertices, n, k, m)
-    phi_fibers = sum(phi(f, n, k, m) for f in fibers.values())
-    overhead = phi_V - phi_fibers
-
-    P_R = potential(R, m)
-    P_fibers = sum(potential(s, m) for s in sizes)
-    P_surplus = P_R - P_fibers
-
-    gap = P_surplus - overhead
-
-    return {
-        "R": R,
-        "t": t,
-        "sizes": sizes,
-        "m": m,
-        "k": k,
-        "n": n,
-        "overhead": overhead,
-        "P_surplus": P_surplus,
-        "gap": gap,
-        "sbl_surp": sbl(R) - sum(sbl(s) for s in sizes),
-        "e_surp": e_seq(R) - sum(e_seq(s) for s in sizes),
-        "lin": t - 1,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Candidate telescoping corrections
-# ---------------------------------------------------------------------------
-
-
-def G_constant(_state, c=0):
-    """G = c (constant). Trivially telescopes but absorbs nothing."""
-    return c
-
-
-def G_num_fibers(state):
-    """G = t (number of fibers)."""
-    return state["t"]
-
-
-def G_max_fiber(state):
-    """G = max fiber size."""
-    return max(state["sizes"]) if state["sizes"] else 0
-
-
-def G_sum_sizes(state):
-    """G = sum of fiber sizes = R (trivially telescopes via R itself)."""
-    return sum(state["sizes"])
-
-
-def G_entropy(state):
-    """G = -sum (c_s/R) * log2(c_s/R) * R, a crude entropy measure."""
-    R = sum(state["sizes"])
-    if R == 0:
-        return 0
-    ent = 0
-    for s in state["sizes"]:
-        if s > 0:
-            p = s / R
-            ent -= p * math.log2(p) * R
-    return ent
-
-
-def G_profile(state):
-    """G = number of distinct fiber sizes."""
-    return len(set(state["sizes"]))
-
-
-def G_sbl_profile(state):
-    """G = sum sbl(c_s)."""
-    return sum(sbl(s) for s in state["sizes"])
-
-
-def test_telescoping(records, _G_fn, label, verbose=False):
-    """Test if Phi(V) + G(state) <= P(R) + G(parent_state) at each split.
-
-    We model G(parent_state) as G(state_of_V_before_split).
-    Since state_of_V = (R, sizes_of_fibers), the parent state is
-    characterized by R alone (the parent IS V').  So we test:
-        Phi(V') + G(t, sizes) <= P(R) + G_parent(R)
-    where G_parent(R) is a function only of R (the parent's total size).
-
-    For true telescoping, G_parent must itself be derivable from the
-    child states.  The simplest test: does there exist f(R) such that
-    for all splits of all R-sets:
-        Phi(V') + G(t, sizes) <= P(R) + f(R)?
-    And does f(R) satisfy f(R) = G(R) (i.e., the parent's state at
-    its own parent level)?
-    """
-    # Group by (R, m, k)
-    grouped = defaultdict(list)
-    for r in records:
-        grouped[(r["R"], r["m"], r["k"])].append(r)
-
-    worst_by_params = {}
-    for (R, m, k), entries in grouped.items():
-        deficits = [-e["gap"] for e in entries if e["gap"] < 0]
-        if deficits:
-            worst_by_params[(R, m, k)] = (max(deficits), len(deficits))
-
-    if verbose:
-        print(f"\n  {label}:")
-        print(f"    {'R':>4} {'m':>3} {'k':>3} | {'worst_def':>10} {'n_fail':>7}")
-        print("    " + "-" * 35)
-        for (R, m, k), (worst, nf) in sorted(worst_by_params.items()):
-            print(f"    {R:4d} {m:3d} {k:3d} | {worst:10d} {nf:7d}")
-
-    return worst_by_params
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
-
 def main():
-    """Run all telescope probes and print results."""
-    print("=== Generating test sets ===")
-    records = []
-
-    configs = [(5, 3), (5, 2), (6, 3), (6, 4), (7, 4), (8, 4), (8, 5)]
+    """Run DP for each config and report whether G stays non-negative."""
+    configs = [(5, 3), (6, 3), (7, 4), (8, 4), (8, 5)]
 
     for n, k in configs:
         m = n - k
-        max_size = min(20, 1 + k * (n - k))  # capacity-valid
+        print(f"\n=== Evaluating A({n},{k}) m={m} ===")
 
-        # Star graphs
-        for sz in range(4, max_size + 1):
-            V = star_graph(n, k, sz)
-            if V is None or len(V) < sz:
+        # 1. Generate seed sets (Star graphs)
+        seeds = []
+        for sz in range(2, 21):
+            center = tuple(range(k))
+            avail = sorted(neighbors(center, n))
+            if sz - 1 <= len(avail):
+                seeds.append(tuple(sorted([center] + avail[: sz - 1])))
+
+        # 2. Closure under fiber splitting
+        pool = set(seeds)
+        queue = list(seeds)
+        while queue:
+            V = queue.pop()
+            if len(V) < 2:
                 continue
-            for coord in range(k):
-                r = analyze_split(V, n, k, m, coord)
-                if r:
-                    r["set_type"] = "star"
-                    r["coord"] = coord
-                    records.append(r)
+            for p_val in range(k):
+                fibers = defaultdict(list)
+                for v in V:
+                    fibers[v[p_val]].append(v)
+                if len(fibers) > 1:
+                    for fiber_verts in fibers.values():
+                        ft = tuple(sorted(fiber_verts))
+                        if ft not in pool:
+                            pool.add(ft)
+                            queue.append(ft)
 
-        # Random subsets
-        for sz in range(4, max_size + 1):
-            for seed in range(5):
-                V = random_subset(n, k, sz, seed)
-                if V is None:
-                    continue
-                for coord in range(k):
-                    r = analyze_split(V, n, k, m, coord)
-                    if r:
-                        r["set_type"] = "random"
-                        r["coord"] = coord
-                        records.append(r)
+        # Group by size for bottom-up DAG processing
+        by_size = defaultdict(list)
+        for V in pool:
+            by_size[len(V)].append(V)
 
-        # Hamming balls
-        for sz in range(4, max_size + 1):
-            V = hamming_ball(n, k, sz)
-            if V is None or len(V) < sz:
+        G = {}
+        # Base case: singletons have G = 0
+        for V in by_size[1]:
+            G[V] = 0
+
+        max_R = max(by_size.keys()) if by_size else 0
+        found_negative = False
+
+        for R in range(2, max_R + 1):
+            if R not in by_size:
                 continue
-            for coord in range(k):
-                r = analyze_split(V, n, k, m, coord)
-                if r:
-                    r["set_type"] = "hamming_ball"
-                    r["coord"] = coord
-                    records.append(r)
 
-        # High-collision cliques
-        for sz in range(4, min(max_size + 1, 12)):
-            V = cliques(n, k, sz)
-            if V is None or len(V) < sz:
-                continue
-            for coord in range(k):
-                r = analyze_split(V, n, k, m, coord)
-                if r:
-                    r["set_type"] = "clique"
-                    r["coord"] = coord
-                    records.append(r)
+            for V in by_size[R]:
+                best_val = -float("inf")
 
-    print(f"Total splits analyzed: {len(records)}")
+                phi_V = phi(V, n, k, m)
+                P_R = potential(R, m)
 
-    # Overall gap distribution
-    gaps = [r["gap"] for r in records]
-    neg = [g for g in gaps if g < 0]
-    print("\n=== Gap distribution ===")
-    print(f"  Total: {len(gaps)}, negative: {len(neg)}")
-    if neg:
-        print(f"  Worst gap: {min(gaps)}")
-        print(f"  Gap histogram: {sorted(Counter(gaps).items())}")
+                for p_val in range(k):
+                    fibers = defaultdict(list)
+                    for v in V:
+                        fibers[v[p_val]].append(v)
+                    if len(fibers) < 2:
+                        continue
 
-    # Breakdown by set type
-    print("\n=== Worst gap by set type ===")
+                    sum_phi_F = sum(phi(fv, n, k, m) for fv in fibers.values())
+                    sum_P_c = sum(potential(len(fv), m) for fv in fibers.values())
 
-    for stype in ["star", "random", "hamming_ball", "clique"]:
-        subset = [r for r in records if r["set_type"] == stype]
-        if not subset:
-            continue
-        sub_gaps = [r["gap"] for r in subset]
-        sub_neg = [g for g in sub_gaps if g < 0]
-        print(
-            f"  {stype:15s}: {len(subset):5d} splits, "
-            f"{len(sub_neg):4d} negative, worst={min(sub_gaps)}"
-        )
+                    overhead = phi_V - sum_phi_F
+                    P_surplus = P_R - sum_P_c
+                    gap = P_surplus - overhead
 
-    # Group by (R, m, k) and show worst deficit
-    print("\n=== Worst deficit by (R, m, k) ===")
-    grouped = defaultdict(list)
-    for r in records:
-        grouped[(r["R"], r["m"], r["k"])].append(r)
+                    # DP transition: G(V) <= gap + sum(G(F_s))
+                    val = gap + sum(G[tuple(sorted(fv))] for fv in fibers.values())
+                    best_val = max(best_val, val)
 
-    print(
-        f"  {'R':>4} {'m':>3} {'k':>3} | {'worst_gap':>10} {'n_neg':>6} {'n_total':>8}"
-    )
-    print("  " + "-" * 45)
-    for (R, m, k), entries in sorted(grouped.items()):
-        sub_gaps = [e["gap"] for e in entries]
-        n_neg = sum(1 for g in sub_gaps if g < 0)
-        print(
-            f"  {R:4d} {m:3d} {k:3d} | {min(sub_gaps):10d}"
-            f" {n_neg:6d} {len(sub_gaps):8d}"
-        )
+                G[V] = best_val
 
-    # Show actual worst cases
-    print("\n=== Top 15 worst gaps (full detail) ===")
-    worst = sorted(records, key=lambda r: r["gap"])[:15]
-    for r in worst:
-        print(
-            f"  A({r['n']},{r['k']}) {r['set_type']:12s}"
-            f" R={r['R']:2d} coord={r['coord']}"
-            f" t={r['t']:2d} sizes={r['sizes']}"
-            f" | overhead={r['overhead']:4d}"
-            f" P_surp={r['P_surplus']:4d} gap={r['gap']:3d}"
-        )
+                if best_val < 0 and not found_negative:
+                    print("  [!] MATHEMATICAL PROOF OF SLACK:")
+                    print(f"      Set of size {R} has max G(V) = {best_val}")
+                    print(
+                        "      Because G(V) < 0 is forced by the"
+                        " transition DAG, NO state"
+                    )
+                    print("      function can save the exact" " Phi <= P(R) bound.")
+                    found_negative = True
 
-    # Test telescoping candidates
-    print("\n=== Telescoping candidate tests ===")
-    candidates = [
-        ("G=0 (baseline)", G_constant),
-        ("G=t", G_num_fibers),
-        ("G=max_size", G_max_fiber),
-        ("G=num_profiles", G_profile),
-        ("G=sbl_profile", G_sbl_profile),
-    ]
+        if not found_negative:
+            print(
+                "  All evaluated sets maintained G(V) >= 0!"
+                " Exact bound might be possible."
+            )
 
-    for label, gfn in candidates:
-        test_telescoping(records, gfn, label, verbose=True)
-
-    return 0
+        # Report max G across all sets
+        if G:
+            max_g = max(G.values())
+            min_g = min(G.values())
+            print(f"  G range: [{min_g:.1f}, {max_g:.1f}]")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
