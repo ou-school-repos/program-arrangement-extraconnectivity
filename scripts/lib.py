@@ -111,7 +111,7 @@ def star_graph(alphabet_size: int, dimension: int, size: int):
 
 def build_fibers(vertices, dimension: int):
     """Build coordinate-root fiber lookup tables."""
-    fibers = [{} for _ in range(dimension)]
+    fibers: list[dict[tuple, set]] = [{} for _ in range(dimension)]
     for vertex in vertices:
         for position in range(dimension):
             root = vertex[:position] + vertex[position + 1 :]
@@ -126,7 +126,7 @@ def build_adjacency(vertices, alphabet_size: int):
 
 def split(vertices, position: int):
     """Return nonempty coordinate fibers in canonical order."""
-    fibers = {}
+    fibers: dict[object, list] = {}
     for vertex in vertices:
         fibers.setdefault(vertex[position], []).append(vertex)
     return tuple(tuple(sorted(fiber)) for _, fiber in sorted(fibers.items()))

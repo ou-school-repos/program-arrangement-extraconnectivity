@@ -210,7 +210,7 @@ check("C2 Mahler for F_E: x*F_E(x)=(1+x)^2 F_E(x^2)+x^3/((1-x)(1-x^2)):", ok)
 
 # --- Prop D: Delange fluctuation, numeric ---
 # Phi(N) := E(N)/N - (1/2)log2(N)  should be a bounded periodic-in-log2 wave
-vals = []
+vals: list[float] = []
 N = 1
 Es = 0
 i = 0
@@ -232,7 +232,7 @@ for n in range(1, 1 << 16):
     Ev.append(Ev[-1] + bin(n - 1).count("1"))
 
 
-def C(R):
+def c_from_table(R):
     """Correction constant C(R), recomputed from the cumulative table Ev for Prop D."""
     d = (R - 1).bit_length()
     return R * (d + 1) - 2**d - Ev[R]
@@ -245,18 +245,18 @@ for R in range(2, 1 << 16):
     Psi = 2 - u - 2 ** (1 - u)
     Phi = Ev[R] / R - 0.5 * lg  # Delange fluctuation, exact by definition
     # claimed exact: C(R)/R = (1/2)log2 R + Psi(u) - Phi(log2 R)
-    if abs(C(R) / R - (0.5 * lg + Psi - Phi)) > 1e-9:
+    if abs(c_from_table(R) / R - (0.5 * lg + Psi - Phi)) > 1e-9:
         ok = False
         print("FAIL", R)
         break
 check("C(R)/R = (1/2)log2R + Psi({log2R}) - Phi(log2R):", ok)
 # X_HB/R = Psi - 2Phi bounded, zero at powers of two, positive elsewhere
 Rs_D = list(range(2, 1 << 16))
-X = [((C(R) - Ev[R]) / R) for R in Rs_D]
+X = [((c_from_table(R) - Ev[R]) / R) for R in Rs_D]
 print(f"X/R range: [{min(X):.4f}, {max(X):.4f}]")
 check(
     "X(2^d)=0 for all sampled powers of two:",
-    all(C(1 << d) == Ev[1 << d] for d in range(1, 16)),
+    all(c_from_table(1 << d) == Ev[1 << d] for d in range(1, 16)),
 )
 check(
     "X(R)>0 for all non-powers-of-two in range:",
