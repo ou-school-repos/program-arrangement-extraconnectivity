@@ -481,6 +481,22 @@ profile-only correction or independent charging theorem is established. The
 additive strategies remain refuted; a failed candidate bound alone does not
 prove that state enrichment is necessary.
 
+### Coordinate-averaged squeeze is refuted (2026-09-16)
+
+The verifier now uses the exact symbol-slice children of each coordinate
+split and the exact sum of their potentials. For the full Star S_4 in A(8,4),
+with R=17 and m=4, each active coordinate has one child of size 13 and four
+singleton children. Therefore `sum child P = 4 P(13) = 460`, while
+`sum Delta-X + (m+1)D = 144 + 5*16 = 224`, and `k P(17) = 4*169 = 676`.
+The exact left side is 684, so the averaged inequality has slack -8,
+matching the four local gaps of -2.
+
+The fracture identity and pairwise multiplicity envelope remain useful
+accounting statements, but their independent combination cannot prove the
+boundary target. The former superadditive proxy is deprecated: its failures
+came from confusing symbol slices with deleted-coordinate roots. No
+restricted theorem or Lean proof follows from this failed squeeze.
+
 ### Separated collision slack fails on Star children (2026-09-16)
 
 The candidate `G(F) = C(|F|) - E(|F|) - X(F)` is negative on the very Star

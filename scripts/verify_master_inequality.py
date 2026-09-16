@@ -15,10 +15,12 @@ from collections import defaultdict
 
 
 def sbl(size):
+    """Return the cumulative bit length on 1 through size - 1."""
     return sum(value.bit_length() for value in range(1, size))
 
 
 def e_seq(size):
+    """Return the cumulative popcount on 0 through size - 1."""
     return sum(value.bit_count() for value in range(size))
 
 
@@ -30,10 +32,11 @@ def f_func(x, m):
 
 
 def P(R, m):
+    """Return the arithmetic potential P(R) for overhang m."""
     return (R - 1) + sbl(R) + (m - 1) * e_seq(R)
 
 
-def coord_boundary_and_roots(vertices, p, n, k):
+def coord_boundary_and_roots(vertices, p, n):
     """Return (external_neighbors_at_p, roots_at_p) for coordinate p."""
     members = set(vertices)
     roots = set()
@@ -78,7 +81,7 @@ def full_statistics(vertices, n, k):
     directions = []
     all_external = set()
     for p in range(k):
-        ext, _ = coord_boundary_and_roots(vertices, p, n, k)
+        ext, _ = coord_boundary_and_roots(vertices, p, n)
         directions.append(ext)
         all_external |= ext
 
@@ -100,7 +103,7 @@ def full_statistics(vertices, n, k):
             # The coordinate-split tree partitions by the symbol at p.
             fibers[vertex[p]].append(vertex)
         child_sizes = [len(f) for f in fibers.values()]
-        _, roots_p = coord_boundary_and_roots(vertices, p, n, k)
+        _, roots_p = coord_boundary_and_roots(vertices, p, n)
         Delta_D_p = R - len(roots_p)
         # sum_s f(c_{p,s})
         sum_f_children = sum(f_func(cs, n - k) for cs in child_sizes)
@@ -127,13 +130,13 @@ def full_statistics(vertices, n, k):
     }
 
 
-def verify_lemma2_envelope(R, D, mu_sum, m, P1):
+def verify_lemma2_envelope(R, mu_sum, m, P1):
     """Lemma 2: sum mu(w) <= 2R(R-1) + 2(m-3)*P_1."""
     bound = 2 * R * (R - 1) + 2 * (m - 3) * P1
     return mu_sum <= bound + 1e-9, bound
 
 
-def verify_lemma3_superadditive(split_data, m):
+def verify_lemma3_superadditive(split_data):
     """Lemma 3: sum_s f(c_{p,s}) <= f(Delta_D_p + 1) for all p."""
     all_ok = True
     worst_gap = float("inf")
@@ -156,6 +159,7 @@ def verify_lemma4_master(R, D, m, k, split_data, mu_sum):
 
 
 def main():
+    """Run bounded random checks and report violations of each diagnostic."""
     print("=== VERIFYING FOUR-LEMMA ANALYTIC SQUEEZE ===\n")
     results = {}
     MAX_SAMPLES = 5000
@@ -195,20 +199,18 @@ def main():
                 P1 = compute_p1(vertices, k)
 
                 # Lemma 2: Envelope
-                ok2, bound = verify_lemma2_envelope(
-                    data["R"], data["D"], data["mu_sum"], m, P1
-                )
+                ok2, _ = verify_lemma2_envelope(data["R"], data["mu_sum"], m, P1)
                 if not ok2:
                     violations["L2"] += 1
 
                 # Lemma 3: Superadditive
-                ok3, worst_gap = verify_lemma3_superadditive(data["split_data"], m)
+                ok3, _ = verify_lemma3_superadditive(data["split_data"])
                 if not ok3:
                     violations["L3"] += 1
 
                 # Lemma 4: Master
                 ok4, lhs, rhs = verify_lemma4_master(
-                    data["R"], data["D"], m, k, data["split_data"], P1
+                    data["R"], data["D"], m, k, data["split_data"], data["mu_sum"]
                 )
                 if not ok4:
                     violations["L4"] += 1
