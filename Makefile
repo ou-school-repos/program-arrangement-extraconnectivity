@@ -52,6 +52,8 @@ SRC_A10_RECON = scripts/a10_5_recon.cpp
 BIN_A10_RECON = a10_5_recon
 SRC_A10_HUNT = scripts/a10_5_hunt.cpp
 BIN_A10_HUNT = a10_5_hunt
+SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
+BIN_ANNEAL = simulated_annealing_hunt
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
@@ -139,6 +141,11 @@ $(BIN_A10_RECON): $(SRC_A10_RECON)
 $(BIN_A10_HUNT): $(SRC_A10_HUNT)
 	@$(call print_info,Building $@ with OR-Tools)
 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) -DOR_PROTO_DLL= -fwrapv $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_ANNEAL): $(SRC_ANNEAL)
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
@@ -259,9 +266,12 @@ csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
 	-cppcheck --std=c++17 --enable=warning,style,performance --quiet $(SRCS) | tee lint.log
-	#-clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
 	flake8 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
+
+.PHONY: clang
+clang: ##H @Dev Run clang-tidy lint only
+	clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
 
 .PHONY: pylint
 pylint:	##H @Dev Run pylint only

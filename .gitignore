@@ -23,6 +23,7 @@ search_triples
 search_single
 profile_telescope_milp
 /a10_*_*
+/simulated_annealing*
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
