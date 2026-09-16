@@ -132,6 +132,6 @@ CASES = [
 ]
 
 if __name__ == "__main__":
-    for R, vertices, nk1, const in CASES:
-        verify(R, vertices, nk1, const)
+    for case_r, case_vertices, case_nk1, case_const in CASES:
+        verify(case_r, case_vertices, case_nk1, case_const)
     print(f"\nAll {len(CASES)} cases verified (R=2..9).")

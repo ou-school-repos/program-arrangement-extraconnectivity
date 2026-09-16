@@ -19,44 +19,14 @@ driven mechanism.
 import argparse
 from itertools import combinations_with_replacement
 
-
-def cross_collisions(vertices, n, k):
-    """Return X(vertices), the directional-boundary overlap excess."""
-    members = set(vertices)
-    directional_total = 0
-    external = set()
-    for position in range(k):
-        directional = set()
-        for vertex in vertices:
-            used = set(vertex)
-            for symbol in range(n):
-                if symbol in used:
-                    continue
-                neighbor = vertex[:position] + (symbol,) + vertex[position + 1 :]
-                if neighbor not in members:
-                    directional.add(neighbor)
-        directional_total += len(directional)
-        external |= directional
-    return directional_total - len(external)
-
-
-def defect(vertices, k):
-    """Return D(vertices)."""
-    roots = 0
-    for position in range(k):
-        roots += len(
-            {vertex[:position] + vertex[position + 1 :] for vertex in vertices}
-        )
-    return len(vertices) * k - roots
+from lib import cross_collisions, defect, e_seq, sbl
 
 
 def potential(size, overhang):
     """Return P(size) = C(size) + overhang * E(size)."""
     if size == 0:
         return 0
-    sbl = sum(value.bit_length() for value in range(1, size))
-    e_val = sum(value.bit_count() for value in range(size))
-    return size - 1 + sbl + (overhang - 1) * e_val
+    return size - 1 + sbl(size) + (overhang - 1) * e_seq(size)
 
 
 def branch_partitions(leftover, m, max_branches):

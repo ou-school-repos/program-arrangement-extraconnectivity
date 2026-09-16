@@ -18,8 +18,8 @@ import argparse
 from itertools import combinations
 from math import comb
 
-from lib import (arrangement_vertices, boundary_metrics, c_constant, e_seq,
-                 is_connected, neighbors)
+from lib import (arrangement_vertices, boundary_metrics, build_fibers,
+                 c_constant, e_seq, is_connected, neighbors)
 
 
 def check(n: int, k: int, size: int) -> None:

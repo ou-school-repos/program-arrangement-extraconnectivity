@@ -36,7 +36,7 @@ import random
 from lib import boundary_metrics, build_fibers
 
 
-def phi(subset, fibers, k, m):
+def phi(subset, fibers, _k, m):
     """Return the weighted collision/defect potential of ``subset``."""
     _, defect, collisions = boundary_metrics(subset, fibers)
     return collisions + (m + 1) * defect

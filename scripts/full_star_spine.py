@@ -14,15 +14,7 @@ spine edge.  It is an exact calculation for the maximally symmetric Star
 family, not a universal proof for arbitrary subsets.
 """
 
-
-def sbl(size):
-    """Return sum(bit_length(i) for 1 <= i < size)."""
-    return sum(value.bit_length() for value in range(1, size))
-
-
-def e_seq(size):
-    """Return cumulative binary popcount through size - 1."""
-    return sum(value.bit_count() for value in range(size))
+from lib import cross_collisions, defect, e_seq, sbl
 
 
 def potential(size, overhang):
@@ -40,36 +32,6 @@ def full_star(n, k, active_coordinates):
         for symbol in range(k, n):
             vertices.append(center[:position] + (symbol,) + center[position + 1 :])
     return vertices
-
-
-def cross_collisions(vertices, n, k):
-    """Return X(vertices), the directional-boundary overlap excess."""
-    members = set(vertices)
-    directional_total = 0
-    external = set()
-    for position in range(k):
-        directional = set()
-        for vertex in vertices:
-            used = set(vertex)
-            for symbol in range(n):
-                if symbol in used:
-                    continue
-                neighbor = vertex[:position] + (symbol,) + vertex[position + 1 :]
-                if neighbor not in members:
-                    directional.add(neighbor)
-        directional_total += len(directional)
-        external |= directional
-    return directional_total - len(external)
-
-
-def defect(vertices, k):
-    """Return D(vertices)."""
-    roots = 0
-    for position in range(k):
-        roots += len(
-            {vertex[:position] + vertex[position + 1 :] for vertex in vertices}
-        )
-    return len(vertices) * k - roots
 
 
 def print_spine(k, overhang):
