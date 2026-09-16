@@ -133,13 +133,11 @@ ARRANGEMENT_HDRS = $(wildcard src/*.h)
 .PHONY: build
 build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE)	##H @Build Compile all binaries
 
-.PHONY: $(BIN_A10_RECON)
 $(BIN_A10_RECON): $(SRC_A10_RECON)
 	@$(call print_info,Building $@)
 	$(CXX) -O3 -std=c++17 -Wall -Wextra -Wpedantic -o $@ $<
 	@$(call print_success,Build complete.)
 
-.PHONY: $(BIN_A10_HUNT)
 $(BIN_A10_HUNT): $(SRC_A10_HUNT)
 	@$(call print_info,Building $@ with OR-Tools)
 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) -DOR_PROTO_DLL= -fwrapv $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)

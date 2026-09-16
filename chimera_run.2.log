@@ -1,3 +1,9 @@
+# === Historical run: a10_5_hunt 34 (pre-decision-model optimization model) ===
+# This log captures the ORIGINAL optimizing model (a10_5_hunt.cpp, 8 workers,
+# hard bound <= 297 + Minimize, no incumbent seeded). It is superseded by the
+# strengthened a10_5_boost.cpp model (6 workers, Hamming-slice incumbent hint,
+# sound neighborhood constraints). Preserve as historical reference only.
+# ---------------------------------------------------------------------------
 $ ./a10_5_hunt 34
 A(10,5): vertices=30240 directed_edges=756000
 resuming with proven lower bound >= 34

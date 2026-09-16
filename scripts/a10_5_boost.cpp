@@ -1,8 +1,10 @@
 #include <array>
 #include <cstdio>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -66,16 +68,22 @@ std::vector<int> hamming_slice() {
 int main(int argc, char **argv) {
     int floor = 0;
     double time_limit = 0.0;
+    bool line_cuts = false;
     for (int i = 1; i < argc; ++i) {
+        const std::string argument = argv[i];
+        if (argument == "cuts") {
+            line_cuts = true;
+            continue;
+        }
         try {
-            const double value = std::stod(argv[i]);
+            const double value = std::stod(argument);
             if (i == 1)
                 floor = static_cast<int>(value);
             else
                 time_limit = value;
         } catch (const std::exception &) {
             std::cerr << "usage: " << argv[0]
-                      << " [proven-lower-bound] [time-limit-seconds]\n";
+                      << " [proven-lower-bound] [time-limit-seconds] [cuts]\n";
             return 2;
         }
     }
@@ -200,9 +208,73 @@ int main(int argc, char **argv) {
         model.AddLessOrEqual(boundary[id], neighbor_sum);
     }
 
-    for (std::size_t u = 0; u < adjacency.size(); ++u) {
-        for (const int v : adjacency[u])
-            model.AddGreaterOrEqual(boundary[v], selected[u] - selected[v]);
+    if (!line_cuts) {
+        for (std::size_t u = 0; u < adjacency.size(); ++u) {
+            for (const int v : adjacency[u])
+                model.AddGreaterOrEqual(boundary[v], selected[u] - selected[v]);
+        }
+    }
+
+    if (line_cuts) {
+        std::vector<std::vector<int>> lines;
+        lines.reserve(kSize * 5040);
+        for (int position = 0; position < kSize; ++position) {
+            std::vector<std::array<int, kSize>> roots;
+            std::array<int, kSize> root{};
+            std::array<bool, kSymbols> used{};
+            std::function<void(int, int)> build = [&](int cursor, int depth) {
+                if (cursor == kSize) {
+                    if (depth == kSize - 1)
+                        roots.push_back(root);
+                    return;
+                }
+                if (cursor == position) {
+                    build(cursor + 1, depth);
+                    return;
+                }
+                for (int symbol = 0; symbol < kSymbols; ++symbol) {
+                    if (used[symbol])
+                        continue;
+                    used[symbol] = true;
+                    root[cursor] = symbol;
+                    build(cursor + 1, depth + 1);
+                    used[symbol] = false;
+                }
+            };
+            build(0, 0);
+            for (const std::array<int, kSize> &line_root : roots) {
+                std::vector<int> members;
+                members.reserve(kSymbols);
+                std::array<bool, kSymbols> root_used{};
+                for (int cursor = 0; cursor < kSize; ++cursor)
+                    if (cursor != position)
+                        root_used[line_root[cursor]] = true;
+                for (int symbol = 0; symbol < kSymbols; ++symbol) {
+                    if (root_used[symbol])
+                        continue;
+                    std::array<int, kSize> member = line_root;
+                    member[position] = symbol;
+                    members.push_back(index.at(encode(member)));
+                }
+                lines.push_back(std::move(members));
+            }
+        }
+        std::cout << "conditional line cuts: " << lines.size() << " lines\n";
+
+        std::vector<BoolVar> occupied;
+        occupied.reserve(lines.size());
+        for (std::size_t l = 0; l < lines.size(); ++l)
+            occupied.push_back(model.NewBoolVar());
+        for (std::size_t l = 0; l < lines.size(); ++l) {
+            const std::vector<int> &line = lines[l];
+            LinearExpr x_sum;
+            for (const int id : line) {
+                x_sum += selected[id];
+                model.AddImplication(selected[id], occupied[l]);
+                model.AddGreaterOrEqual(boundary[id], occupied[l] - selected[id]);
+            }
+            model.AddLessOrEqual(occupied[l], x_sum);
+        }
     }
 
     model.Minimize(boundary_expr);
