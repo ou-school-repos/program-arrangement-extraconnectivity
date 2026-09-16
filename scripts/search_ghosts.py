@@ -15,8 +15,7 @@ Usage: python3 search_ghosts.py n k c_a c_b [--time-limit SECONDS]
 import argparse
 import itertools
 
-# OR-Tools is an optional dependency used only by this solver script.
-from ortools.sat.python import cp_model  # pylint: disable=import-error
+from ortools.sat.python import cp_model
 
 
 def e_seq(size):

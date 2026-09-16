@@ -8,10 +8,16 @@ dev = [
     "flake8",
     "pylint",
     "ruff",
+    "scipy-stubs",
+    "types-networkx",
 ]
 
 [tool.isort]
 profile = "black"
+
+[[tool.mypy.overrides]]
+module = ["ortools.sat.python"]
+ignore_missing_imports = true
 
 [tool.pylint.main]
 disable = [
@@ -28,3 +34,6 @@ disable = [
 # Add `scripts/` to the analysis path so `pylint .` from the repo root sees
 # it too, without muddying the script with runtime path handling.
 init-hook = "import sys, os; sys.path.insert(0, os.path.join(os.getcwd(), 'scripts'))"
+
+[tool.pylint.typecheck]
+ignored-modules = ["ortools.sat.python"]
