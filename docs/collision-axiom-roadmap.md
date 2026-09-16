@@ -27,25 +27,25 @@ This document describes what a complete mechanized proof of each would require.
   general-purpose interface (any future alternate proof of `HBCrossCollisions`
   can still plug into it); it is not leftover debt. `ProofAudit.lean`
   mechanically confirms both `hb_cross_collisions_closed` and
-  `arrangement_boundary_minimum` contain zero `sorry` dependencies. This item
-  is done; no further Lean work is queued for it.
-- **Why the driver route was abandoned (kept for research reference only).**
-  The strong induction driver `hb_cross_collisions_of_recurrence` in
-  `CrossCollisionsResearch.lean` reduced `HBCrossCollisions` to three
-  interface lemmas — `CrossBaseOne` and `CrossDimStable` are proven, but the
-  third, `CrossRecurrence`, is genuinely circular as an induction step: its
+  `arrangement_boundary_minimum` contain zero `sorry` dependencies. This item is
+  done; no further Lean work is queued for it.
+- **Why the driver route was abandoned (kept for research reference only).** The
+  strong induction driver `hb_cross_collisions_of_recurrence` in
+  `CrossCollisionsResearch.lean` reduced `HBCrossCollisions` to three interface
+  lemmas — `CrossBaseOne` and `CrossDimStable` are proven, but the third,
+  `CrossRecurrence`, is genuinely circular as an induction step: its
   `ext_cube(d,m)` term is not an arithmetic quantity but is _equivalent to_
   `HBCrossCollisions(m)` itself (the RHS of `CrossRecurrence` is a set
-  cardinality whose evaluation _is_ the theorem at the smaller size `m`), so
-  the driver would be handing itself its own conclusion as a hypothesis with
-  nothing new supplied. `CrossTop` supersedes this with a direct,
-  non-recursive closed-form identity and its own combinatorial proof (a
-  vertex is double-counted in the top-heavy ball's boundary iff it is a cube
-  vertex; every top-strip cube vertex has multiplicity ≥ 1 via its "bottom
-  partner"; summing the excess multiplicity reduces to a plain edge-boundary
-  count in one lower dimension). `CrossRecurrence` and its driver are archived
-  to `docs/archive/CrossRecurrenceDriver.lean` for historical reference only;
-  there is nothing left to reconcile.
+  cardinality whose evaluation _is_ the theorem at the smaller size `m`), so the
+  driver would be handing itself its own conclusion as a hypothesis with nothing
+  new supplied. `CrossTop` supersedes this with a direct, non-recursive
+  closed-form identity and its own combinatorial proof (a vertex is
+  double-counted in the top-heavy ball's boundary iff it is a cube vertex; every
+  top-strip cube vertex has multiplicity ≥ 1 via its "bottom partner"; summing
+  the excess multiplicity reduces to a plain edge-boundary count in one lower
+  dimension). `CrossRecurrence` and its driver are archived to
+  `docs/archive/CrossRecurrenceDriver.lean` for historical reference only; there
+  is nothing left to reconcile.
 - **Formula values verified** via `predict --verify R` (predict.cpp) for
   `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
   `arrangement` nauty-based search covers `R ≤ 10`. (This verifies the
@@ -54,45 +54,42 @@ This document describes what a complete mechanized proof of each would require.
   quantifier below.)
 - **`UniversalLowerBound` is refuted as an unrestricted statement, and has no
   active Lean formalization strategy for any restricted replacement.** The
-  full-Star set in `A(10,8)` (R=17) has external boundary 168 against a
-  required 169 — see the definition's docstring in
-  `ArrangementExtraconnectivity.lean` and
-  `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure Landscape"
+  full-Star set in `A(10,8)` (R=17) has external boundary 168 against a required
+  169 — see the definition's docstring in `ArrangementExtraconnectivity.lean`
+  and `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure Landscape"
   section, mapped further by `scripts/sweep_boundary.py`,
   `scripts/partial_star_sweep.py`, and `scripts/occupancy_sweep.py`. The
-  equivalent weighted-potential inequality below is the *same* false
-  statement (Lemma "Deficit-compensated collision reduction" in the paper),
-  not an independent candidate.
-  An earlier support-projection/Boolean-cube-injection approach was explored and
-  abandoned — it relied on an inequality later refuted by a direct
-  counterexample. See
+  equivalent weighted-potential inequality below is the _same_ false statement
+  (Lemma "Deficit-compensated collision reduction" in the paper), not an
+  independent candidate. An earlier support-projection/Boolean-cube-injection
+  approach was explored and abandoned — it relied on an inequality later refuted
+  by a direct counterexample. See
   `docs/archive/collision-axiom-support-projection-abandoned.md` for the
   historical record; do not resume from it without addressing the counterexample
   first. The equivalent weighted potential inequality
   `X(V') + (n-k+1) · D(V') ≤ C(R) + (n-k) · E(R)` was previously reported as
-  passing exhaustive C++ testing across 24 parameter rows (up to 190M
-  subsets) with no counterexample; that search never reached the regime
-  (large R relative to n-k) where the full-Star witness above fails it, so it
-  is not in tension with the refutation -- it simply never got there. The
-  standard guarded symbol compression is known to increase
-  boundary on a two-vertex `A(4,2)` example, so it cannot establish this
-  candidate; see `docs/universal-lower-bound-work.md`. Four further candidate
-  proof mechanisms have been closed by finite counterexamples: edge-gradient
-  charging overcounts collision mass, single-vertex hole-filling does not
-  preserve its slack, the tested guarded Pinto-style dual-compression pair has
-  no admissible non-worsening branch on finite witnesses, and the additive
-  convex fiber-size Lyapunov ansatz Ψ_f(V') = Σ_s N_s(V') w_s is dead — refuted
-  by both LP infeasibility and a closed-form 4-cycle argument (the R=1,2 anchors
-  lock w_1=0, w_2=m+1, giving Ψ=4(m+1) < 8m=Φ for every 4-cycle when m≥2). These
-  closures do not alter any Lean interface; a global structural approach
-  (submodular analysis of C(R)+mE(R) directly, rather than vertex-by-vertex or
-  fiber-by-fiber construction) remains to be formalized, but any such approach
-  must now target a *restricted* form of the inequality, not the unrestricted
-  one, since the latter is false.
+  passing exhaustive C++ testing across 24 parameter rows (up to 190M subsets)
+  with no counterexample; that search never reached the regime (large R relative
+  to n-k) where the full-Star witness above fails it, so it is not in tension
+  with the refutation -- it simply never got there. The standard guarded symbol
+  compression is known to increase boundary on a two-vertex `A(4,2)` example, so
+  it cannot establish this candidate; see `docs/universal-lower-bound-work.md`.
+  Four further candidate proof mechanisms have been closed by finite
+  counterexamples: edge-gradient charging overcounts collision mass,
+  single-vertex hole-filling does not preserve its slack, the tested guarded
+  Pinto-style dual-compression pair has no admissible non-worsening branch on
+  finite witnesses, and the additive convex fiber-size Lyapunov ansatz Ψ_f(V') =
+  Σ_s N_s(V') w_s is dead — refuted by both LP infeasibility and a closed-form
+  4-cycle argument (the R=1,2 anchors lock w_1=0, w_2=m+1, giving Ψ=4(m+1) <
+  8m=Φ for every 4-cycle when m≥2). These closures do not alter any Lean
+  interface; a global structural approach (submodular analysis of C(R)+mE(R)
+  directly, rather than vertex-by-vertex or fiber-by-fiber construction) remains
+  to be formalized, but any such approach must now target a _restricted_ form of
+  the inequality, not the unrestricted one, since the latter is false.
 
 ## Immediate Lean Work Queue
 
-1. Define and formalize a *restricted* replacement for `UniversalLowerBound`
+1. Define and formalize a _restricted_ replacement for `UniversalLowerBound`
    (see "Current Status" above) once the restricted regime is characterized
    mathematically -- it is the sole remaining open hypothesis of the capstone.
    `HBCrossCollisions` requires no further work (done, see above).
@@ -208,8 +205,8 @@ unconditional capstone (`arrangement_boundary_minimum`,
 `globally_optimal_growth_strategy`), which calls
 `arrangement_extraconnectivity_minimum`'s conditional capstone with
 `hb_cross_collisions_closed` discharging `HBCrossCollisions` directly. The
-recurrence driver and its scaffold obligations are archived and superseded,
-not pending. `UniversalLowerBound` remains the separate, still-open
+recurrence driver and its scaffold obligations are archived and superseded, not
+pending. `UniversalLowerBound` remains the separate, still-open
 universal-boundary obligation (now known false unrestricted; see "Current
 Status" above).
 

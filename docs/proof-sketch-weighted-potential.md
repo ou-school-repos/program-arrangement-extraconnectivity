@@ -2308,23 +2308,22 @@ showing the locked potential is structurally blind to cross-fiber collisions
 does not merely alter the selection rule for this guarded pair also remains
 open.
 
-**Update (post full-Star counterexample):** the unrestricted inequality
-X(V') + (m+1)D(V') ≤ C(R) + m·E(R) is false in general -- it fails for the
-full Star in $A(10,8)$ at $R=17$ (Proposition 5.3 in the paper) and, more
-broadly, for full Stars at $j\ge j_{\text{fail}}(m)$ branches for every
-$m\ge2$ (see "Full-Star Failure Landscape" above). The exhaustive
-computational evidence below predates that counterexample and was bounded by
-$R\le10$ (connected) or $R\le6$ (all subsets) in its parameter cells; it is
-not in tension with the refutation, which occurs at larger $R$ relative to
-$m$, but it no longer supports an unrestricted claim. The open proof target
-is now the restricted inequality, for whatever restricted regime (in $R$,
-$m$, or set shape) survives the failure landscape mapped above -- that
-regime is not yet characterized.
+**Update (post full-Star counterexample):** the unrestricted inequality X(V') +
+(m+1)D(V') ≤ C(R) + m·E(R) is false in general -- it fails for the full Star in
+$A(10,8)$ at $R=17$ (Proposition 5.3 in the paper) and, more broadly, for full
+Stars at $j\ge j_{\text{fail}}(m)$ branches for every $m\ge2$ (see "Full-Star
+Failure Landscape" above). The exhaustive computational evidence below predates
+that counterexample and was bounded by $R\le10$ (connected) or $R\le6$ (all
+subsets) in its parameter cells; it is not in tension with the refutation, which
+occurs at larger $R$ relative to $m$, but it no longer supports an unrestricted
+claim. The open proof target is now the restricted inequality, for whatever
+restricted regime (in $R$, $m$, or set shape) survives the failure landscape
+mapped above -- that regime is not yet characterized.
 
 The exhaustive computational evidence (3,796 sets as of 2026-09-14, across
 exhaustive, random, structured, Swiss, and crumbs corpora) found no
-counterexample within its bounded search; the full-Star witness above shows
-this reflects the bound on $R$, not the truth of the unrestricted claim. The
-existing Cheng et al. computational results
-\cite{cheng2022extraconnectivity} do not supply this — they are limited to small
-g and do not address the all-subsets vertex-isoperimetric question.
+counterexample within its bounded search; the full-Star witness above shows this
+reflects the bound on $R$, not the truth of the unrestricted claim. The existing
+Cheng et al. computational results \cite{cheng2022extraconnectivity} do not
+supply this — they are limited to small g and do not address the all-subsets
+vertex-isoperimetric question.
