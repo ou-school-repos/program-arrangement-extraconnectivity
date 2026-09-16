@@ -267,6 +267,10 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 pylint:	##H @Dev Run pylint only
 	pylint $$(git ls-files '*.py')
 
+.PHONY: mypy
+mypy:	##H @Dev Run mypy only
+	mypy $$(git ls-files '*.py')
+
 .PHONY: format
 format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
