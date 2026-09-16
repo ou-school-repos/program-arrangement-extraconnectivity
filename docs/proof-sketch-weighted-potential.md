@@ -2268,6 +2268,29 @@ pairs, but it refutes this one guarded pair as a universal compression
 mechanism. Full data, witnesses, and the precise scope of the filters are
 recorded in `docs/archive/strategy4-dual-compression-averaging-abandoned.md`.
 
+### Full-Star Failure Landscape and the D-Invariance Finding
+
+Following the full-Star counterexample in $A(10,8)$ (Proposition~5.3 in the
+paper), `scripts/sweep_boundary.py`, `scripts/partial_star_sweep.py`, and
+`scripts/occupancy_sweep.py` map where the failure occurs. Key findings:
+
+- The full-Star cumulative-slack failure point $j_{\text{fail}}$ is not a fixed
+  constant in $m$: it drifts from $j\approx6$ at $m=3$ up to $j\approx13$ at
+  $m=1000$, so no bound of the form $R\le 1+Cm$ for fixed $C$ holds universally.
+- For any fixed total leaf count $R-1$ distributed across branches (cap $m$ per
+  branch) in a Star-shaped configuration, $D$ depends only on the total leaf
+  count, not on how it is distributed across branches -- it is shape-invariant
+  per $R$. Consequently cumulative slack is driven entirely by $X$, and
+  concentrating leaves into fewer/higher-occupancy branches strictly increases
+  $X$ (worsens slack) while spreading them thinner strictly helps.
+- The full Star is **not** the exact worst-case (maximum-$X$) shape among
+  same-total-leaf-count partitions: at $m=3$, $R=19$, the uneven partition
+  $(3,3,3,3,3,2,1)$ (six full branches' worth of leaves spread across seven
+  branches) has $X=91$ (cum. slack $-7$), strictly worse than the symmetric full
+  Star $(3,3,3,3,3,3)$ at $X=90$ (cum. slack $-6$). The full Star is
+  near-worst-case, not extremal; the exact extremal partition is uncharacterized
+  and is an open combinatorial question, not resolved here.
+
 ## Status
 
 This is a research sketch, not a proof. Root compression (Step 4/5) is stalled
