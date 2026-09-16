@@ -22,6 +22,7 @@ search_ghosts
 search_triples
 search_single
 profile_telescope_milp
+a10_5_recon
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

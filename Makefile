@@ -48,6 +48,8 @@ SRC_SINGLE = src/search_single.cpp
 BIN_SINGLE = search_single
 SRC_PROFILE_TELESCOPE = src/profile_telescope_milp.cpp
 BIN_PROFILE_TELESCOPE = profile_telescope_milp
+SRC_A10_RECON = scripts/a10_5_recon.cpp
+BIN_A10_RECON = a10_5_recon
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
@@ -124,6 +126,12 @@ ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 .PHONY: build
 build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE)	##H @Build Compile all binaries
+
+.PHONY: $(BIN_A10_RECON)
+$(BIN_A10_RECON): $(SRC_A10_RECON)
+	@$(call print_info,Building $@)
+	$(CXX) -O3 -std=c++17 -Wall -Wextra -Wpedantic -o $@ $<
+	@$(call print_success,Build complete.)
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
 $(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
@@ -383,7 +391,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_A10_RECON) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
