@@ -472,7 +472,9 @@ def main():
             )
 
     print("\nPhase 2c is implemented by the bounded C++ CP-SAT probe:")
-    print("  ./profile_telescope_milp n k --max-r=R --time-limit=SECONDS")
+    print("  ./profile_telescope_milp n k --mode=relaxed-state --max-r=R")
+    print("  ./profile_telescope_milp n k --mode=exact-menu --max-r=R")
+    print("  Add --time-limit=SECONDS and --workers=1 for a bounded run.")
 
 
 if __name__ == "__main__":

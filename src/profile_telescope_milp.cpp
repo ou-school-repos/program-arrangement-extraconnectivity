@@ -2,17 +2,19 @@
 //
 // Usage:
 //   ./profile_telescope_milp n k
+//       [--mode=per-set|relaxed-state|exact-menu]
 //       [--max-r=R] [--max-sets=N] [--g-cap=N]
 //       [--time-limit=SECONDS] [--workers=N]
 //
-// For every enumerated set V, the model chooses one nontrivial coordinate
-// split p and requires
-//
-//   G(state(V)) <= gap(V,p) + sum_s G(state(F_s)),
-//
-// with integer G >= 0.  A state is the sorted multiset of the sorted fiber
-// size profiles over all coordinates.  This is a finite feasibility probe,
-// not a proof outside the enumerated cardinality range.
+// Modes:
+//   per-set      One constraint per concrete set (default, original).
+//   relaxed-state Union all transitions per profile state, one constraint
+//                 per state.  Fast bounded falsification filter: if
+//                 infeasible, no profile-only G within --g-cap exists.
+//   exact-menu   Group sets by (state, menu).  Two sets with the same
+//                 parent state and identical split menu impose identical
+//                 disjunctive constraints, so retaining one is exactly
+//                 equivalent.  Compression is auditable.
 
 #include <algorithm>
 #include <cstdint>
@@ -51,10 +53,27 @@ using Profile = std::vector<int>;
 using State = std::vector<Profile>;
 
 struct Transition {
-    int parent_state;
-    std::int64_t gap;
+    int parent_state = 0;
+    std::int64_t gap = 0;
     std::vector<int> child_states;
 };
+
+// A menu is a sorted list of (gap, sorted child_state multiset) options.
+// Two sets with the same (state, menu) impose identical constraints.
+struct TransitionKey {
+    std::int64_t gap = 0;
+    std::vector<int> child_states;
+
+    bool operator<(const TransitionKey &other) const {
+        if (gap != other.gap)
+            return gap < other.gap;
+        return child_states < other.child_states;
+    }
+};
+
+using Menu = std::vector<TransitionKey>;
+
+// ---- Arithmetic ----------------------------------------------------------
 
 std::int64_t e_seq(int size) {
     std::int64_t total = 0;
@@ -79,6 +98,8 @@ std::int64_t c_constant(int size) {
 std::int64_t potential(int size, int overhang) {
     return c_constant(size) + static_cast<std::int64_t>(overhang) * e_seq(size);
 }
+
+// ---- Graph ---------------------------------------------------------------
 
 std::vector<Vertex> vertices_of(int n, int k) {
     std::vector<Vertex> vertices;
@@ -143,6 +164,8 @@ void enumerate_subsets(int vertex_count, int max_r, std::vector<Subset> *out) {
     for (int size = 1; size <= max_r; ++size)
         choose(0, size);
 }
+
+// ---- Geometry ------------------------------------------------------------
 
 State state_of(const Subset &subset, const std::vector<Vertex> &vertices, int k) {
     State profiles;
@@ -224,6 +247,24 @@ std::vector<Subset> fibers_of(const Subset &subset, const std::vector<Vertex> &v
     return result;
 }
 
+// ---- Menu ----------------------------------------------------------------
+
+Menu menu_of(const std::vector<Transition> &choices) {
+    Menu result;
+    result.reserve(choices.size());
+    for (const Transition &t : choices) {
+        TransitionKey key;
+        key.gap = t.gap;
+        key.child_states = t.child_states;
+        std::sort(key.child_states.begin(), key.child_states.end());
+        result.push_back(std::move(key));
+    }
+    std::sort(result.begin(), result.end());
+    return result;
+}
+
+// ---- Printing ------------------------------------------------------------
+
 void print_state(const State &state) {
     std::cout << "{";
     for (std::size_t i = 0; i < state.size(); ++i) {
@@ -240,12 +281,156 @@ void print_state(const State &state) {
     std::cout << "}";
 }
 
+// ---- Model builders ------------------------------------------------------
+
+// Per-set: one constraint per concrete set (original behavior).
+void build_per_set(const std::vector<std::vector<Transition>> &choices_by_subset,
+                   CpModelBuilder *model, std::vector<IntVar> *g) {
+    int constrained_sets = 0;
+    int choice_count = 0;
+    for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
+        const std::vector<Transition> &choices = choices_by_subset[i];
+        if (choices.empty())
+            continue;
+        ++constrained_sets;
+        std::vector<BoolVar> choose;
+        choose.reserve(choices.size());
+        for (std::size_t c = 0; c < choices.size(); ++c)
+            choose.push_back(model->NewBoolVar());
+        model->AddExactlyOne(choose);
+        for (std::size_t c = 0; c < choices.size(); ++c) {
+            const Transition &t = choices[c];
+            LinearExpr children_sum = std::accumulate(
+                t.child_states.begin(), t.child_states.end(), LinearExpr{},
+                [&g](LinearExpr acc, int child) { return acc + (*g)[child]; });
+            model->AddLessOrEqual((*g)[t.parent_state],
+                                  t.gap + children_sum)
+                .OnlyEnforceIf(choose[c]);
+            ++choice_count;
+        }
+    }
+    std::cout << "  constrained_sets=" << constrained_sets
+              << " split_choices=" << choice_count << '\n';
+}
+
+// Relaxed-state: union all transitions per profile state, one constraint
+// per state.  Fast falsification filter.
+void build_relaxed_state(
+    const std::vector<std::vector<Transition>> &choices_by_subset,
+    CpModelBuilder *model, std::vector<IntVar> *g) {
+
+    // Union transitions by parent state, dedup by (gap, sorted child_states).
+    std::map<int, std::set<TransitionKey>> union_by_state;
+    for (const auto &choices : choices_by_subset) {
+        for (const Transition &t : choices) {
+            TransitionKey key;
+            key.gap = t.gap;
+            key.child_states = t.child_states;
+            std::sort(key.child_states.begin(), key.child_states.end());
+            union_by_state[t.parent_state].insert(key);
+        }
+    }
+
+    int constrained_states = 0;
+    int choice_count = 0;
+    for (auto &[state_idx, key_set] : union_by_state) {
+        if (key_set.empty())
+            continue;
+        ++constrained_states;
+        std::vector<BoolVar> choose;
+        choose.reserve(key_set.size());
+        for (std::size_t c = 0; c < key_set.size(); ++c)
+            choose.push_back(model->NewBoolVar());
+        model->AddExactlyOne(choose);
+        std::size_t c = 0;
+        for (const TransitionKey &key : key_set) {
+            LinearExpr children_sum = std::accumulate(
+                key.child_states.begin(), key.child_states.end(), LinearExpr{},
+                [&g](LinearExpr acc, int child) { return acc + (*g)[child]; });
+            model->AddLessOrEqual((*g)[state_idx],
+                                  key.gap + children_sum)
+                .OnlyEnforceIf(choose[c]);
+            ++c;
+            ++choice_count;
+        }
+    }
+    std::cout << "  constrained_states=" << constrained_states
+              << " split_choices=" << choice_count << '\n';
+}
+
+// Exact-menu: group by (state, menu), keep one constraint per unique pair.
+// Two sets with the same parent state and identical split menu impose
+// identical disjunctive constraints, so retaining one is exactly equivalent.
+void build_exact_menu(
+    const std::vector<std::vector<Transition>> &choices_by_subset,
+    const std::vector<int> &parent_states,
+    CpModelBuilder *model, std::vector<IntVar> *g) {
+
+    struct MenuEntry {
+        int parent_state = 0;
+        Menu menu;
+        bool operator<(const MenuEntry &other) const {
+            if (parent_state != other.parent_state)
+                return parent_state < other.parent_state;
+            return menu < other.menu;
+        }
+    };
+
+    // Collect unique (state, menu) pairs.
+    std::set<MenuEntry> unique_menus;
+    for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
+        if (choices_by_subset[i].empty())
+            continue;
+        MenuEntry entry;
+        entry.parent_state = parent_states[i];
+        entry.menu = menu_of(choices_by_subset[i]);
+        unique_menus.insert(entry);
+    }
+
+    // Map each unique menu to its representative transitions.
+    std::map<MenuEntry, std::vector<Transition>> representative;
+    for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
+        if (choices_by_subset[i].empty())
+            continue;
+        MenuEntry entry;
+        entry.parent_state = parent_states[i];
+        entry.menu = menu_of(choices_by_subset[i]);
+        if (representative.find(entry) == representative.end())
+            representative.try_emplace(entry, choices_by_subset[i]);
+    }
+
+    int constrained_menus = 0;
+    int choice_count = 0;
+    for (const auto &[entry, choices] : representative) {
+        ++constrained_menus;
+        std::vector<BoolVar> choose;
+        choose.reserve(choices.size());
+        for (std::size_t c = 0; c < choices.size(); ++c)
+            choose.push_back(model->NewBoolVar());
+        model->AddExactlyOne(choose);
+        for (std::size_t c = 0; c < choices.size(); ++c) {
+            const Transition &t = choices[c];
+            LinearExpr children_sum = std::accumulate(
+                t.child_states.begin(), t.child_states.end(), LinearExpr{},
+                [&g](LinearExpr acc, int child) { return acc + (*g)[child]; });
+            model->AddLessOrEqual((*g)[t.parent_state],
+                                  t.gap + children_sum)
+                .OnlyEnforceIf(choose[c]);
+            ++choice_count;
+        }
+    }
+    std::cout << "  constrained_menus=" << constrained_menus
+              << " split_choices=" << choice_count << '\n';
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
     if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " n k [--max-r=R] [--max-sets=N] "
-                  << "[--g-cap=N] [--time-limit=SECONDS] [--workers=N]\n";
+        std::cerr << "Usage: " << argv[0] << " n k"
+                  << " [--mode=per-set|relaxed-state|exact-menu]"
+                  << " [--max-r=R] [--max-sets=N] [--g-cap=N]"
+                  << " [--time-limit=SECONDS] [--workers=N]\n";
         return 1;
     }
     const int n = std::atoi(argv[1]);
@@ -255,9 +440,12 @@ int main(int argc, char **argv) {
     std::int64_t g_cap = 100;
     double time_limit = 30.0;
     int workers = 1;
+    std::string mode = "per-set";
     for (int argument = 3; argument < argc; ++argument) {
         const std::string option(argv[argument]);
-        if (option.rfind("--max-r=", 0) == 0)
+        if (option.rfind("--mode=", 0) == 0)
+            mode = option.substr(7);
+        else if (option.rfind("--max-r=", 0) == 0)
             max_r = std::stoi(option.substr(8));
         else if (option.rfind("--max-sets=", 0) == 0)
             max_sets = std::stoll(option.substr(11));
@@ -271,6 +459,10 @@ int main(int argc, char **argv) {
             std::cerr << "Unknown option: " << option << '\n';
             return 1;
         }
+    }
+    if (mode != "per-set" && mode != "relaxed-state" && mode != "exact-menu") {
+        std::cerr << "Unknown mode: " << mode << '\n';
+        return 1;
     }
     if (n < 1 || k < 1 || k > n || max_r < 1 || max_sets < 1 || g_cap < 0 ||
         time_limit <= 0 || workers < 1) {
@@ -289,12 +481,14 @@ int main(int argc, char **argv) {
     }
 
     std::cout << "Enumerating " << estimate << " subsets of A(" << n << "," << k
-              << ") through R=" << max_r << "; CP-SAT workers=" << workers
+              << ") through R=" << max_r << "; mode=" << mode
+              << "; workers=" << workers
               << ", time limit=" << time_limit << " s.\n";
     std::vector<Subset> subsets;
     subsets.reserve(static_cast<std::size_t>(estimate));
     enumerate_subsets(static_cast<int>(vertices.size()), max_r, &subsets);
 
+    // Register all states.
     std::map<State, int> state_index;
     std::vector<State> states;
     const auto register_state = [&](const State &state) {
@@ -305,17 +499,23 @@ int main(int argc, char **argv) {
         return iterator->second;
     };
 
+    // Compute transitions for each subset.
     std::vector<std::vector<Transition>> choices_by_subset;
+    std::vector<int> parent_states;
     choices_by_subset.reserve(subsets.size());
+    parent_states.reserve(subsets.size());
     const int m = n - k;
     for (const Subset &subset : subsets) {
         std::vector<Transition> choices;
         const int parent_state = register_state(state_of(subset, vertices, k));
+        parent_states.push_back(parent_state);
         if (subset.size() >= 2) {
             const std::int64_t phi_parent = phi_of(subset, vertices, n, k);
-            const std::int64_t p_parent = potential(static_cast<int>(subset.size()), m);
+            const std::int64_t p_parent =
+                potential(static_cast<int>(subset.size()), m);
             for (int position = 0; position < k; ++position) {
-                const std::vector<Subset> fibers = fibers_of(subset, vertices, position);
+                const std::vector<Subset> fibers =
+                    fibers_of(subset, vertices, position);
                 if (fibers.size() < 2)
                     continue;
                 std::int64_t phi_children = 0;
@@ -324,50 +524,60 @@ int main(int argc, char **argv) {
                 for (const Subset &fiber : fibers) {
                     phi_children += phi_of(fiber, vertices, n, k);
                     p_children += potential(static_cast<int>(fiber.size()), m);
-                    child_states.push_back(register_state(state_of(fiber, vertices, k)));
+                    child_states.push_back(
+                        register_state(state_of(fiber, vertices, k)));
                 }
-                choices.push_back({parent_state, p_parent - p_children -
-                                                    (phi_parent - phi_children),
-                                   std::move(child_states)});
+                choices.push_back(
+                    {parent_state,
+                     p_parent - p_children - (phi_parent - phi_children),
+                     std::move(child_states)});
             }
         }
         choices_by_subset.push_back(std::move(choices));
     }
 
+    // Count distinct menus for stats.
+    std::set<Menu> distinct_menus;
+    for (const auto &choices : choices_by_subset) {
+        if (!choices.empty())
+            distinct_menus.insert(menu_of(choices));
+    }
+
+    // Stats.
+    const int concrete_sets = static_cast<int>(std::count_if(
+        choices_by_subset.begin(), choices_by_subset.end(),
+        [](const auto &choices) { return !choices.empty(); }));
+
+    std::cout << "Stats:\n"
+              << "  vertices=" << vertices.size() << '\n'
+              << "  subsets_enumerated=" << subsets.size() << '\n'
+              << "  concrete_sets=" << concrete_sets << '\n'
+              << "  profile_states=" << states.size() << '\n'
+              << "  distinct_menus=" << distinct_menus.size() << '\n';
+
+    // Build CP-SAT model.
     CpModelBuilder model;
     std::vector<IntVar> g;
     g.reserve(states.size());
     for (std::size_t index = 0; index < states.size(); ++index)
         g.push_back(model.NewIntVar(Domain(0, g_cap)));
 
-    int constrained_sets = 0;
-    int choice_count = 0;
-    for (std::size_t subset_index = 0; subset_index < subsets.size(); ++subset_index) {
-        const std::vector<Transition> &choices = choices_by_subset[subset_index];
-        if (choices.empty())
-            continue;
-        ++constrained_sets;
-        std::vector<BoolVar> choose;
-        choose.reserve(choices.size());
-        for (std::size_t choice = 0; choice < choices.size(); ++choice)
-            choose.push_back(model.NewBoolVar());
-        model.AddExactlyOne(choose);
-        for (std::size_t choice = 0; choice < choices.size(); ++choice) {
-            const Transition &transition = choices[choice];
-            LinearExpr children_sum;
-            for (const int child : transition.child_states)
-                children_sum += g[child];
-            model.AddLessOrEqual(g[transition.parent_state],
-                                  transition.gap + children_sum)
-                .OnlyEnforceIf(choose[choice]);
-            ++choice_count;
-        }
-    }
-
     const Subset singleton{0};
     const int singleton_state = register_state(state_of(singleton, vertices, k));
     model.AddEquality(g[singleton_state], 0);
 
+    if (mode == "per-set") {
+        std::cout << "Building per-set model:\n";
+        build_per_set(choices_by_subset, &model, &g);
+    } else if (mode == "relaxed-state") {
+        std::cout << "Building relaxed-state model:\n";
+        build_relaxed_state(choices_by_subset, &model, &g);
+    } else {
+        std::cout << "Building exact-menu model:\n";
+        build_exact_menu(choices_by_subset, parent_states, &model, &g);
+    }
+
+    // Solve.
     SatParameters parameters;
     parameters.set_num_search_workers(workers);
     parameters.set_max_time_in_seconds(time_limit);
@@ -375,17 +585,17 @@ int main(int argc, char **argv) {
     solver_model.Add(NewSatParameters(parameters));
     const CpSolverResponse response = SolveCpModel(model.Build(), &solver_model);
 
-    std::cout << "Model: " << states.size() << " states, " << constrained_sets
-              << " parent sets, " << choice_count << " split choices.\n";
     std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
     if (response.status() != CpSolverStatus::OPTIMAL &&
         response.status() != CpSolverStatus::FEASIBLE)
         return 0;
 
-    std::int64_t maximum_g = 0;
-    for (const IntVar variable : g)
-        maximum_g = std::max(maximum_g, SolutionIntegerValue(response, variable));
-    std::cout << "G range: [0, " << maximum_g << "] (configured cap " << g_cap << ")\n";
+    const std::int64_t maximum_g = std::accumulate(
+        g.begin(), g.end(), std::int64_t{0},
+        [&response](std::int64_t acc, const IntVar &var) {
+            return std::max(acc, SolutionIntegerValue(response, var));
+        });
+    std::cout << "G range: [0, " << maximum_g << "] (cap " << g_cap << ")\n";
     std::cout << "Largest profile states:\n";
     std::vector<int> order(states.size());
     std::iota(order.begin(), order.end(), 0);
@@ -395,7 +605,8 @@ int main(int argc, char **argv) {
     });
     for (int rank = 0; rank < std::min(5, static_cast<int>(order.size())); ++rank) {
         const int index = order[rank];
-        std::cout << "  G=" << SolutionIntegerValue(response, g[index]) << " state=";
+        std::cout << "  G=" << SolutionIntegerValue(response, g[index])
+                  << " state=";
         print_state(states[index]);
         std::cout << '\n';
     }
