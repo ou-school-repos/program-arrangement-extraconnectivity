@@ -62,7 +62,8 @@ ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
 
-SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK) $(SRC_UNIQUENESS) $(SRC_SWEEP_DEFICIT)
+# SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK) $(SRC_UNIQUENESS) $(SRC_SWEEP_DEFICIT)
+SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
