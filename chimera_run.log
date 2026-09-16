@@ -140,3 +140,4 @@ Starting search at 13.01s with 8 workers.
 #Bound 469.59s best:inf   next:[29,297]   bool_core (num_cores=24 [size:2489 mw:1 d:27] a=452 d=27 fixed=6/134696 clauses=891'032)
 #Bound 812.45s best:inf   next:[30,297]   bool_core (num_cores=25 [size:446 mw:1 d:28] a=7 d=28 fixed=6/148169 clauses=948'103)
 #Bound 1270.53s best:inf   next:[31,297]   bool_core (num_cores=26 [size:7 mw:1 d:29] a=1 d=29 fixed=6/158316 clauses=1'012'305)
+#Bound 1630.39s best:inf   next:[32,297]   bool_core (num_cores=27 [size:1 mw:1] a=1 d=29 fixed=6/166538 clauses=1'067'970)
