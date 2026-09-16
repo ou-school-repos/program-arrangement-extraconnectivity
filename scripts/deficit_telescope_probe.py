@@ -171,7 +171,7 @@ def main():
                         "      Because G(V) < 0 is forced by the"
                         " transition DAG, NO state"
                     )
-                    print("      function can save the exact" " Phi <= P(R) bound.")
+                    print("      function can save the exact", "Phi <= P(R) bound.")
                     found_negative = True
 
         if not found_negative:
@@ -185,6 +185,55 @@ def main():
             max_g = max(G.values())
             min_g = min(G.values())
             print(f"  G range: [{min_g:.1f}, {max_g:.1f}]")
+
+        # Profile-dependence analysis: does G depend only on the
+        # sorted fiber sizes at the best split, or on vertex geometry?
+        profile_groups = defaultdict(list)
+        for V, g_val in G.items():
+            if len(V) < 2:
+                continue
+            phi_V = phi(V, n, k, m)
+            P_R = potential(len(V), m)
+            best_profile = None
+            for p_val in range(k):
+                fibers = defaultdict(list)
+                for v in V:
+                    fibers[v[p_val]].append(v)
+                if len(fibers) < 2:
+                    continue
+                profile = tuple(sorted(len(fv) for fv in fibers.values()))
+                if best_profile is None or profile > best_profile:
+                    best_profile = profile
+            if best_profile is not None:
+                profile_groups[best_profile].append((V, g_val))
+
+        # Check consistency: same profile -> same G?
+        inconsistent = 0
+        total_multi = 0
+        for profile, entries in profile_groups.items():
+            if len(entries) < 2:
+                continue
+            total_multi += 1
+            g_vals = [e[1] for e in entries]
+            if max(g_vals) - min(g_vals) > 0.5:
+                inconsistent += 1
+                print(
+                    f"  INCONSISTENT profile {profile}:"
+                    f" G values = {sorted(set(round(g, 1) for g in g_vals))}"
+                )
+
+        if total_multi == 0:
+            print("  Profile analysis: no multi-entry profiles")
+        elif inconsistent == 0:
+            print(
+                f"  Profile analysis: G is profile-determined"
+                f" ({total_multi} profiles, all consistent)"
+            )
+        else:
+            print(
+                f"  Profile analysis: G is GEOMETRY-DEPENDENT"
+                f" ({inconsistent}/{total_multi} inconsistent)"
+            )
 
 
 if __name__ == "__main__":
