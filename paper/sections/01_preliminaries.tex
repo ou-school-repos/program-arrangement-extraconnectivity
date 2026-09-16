@@ -5,9 +5,12 @@
 \end{definition}
 
 \begin{definition}[Arrangement Graph]
-The arrangement graph $A(n,k)$ has vertex set $V = \{ f : [k] \hookrightarrow
-[n] \}$ (injective functions) and edge set $E = \{ \{u, v\} : |\{p \in [k] : u_p
-\neq v_p\}| = 1 \}$.
+The arrangement graph $A(n,k)$ has vertex set $V = \{f:[k]\hookrightarrow[n]\}$.
+Distinct vertices $u,v$ are adjacent, written $u\sim v$, when there is a
+position $p\in[k]$ such that $u_q=v_q$ for every $q\neq p$ and
+$v_p\notin\{u_q:q\in[k]\}$. Equivalently, two injective $k$-tuples are
+adjacent exactly when they differ in one coordinate; the first formulation
+makes the required unused-symbol replacement explicit.
 \end{definition}
 
 To move to an adjacent vertex in $A(n,k)$, one selects one of the $k$ active
@@ -28,12 +31,18 @@ that intersect the set $V'$ at coordinate $p$:
 That is, each root is the $(k{-}1)$-tuple formed by taking a vertex $v \in V'$
 and deleting its $p$-th coordinate. The sum of unique roots $U(V') =
 \sum_{p=1}^k |U_p(V')|$ counts the total number of distinct coordinate-aligned
-lines that $V'$ touches. The \emph{defect} $D(V') = |V'| \cdot k - U(V')$ counts
-how many times two vertices in $V'$ share the same root, i.e., it acts as an
-algebraic proxy for the number of internal edges within $V'$. For
-hypercube-embedded subsets (where no two vertices share more than one root) this
-equality is exact; for dense cliques it serves as a robust algebraic lower bound
-on the physical edge count that naturally prevents over-counting.
+lines that $V'$ touches. For a root $r\in U_p(V')$, let $V'_r$ be the
+vertices of $V'$ on that coordinate line. The \emph{defect} is the
+occupied-root incidence excess
+\[
+ D(V')=\sum_{p=1}^k\sum_{r\in U_p(V')}\bigl(|V'_r|-1\bigr)
+       =k|V'|-U(V').
+\]
+Thus a root fiber containing $q$ vertices contributes $q-1$ to $D$. This is
+not generally the internal-edge count: the same fiber is a $q$-clique with
+$\binom q2$ internal edges. For a Boolean hypercube-embedded set every
+occupied root fiber has size at most $2$, so $D$ equals the internal-edge count
+in that special case.
 \end{definition}
 
 \begin{definition}[External Boundary]
@@ -106,9 +115,9 @@ vertices:
 			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v5) at (8, -1.0) {\texttt{[I,B,C,D,E]} $\notin V'$};
 			\node[draw, dashed, fill=white, minimum width=2.8cm, minimum height=0.5cm] (v6) at (8, -1.7) {\texttt{[J,B,C,D,E]} $\notin V'$};
 		\end{tikzpicture}
-		\caption{A single root expanding into a 1D-clique in $A(10,5)$. Vertices
-		already in $V'$ form internal defect links, while the remaining empty
-		slots generate the external boundary.}
+		\caption{A single root expanding into a 1D-clique in $A(10,5)$. Its
+		occupied part contributes root-incidence excess to the defect, while the
+		remaining empty slots generate external-boundary incidences.}
 		\label{fig:fill_example}
 	\end{figure}
 \end{example}
@@ -139,7 +148,7 @@ vertices:
 		\node[anchor=west, text=gray] at (9, -0.6) {External neighbor};
 	\end{tikzpicture}
 	\caption{Two vertices sharing the same root (fixed $k{-}1$ symbols) are
-	adjacent in $A(n,k)$. Each shared root adds one to the defect $D$ instead
-	of exposing a new boundary vertex.}
+	adjacent in $A(n,k)$. This two-vertex root fiber contributes one to $D$;
+	in general, a $q$-vertex fiber contributes $q-1$.}
 	\label{fig:fiber}
 \end{figure}

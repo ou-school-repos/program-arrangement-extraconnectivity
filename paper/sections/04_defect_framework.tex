@@ -369,7 +369,7 @@ local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries.
 		\draw[red, dotted, thick] (4.5,2.2) -- (4.5,4.3);
 	\end{tikzpicture}
 	\caption{The boundary decomposition
-	$|\extbd(V')| = U(V') \cdot (n-k) - (X(V') + D(V'))$: defect links $D$
+	$|\extbd(V')| = U(V') \cdot (n-k) - (X(V') + D(V'))$: root-incidence excess $D$
 	shield internal vertices, while cross-collisions $X$ correct for boundary
 	overlaps across coordinates.}
 	\label{fig:structure}
@@ -419,10 +419,9 @@ local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries.
 		\node[align=center, font=\bfseries, text=red!80!black] at (4.75, 0.5) {Forbidden\\Region:\\$D=11$\\Impossible};
 	\end{tikzpicture}
 	\caption{The fracture gap at $R=8$: $\mathrm{HB}_8$ achieves $D=12$. In
-	$A(n,k)$, defect links arise from root-sharing---two vertices that agree
-	on all coordinates but one. Each link therefore has a ``twin'' at the same
-	coordinate, so removing one vertex from a root pair destroys both links
-	simultaneously. This makes $D=11$ impossible; the next achievable value is
+	$A(n,k)$, defect arises from occupied coordinate roots. In the displayed
+	configuration, deleting one vertex changes two occupied-root incidences at
+	once. This makes $D=11$ impossible; the next achievable value is
 	$D=10$.}
 	\label{fig:fracture}
 \end{figure}
