@@ -50,6 +50,8 @@ SRC_PROFILE_TELESCOPE = src/profile_telescope_milp.cpp
 BIN_PROFILE_TELESCOPE = profile_telescope_milp
 SRC_A10_RECON = scripts/a10_5_recon.cpp
 BIN_A10_RECON = a10_5_recon
+SRC_A10_HUNT = scripts/a10_5_hunt.cpp
+BIN_A10_HUNT = a10_5_hunt
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
@@ -131,6 +133,12 @@ build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(
 $(BIN_A10_RECON): $(SRC_A10_RECON)
 	@$(call print_info,Building $@)
 	$(CXX) -O3 -std=c++17 -Wall -Wextra -Wpedantic -o $@ $<
+	@$(call print_success,Build complete.)
+
+.PHONY: $(BIN_A10_HUNT)
+$(BIN_A10_HUNT): $(SRC_A10_HUNT)
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) -DOR_PROTO_DLL= -fwrapv $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
@@ -391,7 +399,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_A10_RECON) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_A10_RECON) $(BIN_A10_HUNT) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars

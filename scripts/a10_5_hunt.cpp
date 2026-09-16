@@ -1,0 +1,127 @@
+#include <array>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+
+#include "ortools/sat/cp_model.h"
+#include "ortools/sat/cp_model_solver.h"
+
+using operations_research::sat::BoolVar;
+using operations_research::sat::CpModelBuilder;
+using operations_research::sat::CpSolverStatus;
+using operations_research::sat::CpSolverStatus_Name;
+using operations_research::sat::IntVar;
+using operations_research::sat::LinearExpr;
+using operations_research::sat::Model;
+using operations_research::sat::NewSatParameters;
+using operations_research::sat::SatParameters;
+using operations_research::sat::SolveCpModel;
+
+using Vertex = std::array<int, 5>;
+
+int encode(const Vertex &vertex) {
+    int code = 0;
+    for (const int symbol : vertex)
+        code = 10 * code + symbol;
+    return code;
+}
+
+void enumerate_vertices(int position, Vertex &vertex, std::array<bool, 10> &used,
+                        std::vector<Vertex> &vertices) {
+    if (position == 5) {
+        vertices.push_back(vertex);
+        return;
+    }
+    for (int symbol = 0; symbol < 10; ++symbol) {
+        if (used[symbol])
+            continue;
+        used[symbol] = true;
+        vertex[position] = symbol;
+        enumerate_vertices(position + 1, vertex, used, vertices);
+        used[symbol] = false;
+    }
+}
+
+int main() {
+    constexpr int n = 10;
+    constexpr int k = 5;
+    constexpr int volume = 26;
+    constexpr int cutoff = 297;
+
+    std::vector<Vertex> vertices;
+    Vertex vertex{};
+    std::array<bool, 10> used{};
+    enumerate_vertices(0, vertex, used, vertices);
+
+    std::unordered_map<int, int> index;
+    index.reserve(vertices.size() * 2);
+    for (int id = 0; id < static_cast<int>(vertices.size()); ++id)
+        index.emplace(encode(vertices[id]), id);
+
+    std::vector<std::vector<int>> adjacency(vertices.size());
+    for (int id = 0; id < static_cast<int>(vertices.size()); ++id) {
+        std::array<bool, n> occupied{};
+        for (const int symbol : vertices[id])
+            occupied[symbol] = true;
+        for (int position = 0; position < k; ++position) {
+            for (int symbol = 0; symbol < n; ++symbol) {
+                if (occupied[symbol])
+                    continue;
+                Vertex neighbor = vertices[id];
+                neighbor[position] = symbol;
+                adjacency[id].push_back(index.at(encode(neighbor)));
+            }
+        }
+    }
+
+    std::cout << "A(10,5): vertices=" << vertices.size()
+              << " directed_edges=";
+    std::size_t edge_count = 0;
+    for (const auto &neighbors : adjacency)
+        edge_count += neighbors.size();
+    std::cout << edge_count << "\n";
+
+    CpModelBuilder model;
+    std::vector<BoolVar> selected;
+    std::vector<BoolVar> boundary;
+    selected.reserve(vertices.size());
+    boundary.reserve(vertices.size());
+    for (std::size_t id = 0; id < vertices.size(); ++id) {
+        selected.push_back(model.NewBoolVar());
+        boundary.push_back(model.NewBoolVar());
+        model.AddImplication(boundary.back(), selected.back().Not());
+    }
+
+    LinearExpr volume_expr;
+    LinearExpr boundary_expr;
+    for (const BoolVar variable : selected)
+        volume_expr += variable;
+    for (const BoolVar variable : boundary)
+        boundary_expr += variable;
+    model.AddEquality(volume_expr, volume);
+    model.AddLessOrEqual(boundary_expr, cutoff);
+    model.Minimize(boundary_expr);
+
+    // One pinned vertex is symmetry-safe because A(10,5) is vertex-transitive.
+    const Vertex origin = {0, 1, 2, 3, 4};
+    model.AddEquality(selected[index.at(encode(origin))], 1);
+
+    for (std::size_t u = 0; u < adjacency.size(); ++u) {
+        for (const int v : adjacency[u])
+            model.AddGreaterOrEqual(boundary[v], selected[u] - selected[v]);
+    }
+
+    Model solver;
+    SatParameters parameters;
+    parameters.set_num_search_workers(8);
+    // No solver time limit: stop externally or when CP-SAT proves the cutoff.
+    parameters.set_log_search_progress(true);
+    solver.Add(NewSatParameters(parameters));
+    const auto response = SolveCpModel(model.Build(), &solver);
+
+    std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
+    if (response.status() == CpSolverStatus::OPTIMAL ||
+        response.status() == CpSolverStatus::FEASIBLE)
+        std::cout << "boundary: " << response.objective_value() << '\n';
+    return 0;
+}
