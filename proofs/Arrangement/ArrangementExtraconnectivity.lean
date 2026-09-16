@@ -49,15 +49,24 @@ achieved uniquely by the Hamming Ball embedding.
 
 | Interface | Role | Status |
 |-------|------|--------|
-| `UniversalLowerBound` | Universal boundary inequality (∀ V') | Tested through R ≤ 160; not mechanized |
+| `UniversalLowerBound` | Universal boundary inequality (∀ V') | **False as stated**; see below |
 | `HBCrossCollisions` | Hamming Ball's exact cross-collision count (∃ witness) | Supplied by the direct `CrossTop` proof |
 
 Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
 `arrangement_extraconnectivity_minimum`, not raw `axiom` declarations.
-`UniversalLowerBound` depends on (n, k) dynamically. The predictor has been
-run through R ≤ 160; its configured ceiling is R = 260, whose full sweep is
-still pending. See `docs/lean-proof-status.md` for full status and
-`docs/collision-axiom-roadmap.md` for the formalization path.
+**`UniversalLowerBound` is refuted**: the full-Star set in `A(10,8)` (center
+plus all sixteen single-coordinate replacements by symbol 8 or 9) has R = 17,
+external boundary 168, while the formula demands ≥ 169. See the definition's
+docstring below for the exact witness and `docs/proof-sketch-weighted-potential.md`'s
+"Full-Star Failure Landscape" section for how far the failure extends. No
+instance of `UniversalLowerBound` is proved or axiomatized anywhere in this
+development, so `arrangement_boundary_minimum_of_cross` and
+`globally_optimal_growth_strategy_of_cross` remain correct, unconditionally
+verified conditional theorems -- they simply await a restricted replacement
+hypothesis under which the antecedent is actually true, which is open. See
+`docs/lean-proof-status.md` for full status and
+`docs/collision-axiom-roadmap.md` for the formalization path (both already
+document this refutation).
 
 ## References
 
@@ -764,26 +773,52 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
 /--
-  **Proposition 1 (Universal Boundary Inequality)**
+  **Proposition 1 (Universal Boundary Inequality) -- REFUTED as stated**
 
-  For ANY R-element subset V' of A(n,k), the external boundary is bounded
-  below by the boundary of the lexicographic Hamming Ball.
+  This asserts that for ANY R-element subset V' of A(n,k), the external
+  boundary is bounded below by the boundary of the lexicographic Hamming
+  Ball. **This unrestricted claim is false.**
 
-  Conceptually: any subset failing to match the optimal defect E_seq(R)
-  suffers an insurmountable dimensional penalty of at least (n-k) per unit
-  of missing defect, which always dominates any secondary cross-collision savings
-  as dimensions scale.
+  **Counterexample**: In A(10,8), take the center (0,1,2,3,4,5,6,7) and all
+  sixteen vertices obtained by replacing one coordinate with 8 or 9 (the
+  full Star, R = 17, D = 16, X = 56). Its external boundary has size 168,
+  while the formula (R*k - E_seq R)*(n-k) - C_constant R evaluates to
+  17*8 - 33 = 103, times (10-8) = 206, minus C_constant(17) = 37, i.e. 169.
+  168 < 169, so the inequality fails. Full-Star sets fail more broadly for
+  every m = n-k >= 2 once the branch count is large enough relative to m;
+  see `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure
+  Landscape" section and `scripts/sweep_boundary.py` /
+  `scripts/occupancy_sweep.py` for the mapped failure region. No fixed-R
+  or fixed-(n-k) restriction is currently known to be both sufficient and
+  established.
 
-  **Status and computational evidence**:
+  Conceptually: the intended argument was that any subset failing to match
+  the optimal defect E_seq(R) suffers an insurmountable dimensional penalty
+  of at least (n-k) per unit of missing defect, dominating any secondary
+  cross-collision savings as dimensions scale. This intuition holds
+  asymptotically in (n-k) for fixed R (Section "sandwich" of the paper) but
+  not as an exact statement at every finite scale, which is what this Prop
+  claims.
+
+  **Prior computational evidence (predates this refutation; bounded, not
+  in tension with it)**:
   - This is an all-subsets statement: it has no connectedness hypothesis.
   - `predict.cpp` evaluates the Hamming-ball construction only, and
     `arrangement.cpp` enumerates connected configurations only; neither
     verifies this universal quantifier.
   - `scripts/check_universal_lower_bound.py` exhaustively tests small complete
-    arrangement graphs, including disconnected subsets. This is evidence, not
-    a proof or a replacement for the missing extremal-combinatorics argument.
+    arrangement graphs, including disconnected subsets, but only for very
+    small R (parameter cells with R <= 6-10); it never covered R = 17 in
+    A(10,8), so it is not contradicted by the counterexample above -- it
+    simply never reached the regime where the failure occurs.
   - See docs/axiom-equivalence.md for the full duality explanation
-  - See docs/collision-axiom-roadmap.md for the formalization roadmap
+  - See docs/lean-proof-status.md and docs/collision-axiom-roadmap.md, both of
+    which already document this refutation, for formalization status
+
+  This definition is retained, unproved and unrefuted-as-a-restricted-claim,
+  solely to name the hypothesis that `arrangement_boundary_minimum_of_cross`
+  and related capstone theorems are conditioned on. No instance of it is
+  proved or assumed anywhere in this file.
 -/
 def UniversalLowerBound (R n k : ℕ) : Prop :=
   ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
