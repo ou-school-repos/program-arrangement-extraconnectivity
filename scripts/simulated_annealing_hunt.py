@@ -170,6 +170,8 @@ def run(args: argparse.Namespace) -> int:
             else:
                 state.swap(outgoing=incoming, incoming=outgoing)
             temperature *= args.cooling
+            if temperature < 0.05:
+                temperature = args.temperature
             if best_score < args.target:
                 break
         if best_score < args.target:

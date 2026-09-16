@@ -147,3 +147,24 @@ therefore
 with $\HuntTarget{}$ a search target rather than an upper bound.  This floor is
 an evolving lower-bound record --- each successive core raises it --- and is
 tracked in the accompanying research log.
+
+\begin{remark}[Coordinate-edge counting]\label{rem:coord-edges}
+Let $\CoordEdges(S)$ denote the total number of coordinate-aligned edges from
+members of $S$ to the external boundary, counted per source coordinate:
+$\CoordEdges(S) = \sum_{p=1}^{k} |\partial_p(S)|$, where $\partial_p(S)$ is the
+set of external neighbors that differ from $S$ in position $p$.  Two exact
+identities determine it from the defect-framework data alone:
+\begin{equation}\label{eq:coord-edges}
+	\CoordEdges(S) = |\extbd(S)| + X(S) = U(S)\,(m+1) - |S|\,k,
+\end{equation}
+where $U(S) = \sum_p |U_p(S)|$ is the total unique-root count
+(eq.~\eqref{eq:unique-roots}), $m = n-k$, and
+$X(S) = \CoordEdges(S) - |\extbd(S)|$ is the cross-collision surplus of
+Section~\ref{sec:defect}: the excess of per-coordinate boundary incidences over
+distinct boundary vertices.  The second equality counts, per occupied root
+$r \in U(S)$, the $(m+1)$ vertices on its line minus those already selected
+into $S$; every such external vertex is adjacent to all members on that line.
+For the $26$-subsets of the bracket above, this ties the boundary size to a
+single geometric count --- equivalently to the occupied-root count, since
+$D(S) = k|S| - U(S)$.
+\end{remark}
