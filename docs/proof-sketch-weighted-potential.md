@@ -126,7 +126,7 @@ Since vertex compression in A(n,k) fails (Step 1), and transfer from H(k,n) is
 open (Step 3), a direct approach on the root structure of A(n,k) may be more
 tractable.
 
-Define a **root compression** at position p: given two roots r₁ <_colex r₂, if
+Define a **root compression** at position p: given two roots r₁ `<colex` r₂, if
 the r₂-fiber contains more V'-members than the r₁-fiber, move one vertex from
 the r₂-fiber to the r₁-fiber by changing its symbol at position p.
 
@@ -354,10 +354,10 @@ or finding a counterexample to it.
 ### Strategy 2 sketch: Global Lyapunov function on fiber multisets (refuted by LP)
 
 1. **State space.** Let 𝓕(V') be the multiset of nonzero fiber sizes across all
-   k coordinates: 𝓕(V') = ⋃ₚ {|F_{p,r}| : r ∈ U_p(V')}.
+   k coordinates: 𝓕(V') = ⋃ₚ {|`F_p,r`| : r ∈ U_p(V')}.
 
 2. **Candidate potential.** Since D(V') = Rk − |𝓕(V')|, a natural candidate is
-   Φ(V') = Σₚ Σᵣ f(|F_{p,r}|) for a convex f (e.g. f = E_seq or f(c) = C(c,2)).
+   Φ(V') = Σₚ Σᵣ f(|`F_p,r`|) for a convex f (e.g. f = E_seq or f(c) = C(c,2)).
    Convexity would make concentrating vertices into fewer, larger fibers — which
    the Hamming ball maximizes — strictly increase Φ.
 
@@ -583,11 +583,11 @@ do the rest — is **false in general**, confirmed by an explicit, fully
 hand-verified counterexample, not merely a case where the crude ΔX bound was too
 generous.
 
-A(5,3) (k=3, m=2), R: 2→3. v=[1,2,3]. V_old={u1,u2} with u1=[1,2,4] (sharing
+A(5,3) (k=3, m=2), R: 2→3. v=[1,2,3]. `V_old`={u1,u2} with u1=[1,2,4] (sharing
 root (1,2) at p=3 with v, so s=1) and u2=[4,5,3] (sharing no root with v).
 Verified directly via per-coordinate `coord_boundary` computation (not naive
 neighbor-list overlap, which over-counts: two V-members sharing a root both
-border the same external point through the *same* coordinate, contributing
+border the same external point through the **same** coordinate, contributing
 bd_mult=1, not 2 — this tripped up the first pass of verification and was caught
 and corrected before accepting the result):
 
@@ -609,7 +609,7 @@ repair must abandon step-locality — e.g. an amortized/potential-method argumen
 (bank surplus from early steps, spend it on later deficits) rather than
 requiring every step to individually satisfy the marginal bound. Note that
 proving the amortized (cumulative) version directly is a rephrasing of the
-*original* global claim (the per-step terms telescope back into
+**original** global claim (the per-step terms telescope back into
 X(V')+(m+1)D(V') ≤ C(R)+mE(R)), so this refutation removes the main advantage
 marginal induction offered — reducing an R-vertex claim to a 1-vertex check —
 not just one candidate bound within it.
@@ -624,12 +624,12 @@ for Φ=X+(m+1)D (not just D) was tested and is presently unresolved, with one
 confirmed dead end and one open, concretely-scoped question:
 
 1. **A first "verification" was caught as tautological.** Computing the
-   recombination penalty (X_cross, ΔD_cross) *by subtracting the known fiber
-   totals from the already-computed Φ(V')* makes the identity
-   Φ(V')=ΣΦ(F_α)+penalty hold by construction for any partition of any set —
+   recombination penalty (`X_cross`, ΔD_cross) **by subtracting the known fiber
+   totals from the already-computed Φ(V')** makes the identity
+   Φ(V')=ΣΦ(`F_α`)+penalty hold by construction for any partition of any set —
    checking it against the target is circular, since it just restates
    Φ(V')≤target using an answer already in hand. A real test requires bounding
-   the penalty from fiber sizes alone, _before_ knowing Φ(V').
+   the penalty from fiber sizes alone, **before** knowing Φ(V').
 
 2. **A geometric a priori bound was derived and is basically sound.** For
    2-fiber partition F_a, F_b (sizes c_a, c_b) at coordinate p, a
@@ -655,8 +655,8 @@ confirmed dead end and one open, concretely-scoped question:
 
    **This does not prove Strategy 3b is dead** — it only shows the generic
    combinatorial upper bounds on X_cross (pairwise count, degree count) are too
-   loose to confirm the inequality at moderate-to-large R. Whether the *true,
-   tightly-argued* worst-case X_cross for a genuine adversarial fiber pair stays
+   loose to confirm the inequality at moderate-to-large R. Whether the **true,
+   tightly-argued** worst-case `X_cross` for a genuine adversarial fiber pair stays
    down near O(log R) — the way earlier "crude bound achievable but the
    trade-off saves it" patterns played out elsewhere in this document — has not
    been checked. No explicit adversarial configuration at R≈10–20 has been
@@ -666,7 +666,7 @@ confirmed dead end and one open, concretely-scoped question:
 4. **A specific R=20 adversarial construction (k=3) was checked and collapses.**
    F_a = {(1,y,3): y∈Y}, F_b = {(2,z,3): z∈Z}, |Y|=|Z|=10, Y∩Z=∅. All 100 pairs
    are genuinely distance-2, but every pair sharing the same z (or same y)
-   generates the *same* collision target — bd_mult counts distinct coordinates,
+   generates the **same** collision target — bd_mult counts distinct coordinates,
    not pairs, so 100 raw pair-interactions collapse to X_cross=20, comfortably
    under the slack of 63 at m=20. **This collapse is a property of k=3
    specifically, not of A(n,k) in general:** with only one non-p coordinate
@@ -679,7 +679,7 @@ confirmed dead end and one open, concretely-scoped question:
    u_i (resp. v_i) is the base with position i replaced by a fresh symbol α_i
    (resp. β_i), and position 1 fixed to a (resp. b). Only matched pairs
    (u_i,v_i) are distance-2 (mismatched i≠j give distance 3, contributing 0),
-   and each matched pair uses a *different* q=i, so their targets don't
+   and each matched pair uses a **different** q=i, so their targets don't
    coincide. Hand-checked at k=5, n=14, m=9: 4 valid pairs, X_cross=8, no
    collapse — confirmed distinct from the k=3 collapse case.
 
@@ -918,7 +918,7 @@ section's first draft omitted entirely.
    extension (r, γ) with γ not already used by u or v is a shared external
    neighbor: exactly m+1−|{u_p,v_p}| = m−1 of them (generalizing to c_a,c_b>1
    sharing one root: m+1−|A_r∪B_r| where A_r,B_r are the symbols already used at
-   p by members of F_a,F_b sharing that root). This is the \_only* channel whose
+   p by members of F_a,F_b sharing that root). This is the **only** channel whose
    count is literally linear in m, verified at m=1 (A(4,3)) where it correctly
    vanishes (m−1=0).
 
@@ -934,7 +934,7 @@ section's first draft omitted entirely.
    per-pair condition itself (this part of the original section was correct).
 
 **And the aggregation is not pair-disjoint — the per-pair sum is only an upper
-bound**, not an exact count: distinct (u,v) pairs can generate the _same_ target
+bound**, not an exact count: distinct (u,v) pairs can generate the **same** target
 w, exactly the k=3 collapse mechanism already established elsewhere in this
 document. So the true shared-boundary count I = eb(F_a)∩eb(F_b) is bounded above
 by (channel 1 total) + (channel 2 pair-sum), with equality failing whenever two
@@ -942,7 +942,7 @@ pairs collide on a target — which is precisely the phenomenon the capacity bou
 needs to control, not a side issue.
 
 **The remaining open problem, precisely, and now correctly scoped:** bound |I| =
-|eb(F_a)∩eb(F_b)| from (c_a, c_b, m) alone, where I is the union of *both*
+|eb(F_a)∩eb(F_b)| from (c_a, c_b, m) alone, where I is the union of **both**
 channels above, adjusted for their mutual overcounting. This is strictly harder
 than "sum a 0–2 count over distance-2 pairs" — that undercounts (by omitting
 channel 1) and overcounts (by ignoring collisions) at the same time. No such
