@@ -262,7 +262,7 @@ hypothesis to V' \ {v} (size R−1), then bound the marginal change Δ Φ = ΔX 
 
 3. **Target bound for the inductive step.** To close the induction, we'd need
 
-   ```
+   ```text
    ΔX + (m+1)s ≤ ΔC(R) + m·Δ E_seq(R)
    ```
 
@@ -283,7 +283,7 @@ hypothesis to V' \ {v} (size R−1), then bound the marginal change Δ Φ = ΔX 
    which requires s>0, and by at most 1 — every other effect of adding v can
    only add new external vertices). Substituting:
 
-   ```
+   ```text
    ΔX = Δ(total_coord_edges) − Δ|∂V'| ≤ (k−s)m         (all s, since the
                                                           s=0 and s>0 cases
                                                           both reduce to this)
@@ -415,7 +415,7 @@ minus the geometric overhead `Phi(V) - sum Phi(F_s)`. A proposed recursive
 correction is a nonnegative, profile-only integer function `G` satisfying, for
 at least one coordinate of every non-singleton set,
 
-```
+```text
 G(state(V)) <= gap + sum G(state(F_s)).
 ```
 
@@ -442,7 +442,7 @@ theorem or axiom status changes follow from these finite certificates.
 
 The defect framework now proves two independent accounting lemmas:
 
-```
+```text
 DeltaD(V,p) = |V| - |U_p(V)|
 DeltaX(V,p) = #{w in external_boundary(V): mu_V(w) >= 2,
                                           w in directional_boundary_p(V)}
@@ -624,24 +624,24 @@ for Φ=X+(m+1)D (not just D) was tested and is presently unresolved, with one
 confirmed dead end and one open, concretely-scoped question:
 
 1. **A first "verification" was caught as tautological.** Computing the
-   recombination penalty (`X_cross`, ΔD_cross) **by subtracting the known fiber
-   totals from the already-computed Φ(V')** makes the identity
-   Φ(V')=ΣΦ(`F_α`)+penalty hold by construction for any partition of any set —
-   checking it against the target is circular, since it just restates
-   Φ(V')≤target using an answer already in hand. A real test requires bounding
-   the penalty from fiber sizes alone, **before** knowing Φ(V').
+   recombination penalty (`X_cross`, `ΔD_cross`) **by subtracting the known
+   fiber totals from the already-computed** `Φ(V')` makes the identity
+   `Φ(V') = ΣΦ(F_α + penalty)` hold by construction for any partition of any set
+   — checking it against the target is circular, since it just restates
+   `Φ(V')≤target` using an answer already in hand. A real test requires bounding
+   the penalty from fiber sizes alone, **before** knowing `Φ(V')`.
 
 2. **A geometric a priori bound was derived and is basically sound.** For
-   2-fiber partition F_a, F_b (sizes c_a, c_b) at coordinate p, a
-   cross-collision requires u∈F_a, v∈F_b at Hamming distance exactly 2
-   (differing at p and one other coordinate q), which forces X_cross ≤ c_a·c_b
+   2-fiber partition `F_a, F_b` (sizes `c_a, c_b`) at coordinate p, a
+   cross-collision requires `u ∈ F_a, v ∈ F_b` at Hamming distance exactly 2
+   (differing at p and one other coordinate q), which forces `X_cross ≤ c_a·c_b`
    (each pair contributes ≤1) and, from a per-vertex degree argument (each v has
-   at most k−1 candidate partners, one per q≠p), also X_cross ≤
-   (k−1)·min(c_a,c_b). The combined bound is min(c_a c_b, (k−1)·min(c_a,c_b)).
-   An initial claim that this bound grows unboundedly with k (making the
-   approach "doomed") was itself an error — it came from summing the two
-   constraints instead of taking their minimum; properly combined, the bound is
-   k-independent for fixed, small fiber sizes.
+   at most k−1 candidate partners, one per q≠p), also
+   `X_cross ≤ (k−1)·min(c_a,c_b)`. The combined bound is
+   `min(c_a c_b, (k−1)·min(c_a,c_b))`. An initial claim that this bound grows
+   unboundedly with `k` (making the approach "doomed") was itself an error — it
+   came from summing the two constraints instead of taking their minimum;
+   properly combined, the bound is k-independent for fixed, small fiber sizes.
 
 3. **The real obstacle is an asymptotic scale mismatch, not k-dependence.**
    ΔC(R)+mΔE(R) (the marginal slack for a single 2-way split) is O(log R) — it
@@ -656,8 +656,8 @@ confirmed dead end and one open, concretely-scoped question:
    **This does not prove Strategy 3b is dead** — it only shows the generic
    combinatorial upper bounds on X_cross (pairwise count, degree count) are too
    loose to confirm the inequality at moderate-to-large R. Whether the **true,
-   tightly-argued** worst-case `X_cross` for a genuine adversarial fiber pair stays
-   down near O(log R) — the way earlier "crude bound achievable but the
+   tightly-argued** worst-case `X_cross` for a genuine adversarial fiber pair
+   stays down near O(log R) — the way earlier "crude bound achievable but the
    trade-off saves it" patterns played out elsewhere in this document — has not
    been checked. No explicit adversarial configuration at R≈10–20 has been
    hand-constructed and verified the way every other claim in this document has
@@ -666,10 +666,10 @@ confirmed dead end and one open, concretely-scoped question:
 4. **A specific R=20 adversarial construction (k=3) was checked and collapses.**
    F_a = {(1,y,3): y∈Y}, F_b = {(2,z,3): z∈Z}, |Y|=|Z|=10, Y∩Z=∅. All 100 pairs
    are genuinely distance-2, but every pair sharing the same z (or same y)
-   generates the **same** collision target — bd_mult counts distinct coordinates,
-   not pairs, so 100 raw pair-interactions collapse to X_cross=20, comfortably
-   under the slack of 63 at m=20. **This collapse is a property of k=3
-   specifically, not of A(n,k) in general:** with only one non-p coordinate
+   generates the **same** collision target — bd_mult counts distinct
+   coordinates, not pairs, so 100 raw pair-interactions collapse to X_cross=20,
+   comfortably under the slack of 63 at m=20. **This collapse is a property of
+   k=3 specifically, not of A(n,k) in general:** with only one non-p coordinate
    available (k=3 means positions {1,2,3}, p=1, only q=2 remains), every pair is
    forced through the same q, which is exactly why they collapse onto shared
    targets.
@@ -710,7 +710,7 @@ confirmed dead end and one open, concretely-scoped question:
    `total_coord_edges = |∂V| + X`, `total_coord_edges = U(m+1) - Rk`, and
    `D = Rk - U`, gives
 
-   ```
+   ```text
    Φ = X + (m+1)D
      = [U(m+1) - Rk - |∂V|] + (m+1)(Rk - U)
      = mRk - |∂V|
@@ -747,7 +747,7 @@ confirmed dead end and one open, concretely-scoped question:
    sharing root (0,·,·)-type structure. Independently recomputed with
    `boundary_metrics` from `scripts/check_universal_lower_bound.py`:
 
-   ```
+   ```text
    |∂F_a| = |∂F_b| = 12, D=X=0 in both fibers (each is internally clean)
    |∂V'| = 16, D(V')=0, X(V')=8
    S = |∂F_a| + |∂F_b| - |∂V'| = 12 + 12 - 16 = 8
@@ -918,9 +918,9 @@ section's first draft omitted entirely.
    extension (r, γ) with γ not already used by u or v is a shared external
    neighbor: exactly m+1−|{u_p,v_p}| = m−1 of them (generalizing to c_a,c_b>1
    sharing one root: m+1−|A_r∪B_r| where A_r,B_r are the symbols already used at
-   p by members of F_a,F_b sharing that root). This is the **only** channel whose
-   count is literally linear in m, verified at m=1 (A(4,3)) where it correctly
-   vanishes (m−1=0).
+   p by members of F_a,F_b sharing that root). This is the **only** channel
+   whose count is literally linear in m, verified at m=1 (A(4,3)) where it
+   correctly vanishes (m−1=0).
 
 2. **Distance-2 (midpoint) channel — gated, but m-free per pair.** For u∈F_a,
    v∈F_b differing at p and exactly one other coordinate q, the candidate
@@ -934,12 +934,12 @@ section's first draft omitted entirely.
    per-pair condition itself (this part of the original section was correct).
 
 **And the aggregation is not pair-disjoint — the per-pair sum is only an upper
-bound**, not an exact count: distinct (u,v) pairs can generate the **same** target
-w, exactly the k=3 collapse mechanism already established elsewhere in this
-document. So the true shared-boundary count I = eb(F_a)∩eb(F_b) is bounded above
-by (channel 1 total) + (channel 2 pair-sum), with equality failing whenever two
-pairs collide on a target — which is precisely the phenomenon the capacity bound
-needs to control, not a side issue.
+bound**, not an exact count: distinct (u,v) pairs can generate the **same**
+target w, exactly the k=3 collapse mechanism already established elsewhere in
+this document. So the true shared-boundary count I = eb(F_a)∩eb(F_b) is bounded
+above by (channel 1 total) + (channel 2 pair-sum), with equality failing
+whenever two pairs collide on a target — which is precisely the phenomenon the
+capacity bound needs to control, not a side issue.
 
 **The remaining open problem, precisely, and now correctly scoped:** bound |I| =
 |eb(F_a)∩eb(F_b)| from (c_a, c_b, m) alone, where I is the union of **both**
@@ -1047,13 +1047,13 @@ rescuing Strategy 3b — see above) to the actual remaining lever: whether every
 split of a set into two fibers always carries enough banked boundary slack to
 cover its own recombination penalty.
 
-**The exact algebraic identity.** For a split V' = F_a ⊔ F_b with sizes c_a, c_b
-(R = c_a+c_b), define the slack of any subset X as S(X) = |extbd(X)| − rhs(|X|),
-where rhs(R) = (Rk−E(R))·(n−k) − C(R) is the conjectured true minimum boundary
-(Proposition 5.3's RHS). Then, **provided F_a and F_b share no direct edges to
-each other**:
+**The exact algebraic identity.** For a split `V' = F_a ⊔ F_b` with sizes
+`c_a, c_b` `(R = c_a+c_b)`, define the slack of any subset X as
+`S(X) = |extbd(X)| − rhs(|X|)`, where `rhs(R) = (Rk−E(R))·(n−k) − C(R)` is the
+conjectured true minimum boundary (Proposition 5.3's RHS). Then, **provided
+`F_a` and `F_b` share no direct edges to each other**:
 
-    S(V') = S(F_a) + S(F_b) + Delta − I
+`S(V') = S(F_a) + S(F_b) + Delta − I`
 
 where Delta = rhs(c_a) + rhs(c_b) − rhs(R) is the recombination budget and I =
 |extbd(F_a) ∩ extbd(F_b)| is the shared-boundary count from the two channels
@@ -1076,7 +1076,7 @@ checked only I < Delta, using the direct-adjacency caveat above as a footnote
 rather than folding it into the quantity being tested. That was an error, not
 merely an incompleteness: the exact identity derived above is
 
-    S(V') = S(F_a) + S(F_b) + Delta − (I + B_ba + B_ab)
+`S(V') = S(F_a) + S(F_b) + Delta − (I + B_ba + B_ab)`
 
 where B_ba = |F_b ∩ ∂F_a| and B_ab = |F_a ∩ ∂F_b| are the direct F_a↔F_b
 adjacency crossover counts (derived cleanly: ∂F_a = E_a ⊔ B_ba with E_a = ∂F_a \
@@ -1318,7 +1318,7 @@ embeddable), and show it equals `Delta` exactly. Whiteboard starting point
 (verified arithmetically against (5,3,4,4) and (7,3,4,4) by the user before this
 section was written):
 
-```
+```text
 Delta = rhs(c_a) + rhs(c_b) - rhs(c_a+c_b)
       = [E_seq(c_a+c_b) - E_seq(c_a) - E_seq(c_b)] * m
         + [C(c_a+c_b) - C(c_a) - C(c_b)]
@@ -1380,7 +1380,7 @@ contributing `ΔE*(m-1)` to `I` with exactly the slope `ΔE` that `Delta`'s own
 `m`-coefficient has. The corrected form of the constant-term target, replacing
 the false `ΔC-ΔE` claim above, is
 
-```
+```text
 T + (B_ab + B_ba) = ΔE + ΔC
 ```
 
@@ -1430,7 +1430,7 @@ _why_ margin=0 is unbeatable, so it still cannot be a step inside the induction.
 partition `V'=F_a⊔F_b` (no tightness assumed yet), edge double-counting over the
 split gives, unconditionally,
 
-```
+```text
 D(V') = D(F_a) + D(F_b) + X
 ```
 
@@ -1445,7 +1445,7 @@ _additionally_, `V'` itself is tight — which is precisely what margin=0
 `Delta` — then `D(V')` is likewise pinned to `E_seq(c_a+c_b)`. Substituting all
 three:
 
-```
+```text
 X = E_seq(c_a+c_b) - E_seq(c_a) - E_seq(c_b) = ΔE
 ```
 
@@ -1469,14 +1469,14 @@ previous paragraph's claim to the contrary is retracted, not just softened.
 hypothesis, giving `D(S) ≤ E_seq(|S|)` for every subset `S`. Applied to
 `V'=F_a⊔F_b` this gives, unconditionally in `V'`:
 
-```
+```text
 X = D(V') - D(F_a) - D(F_b) ≤ E_seq(c_a+c_b) - D(F_a) - D(F_b)
 ```
 
 so if `F_a`, `F_b` are tight _and_ the uniqueness conjecture holds for them
 (`D(F_a)=E_seq(c_a)`, `D(F_b)=E_seq(c_b)`):
 
-```
+```text
 X ≤ ΔE
 ```
 
@@ -1712,7 +1712,7 @@ completeness).** `./sweep_deficit 6 3 5 5   7 3 4 6` (real 102m8.795s — the mo
 expensive `sweep_deficit` run to date, well past the earlier ones, because
 `A(7,3)` has `N=210` vertices and both its tight-fiber enumerations are large):
 
-```
+```text
 n   k   ca   cb   R    m     ceilog2 dk   dm   Delta   worst   deficit
 6   3   5    5    10   3     4       1    1    20      -8      8
 7   3   4    6    10   4     4       1    0    22      -2      2
@@ -1848,7 +1848,7 @@ yet.
 The CP-SAT `amortized` search found the following **FEASIBLE equality witness**
 (not an optimality certificate):
 
-```
+```text
 F_a = {012, 053, 412, 413, 452, 453}
 F_b = {013, 052}
 ```
@@ -1860,7 +1860,7 @@ is a sharp example, but not a proof that 18 is the cell maximum.
 
 The useful local subblocks are
 
-```
+```text
 N_0 = {012, 053},       N_4 = {412, 413, 452, 453},
 F_b = {013, 052}.
 ```
@@ -1874,7 +1874,7 @@ and 2, so it cannot be accounted for in a single root clique.
 The apparently separate tight four-cycle `N_4` has an isolated interaction with
 `F_b` satisfying
 
-```
+```text
 |boundary(N_4)| = 20,  |boundary(F_b)| = 16,
 |boundary(N_4 union F_b)| = 26,
 L(N_4,F_b) = 10 = Delta(4,2).
@@ -1883,26 +1883,26 @@ L(N_4,F_b) = 10 = Delta(4,2).
 This does **not** make the two interactions additive. Define, for disjoint sets,
 the exact boundary-loss functional
 
-```
+```text
 L(A,C) = |boundary(A)| + |boundary(C)| - |boundary(A union C)|.
 ```
 
 It agrees with `I+B_ba+B_ab`. Therefore the exact interface correction is the
 definition
 
-```
+```text
 J(A,B;C) = L(A,C) + L(B,C) - L(A union B,C),
 ```
 
 or equivalently
 
-```
+```text
 L(A union B,C) = L(A,C) + L(B,C) - J(A,B;C).
 ```
 
 For this witness,
 
-```
+```text
 L(N_0,F_b) + L(N_4,F_b) - L(F_a,F_b) = 12 + 10 - 18 = 4.
 ```
 
@@ -1919,7 +1919,7 @@ The separate defect/collision ledger is also signed. Here `m+1=4`,
 `D(F_a)=6<E(6)=7`, and `D(F_b)=0<E(2)=1`. With the boundary identity, the two
 slacks satisfy
 
-```
+```text
 S(F_a) = 4*(7-6) - X(F_a) = 2,
 S(F_b) = 4*(1-0) - X(F_b) = 2,
 ```
@@ -1933,7 +1933,7 @@ loss can be charged.
 `src/search_triples.cpp` is a CP-SAT optimizer for the symmetric third-order
 boundary interface of three pairwise-disjoint sets:
 
-```
+```text
 J(A,B;C) = d(A)+d(B)+d(C)-d(AuB)-d(AuC)-d(BuC)+d(AuBuC),
 ```
 
@@ -1969,7 +1969,7 @@ follows from coupled pure-fiber slack and root-incidence data.
 
 The `A(6,3)` maximum is particularly diagnostic:
 
-```
+```text
 A = {012,013},  B = {512,513},  C = {412,413}.
 ```
 
@@ -1984,7 +1984,7 @@ interface bound must retain ambient root-fiber capacity (hence dependence on
 Root cliques nevertheless do **not** give a decomposition of `J`. The certified
 tight `A(5,3)`, `2+2+3` maximizer is
 
-```
+```text
 A = {012,013},  B = {042,043},  C = {021,023,041},  J=4.
 ```
 
@@ -2003,7 +2003,7 @@ It reifies membership, external boundary, and occupancy of every coordinate
 root. For `R=|F|`, `m=n-k`, and `O(F)` the number of occupied coordinate roots,
 it computes exactly
 
-```
+```text
 D(F) = R*k - O(F),
 X(F) = (m+1)*O(F) - R*k - |boundary(F)|.
 ```
@@ -2017,7 +2017,7 @@ distance-two pairs. Put `deltaD=E(R)-D(F)`. The `collision-excess` objective is
 
 The exact slack identity is
 
-```
+```text
 S(F) = [C(R)-E(R)] + (m+1)*(E(R)-D(F)) - X(F).
 ```
 
@@ -2099,13 +2099,13 @@ compatible with symbol `i`; compatibility is essential:
 `P_i = {x in pi_c(S) : i notin x}`. If `L_c` counts the transversal empty slots
 which also lie in a local boundary, the exact incidence identity is
 
-```
+```text
 X(S) - sum_i X(S_i) = L_c.
 ```
 
 The immune transversal slots are
 
-```
+```text
 sum_i |P_i \ (Q_i union boundary_local(Q_i))|
  = N_transversal - R - L_c.
 ```
@@ -2114,7 +2114,7 @@ Empty slices contribute their whole compatible `P_i` to this quantity.
 `search_single --objective=local-residual` fixes coordinate 0 and maximizes the
 unresolved amount
 
-```
+```text
 m*R - dC_0 - m*dE_0 - V_0,
 ```
 
@@ -2142,7 +2142,7 @@ coordinate-local inequality and revealed a rigid trap architecture.
 
 For every slice $i$ at every coordinate, the local collision count satisfies
 
-```
+```text
 L_{c,i} <= |P_i| - R_i
 ```
 
@@ -2171,7 +2171,7 @@ per edge.
 
 The most striking empirical discovery. Define the colliding slack as
 
-```
+```text
 S = dC + m*dE - (m+1)*conc - L_c
 ```
 
