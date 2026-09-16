@@ -402,7 +402,13 @@ two fibers of size 2 contribute the same w_2 whether they are parallel
 (X=0) or locked in a 4-cycle (X=4m-4). The potential must know about
 fiber intersections to pay for X.
 
-### Recursive coordinate-profile correction: finite certificates only (2026-09-16)
+**Status:** The *additive independent 1D fiber sum* potential is
+**refuted**.  The embedded Hamming cubes mathematically lock the
+minimum weights, rendering an independent sum blind to cross-fiber
+geometric collisions (demonstrated by the LP refutation and the
+4-cycle counterexample above).
+
+### Live: Recursive profile-state potential G(state) (finite certificates, 2026-09-16)
 
 This is separate from the refuted additive ansatz.  For a set `V`, let
 `state(V)` be the sorted multiset of its per-coordinate sorted fiber-size

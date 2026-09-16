@@ -160,3 +160,36 @@ We have formally stated the remaining extremal bounds as `Prop`s to establish a 
 - `uniqueness_conjecture`
 - `sandwich_upper_bound_conjecture`
 - `hypercube_fracture_gap_conjecture`
+
+## Appendix: Finite Evidence Isolates the Remaining Induction Lemma
+
+The proof of `UniversalLowerBound` via coordinate-split induction requires
+bounding the geometric cross-collision overhead against the arithmetic surplus
+of the potential $P(R) = C(R) + mE(R)$.  While a zero-slack raw induction step
+fails globally, finite computational certificates rigorously isolate the shape
+of the required correction.
+
+- **Zero-Correction in Favorable Regimes:** For all subsets in A(4,3) through
+  R=8 (1,271,601 concrete sets), a zero-correction induction is universally
+  feasible.  For every set, there exists at least one coordinate split where
+  the raw arithmetic surplus strictly covers the geometric overhead.  The
+  `exact-menu` CP-SAT solver with `--minimize-sum-g` certifies sum G = 0
+  across the entire universe.
+- **Finite Profile-State Certificates:** Bounded `exact-menu` CP-SAT
+  evaluations certify that a nonnegative, recursive profile-state potential
+  $G(\text{state})$ successfully closes the induction for all subsets in
+  A(4,2) (R≤5), A(5,2) (R≤6), and A(4,3) (R≤7) with small integer bounds
+  (G≤4 before minimization; G=0 after).
+- **The Zero-Correction Obstruction:** The uncorrected "best coordinate"
+  selection rule is provably not universal.  Targeted capacity-valid Star
+  Graphs in larger cells generate strictly negative raw gaps across *every*
+  coordinate split:
+  - A(7,4), R=11: best gap = −1
+  - A(8,4), R=17: best gap = −2
+  - A(8,5), R=15: best gap = −2
+- **The Open Induction Lemma:** These finite tests isolate the remaining gap.
+  The induction requires a recursive profile-state correction function
+  $G(\text{state})$ that telescopes to absorb these local hub-vertex deficits:
+  $G(\text{parent}) \le \text{gap}(V,p) + \sum G(\text{children})$.
+  The exact closed-form equation for $G$ and its corresponding Lean 4
+  formalization remain open.

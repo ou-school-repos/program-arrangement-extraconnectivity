@@ -129,6 +129,36 @@ induction does not close step-by-step, and a repair would again require
 an amortized argument banking slack across the recursion, which has not
 been attempted for either skeleton.
 
+\paragraph{Finite recursive coordinate-profile follow-up.}
+This is distinct from both the failed step-local bound above and the
+additive single-fiber Lyapunov ansatz discussed below.  For a set $V'$, let
+its state be the sorted multiset of the sorted fiber-size profiles over all
+coordinates.  At a coordinate split, let the raw gap be the arithmetic
+surplus $P(R)-\sum_s P(|F_s|)$ minus the geometric overhead
+$\Phi(V')-\sum_s\Phi(F_s)$, where $P(R)=\Cconst(R)+m\Eseq(R)$.  A
+recursive profile correction seeks a nonnegative state function $G$ such
+that some coordinate satisfies
+\[
+ G(\operatorname{state}(V'))
+ \le \operatorname{gap}(V',p)+\sum_sG(\operatorname{state}(F_s)).
+\]
+The bounded CP-SAT checker \texttt{profile\_telescope\_milp} verifies this
+finite recurrence exactly after merging only concrete sets with identical
+parent state and identical complete split menus.  It found feasible finite
+certificates for all subsets of $A(4,2)$ through $R=5$, $A(5,2)$ through
+$R=5$, and $A(4,3)$ through $R=7$.  A minimized run over all $1{,}271{,}625$
+subsets of $A(4,3)$ through $R=8$ returned $\sum G=0$: every set in that
+finite cell has a coordinate with nonnegative raw gap.
+
+This is not a universal induction theorem.  In particular, capacity-valid
+Star sets already refute the raw best-coordinate rule in larger cells:
+$A(7,4)$ at $R=11$ has all four raw gaps equal to $-1$; $A(8,4)$ at
+$R=17$ has all four equal to $-2$; and $A(8,5)$ at $R=15$ has gaps
+$(-2,-3,-3,-3,-3)$.  Whether a nonzero recursive profile correction exists
+uniformly, and whether it admits a closed form formalizable in Lean, remains
+open.  These are finite computational certificates only and do not alter
+Proposition~\ref{prop:universal} or its formal hypothesis status.
+
 \paragraph{Dual root-compression via averaging.}
 Inspired by Pinto's resolution of the Bollob\'{a}s--Leader directed-path
 conjectures on the hypercube \cite{pinto2015directed}, where two
