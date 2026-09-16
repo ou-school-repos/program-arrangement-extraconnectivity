@@ -24,6 +24,7 @@ search_single
 profile_telescope_milp
 /a10_*_*
 /simulated_annealing*
+/root_state_validator
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
