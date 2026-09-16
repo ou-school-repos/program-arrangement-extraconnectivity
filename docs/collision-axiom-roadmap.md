@@ -34,9 +34,9 @@ This document describes what a complete mechanized proof of each would require.
   `CrossCollisionsResearch.lean` reduced `HBCrossCollisions` to three interface
   lemmas — `CrossBaseOne` and `CrossDimStable` are proven, but the third,
   `CrossRecurrence`, is genuinely circular as an induction step: its
-  `ext_cube(d,m)` term is not an arithmetic quantity but is _equivalent to_
+  `ext_cube(d,m)` term is not an arithmetic quantity but is **equivalent to**
   `HBCrossCollisions(m)` itself (the RHS of `CrossRecurrence` is a set
-  cardinality whose evaluation _is_ the theorem at the smaller size `m`), so the
+  cardinality whose evaluation **is** the theorem at the smaller size `m`), so the
   driver would be handing itself its own conclusion as a hypothesis with nothing
   new supplied. `CrossTop` supersedes this with a direct, non-recursive
   closed-form identity and its own combinatorial proof (a vertex is
@@ -59,7 +59,7 @@ This document describes what a complete mechanized proof of each would require.
   and `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure Landscape"
   section, mapped further by `scripts/sweep_boundary.py`,
   `scripts/partial_star_sweep.py`, and `scripts/occupancy_sweep.py`. The
-  equivalent weighted-potential inequality below is the _same_ false statement
+  equivalent weighted-potential inequality below is the **same** false statement
   (Lemma "Deficit-compensated collision reduction" in the paper), not an
   independent candidate. An earlier support-projection/Boolean-cube-injection
   approach was explored and abandoned — it relied on an inequality later refuted
@@ -90,7 +90,7 @@ This document describes what a complete mechanized proof of each would require.
 
 ## Immediate Lean Work Queue
 
-1. Define and formalize a _restricted_ replacement for `UniversalLowerBound`
+1. Define and formalize a **restricted** replacement for `UniversalLowerBound`
    (see "Current Status" above) once the restricted regime is characterized
    mathematically -- it is the sole remaining open hypothesis of the capstone.
    `HBCrossCollisions` requires no further work (done, see above).
@@ -176,7 +176,7 @@ whatever it costs to find a valid version of the transfer inequality.
 ### Status: SUPERSEDED (see `CrossTop.lean`, "Current Status" above)
 
 `proofs/Arrangement/unstable/CrossCollisionsResearch.lean` formally proves the
-entire arithmetic and inductive backbone for a _recursive_ form of the
+entire arithmetic and inductive backbone for a **recursive** form of the
 `C_constant(R)` identity:
 
 - Verified the binary reflection arithmetic decompositions of `E_seq` and
@@ -219,7 +219,7 @@ hypothesis of the public, unconditional capstone theorems.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares, transfer
-to arrangement graphs) sketch what a Kruskal-Katona-based approach to _this_
+to arrangement graphs) sketch what a Kruskal-Katona-based approach to **this**
 hypothesis would need (~450-650 lines combined), but the specific version of
 that approach explored so far was abandoned after a counterexample refuted its
 central inequality (see
