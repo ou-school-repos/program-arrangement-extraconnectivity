@@ -615,6 +615,57 @@ void build_exact_menu(
               << " split_choices=" << choice_count << '\n';
 }
 
+struct SolveResult {
+    CpSolverResponse response;
+    std::vector<IntVar> g;
+};
+
+SolveResult build_and_solve(
+    const std::string &mode, bool minimize_sum_g,
+    std::int64_t g_cap, int workers, double time_limit,
+    const std::vector<std::vector<Transition>> &choices_by_subset,
+    const std::vector<int> &parent_states,
+    const std::map<State, int> &state_index,
+    int singleton_state,
+    const std::vector<std::int64_t> &pin_state_max) {
+    CpModelBuilder model;
+    const int num_states = static_cast<int>(state_index.size());
+    std::vector<IntVar> g;
+    g.reserve(num_states);
+    for (int i = 0; i < num_states; ++i)
+        g.push_back(model.NewIntVar(Domain(0, g_cap)));
+
+    model.AddEquality(g[singleton_state], 0);
+
+    for (int i = 0; i < num_states; ++i) {
+        if (i < static_cast<int>(pin_state_max.size()) &&
+            pin_state_max[i] >= 0) {
+            model.AddLessOrEqual(g[i], pin_state_max[i]);
+        }
+    }
+
+    if (minimize_sum_g) {
+        LinearExpr total_g;
+        for (const IntVar &variable : g)
+            total_g += variable;
+        model.Minimize(total_g);
+    }
+
+    if (mode == "per-set")
+        build_per_set(choices_by_subset, &model, &g);
+    else if (mode == "relaxed-state")
+        build_relaxed_state(choices_by_subset, &model, &g);
+    else
+        build_exact_menu(choices_by_subset, parent_states, &model, &g);
+
+    SatParameters parameters;
+    parameters.set_num_search_workers(workers);
+    parameters.set_max_time_in_seconds(time_limit);
+    Model solver_model;
+    solver_model.Add(NewSatParameters(parameters));
+    return {SolveCpModel(model.Build(), &solver_model), std::move(g)};
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
@@ -624,7 +675,8 @@ int main(int argc, char **argv) {
                   << " [--max-r=R] [--max-sets=N] [--g-cap=N]"
                   << " [--time-limit=SECONDS] [--workers=N]"
                   << " [--print-positive-g] [--minimize-sum-g]"
-                  << " [--dump-positive-menus] [--dump-ledger]\n";
+                  << " [--dump-positive-menus] [--dump-ledger]"
+                  << " [--star-only] [--test-forced]\n";
         return 1;
     }
     const int n = std::atoi(argv[1]);
@@ -640,6 +692,7 @@ int main(int argc, char **argv) {
     bool star_only = false;
     bool dump_positive_menus = false;
     bool dump_ledger = false;
+    bool test_forced = false;
     for (int argument = 3; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--mode=", 0) == 0)
@@ -664,6 +717,8 @@ int main(int argc, char **argv) {
             dump_positive_menus = true;
         else if (option == "--dump-ledger")
             dump_ledger = true;
+        else if (option == "--test-forced")
+            test_forced = true;
         else {
             std::cerr << "Unknown option: " << option << '\n';
             return 1;
@@ -779,42 +834,16 @@ int main(int argc, char **argv) {
               << "  profile_states=" << states.size() << '\n'
               << "  distinct_menus=" << distinct_menus.size() << '\n';
 
-    // Build CP-SAT model.
-    CpModelBuilder model;
-    std::vector<IntVar> g;
-    g.reserve(states.size());
-    for (std::size_t index = 0; index < states.size(); ++index)
-        g.push_back(model.NewIntVar(Domain(0, g_cap)));
-
     const Subset singleton{0};
     const int singleton_state = register_state(state_of(singleton, vertices, k));
-    model.AddEquality(g[singleton_state], 0);
 
-    if (minimize_sum_g) {
-        LinearExpr total_g;
-        for (const IntVar &variable : g)
-            total_g += variable;
-        model.Minimize(total_g);
-    }
+    // Build CP-SAT model and solve.
+    SolveResult baseline = build_and_solve(
+        mode, minimize_sum_g, g_cap, workers, time_limit,
+        choices_by_subset, parent_states, state_index, singleton_state, {});
 
-    if (mode == "per-set") {
-        std::cout << "Building per-set model:\n";
-        build_per_set(choices_by_subset, &model, &g);
-    } else if (mode == "relaxed-state") {
-        std::cout << "Building relaxed-state model:\n";
-        build_relaxed_state(choices_by_subset, &model, &g);
-    } else {
-        std::cout << "Building exact-menu model:\n";
-        build_exact_menu(choices_by_subset, parent_states, &model, &g);
-    }
-
-    // Solve.
-    SatParameters parameters;
-    parameters.set_num_search_workers(workers);
-    parameters.set_max_time_in_seconds(time_limit);
-    Model solver_model;
-    solver_model.Add(NewSatParameters(parameters));
-    const CpSolverResponse response = SolveCpModel(model.Build(), &solver_model);
+    const CpSolverResponse &response = baseline.response;
+    std::vector<IntVar> &g = baseline.g;
 
     std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
     if (response.status() != CpSolverStatus::OPTIMAL &&
@@ -898,6 +927,90 @@ int main(int argc, char **argv) {
             static_cast<void>(key);
             dump_split_ledger(subsets[index], vertices, n, k, state_index, g,
                               response);
+        }
+    }
+
+    // --test-forced: for each positive-G state, pin to 0 and re-solve
+    // (feasibility only, no minimize-sum-g). Reports forced vs movable.
+    if (test_forced) {
+        auto is_infeasible = [](const CpSolverResponse &r) {
+            return r.status() == CpSolverStatus::INFEASIBLE;
+        };
+        auto is_feasible = [](const CpSolverResponse &r) {
+            return r.status() == CpSolverStatus::OPTIMAL ||
+                   r.status() == CpSolverStatus::FEASIBLE;
+        };
+        std::cout << "\nForced-value analysis (feasibility, no objective):\n";
+        for (const int state_idx : order) {
+            const std::int64_t base_value =
+                SolutionIntegerValue(response, g[state_idx]);
+            if (base_value == 0)
+                break;
+            std::cout << "  state=";
+            print_state(states[state_idx]);
+            std::cout << " baseline_G=" << base_value << '\n';
+
+            // Try pinning to 0.
+            std::vector<std::int64_t> pin(states.size(), -1);
+            pin[state_idx] = 0;
+            SolveResult pinned = build_and_solve(
+                mode, false, g_cap, workers, time_limit,
+                choices_by_subset, parent_states, state_index, singleton_state,
+                pin);
+            if (is_infeasible(pinned.response)) {
+                std::cout << "    pin G=0: INFEASIBLE\n";
+                // Binary search for minimum feasible G.
+                bool inconclusive = false;
+                std::int64_t lo = 1, hi = base_value;
+                while (lo < hi) {
+                    const std::int64_t mid = (lo + hi) / 2;
+                    std::vector<std::int64_t> pin_mid(states.size(), -1);
+                    pin_mid[state_idx] = mid;
+                    SolveResult trial = build_and_solve(
+                        mode, false, g_cap, workers, time_limit,
+                        choices_by_subset, parent_states, state_index,
+                        singleton_state, pin_mid);
+                    if (is_feasible(trial.response))
+                        hi = mid;
+                    else if (is_infeasible(trial.response))
+                        lo = mid + 1;
+                    else {
+                        inconclusive = true;
+                        break;
+                    }
+                }
+                if (inconclusive)
+                    std::cout << "    UNKNOWN (binary search inconclusive)\n";
+                else
+                    std::cout << "    forced_G >= " << lo
+                              << " (baseline was " << base_value << ")\n";
+            } else if (is_feasible(pinned.response)) {
+                std::cout << "    pin G=0: FEASIBLE (movable)\n";
+                // Print positive states from pinned solution.
+                std::vector<int> pin_order(states.size());
+                std::iota(pin_order.begin(), pin_order.end(), 0);
+                std::sort(pin_order.begin(), pin_order.end(),
+                    [&](int l, int r) {
+                        return SolutionIntegerValue(pinned.response, pinned.g[l]) >
+                               SolutionIntegerValue(pinned.response, pinned.g[r]);
+                    });
+                bool any_positive = false;
+                for (const int idx : pin_order) {
+                    const std::int64_t val =
+                        SolutionIntegerValue(pinned.response, pinned.g[idx]);
+                    if (val == 0)
+                        break;
+                    if (!any_positive) {
+                        std::cout << "    alternative assignment:\n";
+                        any_positive = true;
+                    }
+                    std::cout << "      G=" << val << " state=";
+                    print_state(states[idx]);
+                    std::cout << '\n';
+                }
+            } else {
+                std::cout << "    pin G=0: UNKNOWN (solver timed out)\n";
+            }
         }
     }
     return 0;
