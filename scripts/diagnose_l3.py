@@ -112,7 +112,8 @@ def diagnose_l3(m_val):
         print("\n  Concentrated partition bound:")
         print(f"    f(R) = f({R}) = {f_func(R, m)}")
         print(
-            f"    f(Delta_D_p + 1) for Delta_D_p = R-1 = {R - 1}: f({R}) = {f_func(R, m)}"
+            f"    f(Delta_D_p + 1) for Delta_D_p = R-1 = {R - 1}: "
+            f"f({R}) = {f_func(R, m)}"
         )
         print("    So f(R) = f(Delta_D_p + 1) for concentrated partition")
 

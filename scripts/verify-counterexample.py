@@ -80,9 +80,10 @@ def verify(R: int, vertices: list[str], expected_nk1: int, expected_const: int) 
         f" = {cheng_predicted}  {c_match}"
     )
 
-    assert nbr_count == predicted, (
+    failure_message = (
         f"A000788 prediction failed: expected {predicted}, got {nbr_count}"
     )
+    assert nbr_count == predicted, failure_message
 
 
 # All minimum-cut vertex sets from exhaustive search (R=2..9)

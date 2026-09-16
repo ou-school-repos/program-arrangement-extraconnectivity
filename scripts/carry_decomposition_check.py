@@ -87,7 +87,8 @@ def main():
         print(f"  R={r['R']} pi={r['pi']} conc={r['conc']} Lc={r['Lc']}")
         print(f"  Ri={Ri}")
         print(
-            f"  dC={r['dC']} dE={r['dE']} m={r['m']}  dC+m*dE={r['dC'] + r['m'] * r['dE']}"
+            f"  dC={r['dC']} dE={r['dE']} m={r['m']} "
+            f"dC+m*dE={r['dC'] + r['m'] * r['dE']}"
         )
         print(f"  carry_mass(Ri)={cm}")
         gap_cm = r["Lc"] - cm
