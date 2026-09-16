@@ -7,6 +7,7 @@
 //       [--max-r=R] [--max-sets=N] [--g-cap=N]
 //       [--time-limit=SECONDS] [--workers=N]
 //       [--dump-positive-menus] [--dump-ledger]
+//       [--export-g=FILE] [--verify-g=FILE]
 //
 // Modes:
 //   per-set      One constraint per concrete set (default, original).
@@ -25,11 +26,13 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <numeric>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -373,6 +376,153 @@ void print_state(const State &state) {
     std::cout << "}";
 }
 
+std::string state_key(const State &state) {
+    std::ostringstream output;
+    for (std::size_t i = 0; i < state.size(); ++i) {
+        if (i)
+            output << "|";
+        for (std::size_t j = 0; j < state[i].size(); ++j) {
+            if (j)
+                output << ",";
+            output << state[i][j];
+        }
+    }
+    return output.str();
+}
+
+bool parse_state_key(const std::string &text, State *state) {
+    State parsed;
+    std::istringstream profiles(text);
+    std::string profile_text;
+    while (std::getline(profiles, profile_text, '|')) {
+        if (profile_text.empty())
+            return false;
+        Profile profile;
+        std::istringstream entries(profile_text);
+        std::string entry;
+        while (std::getline(entries, entry, ',')) {
+            if (entry.empty())
+                return false;
+            try {
+                profile.push_back(std::stoi(entry));
+            } catch (const std::exception &) {
+                return false;
+            }
+        }
+        std::sort(profile.begin(), profile.end());
+        parsed.push_back(std::move(profile));
+    }
+    if (parsed.empty())
+        return false;
+    std::sort(parsed.begin(), parsed.end());
+    *state = std::move(parsed);
+    return true;
+}
+
+bool load_fixed_g(const std::string &path, std::map<State, std::int64_t> *table) {
+    std::ifstream input(path);
+    if (!input) {
+        std::cerr << "Could not read G table: " << path << '\n';
+        return false;
+    }
+    std::string line;
+    int line_number = 0;
+    while (std::getline(input, line)) {
+        ++line_number;
+        if (line.empty() || line[0] == '#')
+            continue;
+        const std::size_t separator = line.find('\t');
+        if (separator == std::string::npos) {
+            std::cerr << "Malformed G table line " << line_number
+                      << ": expected state<TAB>value\n";
+            return false;
+        }
+        State state;
+        if (!parse_state_key(line.substr(0, separator), &state)) {
+            std::cerr << "Malformed state on G table line " << line_number << '\n';
+            return false;
+        }
+        try {
+            const std::int64_t value = std::stoll(line.substr(separator + 1));
+            if (value < 0) {
+                std::cerr << "Negative G value on line " << line_number << '\n';
+                return false;
+            }
+            if (!table->emplace(std::move(state), value).second) {
+                std::cerr << "Duplicate state on G table line " << line_number << '\n';
+                return false;
+            }
+        } catch (const std::exception &) {
+            std::cerr << "Malformed G value on line " << line_number << '\n';
+            return false;
+        }
+    }
+    return true;
+}
+
+bool export_fixed_g(const std::string &path, const std::vector<State> &states,
+                    const std::vector<IntVar> &g,
+                    const CpSolverResponse &response) {
+    std::ofstream output(path);
+    if (!output) {
+        std::cerr << "Could not write G table: " << path << '\n';
+        return false;
+    }
+    output << "# profile_telescope_milp G table\n";
+    output << "# state-key<TAB>nonnegative-integer-G\n";
+    for (std::size_t i = 0; i < states.size(); ++i)
+        output << state_key(states[i]) << '\t'
+               << SolutionIntegerValue(response, g[i]) << '\n';
+    return true;
+}
+
+bool verify_fixed_g(const std::map<State, std::int64_t> &table,
+                    const std::vector<State> &states,
+                    const std::vector<std::vector<Transition>> &choices_by_subset,
+                    const std::vector<int> &parent_states) {
+    int missing_states = 0;
+    for (const State &state : states) {
+        if (!table.count(state))
+            ++missing_states;
+    }
+    if (missing_states != 0) {
+        std::cerr << "G table is missing " << missing_states
+                  << " states from this finite pool.\n";
+        return false;
+    }
+
+    int checked = 0;
+    int failures = 0;
+    for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
+        const std::vector<Transition> &choices = choices_by_subset[i];
+        if (choices.empty())
+            continue;
+        ++checked;
+        const std::int64_t parent_g = table.at(states[parent_states[i]]);
+        bool valid_split = false;
+        for (const Transition &transition : choices) {
+            std::int64_t rhs = transition.gap;
+            for (const int child : transition.child_states)
+                rhs += table.at(states[child]);
+            if (parent_g <= rhs) {
+                valid_split = true;
+                break;
+            }
+        }
+        if (!valid_split) {
+            ++failures;
+            if (failures <= 5) {
+                std::cerr << "FAIL state=";
+                print_state(states[parent_states[i]]);
+                std::cerr << " G=" << parent_g << '\n';
+            }
+        }
+    }
+    std::cout << "Fixed-G verification: " << checked << " concrete sets, "
+              << failures << " failures.\n";
+    return failures == 0;
+}
+
 void print_subset(const Subset &subset, const std::vector<Vertex> &vertices) {
     std::cout << "{";
     for (std::size_t i = 0; i < subset.size(); ++i) {
@@ -676,7 +826,8 @@ int main(int argc, char **argv) {
                   << " [--time-limit=SECONDS] [--workers=N]"
                   << " [--print-positive-g] [--minimize-sum-g]"
                   << " [--dump-positive-menus] [--dump-ledger]"
-                  << " [--star-only] [--test-forced]\n";
+                  << " [--star-only] [--test-forced]"
+                  << " [--export-g=FILE] [--verify-g=FILE]\n";
         return 1;
     }
     const int n = std::atoi(argv[1]);
@@ -693,6 +844,8 @@ int main(int argc, char **argv) {
     bool dump_positive_menus = false;
     bool dump_ledger = false;
     bool test_forced = false;
+    std::string export_g_path;
+    std::string verify_g_path;
     for (int argument = 3; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--mode=", 0) == 0)
@@ -719,6 +872,10 @@ int main(int argc, char **argv) {
             dump_ledger = true;
         else if (option == "--test-forced")
             test_forced = true;
+        else if (option.rfind("--export-g=", 0) == 0)
+            export_g_path = option.substr(11);
+        else if (option.rfind("--verify-g=", 0) == 0)
+            verify_g_path = option.substr(11);
         else {
             std::cerr << "Unknown option: " << option << '\n';
             return 1;
@@ -726,6 +883,10 @@ int main(int argc, char **argv) {
     }
     if (mode != "per-set" && mode != "relaxed-state" && mode != "exact-menu") {
         std::cerr << "Unknown mode: " << mode << '\n';
+        return 1;
+    }
+    if (!export_g_path.empty() && !verify_g_path.empty()) {
+        std::cerr << "Use only one of --export-g and --verify-g.\n";
         return 1;
     }
     if (n < 1 || k < 1 || k > n || max_r < 1 || max_sets < 1 || g_cap < 0 ||
@@ -736,6 +897,9 @@ int main(int argc, char **argv) {
 
     const std::vector<Vertex> vertices = vertices_of(n, k);
     max_r = std::min(max_r, static_cast<int>(vertices.size()));
+    const std::string run_label = verify_g_path.empty()
+        ? "mode=" + mode
+        : "direct fixed-G verification";
 
     std::vector<Subset> subsets;
     if (star_only) {
@@ -747,7 +911,7 @@ int main(int argc, char **argv) {
             return 1;
         }
         std::cout << "Star closure of A(" << n << "," << k << ") through R="
-                  << max_r << ": " << subsets.size() << " sets; mode=" << mode
+                  << max_r << ": " << subsets.size() << " sets; " << run_label
                   << "; workers=" << workers
                   << ", time limit=" << time_limit << " s.\n";
     } else {
@@ -760,7 +924,7 @@ int main(int argc, char **argv) {
             return 1;
         }
         std::cout << "Enumerating " << estimate << " subsets of A(" << n << ","
-                  << k << ") through R=" << max_r << "; mode=" << mode
+                  << k << ") through R=" << max_r << "; " << run_label
                   << "; workers=" << workers
                   << ", time limit=" << time_limit << " s.\n";
         subsets.reserve(static_cast<std::size_t>(estimate));
@@ -837,6 +1001,14 @@ int main(int argc, char **argv) {
     const Subset singleton{0};
     const int singleton_state = register_state(state_of(singleton, vertices, k));
 
+    if (!verify_g_path.empty()) {
+        std::map<State, std::int64_t> fixed_g;
+        if (!load_fixed_g(verify_g_path, &fixed_g))
+            return 1;
+        return verify_fixed_g(fixed_g, states, choices_by_subset, parent_states)
+            ? 0 : 2;
+    }
+
     // Build CP-SAT model and solve.
     SolveResult baseline = build_and_solve(
         mode, minimize_sum_g, g_cap, workers, time_limit,
@@ -849,6 +1021,12 @@ int main(int argc, char **argv) {
     if (response.status() != CpSolverStatus::OPTIMAL &&
         response.status() != CpSolverStatus::FEASIBLE)
         return 0;
+
+    if (!export_g_path.empty()) {
+        if (!export_fixed_g(export_g_path, states, g, response))
+            return 1;
+        std::cout << "Wrote G table: " << export_g_path << '\n';
+    }
 
     const std::int64_t maximum_g = std::accumulate(
         g.begin(), g.end(), std::int64_t{0},
@@ -1009,7 +1187,7 @@ int main(int argc, char **argv) {
                         if (val == 0)
                             break;
                         if (!any_positive) {
-                            std::cout << "    relocated assignment (min sum G="
+                            std::cout << "    " << label
                                       << optimized.response.objective_value() << "):\n";
                             any_positive = true;
                         }
