@@ -108,6 +108,25 @@ def verify_recurrences(limit):
     return failures
 
 
+def split_gap(vertices, alphabet_size, dimension, position):
+    """Return fiber sizes and raw ``P``-surplus minus ``Phi`` overhead."""
+    fibers = {}
+    for vertex in vertices:
+        fibers.setdefault(vertex[position], []).append(vertex)
+    if len(fibers) < 2:
+        return (), None
+    sizes = tuple(sorted(len(fiber) for fiber in fibers.values()))
+    size = len(vertices)
+    overhang = alphabet_size - dimension
+    overhead = phi(vertices, alphabet_size, dimension) - sum(
+        phi(fiber, alphabet_size, dimension) for fiber in fibers.values()
+    )
+    surplus = potential(size, overhang) - sum(
+        potential(fiber_size, overhang) for fiber_size in sizes
+    )
+    return sizes, surplus - overhead
+
+
 def main():
     """Run the finite recurrence and capacity-valid star diagnostics."""
     failures = verify_recurrences(1000)
@@ -155,6 +174,36 @@ def main():
                 f" {(overhang - 1) * e_surplus:11d} {linear_surplus:4d} |"
                 f" {p_surplus:6d} | {gap:3d}"
             )
+
+    print("\n=== all-coordinate check for negative Star splits ===")
+    for alphabet_size, dimension in [(7, 4), (8, 4), (8, 5)]:
+        overhang = alphabet_size - dimension
+        capacity = 1 + dimension * overhang
+        for size in range(4, min(19, capacity) + 1):
+            vertices = star_graph(alphabet_size, dimension, size)
+            assert vertices is not None
+            coordinate_data = [
+                split_gap(vertices, alphabet_size, dimension, position)
+                for position in range(dimension)
+            ]
+            gaps = [gap for _sizes, gap in coordinate_data if gap is not None]
+            if min(gaps) >= 0:
+                continue
+            valid_positions = [
+                position
+                for position, (_sizes, gap) in enumerate(coordinate_data)
+                if gap is not None
+            ]
+            best_position = max(
+                valid_positions,
+                key=lambda position, data=coordinate_data: data[position][1],
+            )
+            print(
+                f"A({alphabet_size},{dimension}) R={size}:"
+                f" best p={best_position}, gap={coordinate_data[best_position][1]}"
+            )
+            for position, (sizes, gap) in enumerate(coordinate_data):
+                print(f"  p={position}: sizes={sizes}, gap={gap}")
     return 0
 
 
