@@ -40,7 +40,7 @@ remaining extremal combinatorics hypotheses rather than depending on raw global
 | Evaluation               | `hamming_ball_eval` (boundary count)                                 | PROVEN\*      |
 | Hamming-ball evaluation  | `hb_cross_collisions_closed`                                         | PROVEN        |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`                   | PROVEN        |
-| Lower Bound              | `RestrictedLowerBound` (under embedding conditions)                   | HYPOTHESIS    |
+| Lower Bound              | `RestrictedLowerBound` (under embedding conditions)                  | HYPOTHESIS    |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN        |
 | Capstone                 | `arrangement_extraconnectivity_minimum` (composition)                | CONDITIONAL\* |
 

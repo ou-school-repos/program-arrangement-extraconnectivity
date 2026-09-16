@@ -717,8 +717,8 @@ confirmed dead end and one open, concretely-scoped question:
    ```
 
    The U terms cancel identically. So Φ ≤ C(R) + mE(R) is _equivalent_, term for
-   term, to |∂V| ≥ (Rk - E(R))(n-k) - C(R) — the boundary inequality itself, with
-   no slack introduced or removed by the translation.
+   term, to |∂V| ≥ (Rk - E(R))(n-k) - C(R) — the boundary inequality itself,
+   with no slack introduced or removed by the translation.
 
    Consequence: "maximize X_cross while keeping m small" (the natural next
    adversarial construction to try after points 4-6) is **not a new test**. At
@@ -2293,21 +2293,23 @@ paper), `scripts/sweep_boundary.py`, `scripts/partial_star_sweep.py`, and
 
 ### Safe Parameter Regime ($m \le 4$)
 
-The unrestricted universal lower bound fails at $R_{\text{fail}} = 1 + j_{\text{fail}} \cdot m$, where
-$j_{\text{fail}}$ drifts as $O(\log m)$. However, the hypercube embedding condition requires
-$R \le 2^m$. For $m \le 4$, we have $2^m < R_{\text{fail}}$:
+The unrestricted universal lower bound fails at
+$R_{\text{fail}} = 1 + j_{\text{fail}} \cdot m$, where $j_{\text{fail}}$ drifts
+as $O(\log m)$. However, the hypercube embedding condition requires $R \le 2^m$.
+For $m \le 4$, we have $2^m < R_{\text{fail}}$:
 
-| $m$ | $2^m$ (embed max) | $R_{\text{fail}}$ | Safe margin | Status |
-|---|---|---|---|---|
-| 2 | 4 | 17 | +13 | Unconditionally Safe ($A(10,8)$ has $m=2$) |
-| 3 | 8 | 19 | +11 | Unconditionally Safe ($A(6,3), A(7,4), A(9,6)$ have $m=3$) |
-| 4 | 16 | 25 | +9 | Unconditionally Safe ($A(8,4)$ has $m=4$) |
-| 5 | 32 | 26 | -6 | Crossover / Open frontier ($R \le 25$ safe) |
+| $m$ | $2^m$ (embed max) | $R_{\text{fail}}$ | Safe margin | Status                                                     |
+| --- | ----------------- | ----------------- | ----------- | ---------------------------------------------------------- |
+| 2   | 4                 | 17                | +13         | Unconditionally Safe ($A(10,8)$ has $m=2$)                 |
+| 3   | 8                 | 19                | +11         | Unconditionally Safe ($A(6,3), A(7,4), A(9,6)$ have $m=3$) |
+| 4   | 16                | 25                | +9          | Unconditionally Safe ($A(8,4)$ has $m=4$)                  |
+| 5   | 32                | 26                | -6          | Crossover / Open frontier ($R \le 25$ safe)                |
 
 Thus for $m \le 4$, ALL embeddable $R$ have the Hamming Ball as the unambiguous
-minimizer. The paper's canonical examples ($A(6,3)$, $A(7,4)$, $A(8,4)$, $A(9,6)$,
-$A(10,8)$) all have $m \le 4$, so the main theorem is unconditionally useful for
-every example in the paper. The general case ($m \ge 5$) remains open.
+minimizer. The paper's canonical examples ($A(6,3)$, $A(7,4)$, $A(8,4)$,
+$A(9,6)$, $A(10,8)$) all have $m \le 4$, so the main theorem is unconditionally
+useful for every example in the paper. The general case ($m \ge 5$) remains
+open.
 
 ## Status
 
