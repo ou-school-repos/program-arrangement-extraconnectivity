@@ -402,6 +402,41 @@ two fibers of size 2 contribute the same w_2 whether they are parallel
 (X=0) or locked in a 4-cycle (X=4m-4). The potential must know about
 fiber intersections to pay for X.
 
+### Recursive coordinate-profile correction: finite certificates only (2026-09-16)
+
+This is separate from the refuted additive ansatz.  For a set `V`, let
+`state(V)` be the sorted multiset of its per-coordinate sorted fiber-size
+profiles.  At a coordinate split, let `gap` be the arithmetic surplus
+`P(R) - sum P(|F_s|)` minus the geometric overhead
+`Phi(V) - sum Phi(F_s)`.  A proposed recursive correction is a
+nonnegative, profile-only integer function `G` satisfying, for at least
+one coordinate of every non-singleton set,
+
+```
+G(state(V)) <= gap + sum G(state(F_s)).
+```
+
+`src/profile_telescope_milp.cpp` checks this finite feasibility problem
+with OR-Tools CP-SAT.  Its `exact-menu` mode is exact within the stated
+range: it merges concrete sets only when they have both the same parent
+state and the same complete menu of `(gap, child-state)` split options.
+
+Exact-menu feasibility was obtained for all subsets in `A(4,2)` through
+`R=5` (1,585 subsets), `A(5,2)` through `R=5` (21,699 subsets), and
+`A(4,3)` through `R=7` (536,154 subsets).  A minimized run on all
+`A(4,3)` subsets through `R=8` (1,271,625 subsets and 6,022 distinct
+menus) returned `sum G = 0`: every set in that finite cell has a
+coordinate whose raw gap is nonnegative.
+
+That zero-correction outcome is not universal.  Capacity-valid Star
+sets with every available raw coordinate gap negative occur in
+`A(7,4)` at `R=11`, with gaps `(-1,-1,-1,-1)`; in `A(8,4)` at `R=17`,
+with `(-2,-2,-2,-2)`; and in `A(8,5)` at `R=15`, with
+`(-2,-3,-3,-3,-3)`.  Thus choosing the best raw coordinate is false in
+general.  Whether a nonzero recursive profile correction works for all
+parameters, and what closed form it has, remains open.  No Lean theorem
+or axiom status changes follow from these finite certificates.
+
 ### Strategy 4: Tested guarded dual root-compression candidate (refuted)
 
 Inspired by Pinto's proof of the Bollobás-Leader directed-path conjectures
@@ -722,17 +757,15 @@ better, as R grows relative to the graph. See
 `docs/archive/strategy4-dual-compression-averaging-abandoned.md` for the
 full diagnosis (two obstructions: injectivity blockage, and an observed
 1-for-1 defect/collision exchange that a fixed (m+1):1-weighted
-potential never rewards). Strategy 2 (Lyapunov over fiber-size
-multisets, Ψ) is dead: the additive convex ansatz is refuted both by
-LP infeasibility on the normalized corpus and by a purely algebraic
-4-cycle argument — the locked weights w_1=0, w_2=m+1 from R=1,2
-anchors leave Ψ = 4(m+1) < 8m = Φ for every 4-cycle when m ≥ 2.
-The root cause is that a sum of independent fiber potentials is blind
-to cross-fiber collisions (see full autopsy above). As of this
-writing, none of the four sketches has a confirmed, closed path to
-Proposition 5.3; the exhaustive computational evidence (30+ rows, no
-counterexample) remains the _only_ supporting evidence for the
-proposition.
+potential never rewards). The additive convex Strategy 2 ansatz is
+dead: LP infeasibility and a purely algebraic 4-cycle argument refute
+it. The root cause is that a sum of independent fiber potentials is
+blind to cross-fiber collisions (see full autopsy above). This does not
+rule out the distinct recursive coordinate-profile correction recorded
+above, which has finite exact certificates but no closed-form invariant
+or universal proof. As of this writing, no approach has a confirmed,
+closed path to Proposition 5.3; exhaustive computation remains
+supporting evidence rather than a proof.
 
 ### Entropy/Shearer candidate: tested and killed (2026-09-13)
 
