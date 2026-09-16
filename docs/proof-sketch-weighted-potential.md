@@ -455,6 +455,43 @@ profile-only correction or independent charging theorem is established. The
 additive strategies remain refuted; a failed candidate bound alone does not
 prove that state enrichment is necessary.
 
+### Separated collision slack fails on Star children (2026-09-16)
+
+The candidate `G(F) = C(|F|) - E(|F|) - X(F)` is negative on the very Star
+children proposed to carry credit. Direct evaluation using `full_star`,
+`cross_collisions`, `defect`, `e_seq`, and `sbl` from
+`scripts/full_star_spine.py` gives:
+
+| Cell   | Full-Star child |   C |   E |   D |   X | C-E-X | (m+1)(E-D) | P-Phi |
+| ------ | --------------- | --: | --: | --: | --: | ----: | ---------: | ----: |
+| A(7,4) | S_3, R=10       |  19 |  15 |   9 |  18 |   -14 |         24 |    10 |
+| A(8,4) | S_3, R=13       |  27 |  22 |  12 |  36 |   -31 |         50 |    19 |
+| A(8,5) | S_4, R=13       |  27 |  22 |  12 |  36 |   -31 |         40 |     9 |
+
+Thus this candidate fails nonnegativity. Clamping it to zero also fails to
+provide credit at these children. In particular, the coupled slack of the
+size-13 child in A(8,4) is **19**, not 17. The quantity `E-D` is a defect
+difference, not an internal-edge deficit: root occupancy contributes `q-1` to D
+but `binom(q,2)` internal edges.
+
+The identity `P-Phi = (m+1)(E-D) + (C-E-X)` explains the positive total in these
+examples. It does not establish a nonnegative total for arbitrary sets. These
+calculations refute the specific separated candidate; they do not prove that
+every possible invariant must explicitly depend on both D and X.
+
+Credit requirements remain conditional on split choice. The size-11 A(7,4)
+Star's split into sizes 10 and 1 requires `G(S_3) >= 1` if that split is used.
+Its finite exact-menu model also permits the unit of credit at a size-8 child
+instead.
+
+An unconditional proof of `0 <= G(V) <= P(|V|)-Phi(V)` would already prove the
+target bound. Merely defining a nonnegative graph counter does not supply the
+second inequality. For the inductive route, the independent obligation remains
+to prove nonnegativity, singleton normalization, and
+`G(V) <= gap(V,p) + sum G(F_{p,s})` for some nontrivial split of every
+non-singleton set. The displayed Star slack values are constraints for candidate
+testing, not a construction of such an invariant.
+
 ### Strategy 4: Tested guarded dual root-compression candidate (refuted)
 
 Inspired by Pinto's proof of the Bollobás-Leader directed-path conjectures
