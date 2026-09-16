@@ -78,14 +78,14 @@ This document describes what a complete mechanized proof of each would require.
   counterexamples: edge-gradient charging overcounts collision mass,
   single-vertex hole-filling does not preserve its slack, the tested guarded
   Pinto-style dual-compression pair has no admissible non-worsening branch on
-  finite witnesses, and the additive convex fiber-size Lyapunov ansatz Ψ_f(V') =
+  finite witnesses, and the additive convex fiber-size Lyapunov ansatz Ψ*f(V') =
   Σ_s N_s(V') w_s is dead — refuted by both LP infeasibility and a closed-form
   4-cycle argument (the R=1,2 anchors lock w_1=0, w_2=m+1, giving Ψ=4(m+1) <
   8m=Φ for every 4-cycle when m≥2). These closures do not alter any Lean
   interface; a global structural approach (submodular analysis of C(R)+mE(R)
   directly, rather than vertex-by-vertex or fiber-by-fiber construction) remains
-  to be formalized, but any such approach must now target a _restricted_ form of
-  the inequality, not the unrestricted one, since the latter is false.
+  to be formalized, but any such approach must now target a \_restricted* form
+  of the inequality, not the unrestricted one, since the latter is false.
 
 ## Immediate Lean Work Queue
 
