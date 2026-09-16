@@ -40,17 +40,17 @@ def C_constant(R):
     return 0 if R == 0 else (R - 1) + sum_bit_length(R) - E_seq(R)
 
 
-def embed_vertex(n, k, d, i):
+def embed_vertex(k, d, i):
     """Embed index i < 2^d as the i-th vertex of the Hamming ball in A(n,k)."""
     return tuple((k + p if (i >> p) & 1 else p) if p < d else p for p in range(k))
 
 
 def hamming_ball(R, n, k, d):
     """Return the R-vertex Hamming ball {embed_vertex(n,k,d,i) : i < R} in A(n,k)."""
-    return set(embed_vertex(n, k, d, i) for i in range(R))
+    return set(embed_vertex(k, d, i) for i in range(R))
 
 
-def coord_boundary(V, n, k, p):
+def coord_boundary(V, n, _k, p):
     """Vertices outside V reachable from V by changing only coordinate p."""
     out = set()
     for v in V:

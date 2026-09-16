@@ -20,6 +20,10 @@ Run: `python3 verify_gf_identities.py`
 "X/R range" lines are informational diagnostics, not pass/fail checks)
 """
 
+# This is a finite, top-level verification transcript.  The deliberately
+# reused short names mirror the notation in the checked identities.
+# pylint: disable=redefined-outer-name,global-statement,function-redefined
+
 import math
 import sys
 

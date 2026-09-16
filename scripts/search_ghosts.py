@@ -15,10 +15,12 @@ Usage: python3 search_ghosts.py n k c_a c_b [--time-limit SECONDS]
 import argparse
 import itertools
 
-from ortools.sat.python import cp_model
+# OR-Tools is an optional dependency used only by this solver script.
+from ortools.sat.python import cp_model  # pylint: disable=import-error
 
 
 def e_seq(size):
+    """Return the cumulative popcount below ``size``."""
     return sum(value.bit_count() for value in range(size))
 
 
@@ -32,6 +34,7 @@ def c_constant(size):
 
 
 def rhs(n, k, size):
+    """Return the conjectured minimum boundary for an ``size``-set."""
     return (size * k - e_seq(size)) * (n - k) - c_constant(size)
 
 
@@ -57,6 +60,7 @@ def iff_all(model, literals, name):
 
 
 def main():
+    """Build and solve the finite CP-SAT ghost-search model."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("n", type=int)
     parser.add_argument("k", type=int)

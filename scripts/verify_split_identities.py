@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Check exact split accounting on bounded pools; finite checks are not proofs."""
 
+# These scripts intentionally remain standalone so each finite experiment can
+# be copied and run independently; their small geometry helpers are therefore
+# repeated rather than imported from an application module.
+# pylint: disable=duplicate-code
+
 import argparse
 import itertools
 import math

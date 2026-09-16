@@ -95,7 +95,7 @@ def cross_collisions(A, n, k):
     return total_coord_edges - len(ext)
 
 
-def unique_roots(A, n, k, p):
+def unique_roots(A, _n, _k, p):
     """Return the number of distinct roots at coordinate ``p``."""
     return len(set(v[:p] + v[p + 1 :] for v in A))
 

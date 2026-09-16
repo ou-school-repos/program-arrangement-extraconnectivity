@@ -149,6 +149,7 @@ def check(n: int, k: int, size: int) -> None:
 
 
 def main() -> None:
+    """Parse command-line options and run the requested exhaustive checks."""
     parser = argparse.ArgumentParser()
     parser.add_argument("n", type=int, nargs="?")
     parser.add_argument("k", type=int, nargs="?")

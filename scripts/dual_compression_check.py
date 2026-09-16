@@ -74,6 +74,7 @@ def boundary_metrics(subset, fibers, k):
 
 
 def phi(subset, fibers, k, m):
+    """Return the weighted collision/defect potential of ``subset``."""
     _, defect, collisions = boundary_metrics(subset, fibers, k)
     return collisions + (m + 1) * defect
 
