@@ -1,6 +1,32 @@
 # Proof Sketch: Weighted Fiber-Overlap Inequality
 
-## Target
+## Unrestricted target refuted (2026-09-16)
+
+The full Star in A(10,8), with center `(0,1,2,3,4,5,6,7)` and all replacements
+of one coordinate by 8 or 9, has R=17, m=2, D=16 and X=56. Here E(17)=33,
+sbl(17)=54, C(17)=37, so P=103 while Phi=104. Direct enumeration of distinct
+external neighbors gives 168, below the claimed lower bound 169. This refutes
+the unrestricted target below, not merely a proof strategy.
+
+The full-Star formulas give Phi = m(m-1)j(j-1)/2 + m(m+1)j. For fixed m>1 this
+grows quadratically in j, whereas P(1+jm) grows as O(j log j). Thus unrestricted
+complete-Star inequalities cannot hold for all dimensions. No nonnegative
+singleton-normalized transition potential can repair the false bound in this
+regime.
+
+Restricting to m >= ceil(log2 R) is a possible revised conjecture, not an
+established safe range. The witness violates that restriction. It beats the
+numerical Hamming-ball target; comparison with an actually embedded Hamming ball
+requires separate embedding hypotheses.
+
+The sweep script includes small-R rows outside that proposed range, including
+A(5,4), R=3,4 and A(5,3), R=5. Earlier small-pool passes therefore cannot be
+explained solely by the proposed restriction. In particular, the verified
+A(4,3), R<=5 pool includes m=1, R=5. Those bounded passes do not reach this R=17
+obstruction. The script's scheduled rows and cap-dependent skips are not
+themselves execution logs.
+
+## Historical target (false without restrictions)
 
 For all V' ⊆ A(n,k) with |V'| = R and k ≤ n:
 

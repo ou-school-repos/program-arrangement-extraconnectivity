@@ -5,6 +5,13 @@ Lean 4 and Mathlib.
 
 ## Build
 
+**Mathematical status update (2026-09-16):** The unrestricted
+UniversalLowerBound hypothesis is false. The full Star in A(10,8),
+R=17 has external boundary 168 versus the claimed lower bound 169
+(D=16, X=56, P=103, Phi=104). Conditional Lean results do not
+establish this hypothesis. A restricted replacement and its proof remain
+open; see `proof-sketch-weighted-potential.md` for the witness.
+
 ```bash
 make lean          # Build and verify proofs
 make lean/cache    # Download pre-built Mathlib cache (first time)

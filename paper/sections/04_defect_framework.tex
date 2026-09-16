@@ -183,12 +183,26 @@ minimality is captured by the following universal boundary inequality. Together
 with the evaluation of the Hamming Ball, these two propositions form our
 extremal framework.
 
-\begin{proposition}[Universal Boundary Inequality]\label{prop:universal}
+\begin{proposition}[Former Universal Boundary Inequality (refuted)]\label{prop:universal}
+	\textbf{The following unrestricted assertion is false; it is retained
+	only to identify the hypothesis of the conditional results below.}
 	For every $R$-element subset $V' \subseteq V(A(n,k))$:
 	\begin{equation}\label{eq:universal-bound}
 		\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 	\end{equation}
 \end{proposition}
+
+\begin{remark}[Full-Star counterexample]
+In $A(10,8)$, take the center $(0,1,2,3,4,5,6,7)$ and all sixteen
+vertices obtained by replacing one coordinate with 8 or 9.
+This set has $R=17$, $D=16$, and $X=56$.
+Since $\Eseq(17)=33$ and $\Cconst(17)=37$, its external boundary
+has size $168$, whereas \eqref{eq:universal-bound} demands $169$.
+The proposed restriction $n-k\ge\lceil\log_2 R\rceil$ excludes this
+witness, but its sufficiency for a revised lower bound remains unproved.
+The counterexample refutes the numerical target without asserting that
+a Hamming ball achieving that target embeds in this parameter cell.
+\end{remark}
 
 \begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
 	The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
@@ -292,7 +306,7 @@ $R \le 6$ across 26 parameter rows of $A(n,k)$ (up to $3.24\times10^9$ subsets
 in a single row), with no counterexample found in either search. Because
 both searches are bounded in $R$, this remains only partial computational
 evidence; the proposition is
-open, not yet proven, for general $R$. Conceptually,
+refuted for general $R$ by the full-Star counterexample above. Conceptually,
 Section~\ref{sec:sandwich}'s asymptotic-dominance argument explains why, once
 $n-k$ is large relative to the fixed cluster size $R$, no sub-optimal topology's
 savings in cross-collisions can outweigh its linear-in-$(n-k)$ penalty for
