@@ -36,9 +36,9 @@ This document describes what a complete mechanized proof of each would require.
   `CrossRecurrence`, is genuinely circular as an induction step: its
   `ext_cube(d,m)` term is not an arithmetic quantity but is **equivalent to**
   `HBCrossCollisions(m)` itself (the RHS of `CrossRecurrence` is a set
-  cardinality whose evaluation **is** the theorem at the smaller size `m`), so the
-  driver would be handing itself its own conclusion as a hypothesis with nothing
-  new supplied. `CrossTop` supersedes this with a direct, non-recursive
+  cardinality whose evaluation **is** the theorem at the smaller size `m`), so
+  the driver would be handing itself its own conclusion as a hypothesis with
+  nothing new supplied. `CrossTop` supersedes this with a direct, non-recursive
   closed-form identity and its own combinatorial proof (a vertex is
   double-counted in the top-heavy ball's boundary iff it is a cube vertex; every
   top-strip cube vertex has multiplicity ≥ 1 via its "bottom partner"; summing
