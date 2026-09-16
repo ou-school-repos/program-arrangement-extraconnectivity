@@ -69,6 +69,7 @@ def full_statistics(vertices, n, k):
         all_roots.append(roots)
         D += R - len(roots)
 
+    # Cross-collisions and per-coordinate data
     directions = []
     all_external = set()
     for p in range(k):
@@ -79,6 +80,7 @@ def full_statistics(vertices, n, k):
     total_dir = sum(len(d) for d in directions)
     X = total_dir - len(all_external)
 
+    # Multiplicity sum: sum_{mu>=2} mu(w)
     multiplicity = defaultdict(int)
     for d in directions:
         for w in d:
@@ -90,6 +92,7 @@ def full_statistics(vertices, n, k):
         if sum(1 for i in range(k) if u[i] != v[i]) == 1:
             P1 += 1
 
+    # Per-split data
     split_data = []
     for p in range(k):
         fibers = defaultdict(list)
@@ -98,6 +101,7 @@ def full_statistics(vertices, n, k):
         child_sizes = [len(f) for f in fibers.values()]
         _, roots_p = coord_boundary_and_roots(vertices, p, n, k)
         Delta_D_p = R - len(roots_p)
+        # sum_s f(c_{p,s})
         sum_f_children = sum(f_func(cs, m) for cs in child_sizes)
         f_bound = f_func(Delta_D_p + 1, m)
         split_data.append(
