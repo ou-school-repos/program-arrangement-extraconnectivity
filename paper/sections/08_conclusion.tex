@@ -1,7 +1,14 @@
-\section{Conclusion}
+\section{Conclusion and Open Problems}
+\label{sec:conclusion}
 
-This paper's contribution divides cleanly into what is proved outright and what
-remains conditional, and the two should not be conflated.
+This paper investigates the vertex-isoperimetric profile of the arrangement
+graph $A(n,k)$ and its connection with extraconnectivity. We conjecture that
+the Hamming Ball configuration $\mathrm{HB}_R$ minimizes the external boundary
+for subsets with $R \le 2^m$ in the tested $m \le 4$ regime. This restricted
+claim is supported by bounded computations in selected cases. The Lean
+formalization proves structural consequences conditional on the boundary
+inequality itself; it does not prove that inequality. A general proof, and the
+question of uniqueness of the minimizer, remain open.
 
 \textbf{Proved unconditionally.} The Algebraic Defect Framework itself ---
 the root/fiber decomposition of the external boundary into a term linear in
@@ -18,11 +25,14 @@ Funnel, its primary and secondary fractures, and Theorem~\ref{thm:classification
 is likewise proved on paper from Harper's edge-isoperimetric theorem, not
 merely observed computationally.
 
+The unrestricted boundary proposition is false: the full Star in $A(10,8)$ at
+$R=17$ has external boundary $168$, below the claimed value $169$.
+
 \textbf{Conditional.} Combining these unconditional results into a single
 exact closed-form boundary formula valid within the hypercube embedding
 regime ($R \le 2^m$) requires the Restricted Boundary Inequality
-(Proposition~\ref{prop:restricted_lower_bound}), which holds for $m \le 4$ by
-computational verification but remains open for general $m$.
+(Proposition~\ref{prop:restricted_lower_bound}), which is supported by
+selected finite computations but remains open.
 A second, independent
 gap --- the
 boundary-to-extraconnectivity reduction relating minimum-boundary sets to
@@ -33,9 +43,7 @@ sets of $R$-element subsets.
 \textbf{Net assessment.} Relative to \cite{cheng2022extraconnectivity}'s exact
 computation of small-$g$ extraconnectivity cases ($g \le 6$), this paper
 establishes a conditional closed-form framework that subsumes those results
-within the embeddable regime. For $m \le 4$ (covering all of the paper's
-canonical examples), the framework is computationally verified. Closing the
-Restricted Boundary Inequality for general $m$, and the
+within the embeddable regime. Closing the Restricted Boundary Inequality and the
 boundary-to-extraconnectivity reduction, remain the principal open problems.
 
 \paragraph{Conjugate geometry and local induction.}
@@ -43,11 +51,20 @@ The computational diagnostics expose a persistent trade-off between the
 root-incidence defect $D(V)$ and the cross-collision multiplicity
 $\sum_{w:\,\mu_V(w)\ge2}\mu_V(w)$. Sparse Star configurations have small
 defect and large collision capacity, while dense Hamming-ball configurations
-have the opposite profile. These quantities therefore cannot be maximized
-independently in a valid extremal argument. The exact coordinate-averaged
+have the opposite profile. These quantities cannot be maximized independently
+in a valid extremal argument. In a coarse pair-counting envelope, the
+coefficient suppresses collision capacity for $m\le3$ and changes sign for
+larger $m$; this is an accounting observation, not an extremal theorem. Star
+calculations suggest, heuristically, competing scales $O(R^2/m)$ and
+$O(R\log_2 R)$, but this is not an asymptotic result. The exact coordinate-averaged
 squeeze nevertheless fails on the full Star $S_4\subset A(8,4)$: its child
 potential sum is $460$, its geometric penalty is $224$, and the arithmetic
-budget is $4P(17)=676$, giving the exact deficit $684-676=8$. This records a
-failure of a strictly local payment rule, not a proof of a replacement
-theorem; the remaining boundary problem requires a coupled argument or a
-different extremal description.
+budget is $4P(17)=676$, giving exact slack $684-676=-8$. This is not a
+boundary counterexample; it shows that a strictly local averaged payment rule
+cannot establish the lower bound. The tested Star closures satisfy their
+recursive constraints by routing credit backward through a finite ledger.
+
+The complete characterization of the $A(n,k)$ isoperimetric profile remains
+open. Future work must account for the coupled collision and defect geometry,
+either through a global recursive ledger or through a different extremal
+description.
