@@ -203,16 +203,21 @@ route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 ### What remains
 
-The direct route must be reconciled with the remaining recurrence and unstable
-scaffold obligations, then wired into the public capstone to discharge the
-`HBCrossCollisions` parameter. `UniversalLowerBound` remains the separate
-universal-boundary obligation.
+Nothing. The direct `CrossTop.lean` route is already wired into the public,
+unconditional capstone (`arrangement_boundary_minimum`,
+`globally_optimal_growth_strategy`), which calls
+`arrangement_extraconnectivity_minimum`'s conditional capstone with
+`hb_cross_collisions_closed` discharging `HBCrossCollisions` directly. The
+recurrence driver and its scaffold obligations are archived and superseded,
+not pending. `UniversalLowerBound` remains the separate, still-open
+universal-boundary obligation (now known false unrestricted; see "Current
+Status" above).
 
 ## Total Remaining Estimated Effort
 
-**`HBCrossCollisions`**: still an explicit capstone hypothesis. The direct
-`CrossTop.lean` route and the remaining recurrence/scaffold obligations must be
-reconciled before it can be discharged and removed from the capstone API.
+**`HBCrossCollisions`**: done. It is discharged unconditionally by
+`CrossTop.lean`'s `hb_cross_collisions_closed` and is no longer a live
+hypothesis of the public, unconditional capstone theorems.
 
 **`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
 above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares, transfer
