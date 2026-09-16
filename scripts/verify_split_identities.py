@@ -6,6 +6,7 @@ import itertools
 import math
 import sys
 from collections import defaultdict
+from contextlib import nullcontext
 
 
 def boundary(vertices, adjacency, k):
@@ -56,14 +57,12 @@ def main():
     explicit = None
     if args.input:
         try:
-            source = (
-                sys.stdin if args.input == "-" else open(args.input, encoding="utf-8")
-            )
-            try:
+            with (
+                nullcontext(sys.stdin)
+                if args.input == "-"
+                else open(args.input, encoding="utf-8")
+            ) as source:
                 lines = [line.strip() for line in source if line.strip()]
-            finally:
-                if source is not sys.stdin:
-                    source.close()
             explicit = tuple(
                 (
                     tuple(map(int, line.replace(",", " ").split()))
