@@ -1,8 +1,9 @@
-// Bounded CP-SAT feasibility probe for a coordinate-profile telescope.
+// Bounded CP-SAT feasibility probe for a coordinate-state telescope.
 //
 // Usage:
 //   ./profile_telescope_milp n k
 //       [--mode=per-set|relaxed-state|exact-menu]
+//       [--state=profile|pairwise]
 //       [--star-only]
 //       [--max-r=R] [--max-sets=N] [--g-cap=N]
 //       [--time-limit=SECONDS] [--workers=N]
@@ -18,6 +19,10 @@
 //                 parent state and identical split menu impose identical
 //                 disjunctive constraints, so retaining one is exactly
 //                 equivalent.  Compression is auditable.
+//
+// --state=pairwise uses labelled coordinate-pair contingency tables, modulo a
+// single global alphabet relabelling.  It is currently capped at n <= 5 since
+// canonicalization enumerates n! relabellings per concrete set.
 //
 // --star-only  Use one radius-one Star of size --max-r, together with its
 //              closure under all nontrivial coordinate-fiber splits.  This
@@ -183,7 +188,8 @@ void enumerate_subsets(int vertex_count, int max_r, std::vector<Subset> *out) {
 
 // ---- Geometry ------------------------------------------------------------
 
-State state_of(const Subset &subset, const std::vector<Vertex> &vertices, int k) {
+State profile_state_of(const Subset &subset, const std::vector<Vertex> &vertices,
+                       int k) {
     State profiles;
     for (int position = 0; position < k; ++position) {
         std::map<int, int> fiber_sizes;
@@ -199,6 +205,41 @@ State state_of(const Subset &subset, const std::vector<Vertex> &vertices, int k)
     }
     std::sort(profiles.begin(), profiles.end());
     return profiles;
+}
+
+State pairwise_state_of(const Subset &subset, const std::vector<Vertex> &vertices,
+                        int n, int k, const std::vector<Vertex> &relabelings) {
+    State best_state;
+    bool first = true;
+    for (const Vertex &relabel : relabelings) {
+        State tables;
+        for (int first_position = 0; first_position < k; ++first_position) {
+            for (int second_position = first_position + 1; second_position < k;
+                 ++second_position) {
+                Profile table(n * n, 0);
+                for (const int id : subset) {
+                    const Vertex &vertex = vertices[id];
+                    const int row = relabel[vertex[first_position]];
+                    const int column = relabel[vertex[second_position]];
+                    ++table[row * n + column];
+                }
+                tables.push_back(std::move(table));
+            }
+        }
+        if (first || tables < best_state) {
+            best_state = std::move(tables);
+            first = false;
+        }
+    }
+    return best_state;
+}
+
+State state_of(const Subset &subset, const std::vector<Vertex> &vertices, int n,
+               int k, const std::string &state_kind,
+               const std::vector<Vertex> &relabelings) {
+    if (state_kind == "profile")
+        return profile_state_of(subset, vertices, k);
+    return pairwise_state_of(subset, vertices, n, k, relabelings);
 }
 
 std::int64_t defect_of(const Subset &subset, const std::vector<Vertex> &vertices,
@@ -581,9 +622,12 @@ void dump_split_menu(const Subset &subset, const std::vector<Vertex> &vertices,
 void dump_split_ledger(const Subset &subset, const std::vector<Vertex> &vertices,
                        int n, int k, const std::map<State, int> &state_index,
                        const std::vector<IntVar> &g,
-                       const CpSolverResponse &response) {
+                       const CpSolverResponse &response,
+                       const std::string &state_kind,
+                       const std::vector<Vertex> &relabelings) {
     const int m = n - k;
-    const State parent_state = state_of(subset, vertices, k);
+    const State parent_state = state_of(
+        subset, vertices, n, k, state_kind, relabelings);
     const int parent_index = state_index.at(parent_state);
     const std::int64_t parent_g = SolutionIntegerValue(response, g[parent_index]);
     const std::int64_t phi_parent = phi_of(subset, vertices, n, k);
@@ -604,7 +648,8 @@ void dump_split_ledger(const Subset &subset, const std::vector<Vertex> &vertices
         for (const Subset &fiber : fibers) {
             phi_children += phi_of(fiber, vertices, n, k);
             p_children += potential(static_cast<int>(fiber.size()), m);
-            const int child_index = state_index.at(state_of(fiber, vertices, k));
+            const int child_index = state_index.at(state_of(
+                fiber, vertices, n, k, state_kind, relabelings));
             child_g_sum += SolutionIntegerValue(response, g[child_index]);
             sizes.push_back(static_cast<int>(fiber.size()));
         }
@@ -822,6 +867,7 @@ int main(int argc, char **argv) {
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " n k"
                   << " [--mode=per-set|relaxed-state|exact-menu]"
+                  << " [--state=profile|pairwise]"
                   << " [--max-r=R] [--max-sets=N] [--g-cap=N]"
                   << " [--time-limit=SECONDS] [--workers=N]"
                   << " [--print-positive-g] [--minimize-sum-g]"
@@ -838,6 +884,7 @@ int main(int argc, char **argv) {
     double time_limit = 30.0;
     int workers = 1;
     std::string mode = "per-set";
+    std::string state_kind = "profile";
     bool print_positive_g = false;
     bool minimize_sum_g = false;
     bool star_only = false;
@@ -850,6 +897,8 @@ int main(int argc, char **argv) {
         const std::string option(argv[argument]);
         if (option.rfind("--mode=", 0) == 0)
             mode = option.substr(7);
+        else if (option.rfind("--state=", 0) == 0)
+            state_kind = option.substr(8);
         else if (option.rfind("--max-r=", 0) == 0)
             max_r = std::stoi(option.substr(8));
         else if (option.rfind("--max-sets=", 0) == 0)
@@ -885,6 +934,15 @@ int main(int argc, char **argv) {
         std::cerr << "Unknown mode: " << mode << '\n';
         return 1;
     }
+    if (state_kind != "profile" && state_kind != "pairwise") {
+        std::cerr << "Unknown state kind: " << state_kind << '\n';
+        return 1;
+    }
+    if (state_kind == "pairwise" && n > 5) {
+        std::cerr << "--state=pairwise is currently limited to n <= 5 "
+                  << "because it enumerates n! global relabellings per set.\n";
+        return 1;
+    }
     if (!export_g_path.empty() && !verify_g_path.empty()) {
         std::cerr << "Use only one of --export-g and --verify-g.\n";
         return 1;
@@ -896,10 +954,18 @@ int main(int argc, char **argv) {
     }
 
     const std::vector<Vertex> vertices = vertices_of(n, k);
+    std::vector<Vertex> relabelings;
+    if (state_kind == "pairwise") {
+        Vertex relabel(n);
+        std::iota(relabel.begin(), relabel.end(), 0);
+        do {
+            relabelings.push_back(relabel);
+        } while (std::next_permutation(relabel.begin(), relabel.end()));
+    }
     max_r = std::min(max_r, static_cast<int>(vertices.size()));
     const std::string run_label = verify_g_path.empty()
-        ? "mode=" + mode
-        : "direct fixed-G verification";
+        ? "mode=" + mode + "; state=" + state_kind
+        : "direct fixed-G verification; state=" + state_kind;
 
     std::vector<Subset> subsets;
     if (star_only) {
@@ -950,7 +1016,8 @@ int main(int argc, char **argv) {
     const int m = n - k;
     for (const Subset &subset : subsets) {
         std::vector<Transition> choices;
-        const int parent_state = register_state(state_of(subset, vertices, k));
+        const int parent_state = register_state(state_of(
+            subset, vertices, n, k, state_kind, relabelings));
         parent_states.push_back(parent_state);
         if (subset.size() >= 2) {
             const std::int64_t phi_parent = phi_of(subset, vertices, n, k);
@@ -968,7 +1035,8 @@ int main(int argc, char **argv) {
                     phi_children += phi_of(fiber, vertices, n, k);
                     p_children += potential(static_cast<int>(fiber.size()), m);
                     child_states.push_back(
-                        register_state(state_of(fiber, vertices, k)));
+                        register_state(state_of(
+                            fiber, vertices, n, k, state_kind, relabelings)));
                 }
                 choices.push_back(
                     {parent_state,
@@ -995,11 +1063,12 @@ int main(int argc, char **argv) {
               << "  vertices=" << vertices.size() << '\n'
               << "  subsets_enumerated=" << subsets.size() << '\n'
               << "  concrete_sets=" << concrete_sets << '\n'
-              << "  profile_states=" << states.size() << '\n'
+              << "  states=" << states.size() << '\n'
               << "  distinct_menus=" << distinct_menus.size() << '\n';
 
     const Subset singleton{0};
-    const int singleton_state = register_state(state_of(singleton, vertices, k));
+    const int singleton_state = register_state(state_of(
+        singleton, vertices, n, k, state_kind, relabelings));
 
     if (!verify_g_path.empty()) {
         std::map<State, std::int64_t> fixed_g;
@@ -1104,7 +1173,7 @@ int main(int argc, char **argv) {
         for (const auto &[key, index] : representatives) {
             static_cast<void>(key);
             dump_split_ledger(subsets[index], vertices, n, k, state_index, g,
-                              response);
+                              response, state_kind, relabelings);
         }
     }
 
