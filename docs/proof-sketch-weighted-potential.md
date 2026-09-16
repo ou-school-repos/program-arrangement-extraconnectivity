@@ -443,6 +443,48 @@ general.  Whether a nonzero recursive profile correction works for all
 parameters, and what closed form it has, remains open.  No Lean theorem
 or axiom status changes follow from these finite certificates.
 
+### Exact coordinate-split accounting (2026-09-16)
+
+The defect framework now proves two independent accounting lemmas:
+
+```
+DeltaD(V,p) = |V| - |U_p(V)|
+DeltaX(V,p) = #{w in external_boundary(V): mu_V(w) >= 2,
+                                          w in directional_boundary_p(V)}
+```
+
+Multiplicity counts coordinate directions, not adjacent vertices. A vertex
+internal to a sibling fiber can be reached from another child only along
+the split coordinate, so it contributes no child collision excess. The
+proof explicitly accounts for these child-external, parent-internal vertices.
+
+`scripts/verify_split_identities.py` independently computes the increments
+by parent-minus-child subtraction and checks the displayed formulas for
+every coordinate, including trivial splits:
+
+| Pool | Non-singleton sets | Coordinate checks | Mismatches | All-negative sets |
+| --- | ---: | ---: | ---: | ---: |
+| A(4,3), R <= 5 | 55,430 | 166,290 | 0 | 0 |
+| A(5,2), R <= 6 | 60,439 | 120,878 | 0 | 0 |
+
+Reproduce with `python3 scripts/verify_split_identities.py --n 4 --k 3
+--max-r 5` and the corresponding `--n 5 --k 2 --max-r 6` invocation.
+These finite checks corroborate the implementation; the universal identities
+are justified by the paper proofs. The pools do not include the larger
+all-negative Star witnesses recorded above.
+
+A split-tree inequality using exact terminal slack is not a new proof:
+`sum DeltaPhi = Phi(V) - sum Phi(leaves)` and
+`sum DeltaP = P(|V|) - sum P(|leaves|)` telescope. Adding terminal slack
+therefore reduces precisely to the desired universal bound. For singleton
+leaves, both totals are independent of the tree. Split selection redistributes
+local deficits but cannot create aggregate budget.
+
+The recursive G framework remains live, but no universal nonnegative
+profile-only correction or independent charging theorem is established.
+The additive strategies remain refuted; a failed candidate bound alone
+does not prove that state enrichment is necessary.
+
 ### Strategy 4: Tested guarded dual root-compression candidate (refuted)
 
 Inspired by Pinto's proof of the Bollobás-Leader directed-path conjectures

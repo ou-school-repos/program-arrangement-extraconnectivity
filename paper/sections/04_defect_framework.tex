@@ -60,6 +60,73 @@ The exact boundary size is then:
 \begin{equation}\label{eq:boundary}
 	\left| \extbd(V') \right| = U(V') \cdot (n - k) - \big(X(V') + D(V')\big).
 \end{equation}
+The following identities record the exact cost of a coordinate split;
+they do not assert that its arithmetic allowance covers that cost.
+For a set $V$, fix $p\in[k]$ and let
+$F_{p,s}=\{v\in V:v_p=s\}$, retaining only nonempty fibers.
+All child quantities are evaluated in the same ambient graph $A(n,k)$.
+Write $\Delta D(V,p)=D(V)-\sum_s D(F_{p,s})$ and
+$\Delta X(V,p)=X(V)-\sum_s X(F_{p,s})$.
+
+\begin{lemma}[Exact coordinate defect increment]
+\label{lem:exact_defect_increment}
+For every coordinate split,
+\[
+ \Delta D(V,p)=|V|-|U_p(V)|.
+\]
+\end{lemma}
+\begin{proof}
+Deleting coordinate $p$ is injective on each fixed-symbol fiber, so
+$|U_p(F_{p,s})|=|F_{p,s}|$.  For $q\ne p$, deleting $q$ retains
+the symbol at $p$; consequently roots from different fibers are disjoint and
+$|U_q(V)|=\sum_s|U_q(F_{p,s})|$.  Hence
+\[
+ \sum_s U(F_{p,s})=|V|+\sum_{q\ne p}|U_q(V)|.
+\]
+Subtracting the defects $D(A)=k|A|-U(A)$ proves the identity.
+\end{proof}
+
+\begin{lemma}[Exact coordinate collision increment]
+\label{lem:exact_collision_increment}
+Let $\partial_p V$ be the external neighbors of $V$ reached by changing
+coordinate $p$.  Then
+\[
+ \Delta X(V,p)=
+ \bigl|\{w\in\extbd(V):\mu_V(w)\ge2,
+                  \ w\in\partial_p V\}\bigr|.
+\]
+\end{lemma}
+\begin{proof}
+Write $(a)_+=\max\{a,0\}$ and assign multiplicity zero to vertices
+internal to a set.  First consider $w\in V$ that is external to a child
+$F_{p,s}$.  Since $w_p\ne s$, every adjacency from that child to $w$
+changes $p$.  Its child multiplicity is therefore at most one, so
+such sibling-internal vertices contribute zero to every child collision count.
+
+Now fix $w\notin V$.  Every generator along $q\ne p$ belongs to
+$F_{p,w_p}$, whereas generators along $p$ belong to fibers with
+$s\ne w_p$.  Each latter fiber can reach $w$ only along $p$, and thus
+contributes no collision excess.  The former fiber has multiplicity
+$\mu_V(w)-\mathbf{1}_{\{w\in\partial_p V\}}$; an absent fiber has
+multiplicity zero.  Consequently
+\[
+ \sum_s(\mu_{F_{p,s}}(w)-1)_+
+ =\bigl(\mu_V(w)-1-\mathbf{1}_{\{w\in\partial_p V\}}\bigr)_+.
+\]
+Subtracting this from $(\mu_V(w)-1)_+$ gives one precisely when
+$\mu_V(w)\ge2$ and $w\in\partial_p V$, and zero otherwise.
+Summing over parent-external vertices, with the sibling contributions
+already accounted for, proves the claim.
+\end{proof}
+
+In particular, summing over all coordinates gives the exact identity
+\[
+ \sum_{p=1}^k\Delta X(V,p)
+ =\sum_{\substack{w\in\extbd(V)\\\mu_V(w)\ge2}}\mu_V(w).
+\]
+These are accounting identities, not an independent proof of the universal
+boundary inequality below.
+
 The algebraic engine of this framework relies on a fundamental subadditivity
 inequality for $\Eseq(\cdot)$ (Definition~2.5). While this inequality reflects
 the classical inductive step in Harper's edge-isoperimetric theorem for Boolean
