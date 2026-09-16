@@ -18,6 +18,7 @@ lean_lib «Proofs» where
     `Arrangement.PenaltyExact,
     `Arrangement.CrossTop,
     `Arrangement.CapacityBoundExamples,
+    `Arrangement.UniversalCounterexample,
     `Arrangement.unstable.ArrangementGraphUtils,
     `Arrangement.unstable.SupportProjection
   ]
