@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <string>
 #include <vector>
@@ -89,8 +90,9 @@ BoolVar iff_any(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     model.AddBoolOr(literals).OnlyEnforceIf(result);
     std::vector<BoolVar> negatives;
     negatives.reserve(literals.size());
-    for (BoolVar literal : literals)
-        negatives.push_back(Not(literal));
+    std::transform(literals.begin(), literals.end(),
+                   std::back_inserter(negatives),
+                   [](const BoolVar literal) { return Not(literal); });
     model.AddBoolAnd(negatives).OnlyEnforceIf(Not(result));
     return result;
 }
@@ -100,8 +102,9 @@ BoolVar iff_all(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     model.AddBoolAnd(literals).OnlyEnforceIf(result);
     std::vector<BoolVar> negated;
     negated.reserve(literals.size());
-    for (const auto literal : literals)
-        negated.push_back(literal.Not());
+    std::transform(literals.begin(), literals.end(),
+                   std::back_inserter(negated),
+                   [](const BoolVar literal) { return literal.Not(); });
     model.AddBoolOr(negated).OnlyEnforceIf(Not(result));
     return result;
 }

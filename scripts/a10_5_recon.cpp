@@ -1,5 +1,6 @@
 #include <array>
 #include <iostream>
+#include <numeric>
 #include <unordered_set>
 #include <vector>
 
@@ -7,10 +8,11 @@ using Vertex = std::array<int, 5>;
 
 struct VertexHash {
     std::size_t operator()(const Vertex &vertex) const {
-        std::size_t hash = 0;
-        for (const int symbol : vertex)
-            hash = hash * 11 + static_cast<std::size_t>(symbol);
-        return hash;
+        return std::accumulate(vertex.begin(), vertex.end(), std::size_t{0},
+                               [](const std::size_t hash, const int symbol) {
+                                   return hash * 11 +
+                                          static_cast<std::size_t>(symbol);
+                               });
     }
 };
 

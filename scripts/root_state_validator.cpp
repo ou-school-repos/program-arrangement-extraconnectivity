@@ -27,10 +27,10 @@ struct Instance {
     std::unordered_map<int, int> index;
 
     int encode(const std::vector<int> &vertex) const {
-        int code = 0;
-        for (int symbol : vertex)
-            code = n * code + symbol;
-        return code;
+        return std::accumulate(vertex.begin(), vertex.end(), 0,
+                               [&](const int code, const int symbol) {
+                                   return n * code + symbol;
+                               });
     }
 
     void enumerate(std::vector<int> &prefix, std::vector<bool> &used) {
@@ -180,9 +180,11 @@ struct State {
 
     int active_roots() const {
         int total = 0;
-        for (const auto &roots : root_count)
-            for (int count : roots)
-                total += count > 0;
+        for (const auto &roots : root_count) {
+            total += static_cast<int>(
+                std::count_if(roots.begin(), roots.end(),
+                              [](const int count) { return count > 0; }));
+        }
         return total;
     }
 
@@ -196,9 +198,10 @@ Metrics from_scratch(const Instance &instance, const State &state) {
     for (int position = 0; position < instance.k; ++position) {
         for (std::size_t root = 0; root < instance.lines[position].size();
              ++root) {
-            int selected_on_line = 0;
-            for (int vertex : instance.lines[position][root])
-                selected_on_line += state.selected[vertex];
+            const int selected_on_line = static_cast<int>(std::count_if(
+                instance.lines[position][root].begin(),
+                instance.lines[position][root].end(),
+                [&](const int vertex) { return state.selected[vertex]; }));
             if (selected_on_line == 0)
                 continue;
             ++active_roots;
@@ -258,10 +261,13 @@ void random_test(const Instance &instance) {
                 for (int vertex : chosen)
                     present[vertex] = true;
                 std::vector<int> candidates;
-                for (int vertex = 0; vertex < static_cast<int>(present.size());
-                     ++vertex)
-                    if (!present[vertex])
-                        candidates.push_back(vertex);
+                candidates.reserve(present.size());
+                std::vector<int> vertex_ids(present.size());
+                std::iota(vertex_ids.begin(), vertex_ids.end(), 0);
+                std::copy_if(
+                    vertex_ids.begin(), vertex_ids.end(),
+                    std::back_inserter(candidates),
+                    [&](const int vertex) { return !present[vertex]; });
                 const int vertex = candidates[rng() % candidates.size()];
                 chosen.push_back(vertex);
                 state.add(vertex);

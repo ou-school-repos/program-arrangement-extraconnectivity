@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -32,10 +34,9 @@ constexpr int kVolume = 26;
 constexpr int kSliceBoundary = 298;
 
 int encode(const Vertex &vertex) {
-    int code = 0;
-    for (const int symbol : vertex)
-        code = 10 * code + symbol;
-    return code;
+    return std::accumulate(
+        vertex.begin(), vertex.end(), 0,
+        [](const int code, const int symbol) { return 10 * code + symbol; });
 }
 
 void enumerate_vertices(int position, Vertex &vertex,
@@ -121,27 +122,32 @@ int main(int argc, char **argv) {
     }
 
     std::cout << "A(10,5): vertices=" << vertices.size() << " directed_edges=";
-    std::size_t edge_count = 0;
-    for (const auto &neighbors : adjacency)
-        edge_count += neighbors.size();
+    const std::size_t edge_count =
+        std::accumulate(adjacency.begin(), adjacency.end(), std::size_t{0},
+                        [](const std::size_t total, const auto &neighbors) {
+                            return total + neighbors.size();
+                        });
     std::cout << edge_count << "\n";
 
     std::vector<char> selected_flag(vertices.size());
     for (const int code : hamming_slice())
         selected_flag[index.at(code)] = true;
     std::vector<int> selected_list;
-    for (int id = 0; id < static_cast<int>(vertices.size()); ++id)
-        if (selected_flag[id])
-            selected_list.push_back(id);
+    selected_list.reserve(kVolume);
+    std::vector<int> vertex_ids(vertices.size());
+    std::iota(vertex_ids.begin(), vertex_ids.end(), 0);
+    std::copy_if(vertex_ids.begin(), vertex_ids.end(),
+                 std::back_inserter(selected_list),
+                 [&](const int id) { return selected_flag[id] != 0; });
 
     std::vector<char> boundary_flag(vertices.size(), false);
     for (const int id : selected_list)
         for (const int neighbor : adjacency[id])
             if (!selected_flag[neighbor])
                 boundary_flag[neighbor] = true;
-    int boundary_count = 0;
-    for (const char flag : boundary_flag)
-        boundary_count += flag;
+    const int boundary_count = static_cast<int>(
+        std::count_if(boundary_flag.begin(), boundary_flag.end(),
+                      [](const char flag) { return flag != 0; }));
     if (boundary_count != kSliceBoundary) {
         std::cerr << "slice boundary verification failed: " << boundary_count
                   << " != " << kSliceBoundary << "\n";
@@ -154,13 +160,13 @@ int main(int argc, char **argv) {
         if (!boundary_flag[id])
             continue;
         for (int position = 0; position < kSize; ++position) {
-            bool reached = false;
-            for (const int neighbor : adjacency[id])
-                if (selected_flag[neighbor] &&
-                    vertices[neighbor][position] != vertices[id][position]) {
-                    reached = true;
-                    break;
-                }
+            const bool reached =
+                std::any_of(adjacency[id].begin(), adjacency[id].end(),
+                            [&](const int neighbor) {
+                                return selected_flag[neighbor] &&
+                                       vertices[neighbor][position] !=
+                                           vertices[id][position];
+                            });
             if (reached) {
                 ++external_count[position];
                 ++incidence_total;
@@ -194,20 +200,29 @@ int main(int argc, char **argv) {
         model.AddImplication(boundary.back(), selected.back().Not());
     }
 
-    LinearExpr volume_expr;
-    LinearExpr boundary_expr;
-    for (const BoolVar variable : selected)
-        volume_expr += variable;
-    for (const BoolVar variable : boundary)
-        boundary_expr += variable;
+    const LinearExpr volume_expr =
+        std::accumulate(selected.begin(), selected.end(), LinearExpr{},
+                        [](LinearExpr sum, const BoolVar variable) {
+                            sum += variable;
+                            return sum;
+                        });
+    const LinearExpr boundary_expr =
+        std::accumulate(boundary.begin(), boundary.end(), LinearExpr{},
+                        [](LinearExpr sum, const BoolVar variable) {
+                            sum += variable;
+                            return sum;
+                        });
     model.AddEquality(volume_expr, kVolume);
     if (floor > 0)
         model.AddGreaterOrEqual(boundary_expr, floor);
 
     for (std::size_t id = 0; id < vertices.size(); ++id) {
-        LinearExpr neighbor_sum;
-        for (const int neighbor : adjacency[id])
-            neighbor_sum += selected[neighbor];
+        const LinearExpr neighbor_sum = std::accumulate(
+            adjacency[id].begin(), adjacency[id].end(), LinearExpr{},
+            [&](LinearExpr sum, const int neighbor) {
+                sum += selected[neighbor];
+                return sum;
+            });
         model.AddLessOrEqual(boundary[id], neighbor_sum);
     }
 

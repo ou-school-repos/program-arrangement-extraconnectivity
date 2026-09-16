@@ -320,13 +320,10 @@ Subset star_graph_center(int k) {
 Subset star_graph(const std::vector<Vertex> &vertices, int k, int size) {
     const Vertex center = star_graph_center(k);
     // Find center index.
-    int center_id = -1;
-    for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
-        if (vertices[i] == center) {
-            center_id = i;
-            break;
-        }
-    }
+    const auto center_it = std::find(vertices.begin(), vertices.end(), center);
+    const int center_id = center_it == vertices.end()
+                              ? -1
+                              : static_cast<int>(center_it - vertices.begin());
     if (center_id < 0)
         return {};
 
@@ -529,11 +526,9 @@ bool verify_fixed_g(
     const std::vector<State> &states,
     const std::vector<std::vector<Transition>> &choices_by_subset,
     const std::vector<int> &parent_states) {
-    int missing_states = 0;
-    for (const State &state : states) {
-        if (!table.count(state))
-            ++missing_states;
-    }
+    const int missing_states = static_cast<int>(
+        std::count_if(states.begin(), states.end(),
+                      [&](const State &state) { return !table.count(state); }));
     if (missing_states != 0) {
         std::cerr << "G table is missing " << missing_states
                   << " states from this finite pool.\n";
@@ -550,9 +545,11 @@ bool verify_fixed_g(
         const std::int64_t parent_g = table.at(states[parent_states[i]]);
         bool valid_split = false;
         for (const Transition &transition : choices) {
-            std::int64_t rhs = transition.gap;
-            for (const int child : transition.child_states)
-                rhs += table.at(states[child]);
+            const std::int64_t rhs = std::accumulate(
+                transition.child_states.begin(), transition.child_states.end(),
+                transition.gap, [&](const std::int64_t total, const int child) {
+                    return total + table.at(states[child]);
+                });
             if (parent_g <= rhs) {
                 valid_split = true;
                 break;
@@ -849,9 +846,12 @@ build_and_solve(const std::string &mode, bool minimize_sum_g,
     }
 
     if (minimize_sum_g) {
-        LinearExpr total_g;
-        for (const IntVar &variable : g)
-            total_g += variable;
+        const LinearExpr total_g =
+            std::accumulate(g.begin(), g.end(), LinearExpr{},
+                            [](LinearExpr sum, const IntVar &variable) {
+                                sum += variable;
+                                return sum;
+                            });
         model.Minimize(total_g);
     }
 

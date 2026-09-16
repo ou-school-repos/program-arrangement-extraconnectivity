@@ -4,10 +4,12 @@
 // Usage: ./search_triples n k c_a c_b c_c
 //          [--objective=min_J|max_J] [--tight] [--time-limit=SECONDS]
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <string>
 #include <vector>
@@ -80,8 +82,9 @@ BoolVar iff_any(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     model.AddBoolOr(literals).OnlyEnforceIf(result);
     std::vector<BoolVar> negatives;
     negatives.reserve(literals.size());
-    for (const BoolVar literal : literals)
-        negatives.push_back(Not(literal));
+    std::transform(literals.begin(), literals.end(),
+                   std::back_inserter(negatives),
+                   [](const BoolVar literal) { return Not(literal); });
     model.AddBoolAnd(negatives).OnlyEnforceIf(Not(result));
     return result;
 }
@@ -91,8 +94,9 @@ BoolVar iff_all(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     model.AddBoolAnd(literals).OnlyEnforceIf(result);
     std::vector<BoolVar> negatives;
     negatives.reserve(literals.size());
-    for (const BoolVar literal : literals)
-        negatives.push_back(Not(literal));
+    std::transform(literals.begin(), literals.end(),
+                   std::back_inserter(negatives),
+                   [](const BoolVar literal) { return Not(literal); });
     model.AddBoolOr(negatives).OnlyEnforceIf(Not(result));
     return result;
 }
@@ -193,8 +197,10 @@ int main(int argc, char **argv) {
         std::vector<BoolVar> result(count);
         for (int id = 0; id < count; ++id) {
             std::vector<BoolVar> neighbors;
-            for (const int neighbor : adjacency[id])
-                neighbors.push_back(set[neighbor]);
+            neighbors.reserve(adjacency[id].size());
+            std::transform(adjacency[id].begin(), adjacency[id].end(),
+                           std::back_inserter(neighbors),
+                           [&](const int neighbor) { return set[neighbor]; });
             result[id] = iff_all(cp, {Not(set[id]), iff_any(cp, neighbors)});
         }
         return result;

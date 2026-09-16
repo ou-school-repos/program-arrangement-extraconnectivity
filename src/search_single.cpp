@@ -14,7 +14,9 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -86,8 +88,9 @@ BoolVar iff_any(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     model.AddBoolOr(literals).OnlyEnforceIf(result);
     std::vector<BoolVar> negatives;
     negatives.reserve(literals.size());
-    for (const BoolVar literal : literals)
-        negatives.push_back(Not(literal));
+    std::transform(literals.begin(), literals.end(),
+                   std::back_inserter(negatives),
+                   [](const BoolVar literal) { return Not(literal); });
     model.AddBoolAnd(negatives).OnlyEnforceIf(Not(result));
     return result;
 }
@@ -97,8 +100,9 @@ BoolVar iff_all(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     model.AddBoolAnd(literals).OnlyEnforceIf(result);
     std::vector<BoolVar> negatives;
     negatives.reserve(literals.size());
-    for (const BoolVar literal : literals)
-        negatives.push_back(Not(literal));
+    std::transform(literals.begin(), literals.end(),
+                   std::back_inserter(negatives),
+                   [](const BoolVar literal) { return Not(literal); });
     model.AddBoolOr(negatives).OnlyEnforceIf(Not(result));
     return result;
 }
@@ -181,8 +185,10 @@ int main(int argc, char **argv) {
 
     for (int id = 0; id < count; ++id) {
         std::vector<BoolVar> adjacent;
-        for (int neighbor : adjacency[id])
-            adjacent.push_back(in_set[neighbor]);
+        adjacent.reserve(adjacency[id].size());
+        std::transform(adjacency[id].begin(), adjacency[id].end(),
+                       std::back_inserter(adjacent),
+                       [&](const int neighbor) { return in_set[neighbor]; });
         const BoolVar has_neighbor = iff_any(cp, adjacent);
         ext[id] = iff_all(cp, {has_neighbor, Not(in_set[id])});
         boundary += ext[id];
@@ -201,8 +207,10 @@ int main(int argc, char **argv) {
         }
         for (const auto &[root, members] : root_members) {
             std::vector<BoolVar> literals;
-            for (int id : members)
-                literals.push_back(in_set[id]);
+            literals.reserve(members.size());
+            std::transform(members.begin(), members.end(),
+                           std::back_inserter(literals),
+                           [&](const int id) { return in_set[id]; });
             const BoolVar occupied = iff_any(cp, literals);
             occupied_roots += occupied;
             if (position == 0) {
@@ -249,11 +257,15 @@ int main(int argc, char **argv) {
         is_empty[symbol] = cp.NewBoolVar();
         e_by_slice[symbol] = cp.NewIntVar(Domain(0, max_e));
         c_by_slice[symbol] = cp.NewIntVar(Domain(0, max_c));
-        LinearExpr members_in_slice;
-        for (int id = 0; id < count; ++id) {
-            if (vertices[id][0] == symbol)
-                members_in_slice += in_set[id];
-        }
+        const LinearExpr members_in_slice =
+            std::accumulate(vertices.begin(), vertices.end(), LinearExpr{},
+                            [&](LinearExpr sum, const auto &vertex) {
+                                const int id =
+                                    static_cast<int>(&vertex - vertices.data());
+                                if (vertices[id][0] == symbol)
+                                    sum += in_set[id];
+                                return sum;
+                            });
         cp.AddEquality(slice_sizes[symbol], members_in_slice);
         cp.AddEquality(slice_sizes[symbol], 0).OnlyEnforceIf(is_empty[symbol]);
         cp.AddGreaterThan(slice_sizes[symbol], 0)

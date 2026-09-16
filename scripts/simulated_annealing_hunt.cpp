@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <iterator>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -210,9 +211,11 @@ int main(int argc, char **argv) {
         }
     }
 
+    const std::vector<uint64_t> seed_vertices = hamming_ball();
     std::vector<int> seed;
-    for (uint64_t vertex : hamming_ball())
-        seed.push_back(index[vertex]);
+    std::transform(seed_vertices.begin(), seed_vertices.end(),
+                   std::back_inserter(seed),
+                   [&](const uint64_t vertex) { return index[vertex]; });
     State initial(seed, adjacency);
     if (initial.score != exact_boundary(initial) || initial.score != 298) {
         std::cerr << "initial boundary verification failed\n";

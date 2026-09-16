@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -25,10 +27,9 @@ using operations_research::sat::SolveCpModel;
 using Vertex = std::array<int, 5>;
 
 int encode(const Vertex &vertex) {
-    int code = 0;
-    for (const int symbol : vertex)
-        code = 10 * code + symbol;
-    return code;
+    return std::accumulate(
+        vertex.begin(), vertex.end(), 0,
+        [](const int code, const int symbol) { return 10 * code + symbol; });
 }
 
 void enumerate_vertices(int position, Vertex &vertex,
@@ -109,9 +110,11 @@ int main(int argc, char **argv) {
     }
 
     std::cout << "A(10,5): vertices=" << vertices.size() << " directed_edges=";
-    std::size_t edge_count = 0;
-    for (const auto &neighbors : adjacency)
-        edge_count += neighbors.size();
+    const std::size_t edge_count =
+        std::accumulate(adjacency.begin(), adjacency.end(), std::size_t{0},
+                        [](const std::size_t total, const auto &neighbors) {
+                            return total + neighbors.size();
+                        });
     std::cout << edge_count << "\n";
     if (start_lb > 0)
         std::cout << "resuming with proven lower bound >= " << start_lb << "\n";
@@ -127,12 +130,18 @@ int main(int argc, char **argv) {
         model.AddImplication(boundary.back(), selected.back().Not());
     }
 
-    LinearExpr volume_expr;
-    LinearExpr boundary_expr;
-    for (const BoolVar variable : selected)
-        volume_expr += variable;
-    for (const BoolVar variable : boundary)
-        boundary_expr += variable;
+    const LinearExpr volume_expr =
+        std::accumulate(selected.begin(), selected.end(), LinearExpr{},
+                        [](LinearExpr sum, const BoolVar variable) {
+                            sum += variable;
+                            return sum;
+                        });
+    const LinearExpr boundary_expr =
+        std::accumulate(boundary.begin(), boundary.end(), LinearExpr{},
+                        [](LinearExpr sum, const BoolVar variable) {
+                            sum += variable;
+                            return sum;
+                        });
     model.AddEquality(volume_expr, volume);
     model.AddLessOrEqual(boundary_expr, cutoff);
     if (start_lb > 0)
@@ -167,10 +176,8 @@ int main(int argc, char **argv) {
                     if (!selected_flags[v])
                         external[v] = true;
             }
-            int count = 0;
-            for (const bool value : external)
-                count += value;
-            return count;
+            return static_cast<int>(
+                std::count(external.begin(), external.end(), true));
         };
     solver.Add(NewFeasibleSolutionObserver(
         [&](const operations_research::sat::CpSolverResponse &response) {
