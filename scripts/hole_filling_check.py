@@ -31,6 +31,7 @@ Run:  python3 scripts/hole_filling_check.py
 from collections import Counter
 
 from coverage_avoidance import analyze, corpus
+from lib import neighbors as arrangement_neighbors
 
 
 def slack(r):
@@ -47,23 +48,12 @@ def swallowed_slots(A, S, c=0):
     for v in S:
         Q[v[c]].add(tuple(v[p] for p in rest))
 
-    def nbrs(v):
-        v = list(v)
-        out = []
-        for p in range(len(v)):
-            for a in range(n):
-                if a not in v:
-                    w = list(v)
-                    w[p] = a
-                    out.append(tuple(w))
-        return out
-
     P = {i: {x for x in pi if i not in set(x)} for i in range(n)}
     blo = {}
     for i in range(n):
         b = set()
         for y in Q[i]:
-            for z in nbrs(y):
+            for z in arrangement_neighbors(y, n):
                 if len(set(z)) == len(z) and z not in Q[i]:
                     b.add(z)
         blo[i] = b

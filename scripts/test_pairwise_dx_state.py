@@ -17,39 +17,12 @@ import itertools
 from collections import defaultdict
 from functools import lru_cache
 
+from lib import cross_collisions, split
+
 
 def arrangement_vertices(n, k):
     """Return all injective k-tuples over range(n)."""
     return tuple(itertools.permutations(range(n), k))
-
-
-@lru_cache(maxsize=None)
-def cross_collisions(vertices, n, k):
-    """Return X(vertices), the directional-boundary overlap excess."""
-    members = set(vertices)
-    directional_total = 0
-    external = set()
-    for position in range(k):
-        directional = set()
-        for vertex in vertices:
-            used = set(vertex)
-            for symbol in range(n):
-                if symbol in used:
-                    continue
-                neighbor = vertex[:position] + (symbol,) + vertex[position + 1 :]
-                if neighbor not in members:
-                    directional.add(neighbor)
-        directional_total += len(directional)
-        external |= directional
-    return directional_total - len(external)
-
-
-def split(vertices, position):
-    """Return coordinate fibers in a canonical order."""
-    fibers = defaultdict(list)
-    for vertex in vertices:
-        fibers[vertex[position]].append(vertex)
-    return tuple(tuple(sorted(fiber)) for _, fiber in sorted(fibers.items()))
 
 
 def raw_pairwise_signature(vertices, n, k, relabel):

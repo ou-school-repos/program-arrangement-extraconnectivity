@@ -17,38 +17,12 @@ This is a finite arithmetic/geometry diagnostic.  It does not prove a
 universal induction inequality.
 """
 
-
-def sbl(size):
-    """``sum(bit_length(i) for 1 <= i < size)``."""
-    return sum(value.bit_length() for value in range(1, size))
-
-
-def e_seq(size):
-    """Cumulative binary popcount, OEIS A000788."""
-    return sum(value.bit_count() for value in range(size))
-
-
-def c_constant(size):
-    """The Hamming-ball collision constant ``C(size)``."""
-    if size == 0:
-        return 0
-    return size - 1 + sbl(size) - e_seq(size)
+from lib import c_constant, e_seq, neighbors, sbl
 
 
 def potential(size, overhang):
     """``P(R) = C(R) + m E(R)``."""
     return c_constant(size) + overhang * e_seq(size)
-
-
-def neighbors(vertex, alphabet_size):
-    """The arrangement-graph neighbors of an injective tuple."""
-    used = set(vertex)
-    result = set()
-    for position in range(len(vertex)):
-        for symbol in range(alphabet_size):
-            if symbol not in used:
-                result.add(vertex[:position] + (symbol,) + vertex[position + 1 :])
-    return result
 
 
 def star_graph(alphabet_size, dimension, size):

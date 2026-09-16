@@ -223,8 +223,8 @@ for n in range(1, maxN + 1):
         phi_samples.append(E_running / n - 0.5 * math.log2(n))
 
 print(
-    "D  Delange wave: min=%.6f max=%.6f (bounded, nonconstant)"
-    % (min(phi_samples), max(phi_samples))
+    f"D  Delange wave: min={min(phi_samples):.6f} "
+    f"max={max(phi_samples):.6f} (bounded, nonconstant)"
 )
 
 Ev = [0]
@@ -253,7 +253,7 @@ check("C(R)/R = (1/2)log2R + Psi({log2R}) - Phi(log2R):", ok)
 # X_HB/R = Psi - 2Phi bounded, zero at powers of two, positive elsewhere
 Rs_D = list(range(2, 1 << 16))
 X = [((C(R) - Ev[R]) / R) for R in Rs_D]
-print("X/R range: [%.4f, %.4f]" % (min(X), max(X)))
+print(f"X/R range: [{min(X):.4f}, {max(X):.4f}]")
 check(
     "X(2^d)=0 for all sampled powers of two:",
     all(C(1 << d) == Ev[1 << d] for d in range(1, 16)),

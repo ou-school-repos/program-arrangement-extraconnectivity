@@ -13,45 +13,8 @@ import math
 import random
 from collections import defaultdict
 
-
-def sbl(size):
-    """Return the cumulative bit length on 1 through size - 1."""
-    return sum(value.bit_length() for value in range(1, size))
-
-
-def e_seq(size):
-    """Return the cumulative popcount on 0 through size - 1."""
-    return sum(value.bit_count() for value in range(size))
-
-
-def f_func(x, m):
-    """f(x) = sbl(x) + (m-1)*E(x)."""
-    if x <= 0:
-        return 0
-    return sbl(x) + (m - 1) * e_seq(x)
-
-
-def P(R, m):
-    """Return the arithmetic potential P(R) for overhang m."""
-    return (R - 1) + sbl(R) + (m - 1) * e_seq(R)
-
-
-def coord_boundary_and_roots(vertices, p, n):
-    """Return (external_neighbors_at_p, roots_at_p) for coordinate p."""
-    members = set(vertices)
-    roots = set()
-    external = set()
-    for vertex in vertices:
-        root = vertex[:p] + vertex[p + 1 :]
-        roots.add(root)
-        used = set(vertex)
-        for symbol in range(n):
-            if symbol in used:
-                continue
-            neighbor = vertex[:p] + (symbol,) + vertex[p + 1 :]
-            if neighbor not in members:
-                external.add(neighbor)
-    return external, roots
+from lib import arithmetic_potential as P
+from lib import coord_boundary_and_roots, f_func
 
 
 def compute_p1(vertices, k):

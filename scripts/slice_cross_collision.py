@@ -12,16 +12,7 @@ Run:  python3 scripts/slice_cross_collision.py
 
 import itertools
 
-
-def neighbors(v, n):
-    """All single-substitution neighbors of an injective tuple."""
-    used = set(v)
-    out = set()
-    for p in range(len(v)):
-        for a in range(n):
-            if a not in used:
-                out.add(v[:p] + (a,) + v[p + 1 :])
-    return out
+from lib import neighbors
 
 
 def boundary(A, n):

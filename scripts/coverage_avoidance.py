@@ -15,6 +15,8 @@ import os
 import random
 from collections import defaultdict
 
+from lib import neighbors as arrangement_neighbors
+
 
 def popcount(j):
     """Binary digit sum."""
@@ -32,19 +34,6 @@ def Cconst(R):
         return 0
     d = 0 if R == 1 else math.ceil(math.log2(R))
     return R * (d + 1) - (1 << d) - Eseq(R)
-
-
-def nbrs(v, n):
-    """Single-substitution neighbours of v over alphabet [n]."""
-    v = list(v)
-    out = []
-    for p in range(len(v)):
-        for a in range(n):
-            if a not in v:
-                w = list(v)
-                w[p] = a
-                out.append(tuple(w))
-    return out
 
 
 class Arr:  # pylint: disable=too-few-public-methods
@@ -75,12 +64,12 @@ def analyze(A, S, c=0):
     P = {i: {x for x in pi if i not in set(x)} for i in range(n)}
     locN = {}
     for x in pi:
-        locN[x] = [y for y in nbrs(x, n) if len(set(y)) == len(y)]
+        locN[x] = [y for y in arrangement_neighbors(x, n) if len(set(y)) == len(y)]
     blo = {}
     for i in range(n):
         b = set()
         for y in Q[i]:
-            for z in nbrs(y, n):
+            for z in arrangement_neighbors(y, n):
                 if len(set(z)) == len(z) and z not in Q[i]:
                     b.add(z)
         blo[i] = b
@@ -204,7 +193,11 @@ def corpus():
             front = [start]
             while len(pi) < R and front:
                 x = front.pop()
-                ys = [y for y in nbrs(x, A.n) if len(set(y)) == len(y) and y not in pi]
+                ys = [
+                    y
+                    for y in arrangement_neighbors(x, A.n)
+                    if len(set(y)) == len(y) and y not in pi
+                ]
                 random.shuffle(ys)
                 for y in ys[:2]:
                     if len(pi) < R:
@@ -229,7 +222,7 @@ def corpus():
                 queue = [start]
                 while queue:
                     x = queue.pop(0)
-                    for y in nbrs(x, A.n):
+                    for y in arrangement_neighbors(x, A.n):
                         if len(set(y)) == len(y) and y not in seen:
                             seen.add(y)
                             queue.append(y)
@@ -261,7 +254,7 @@ def corpus():
                 queue = [start]
                 while queue:
                     x = queue.pop(0)
-                    for y in nbrs(x, A.n):
+                    for y in arrangement_neighbors(x, A.n):
                         if len(set(y)) == len(y) and y not in seen:
                             seen.add(y)
                             queue.append(y)

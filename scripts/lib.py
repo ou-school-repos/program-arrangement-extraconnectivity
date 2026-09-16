@@ -20,6 +20,34 @@ def c_constant(size: int) -> int:
     return 0 if size == 0 else size - 1 + sbl(size) - e_seq(size)
 
 
+def f_func(value: int, overhang: int) -> int:
+    """Return ``sbl(value) + (overhang - 1) * e_seq(value)``."""
+    return 0 if value <= 0 else sbl(value) + (overhang - 1) * e_seq(value)
+
+
+def arithmetic_potential(size: int, overhang: int) -> int:
+    """Return the arithmetic potential used by the master-inequality checks."""
+    return size - 1 + sbl(size) + (overhang - 1) * e_seq(size)
+
+
+def potential(size: int, overhang: int) -> int:
+    """Return ``C(size) + overhang * E(size)``."""
+    return c_constant(size) + overhang * e_seq(size)
+
+
+def coord_boundary_and_roots(vertices, position: int, alphabet_size: int):
+    """Return external neighbors and roots for one coordinate."""
+    members = set(vertices)
+    roots = set()
+    external = set()
+    for vertex in vertices:
+        roots.add(vertex[:position] + vertex[position + 1 :])
+        for neighbor in coordinate_neighbors(vertex, position, alphabet_size):
+            if neighbor not in members:
+                external.add(neighbor)
+    return external, roots
+
+
 def neighbors(vertex: tuple[int, ...], alphabet_size: int) -> set[tuple[int, ...]]:
     """Return all one-coordinate substitutions of an injective tuple."""
     used = set(vertex)
@@ -89,6 +117,19 @@ def build_fibers(vertices, dimension: int):
             root = vertex[:position] + vertex[position + 1 :]
             fibers[position].setdefault(root, set()).add(vertex)
     return fibers
+
+
+def build_adjacency(vertices, alphabet_size: int):
+    """Return the one-substitution adjacency map for ``vertices``."""
+    return {vertex: neighbors(vertex, alphabet_size) for vertex in vertices}
+
+
+def split(vertices, position: int):
+    """Return nonempty coordinate fibers in canonical order."""
+    fibers = {}
+    for vertex in vertices:
+        fibers.setdefault(vertex[position], []).append(vertex)
+    return tuple(tuple(sorted(fiber)) for _, fiber in sorted(fibers.items()))
 
 
 def boundary_metrics(subset, fibers):

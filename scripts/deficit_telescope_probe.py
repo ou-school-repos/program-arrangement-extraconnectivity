@@ -18,47 +18,16 @@ Scope: finite certificates only.  Not a universal theorem.
 import itertools
 from collections import defaultdict
 
+from lib import neighbors, potential
+
 # ---------------------------------------------------------------------------
 # Arithmetic
 # ---------------------------------------------------------------------------
 
 
-def sbl(size):
-    """Sum of bit_length(i) for 1 <= i < size."""
-    return sum(value.bit_length() for value in range(1, size))
-
-
-def e_seq(size):
-    """Cumulative popcount, OEIS A000788."""
-    return sum(value.bit_count() for value in range(size))
-
-
-def c_constant(size):
-    """Hamming-ball collision constant C(size)."""
-    if size == 0:
-        return 0
-    return size - 1 + sbl(size) - e_seq(size)
-
-
-def potential(size, overhang):
-    """P(R) = C(R) + m * E(R) where m = overhang."""
-    return c_constant(size) + overhang * e_seq(size)
-
-
 # ---------------------------------------------------------------------------
 # Geometry
 # ---------------------------------------------------------------------------
-
-
-def neighbors(vertex, alphabet_size):
-    """Neighbors in the arrangement graph."""
-    used = set(vertex)
-    result = set()
-    for pos in range(len(vertex)):
-        for sym in range(alphabet_size):
-            if sym not in used:
-                result.add(vertex[:pos] + (sym,) + vertex[pos + 1 :])
-    return result
 
 
 def cross_collisions(vertices, n, k):

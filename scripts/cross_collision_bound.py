@@ -28,74 +28,12 @@ import sys
 import time
 from itertools import combinations
 
-
-def e_seq(size: int) -> int:
-    """A000788: sum of popcount(j) for j in range(size)."""
-    return sum(value.bit_count() for value in range(size))
-
-
-def c_constant(size: int) -> int:
-    """C(R) = (R-1) + sum_bit_length(R) - E_seq(R)."""
-    if size == 0:
-        return 0
-    return (
-        (size - 1) + sum(value.bit_length() for value in range(1, size)) - e_seq(size)
-    )
+from lib import build_adjacency, c_constant, e_seq
 
 
 def rhs(n: int, k: int, R: int) -> int:
     """Minimum-boundary conjecture: (R*k - E(R))*(n-k) - C(R)."""
     return (R * k - e_seq(R)) * (n - k) - c_constant(R)
-
-
-def neighbors(vertex: tuple[int, ...], alphabet_size: int) -> set[tuple[int, ...]]:
-    """All single-substitution neighbors of an injective k-tuple."""
-    result: set[tuple[int, ...]] = set()
-    used = set(vertex)
-    for position in range(len(vertex)):
-        for symbol in range(alphabet_size):
-            if symbol not in used:
-                result.add(vertex[:position] + (symbol,) + vertex[position + 1 :])
-    return result
-
-
-def build_adjacency(vertices: list[tuple[int, ...]], n: int) -> dict:
-    """Map each vertex to its set of single-substitution neighbors."""
-    adj: dict = {}
-    for v in vertices:
-        adj[v] = neighbors(v, n)
-    return adj
-
-
-def build_fibers(vertices: list[tuple[int, ...]], k: int) -> list[dict]:
-    """Build k coordinate-fiber dicts: fibers[p][root] = {vertices sharing root}."""
-    fibers = [{} for _ in range(k)]
-    for v in vertices:
-        for p in range(k):
-            root = v[:p] + v[p + 1 :]
-            fibers[p].setdefault(root, set()).add(v)
-    return fibers
-
-
-def boundary_metrics(
-    subset: tuple[tuple[int, ...], ...],
-    fibers: list[dict[tuple[int, ...], set[tuple[int, ...]]]],
-) -> tuple[int, int, int]:
-    """Return (|∂V'|, D(V'), X(V')) using the Lean fiber definitions."""
-    members = set(subset)
-    coordinate_boundaries: list[set[tuple[int, ...]]] = []
-    unique_roots = 0
-    for position, position_fibers in enumerate(fibers):
-        roots = {vertex[:position] + vertex[position + 1 :] for vertex in subset}
-        unique_roots += len(roots)
-        coordinate_boundaries.append(
-            set().union(*(position_fibers[root] for root in roots)) - members
-        )
-    total_coordinate_boundary = sum(map(len, coordinate_boundaries))
-    boundary = len(set().union(*coordinate_boundaries))
-    defect = len(subset) * len(fibers) - unique_roots
-    collisions = total_coordinate_boundary - boundary
-    return boundary, defect, collisions
 
 
 def run_check(n: int, k: int, a: int, b: int, adj: dict, verbose: bool = False):
