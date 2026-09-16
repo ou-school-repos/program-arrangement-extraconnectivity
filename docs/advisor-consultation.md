@@ -82,54 +82,53 @@ arrangement graph $A(n,k)$:
   the linear subadditivity surplus, even restricted to the actual slice
   pairs the induction needs.
 
-**5. N-ary Collision-Ceiling Lemma ($C_{\text{constant}}$ as Upper Bound on
-Cross-Collisions)**
+**5. Locating the Real Target: $\Phi = X + (m+1)D \le C(R) + mE(R)$
+(Two Wrong Shapes Refuted, the Correct One Confirmed)**
 
-* **The Approach:** Since `E_seq_list_sum_le` successfully generalized the
-  2-way subadditivity $E(x)+E(y)+\min(x,y) \le E(x+y)$ to $n$-ary partitions
-  (aggregate form: $\sum_s E(c_s) + R - y \le E(R)$) and closed the Defect
-  Bound unconditionally, try the same move for $C_{\text{constant}}$: an
-  aggregate, $y$-coupled bound on `cross_collisions` over a fiber partition,
-  $X(V') \le \sum_s (C(c_s) - D(F_s)) + (R - y)$, hoping this would close
-  the gap between the proven Defect Bound and the still-hypothesis
-  `UniversalLowerBound`.
-* **The Obstruction:** A first pass tested a per-fiber, non-aggregate form
-  with no $y$ term at all ($X(F_s) \le C(c_s) - D(F_s)$ on each fiber in
-  isolation) and found only depth-0 (whole-set) violations — a scoping bug
-  an advisor review caught, since depth-0 just re-derives the already-known
-  global Star Graph refutation on smaller instances and says nothing about
-  genuine fiber splits. Correcting this (tracking depth $\ge 1$ separately,
-  and testing the actual aggregate $y$-coupled analogue on both Star Graphs
-  and denser random subsets) shows the failure is real but narrower than
-  first claimed: it is absent for small/sparse configurations
-  ($A(4,2)$; most $A(5,2)$ random draws) but appears reliably once $m \ge 2$
-  and density rises — e.g. $A(6,3)$, random seed 4: $R=12$, $X=26$ vs.
-  aggregate RHS $=9$; $A(5,3)$, random seed 3: $X=20$ vs. RHS $=9$. The
-  weaker variant without the $-D$ term ($X(V') \le \sum_s C(c_s) + (R-y)$)
-  is more forgiving but fails under the same conditions once density rises
-  further (e.g. $A(6,2)$, all random draws).
-* **Conclusion:** The $E_{\text{seq}}$ list-lemma trick does not transfer to
-  $C_{\text{constant}}$, even in its correct aggregate, $y$-coupled form —
-  it fails specifically once $m \ge 2$ and fiber density is nontrivial,
-  matching the same $m \ge 2$ threshold seen in Item 4. This is structurally
-  stronger than Items 1-4: those killed specific proof strategies (local
-  edits, additive fiber potentials, carry maps, slice merging); this rules
-  out an entire *shape* of argument — bounding `cross_collisions` through
-  $C_{\text{constant}}$ as an arithmetic ceiling, whether globally (already
-  refuted by the Star Graph at $R=8$, $n=15$, $k=7$: $X+D=28 > C(8)=12$, per
-  `docs/lean-proof-status.md`'s "Superseded" note) or via the fiber-partition
-  aggregate that made the $E_{\text{seq}}$ version work.
+Two prior passes on this item tested the wrong inequality shape and were
+retracted. Recorded here so the dead ends aren't silently re-discovered:
+
+* **Wrong shape 1 ($X(F) \le C(c) - D(F)$, per fiber, no $y$):** refuted, but
+  only at depth-0 (the whole set) — a scoping bug caught in review, since
+  depth-0 just re-derives the already-known global Star Graph refutation on
+  smaller instances and says nothing about genuine fiber splits.
+* **Wrong shape 2 (aggregate, $X(V') \le \sum_s(C(c_s)-D(F_s)) + (R-y)$):**
+  also refuted, at small scale (e.g. $A(4,2)$ star size 3: $X=7 > 6$). But
+  this is not the requirement either — from `total_coord_edges_eq`
+  ($|\partial V'| + X + Rk = U\cdot(m+1)$, $U=Rk-D$), the algebra that
+  `UniversalLowerBound` actually needs is
+  $\Phi = X + (m+1)D \le C(R) + mE(R)$, not $X+D \le C(R)$. The
+  $m\cdot E(R)$ term is exactly what the superseded `CollisionAdjustedBound`
+  hypothesis threw away, making it a strictly *stronger*, dimension-independent
+  claim than what the proof needs — its refutation by the Star Graph
+  (`docs/lean-proof-status.md`'s "Superseded" note) does not carry over to
+  $\Phi \le C+mE$.
+* **The correct target, tested directly:** $\Phi \le C(R)+mE(R)$ holds on
+  every whole-set and per-fiber (depth $\ge 1$) configuration tested,
+  including the literal Star Graph counterexample dimensions that killed
+  `CollisionAdjustedBound` ($A(15,7)$, $R=8$: $\Phi=81 \le C+mE=108$), and
+  larger stress cases where the looser $X \le C(R)$ shape (no $D$, no $m$
+  term) does fail outright once the ambient graph has room
+  ($A(9,5)$, $R=20$: $X=108 > C(20)=48$, yet $\Phi=203 \le C+mE=208$).
+* **Conclusion:** This is not a dead end — it is computational evidence
+  *for* `UniversalLowerBound`, via the inequality it is actually equivalent
+  to. What remains genuinely open is narrower: a naive aggregate,
+  $y$-coupled fiber-partition bound on $\Phi$ with a flat
+  $(m+1)(R-y)$ correction term (mimicking `E_seq_list_sum_le`'s
+  $+R-y$ structure) fails at small scale, so the correct $n$-ary induction
+  step for $\Phi \le C+mE$ is not a straightforward port of the
+  $E_{\text{seq}}$ list lemma — it needs a differently-shaped or more
+  tightly $y$-coupled correction, which is the concrete next target.
 
 ### Next Steps
 
-The exhaustive data proves the inequality is true, but the proof *cannot*
-rely on graph edits, 1D fiber sums, direct carry-mapping, slice-merge
-induction, or any $C_{\text{constant}}$-as-ceiling bound on
-`cross_collisions`, at any granularity. The true invariant is hiding in a
-deeper, non-additive structural property of $A(n,k)$ — likely requiring a
-global, submodular analysis of $C(R) + mE(R)$ directly against the global
-transversal structure, or a route to `cross_collisions` that never passes
-through $C_{\text{constant}}$ as an upper bound.
+Items 1-4 rule out local graph edits, 1D fiber sums, direct carry-mapping,
+and slice-merge induction as proof strategies for the strictness
+conjecture. Item 5 is different in kind: it is not another refutation, but
+a correction of the target itself, and the corrected target
+($\Phi = X + (m+1)D \le C(R) + mE(R)$, equivalent to `UniversalLowerBound`)
+has survived every test run against it, including the counterexample that
+killed its predecessor hypothesis.
 
 Note also (confirmed against `docs/lean-proof-status.md`): `UniversalLowerBound`
 is a live *hypothesis interface*, not a proven theorem — Layers 1-3
@@ -138,12 +137,15 @@ is a live *hypothesis interface*, not a proven theorem — Layers 1-3
 proven unconditionally, but they bound the algebraic *defect*
 $D(V') = Rk - \text{sum\_unique\_roots}(V')$ and relate it to
 `total_coord_edges`, not `external_neighbors` directly. The missing link is
-exactly `cross_collisions`, and Item 5 shows the most natural route to it
-(reusing the $E_{\text{seq}}$ list-lemma machinery) is closed.
+`cross_collisions`, and Item 5 identifies the correct inequality this
+missing link must satisfy — $\Phi \le C+mE$ — plus concrete computational
+support for it.
 
-We propose clearing the whiteboard of local geometric operators and
-refocusing entirely on constructing a non-additive global invariant for
-`cross_collisions` that does not route through $C_{\text{constant}}$.
+We propose refocusing on constructing the $n$-ary, $y$-coupled induction
+step for $\Phi \le C(R)+mE(R)$ over a fiber partition (the structural
+analogue of `E_seq_list_sum_le`, but for $\Phi$ rather than $E$ alone),
+since the naive flat correction term does not work and a genuine gap
+remains in how the per-fiber slack should compose.
 
 ### Reproducing
 
