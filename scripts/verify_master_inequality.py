@@ -97,6 +97,7 @@ def full_statistics(vertices, n, k):
     for p in range(k):
         fibers = defaultdict(list)
         for vertex in vertices:
+            # The coordinate-split tree partitions by the symbol at p.
             fibers[vertex[p]].append(vertex)
         child_sizes = [len(f) for f in fibers.values()]
         _, roots_p = coord_boundary_and_roots(vertices, p, n, k)
@@ -144,15 +145,11 @@ def verify_lemma3_superadditive(split_data, m):
     return all_ok, worst_gap
 
 
-def verify_lemma4_master(R, D, m, k, split_data, P1):
-    """Lemma 4: Master inequality LHS <= k * P(R).
-    LHS = 2R(R-1) + max(0, 2(m-3)*P_1) + (m+2)*D + sum_p f(Delta_D_p + 1)
-    """
-    lhs_envelope = 2 * R * (R - 1) + max(0, 2 * (m - 3)) * P1
-    lhs_defect = (m + 2) * D
-    lhs_superadd = sum(sd["f_bound"] for sd in split_data)
-
-    lhs_total = lhs_envelope + lhs_defect + lhs_superadd
+def verify_lemma4_master(R, D, m, k, split_data, mu_sum):
+    """Check the exact averaged master inequality."""
+    lhs_geom = mu_sum + (m + 1) * D
+    lhs_fibers = sum(P(cs, m) for split in split_data for cs in split["child_sizes"])
+    lhs_total = lhs_geom + lhs_fibers
     rhs = k * P(R, m)
 
     return lhs_total <= rhs + 1e-9, lhs_total, rhs
