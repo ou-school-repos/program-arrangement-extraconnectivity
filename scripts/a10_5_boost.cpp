@@ -205,38 +205,10 @@ int main(int argc, char **argv) {
             model.AddGreaterOrEqual(boundary[v], selected[u] - selected[v]);
     }
 
-    std::unordered_map<long long, std::vector<int>> lines;
-    for (int id = 0; id < static_cast<int>(vertices.size()); ++id) {
-        for (int position = 0; position < kSize; ++position) {
-            int root = 0;
-            for (int other = 0; other < kSize; ++other) {
-                if (other == position)
-                    continue;
-                root = 10 * root + vertices[id][other];
-            }
-            lines[static_cast<long long>(position) * 100000 + root].push_back(id);
-        }
-    }
-    if (lines.size() != 5 * 5040) {
-        std::cerr << "line count mismatch: " << lines.size() << "\n";
-        return 2;
-    }
-    for (const auto &entry : lines) {
-        LinearExpr selected_sum;
-        LinearExpr boundary_sum;
-        for (const int id : entry.second) {
-            selected_sum += selected[id];
-            boundary_sum += boundary[id];
-        }
-        model.AddGreaterOrEqual(boundary_sum, LinearExpr(entry.second.size()) - selected_sum);
-    }
-
     model.Minimize(boundary_expr);
 
-    for (int id = 0; id < static_cast<int>(vertices.size()); ++id) {
+    for (int id = 0; id < static_cast<int>(vertices.size()); ++id)
         model.AddHint(selected[id], selected_flag[id] != 0);
-        model.AddHint(boundary[id], boundary_flag[id] != 0);
-    }
 
     const Vertex origin = {0, 1, 2, 3, 4};
     model.AddEquality(selected[index.at(encode(origin))], 1);
