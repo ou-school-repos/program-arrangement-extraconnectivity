@@ -5,78 +5,15 @@ from __future__ import annotations
 
 from itertools import combinations, permutations
 
-
-def e_seq(size: int) -> int:
-    """Return the cumulative popcount on ``0`` through ``size - 1``."""
-    return sum(value.bit_count() for value in range(size))
-
-
-def c_constant(size: int) -> int:
-    """Return the collision constant used by the conjectured bound."""
-    return (
-        (size - 1) + sum(value.bit_length() for value in range(1, size)) - e_seq(size)
-    )
-
-
-def neighbors(vertex: tuple[int, ...], alphabet_size: int) -> set[tuple[int, ...]]:
-    """Return the arrangement-graph neighbors of ``vertex``."""
-    result: set[tuple[int, ...]] = set()
-    used = set(vertex)
-    for position in range(len(vertex)):
-        for symbol in range(alphabet_size):
-            if symbol not in used:
-                result.add(vertex[:position] + (symbol,) + vertex[position + 1 :])
-    return result
-
-
-def is_connected(
-    subset: tuple[tuple[int, ...], ...],
-    adjacency: dict[tuple[int, ...], set[tuple[int, ...]]],
-) -> bool:
-    """Return whether the induced subgraph on ``subset`` is connected."""
-    if len(subset) < 2:
-        return True
-    target = set(subset)
-    seen = {subset[0]}
-    frontier = [subset[0]]
-    for vertex in tuple(frontier):
-        for neighbor in adjacency[vertex] & target:
-            if neighbor not in seen:
-                seen.add(neighbor)
-                frontier.append(neighbor)
-    return len(seen) == len(target)
-
-
-def boundary_metrics(
-    subset: tuple[tuple[int, ...], ...],
-    fibers: list[dict[tuple[int, ...], set[tuple[int, ...]]]],
-) -> tuple[int, int, int]:
-    """Return boundary, defect, and collision metrics for ``subset``."""
-    members = set(subset)
-    coordinate_boundaries: list[set[tuple[int, ...]]] = []
-    unique_roots = 0
-    for position, position_fibers in enumerate(fibers):
-        roots = {vertex[:position] + vertex[position + 1 :] for vertex in subset}
-        unique_roots += len(roots)
-        coordinate_boundaries.append(
-            set().union(*(position_fibers[root] for root in roots)) - members
-        )
-    total_coordinate_boundary = sum(map(len, coordinate_boundaries))
-    boundary = len(set().union(*coordinate_boundaries))
-    defect = len(subset) * len(fibers) - unique_roots
-    collisions = total_coordinate_boundary - boundary
-    return boundary, defect, collisions
+from lib import (boundary_metrics, build_fibers, c_constant, e_seq,
+                 is_connected, neighbors)
 
 
 def find_near_tight(n: int, k: int, size: int, max_slack: int = 2) -> None:
     """Find subsets whose boundary is close to the conjectured bound."""
     vertices = list(permutations(range(n), k))
     adjacency = {vertex: neighbors(vertex, n) for vertex in vertices}
-    fibers: list[dict[tuple[int, ...], set[tuple[int, ...]]]] = [{} for _ in range(k)]
-    for vertex in vertices:
-        for position in range(k):
-            root = vertex[:position] + vertex[position + 1 :]
-            fibers[position].setdefault(root, set()).add(vertex)
+    fibers = build_fibers(vertices, k)
 
     m = n - k
     es = e_seq(size)

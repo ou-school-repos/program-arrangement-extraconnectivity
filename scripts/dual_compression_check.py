@@ -33,49 +33,12 @@ Run:  python3 scripts/dual_compression_check.py
 import itertools
 import random
 
-
-def neighbors(v, n):
-    """Return all one-coordinate substitutions of ``v``."""
-    used = set(v)
-    out = set()
-    for p in range(len(v)):
-        for a in range(n):
-            if a not in used:
-                out.add(v[:p] + (a,) + v[p + 1 :])
-    return out
-
-
-def e_seq(size):
-    """Return the cumulative binary popcount below ``size``."""
-    return sum(bin(x).count("1") for x in range(size))
-
-
-def c_constant(size):
-    """Return the collision constant for a set of ``size`` vertices."""
-    if size <= 0:
-        return 0
-    return (size - 1) + sum(x.bit_length() for x in range(1, size)) - e_seq(size)
-
-
-def boundary_metrics(subset, fibers, k):
-    """Return external boundary, defect, and cross-collision metrics."""
-    members = set(subset)
-    coord_b = []
-    unique_roots = 0
-    for p in range(k):
-        roots = {v[:p] + v[p + 1 :] for v in subset}
-        unique_roots += len(roots)
-        coord_b.append(set().union(*(fibers[p][r] for r in roots)) - members)
-    boundary = len(set().union(*coord_b))
-    defect = len(subset) * k - unique_roots
-    total = sum(len(s) for s in coord_b)
-    collisions = total - boundary
-    return boundary, defect, collisions
+from lib import boundary_metrics, build_fibers
 
 
 def phi(subset, fibers, k, m):
     """Return the weighted collision/defect potential of ``subset``."""
-    _, defect, collisions = boundary_metrics(subset, fibers, k)
+    _, defect, collisions = boundary_metrics(subset, fibers)
     return collisions + (m + 1) * defect
 
 
@@ -101,16 +64,6 @@ def compress_d(V, a, b):
         else:
             out.append(v)
     return tuple(out)
-
-
-def build_fibers(vertices, k):
-    """Build coordinate-root fiber lookup tables."""
-    fibers = [{} for _ in range(k)]
-    for v in vertices:
-        for p in range(k):
-            root = v[:p] + v[p + 1 :]
-            fibers[p].setdefault(root, set()).add(v)
-    return fibers
 
 
 def best_over_all_pairs(V, fibers, k, m, _n):
