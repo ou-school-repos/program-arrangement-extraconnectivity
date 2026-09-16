@@ -7,16 +7,19 @@ from itertools import combinations, permutations
 
 
 def e_seq(size: int) -> int:
+    """Return the cumulative popcount on ``0`` through ``size - 1``."""
     return sum(value.bit_count() for value in range(size))
 
 
 def c_constant(size: int) -> int:
+    """Return the collision constant used by the conjectured bound."""
     return (
         (size - 1) + sum(value.bit_length() for value in range(1, size)) - e_seq(size)
     )
 
 
 def neighbors(vertex: tuple[int, ...], alphabet_size: int) -> set[tuple[int, ...]]:
+    """Return the arrangement-graph neighbors of ``vertex``."""
     result: set[tuple[int, ...]] = set()
     used = set(vertex)
     for position in range(len(vertex)):
@@ -30,12 +33,13 @@ def is_connected(
     subset: tuple[tuple[int, ...], ...],
     adjacency: dict[tuple[int, ...], set[tuple[int, ...]]],
 ) -> bool:
+    """Return whether the induced subgraph on ``subset`` is connected."""
     if len(subset) < 2:
         return True
     target = set(subset)
     seen = {subset[0]}
     frontier = [subset[0]]
-    for vertex in frontier:
+    for vertex in tuple(frontier):
         for neighbor in adjacency[vertex] & target:
             if neighbor not in seen:
                 seen.add(neighbor)
@@ -47,6 +51,7 @@ def boundary_metrics(
     subset: tuple[tuple[int, ...], ...],
     fibers: list[dict[tuple[int, ...], set[tuple[int, ...]]]],
 ) -> tuple[int, int, int]:
+    """Return boundary, defect, and collision metrics for ``subset``."""
     members = set(subset)
     coordinate_boundaries: list[set[tuple[int, ...]]] = []
     unique_roots = 0
@@ -64,6 +69,7 @@ def boundary_metrics(
 
 
 def find_near_tight(n: int, k: int, size: int, max_slack: int = 2) -> None:
+    """Find subsets whose boundary is close to the conjectured bound."""
     vertices = list(permutations(range(n), k))
     adjacency = {vertex: neighbors(vertex, n) for vertex in vertices}
     fibers: list[dict[tuple[int, ...], set[tuple[int, ...]]]] = [{} for _ in range(k)]
@@ -100,6 +106,7 @@ def find_near_tight(n: int, k: int, size: int, max_slack: int = 2) -> None:
 
 
 def main() -> None:
+    """Parse arguments and run the near-tight search."""
     # Cases with small compensated slack
     find_near_tight(5, 2, 5, max_slack=2)
     find_near_tight(5, 2, 6, max_slack=3)

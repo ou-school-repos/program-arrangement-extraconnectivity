@@ -46,10 +46,12 @@ from math import comb
 
 
 def e_seq(size: int) -> int:
+    """Return the cumulative popcount on ``0`` through ``size - 1``."""
     return sum(v.bit_count() for v in range(size))
 
 
 def c_constant(size: int) -> int:
+    """Return the collision constant used by the conjectured bound."""
     return (
         0
         if size == 0
@@ -58,10 +60,12 @@ def c_constant(size: int) -> int:
 
 
 def rhs(n: int, k: int, R: int) -> int:
+    """Return the conjectured minimum external boundary for an ``R``-set."""
     return (R * k - e_seq(R)) * (n - k) - c_constant(R)
 
 
 def neighbors(vertex: tuple[int, ...], n: int) -> set[tuple[int, ...]]:
+    """Return the arrangement-graph neighbors of ``vertex``."""
     used = set(vertex)
     out: set[tuple[int, ...]] = set()
     for pos in range(len(vertex)):
@@ -72,6 +76,7 @@ def neighbors(vertex: tuple[int, ...], n: int) -> set[tuple[int, ...]]:
 
 
 def eb(subset, n: int) -> set[tuple[int, ...]]:
+    """Return the external boundary of ``subset``."""
     members = set(subset)
     bd: set[tuple[int, ...]] = set()
     for v in subset:
@@ -80,6 +85,7 @@ def eb(subset, n: int) -> set[tuple[int, ...]]:
 
 
 def run(n: int, k: int, ca: int, cb: int) -> int:
+    """Compare shared boundary against the recombination budget."""
     verts = list(itertools.permutations(range(n), k))
     target_a = rhs(n, k, ca)
     target_b = rhs(n, k, cb)
@@ -115,6 +121,7 @@ def run(n: int, k: int, ca: int, cb: int) -> int:
     eb_cache = {}
 
     def get_eb(fs):
+        """Return a cached external boundary for a fiber set."""
         if fs not in eb_cache:
             eb_cache[fs] = eb(fs, n)
         return eb_cache[fs]
@@ -147,6 +154,7 @@ def run(n: int, k: int, ca: int, cb: int) -> int:
 
 
 def main() -> None:
+    """Parse command-line dimensions and run the exhaustive check."""
     if len(sys.argv) != 5:
         print(__doc__)
         sys.exit(1)

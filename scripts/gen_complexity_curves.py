@@ -7,11 +7,11 @@ Fits log10(T) = a + b*(R-2)*log10(R) to search data.
 """
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
 matplotlib.use("pdf")
-import matplotlib.pyplot as plt  # noqa: E402
 
 # ── Actual measured search times from README.md ──────────────
 search_R = np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])

@@ -6,9 +6,9 @@ Render the Delange fluctuation and correction-density figure (delange-structure.
 import math
 
 import matplotlib
+import matplotlib.pyplot as plt
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
 
 maxexp = 20
 E_running = 0

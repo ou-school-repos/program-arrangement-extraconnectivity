@@ -35,6 +35,7 @@ import random
 
 
 def neighbors(v, n):
+    """Return all one-coordinate substitutions of ``v``."""
     used = set(v)
     out = set()
     for p in range(len(v)):
@@ -45,16 +46,19 @@ def neighbors(v, n):
 
 
 def e_seq(size):
+    """Return the cumulative binary popcount below ``size``."""
     return sum(bin(x).count("1") for x in range(size))
 
 
 def c_constant(size):
+    """Return the collision constant for a set of ``size`` vertices."""
     if size <= 0:
         return 0
     return (size - 1) + sum(x.bit_length() for x in range(1, size)) - e_seq(size)
 
 
 def boundary_metrics(subset, fibers, k):
+    """Return external boundary, defect, and cross-collision metrics."""
     members = set(subset)
     coord_b = []
     unique_roots = 0
@@ -99,7 +103,8 @@ def compress_d(V, a, b):
 
 
 def build_fibers(vertices, k):
-    fibers = [dict() for _ in range(k)]
+    """Build coordinate-root fiber lookup tables."""
+    fibers = [{} for _ in range(k)]
     for v in vertices:
         for p in range(k):
             root = v[:p] + v[p + 1 :]
@@ -107,7 +112,7 @@ def build_fibers(vertices, k):
     return fibers
 
 
-def best_over_all_pairs(V, fibers, k, m, n):
+def best_over_all_pairs(V, fibers, k, m, _n):
     """Try every (a,b) symbol pair; return the best achievable Phi via C or D."""
     p0 = phi(V, fibers, k, m)
     symbols_present = set()
@@ -132,6 +137,7 @@ def best_over_all_pairs(V, fibers, k, m, n):
 
 
 def main():
+    """Run randomized checks of the dual-compression operators."""
     random.seed(11)
     tested = 0
     avg_holds = 0
@@ -211,7 +217,7 @@ def main():
         )
 
     print("\n--- re-checking single-pair EXIST-FAILs against ALL symbol pairs ---")
-    single_pair_fails = [f for f in exist_fails]
+    single_pair_fails = list(exist_fails)
     still_fail = 0
     checked = 0
     fibers_cache = {}

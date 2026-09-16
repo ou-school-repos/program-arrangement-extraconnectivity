@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Generate fracture graph DOT files
+"""Generate DOT files for optimal and fractured hypercube graphs."""
+
 import sys
 
 
@@ -9,7 +10,7 @@ def gen_hypercube_dot(d, output):
     """
     R = 2**d
     E = d * (2 ** (d - 1))
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Hypercube_{d} {{\n")
         label = f'"Optimal {d}-Cube (R={R}, E={E})"'
         f.write(
@@ -35,7 +36,7 @@ def gen_fracture_dot(d, output):
     R = 2**d
     E_opt = d * (2 ** (d - 1))
     E_max = E_opt - d + 1
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Fracture_{d} {{\n")
         label = f'"Fractured {d}-Cube (R={R}, E={E_max})"'
         f.write(
@@ -50,7 +51,7 @@ def gen_fracture_dot(d, output):
         for i in range(R - 1):
             for bit in range(d):
                 j = i ^ (1 << bit)
-                if i < j and j < R - 1:
+                if i < j < R - 1:
                     f.write(f"    f{i} -- f{j};\n")
 
         # Splintered vertex (connected via only 1 edge to maintain connectivity)
@@ -66,9 +67,9 @@ if __name__ == "__main__":
         print("Usage: gen_fracture.py [d] [output_prefix]")
         sys.exit(1)
 
-    d = int(sys.argv[1])
+    dimension = int(sys.argv[1])
     prefix = sys.argv[2]
 
-    gen_hypercube_dot(d, f"{prefix}_optimal.dot")
-    gen_fracture_dot(d, f"{prefix}_fractured.dot")
+    gen_hypercube_dot(dimension, f"{prefix}_optimal.dot")
+    gen_fracture_dot(dimension, f"{prefix}_fractured.dot")
     print(f"Generated {prefix}_optimal.dot and {prefix}_fractured.dot")

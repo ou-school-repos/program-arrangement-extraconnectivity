@@ -39,6 +39,7 @@ import random
 
 
 def neighbors(v, n):
+    """Return all one-coordinate substitutions of ``v``."""
     used = set(v)
     out = set()
     for p in range(len(v)):
@@ -49,20 +50,24 @@ def neighbors(v, n):
 
 
 def e_seq(R):
+    """Return the cumulative binary popcount below ``R``."""
     return sum(bin(i).count("1") for i in range(R))
 
 
 def sum_bit_length(R):
+    """Return the cumulative bit-length sum below ``R``."""
     return sum(i.bit_length() for i in range(1, R))
 
 
 def c_constant(R):
+    """Return the collision constant for ``R``."""
     if R == 0:
         return 0
     return (R - 1) + sum_bit_length(R) - e_seq(R)
 
 
 def defect(A, k):
+    """Return the coordinate-fiber defect of ``A``."""
     roots_sum = 0
     for p in range(k):
         roots = set(v[:p] + v[p + 1 :] for v in A)
@@ -91,16 +96,19 @@ def cross_collisions(A, n, k):
 
 
 def unique_roots(A, n, k, p):
+    """Return the number of distinct roots at coordinate ``p``."""
     return len(set(v[:p] + v[p + 1 :] for v in A))
 
 
 def star_graph(n, k, size):
+    """Return a radius-one star truncated to ``size`` vertices."""
     center = tuple(range(k))
     nbrs = list(neighbors(center, n))
     return [center] + nbrs[: size - 1]
 
 
 def dense_random(n, k, size, seed):
+    """Return a deterministic random sample of arrangement vertices."""
     vertices = list(itertools.permutations(range(n), k))
     rng = random.Random(seed)
     return rng.sample(vertices, min(size, len(vertices)))
@@ -119,9 +127,10 @@ def phi_check(A, n, k, m):
 
 
 def check_recursive(A, n, k, m, depth, stats):
+    """Record the minimum slack over a set and its coordinate fibers."""
     if len(A) < 1:
         return
-    lhs, rhs, ok = phi_check(A, n, k, m)
+    lhs, rhs, _ok = phi_check(A, n, k, m)
     key = "depth0" if depth == 0 else "depth>=1"
     cur = stats.get(key)
     slack = rhs - lhs
@@ -161,6 +170,7 @@ def check_aggregate(A, n, k, m):
 
 
 def main():
+    """Run whole-set, per-fiber, and aggregate bound checks."""
     print("=== Phi = X + (m+1)D <= C(R) + m*E(R), whole-set / per-fiber ===")
     for n, k in [(4, 2), (5, 3), (5, 2), (6, 3), (6, 2)]:
         m = n - k

@@ -263,6 +263,10 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	flake8 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 
+.PHONY: pylint
+pylint:	##H @Dev Run pylint only
+	pylint $$(git ls-files '*.py')
+
 .PHONY: format
 format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)

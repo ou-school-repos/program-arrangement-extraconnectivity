@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Render generated Graphviz DOT assets to bitmap files."""
+
 import os
 import subprocess
 
@@ -17,7 +19,7 @@ def gen_comparison_dot(d, output):
     E_opt = d * (2 ** (d - 1))
     E_max = E_opt - d + 1
 
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Comparison_{d} {{\n")
         label = f'"Stability Analysis (R={R})' f'\\nOptimal vs Fractured"'
         f.write(
@@ -55,7 +57,7 @@ def gen_comparison_dot(d, output):
         for i in range(R - 1):
             for bit in range(d):
                 j = i ^ (1 << bit)
-                if i < j and j < R - 1:
+                if i < j < R - 1:
                     f.write(f"    f{i} -- f{j};\n")
 
         # The Fractured/Splintered Node

@@ -34,6 +34,7 @@ from coverage_avoidance import analyze, corpus
 
 
 def slack(r):
+    """Return the weighted slack recorded in an analysis result."""
     return r["dC"] + r["m"] * r["dE"] - (r["m"] + 1) * r["conc"] - r["Lc"]
 
 
@@ -123,6 +124,7 @@ def all_steps(
 
 
 def main():
+    """Run the exhaustive hole-filling marginal check."""
     total_steps = 0
     min_delta = None
     min_ctx = None

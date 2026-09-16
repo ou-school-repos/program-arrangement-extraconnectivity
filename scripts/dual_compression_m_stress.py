@@ -18,6 +18,7 @@ from dual_compression_check import best_over_all_pairs, build_fibers
 
 
 def neighbors(v, n):
+    """Return all one-coordinate substitutions of ``v``."""
     used = set(v)
     out = set()
     for p in range(len(v)):
@@ -27,7 +28,7 @@ def neighbors(v, n):
     return out
 
 
-def swiss_cheese(vertices, adj, n, R, hole_frac, rng):
+def swiss_cheese(vertices, adj, _n, R, hole_frac, rng):
     """BFS ball of size ~R/(1-hole_frac), then randomly punch holes down to R."""
     start = rng.choice(vertices)
     seen = {start}
@@ -47,6 +48,7 @@ def swiss_cheese(vertices, adj, n, R, hole_frac, rng):
 
 
 def main():
+    """Run stress tests for dual compression on random structured sets."""
     rng = random.Random(23)
     total = 0
     fails = []

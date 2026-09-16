@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Generate compression counterexample side-by-side diagram for A(4,2)."""
 
+import io
 import itertools
 import math
+import os
 
 import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
+from matplotlib.patches import Patch
+from PIL import Image
 
 matplotlib.use("Agg")
 
@@ -14,7 +18,7 @@ matplotlib.use("Agg")
 def make_graph():
     """Build A(4,2): vertices are injective 2-tuples from {1,2,3,4}."""
     G = nx.Graph()
-    verts = [(a, b) for a, b in itertools.permutations(range(1, 5), 2)]
+    verts = list(itertools.permutations(range(1, 5), 2))
     G.add_nodes_from(verts)
     for u in verts:
         for v in verts:
@@ -120,8 +124,6 @@ def draw_panel(ax, G, pos, S, bnd, title, bnd_color, legend_label, notes):
             color="#555",
         )
 
-    from matplotlib.patches import Patch
-
     legend_items = [
         Patch(facecolor="#4a90d9", edgecolor="#1a3a6a", label=f"Set ({len(S)})"),
         Patch(
@@ -221,15 +223,14 @@ def main():
         fontsize=8,
         color="#333",
         linespacing=1.5,
-        bbox=dict(
-            boxstyle="round,pad=0.4", facecolor="#f5f5f5", edgecolor="#ccc", alpha=0.9
-        ),
+        bbox={
+            "boxstyle": "round,pad=0.4",
+            "facecolor": "#f5f5f5",
+            "edgecolor": "#ccc",
+            "alpha": 0.9,
+        },
         transform=fig.transFigure,
     )
-
-    import io
-
-    from PIL import Image
 
     out = "assets/out/compression_counterexample.gif"
     buf = io.BytesIO()
@@ -245,8 +246,6 @@ def main():
     img = Image.open(buf)
     img.save(out, format="GIF")
     plt.close(fig)
-
-    import os
 
     size_kb = os.path.getsize(out) // 1024
     print(f"Saved {out} ({size_kb}KB)")
