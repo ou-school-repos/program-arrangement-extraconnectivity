@@ -16,6 +16,7 @@ The LP feasibility check (`lyapunov_profile_check.py`, now archived in this dire
 3. **R=3:** The true target $C(3) + mE(3)$ is strictly larger than $2(m+1)$. But an additive potential constructed from 1- and 2- occupied roots would rigidly predict $2 w_2 = 2(m+1)$, causing immediate algebraic inconsistency (as explicitly diagnosed for $A(5,3)$ and $A(6,3)$).
 
 ### The Coup de Grâce: The 4-Cycle
+
 Even if the algebraic normalizations could be relaxed, an additive function over individual fibers is inherently blind to cross-fiber collisions ($X$).
 For a 4-cycle, the locked potential evaluates to exactly $\Psi_f = 4w_2 = 4m + 4$.
 However, the adversarial load $\Phi$ involves 4 fibers of size 2 ($D=4$) and shared external neighbors at the corners ($X = 4(m-1)$):
@@ -23,4 +24,5 @@ $$\Phi(\text{4-cycle}) = 4(m-1) + 4(m+1) = 8m$$
 For $\Phi \le \Psi_f$, we need $8m \le 4m + 4 \implies m \le 1$. It fails entirely for $m \ge 2$, where collision mass shatters the potential ceiling.
 
 ### Conclusion
+
 A valid global potential $\Psi$ cannot be the independent sum of 1D fibers. It requires a non-additive structure (e.g., $R$-dependent weights, coordinate-coupled terms, or explicit multi-root intersection terms) because the true boundary of $A(n,k)$ is irreducibly dimensional.

@@ -19,7 +19,7 @@ Following Pinto's proof of the Bollobás–Leader directed-path conjecture
   to the whole vertex instead of skipping.
 
 Goal: show `Φ(V') = X(V') + (m+1)·D_defect(V')` is non-decreasing along
-at least one of `C`, `D` for every `V'` — an *existence* claim, not a
+at least one of `C`, `D` for every `V'` — an _existence_ claim, not a
 universal one (Pinto's own averaging inequality is one mechanism for
 guaranteeing existence, but existence could in principle hold without
 the literal averaging bound; both were checked).
@@ -33,7 +33,7 @@ the literal averaging bound; both were checked).
 - Existence for a single random `(a,b)` pair (pick the better of `C`/`D`):
   **878/1052 (83.5%)**. This is the honest headline number — not the
   rescue rate below.
-- Existence over the *best* choice of `(a,b)` and operator, among the
+- Existence over the _best_ choice of `(a,b)` and operator, among the
   174 cases that failed for their originally-sampled pair: **171/174
   (98%) rescued**, leaving 3 residual witnesses, all in `A(4,3)`
   (`m = n−k = 1`).
@@ -60,7 +60,7 @@ corner —
 
 1. **Injectivity blockage**: most `(a,b)` pairs are invalid because the
    guarded replacement collides with a vertex already in `V'`.
-2. **Exact defect–collision exchange**: when a move *is* valid, it
+2. **Exact defect–collision exchange**: when a move _is_ valid, it
    commonly converts `+1 D` into `+1 X` one-for-one. Since the target
    weights defect at `(m+1)` and collision at `1`, a clean `1-for-1`
    trade nets `Φ` down by `(m+1) − 1 ≥ 1` every time — a conservation
@@ -72,7 +72,7 @@ corner —
 `scripts/dual_compression_m_stress.py`: `A(5,3)` (`m=2`) and `A(6,3)`
 (`m=3`) at `R ∈ {15,20,30}`, random and Swiss-cheese (dense ball with
 holes) constructions, existence checked over
-*every* valid `(a,b,op)` combination (the full criterion, not a single
+_every_ valid `(a,b,op)` combination (the full criterion, not a single
 sampled pair).
 
 **193 of 270 trials (71.5%) fail existence** — far worse than the small-`R`
@@ -84,7 +84,7 @@ replacements colliding with existing image vertices. Thus `best=None` means
 unqualified claim that no set-preserving operation of any kind exists.
 
 So the `m=1` framing was an artifact of testing only small, sparse sets.
-Both obstruction mechanisms diagnosed above get *worse*, not better, as
+Both obstruction mechanisms diagnosed above get _worse_, not better, as
 `R` grows relative to the graph: more vertices means more guard-blocking
 (mechanism 1), and the fixed `1`-for-`1` exchange rate (mechanism 2) is
 unaffected by `m`. High density — exactly the near-extremal regime this

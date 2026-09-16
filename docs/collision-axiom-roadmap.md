@@ -19,7 +19,7 @@ require.
 - **`HBCrossCollisions` is not yet on the stable capstone path.**
   `CrossTop.lean` contains a direct proof candidate
   (`hb_cross_collisions_closed`) for every `R ≥ 1`, but the public capstone
-  still accepts `HBCrossCollisions` as an explicit hypothesis.  It must remain
+  still accepts `HBCrossCollisions` as an explicit hypothesis. It must remain
   an interface until the supporting proof work is reconciled, including the
   `CrossRecurrence` route and the remaining unstable-scaffold obligations.
   Only then should the direct route be promoted, its hypothesis removed from
@@ -58,7 +58,7 @@ require.
   Exhaustive C++ testing now covers 24 parameter rows (up to 190M subsets)
   with no counterexample. The standard guarded symbol compression is known to
   increase boundary on a two-vertex `A(4,2)` example, so it cannot establish
-  this candidate; see `docs/universal-lower-bound-work.md`.  Four further
+  this candidate; see `docs/universal-lower-bound-work.md`. Four further
   candidate proof mechanisms have been closed by finite counterexamples:
   edge-gradient charging overcounts collision mass, single-vertex
   hole-filling does not preserve its slack, the tested guarded
@@ -175,12 +175,12 @@ route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 The direct route must be reconciled with the remaining recurrence and unstable
 scaffold obligations, then wired into the public capstone to discharge the
-`HBCrossCollisions` parameter.  `UniversalLowerBound` remains the separate
+`HBCrossCollisions` parameter. `UniversalLowerBound` remains the separate
 universal-boundary obligation.
 
 ## Total Remaining Estimated Effort
 
-**`HBCrossCollisions`**: still an explicit capstone hypothesis.  The direct
+**`HBCrossCollisions`**: still an explicit capstone hypothesis. The direct
 `CrossTop.lean` route and the remaining recurrence/scaffold obligations must
 be reconciled before it can be discharged and removed from the capstone API.
 

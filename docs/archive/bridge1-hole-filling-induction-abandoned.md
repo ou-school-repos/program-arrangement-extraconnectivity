@@ -19,11 +19,11 @@ boundary of `Q_i` — and add `v = (i, x)` to get `S' = S ∪ {v}`.
 For this to prove `Slack(S) ≥ 0`, slack must be **non-increasing** along
 the walk: `Slack(S') ≤ Slack(S)` at every step. Then
 `Slack(S) ≥ Slack(S₁) ≥ … ≥ Slack(S_final) ≥ 0`. (The other polarity —
-slack non-decreasing on fill — only bounds `Slack(S)` from *above* and is
+slack non-decreasing on fill — only bounds `Slack(S)` from _above_ and is
 useless for this goal.) Two variants were tested:
 
 - **Universal**: every hole-fill step satisfies `ΔSlack ≤ 0`.
-- **Existential** (weaker, still sufficient): *some* hole at each stage
+- **Existential** (weaker, still sufficient): _some_ hole at each stage
   satisfies `ΔSlack ≤ 0`, i.e. there is always at least one safe move.
 
 ## Computational result
@@ -38,7 +38,7 @@ steps.
   `(0,3,2)` on `R=15, Lc=14, slack=16 → R=16, Lc=13, slack=22`).
 - **`α` (the collision mass a fill destroys) is not bounded below by 1,
   or even by 0**: histogram over all steps was
-  `{-2: 33, -1: 531, 0: 1737, 1: 5535}`. Filling one hole can *create*
+  `{-2: 33, -1: 531, 0: 1737, 1: 5535}`. Filling one hole can _create_
   new swallowed slots elsewhere — the newly-occupied vertex projects its
   own local boundary, which can reach neighboring empty slots that were
   previously safe. This ripple effect kills any argument assuming a
@@ -48,7 +48,7 @@ steps.
   This sub-claim — the one piece of the original hole-filling proposal
   that simplified the accounting — is correct and worth keeping if this
   direction is ever revisited.
-- **Existential also fails**: 212 of 2,318 sets with `L_c > 0` have *no*
+- **Existential also fails**: 212 of 2,318 sets with `L_c > 0` have _no_
   safe hole at all — every available fill strictly increases slack.
   Ruled out by minimal witness, not just aggregate rate (see below).
 
@@ -60,8 +60,8 @@ steps.
   slot: `(1, (3,0))` — slice 1 is missing `(1,3,0)`, adjacent to the
   occupied projection `(3,2)`.
 - Before: `R=4, ΔC=4, ΔE=4, m=1, Slack = 4+4−0−1 = 7`.
-- Filling `(1,3,0)` (the *only* available move): `R=5, π=4, conc=1,
-  L_c: 1→0` (clean, `α=1`, no ripple — this is the minimal case).
+- Filling `(1,3,0)` (the _only_ available move): `R=5, π=4, conc=1,
+L_c: 1→0` (clean, `α=1`, no ripple — this is the minimal case).
   `ΔC=6, ΔE=4` (`β = ΔC(S')+m·ΔE(S') − ΔC(S)−m·ΔE(S) = 2`).
   `ΔSlack = β − (m+1) + α = 2 − 2 + 1 = +1`. New `Slack = 8`.
 
