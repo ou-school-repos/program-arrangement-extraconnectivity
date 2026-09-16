@@ -126,9 +126,10 @@ def main():
     # Layer A: sum_{j in [m,2^D)} deg(m,D,j) + 2*E_seq(m) == m*D, all m<=2^D.
     for D in range(0, 8):
         for m in range(0, 2**D + 1):
-            assert (
-                sum(deg(m, D, j) for j in range(m, 2**D)) + 2 * E_seq(m) == m * D
-            ), (D, m)
+            assert sum(deg(m, D, j) for j in range(m, 2**D)) + 2 * E_seq(m) == m * D, (
+                D,
+                m,
+            )
     print("3. Layer A (sum_ball_deg): OK")
 
     # 3b. Layer A ingredients.

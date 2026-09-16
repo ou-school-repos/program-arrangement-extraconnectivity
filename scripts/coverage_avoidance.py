@@ -315,7 +315,7 @@ def main():
         print(
             f"  SUFF-FAIL {tag}: R={r['R']} pi={r['pi']} Lc={r['Lc']} "
             f"grad={r['grad']} conc={r['conc']} dC={r['dC']} dE={r['dE']} "
-            f"T={r['T']} gap={r['gap']} T-Lc={r['T']-r['Lc']}"
+            f"T={r['T']} gap={r['gap']} T-Lc={r['T'] - r['Lc']}"
         )
     # per-slice data: only slices with swallowed slots
     os.makedirs("/tmp/opencode", exist_ok=True)

@@ -107,7 +107,7 @@ def main():
 
     seq = partial_star_sequence(n, k, b, b)
     trace_spine(
-        f"partial-Star: {b} full branches + branch {b+1} leaf-by-leaf", n, k, m, seq
+        f"partial-Star: {b} full branches + branch {b + 1} leaf-by-leaf", n, k, m, seq
     )
 
     target_r = 1 + b * m

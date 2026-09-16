@@ -108,7 +108,7 @@ def main():
     }
     budgets = [0] + [potential(r, args.n - args.k) for r in range(1, max_r + 1)]
     tested_sets = tested_splits = all_negative = 0
-    for size in ([len(explicit)] if explicit is not None else range(2, max_r + 1)):
+    for size in [len(explicit)] if explicit is not None else range(2, max_r + 1):
         size_negative = 0
         pool = (
             [explicit]

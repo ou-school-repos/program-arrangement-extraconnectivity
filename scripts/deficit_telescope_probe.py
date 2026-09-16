@@ -235,7 +235,7 @@ def main():
             print("  G(V) >= 0 for all sets in closure")
 
         if G:
-            print(f"  G range: [{min(G.values()):.1f}," f" {max(G.values()):.1f}]")
+            print(f"  G range: [{min(G.values()):.1f}, {max(G.values()):.1f}]")
 
         # State-consistency check
         state_groups = defaultdict(list)
@@ -252,8 +252,7 @@ def main():
             if g_vals[-1] - g_vals[0] > 0.5:
                 inconsistent += 1
                 print(
-                    f"  INCONSISTENT state: G values = {g_vals}"
-                    f" ({len(entries)} sets)"
+                    f"  INCONSISTENT state: G values = {g_vals} ({len(entries)} sets)"
                 )
 
         if total_multi == 0:
@@ -375,7 +374,7 @@ def main():
         print(f"  Unknown states: {len(unknown_states)}")
         if failed_examples:
             for V, st, gval in failed_examples[:3]:
-                print(f"  FAIL: |V|={len(V)} state={st}" f" G_learned={gval}")
+                print(f"  FAIL: |V|={len(V)} state={st} G_learned={gval}")
 
     # ================================================================
     # Phase 2b: Full-pool DP — state-consistency on expanded set
@@ -407,7 +406,7 @@ def main():
             print("  [!] G(V) < 0 found")
             continue
 
-        print(f"  G range: [{min(G.values()):.1f}," f" {max(G.values()):.1f}]")
+        print(f"  G range: [{min(G.values()):.1f}, {max(G.values()):.1f}]")
 
         state_groups = defaultdict(list)
         for entry in info:

@@ -22,8 +22,8 @@ def diagnose_l3(m_val):
     m = m_val  # overhang
 
     print(f"\n=== DIAGNOSING L3 for A({n},{k}), m={m} ===")
-    print(f"f(x) = sbl(x) + {m-1}*E(x)")
-    print(f"P(R) = (R-1) + sbl(R) + {m-1}*E(R)")
+    print(f"f(x) = sbl(x) + {m - 1}*E(x)")
+    print(f"P(R) = (R-1) + sbl(R) + {m - 1}*E(R)")
 
     # Print f values for small x
     print("\nf values:")
@@ -82,11 +82,11 @@ def diagnose_l3(m_val):
                         )
 
         print(f"  L3 violations: {l3_violations}/{l3_total}")
-        print(f"  Violation rate: {l3_violations/l3_total*100:.1f}%")
+        print(f"  Violation rate: {l3_violations / l3_total * 100:.1f}%")
 
         # Print examples
         for i, ex in enumerate(examples):
-            print(f"\n  Example {i+1}:")
+            print(f"\n  Example {i + 1}:")
             print(f"    Partition: {ex['child_sizes']}")
             print(f"    Delta_D_p = {ex['Delta_D_p']}")
             print(f"    sum_s f(c_{{p,s}}) = {ex['sum_f_children']}")
@@ -112,7 +112,7 @@ def diagnose_l3(m_val):
         print("\n  Concentrated partition bound:")
         print(f"    f(R) = f({R}) = {f_func(R, m)}")
         print(
-            f"    f(Delta_D_p + 1) for Delta_D_p = R-1 = {R-1}: f({R}) = {f_func(R, m)}"
+            f"    f(Delta_D_p + 1) for Delta_D_p = R-1 = {R - 1}: f({R}) = {f_func(R, m)}"
         )
         print("    So f(R) = f(Delta_D_p + 1) for concentrated partition")
 

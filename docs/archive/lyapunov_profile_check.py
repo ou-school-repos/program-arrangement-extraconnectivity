@@ -170,7 +170,7 @@ def main():
             print(f"  H_R equalities alone: feasible; one solution = ({weights})")
         if result.success:
             weights = ", ".join(f"{weight:.8g}" for weight in result.x)
-            print(f"  FEASIBLE convex weights (w_1,...,w_{n-k+1}) = ({weights})")
+            print(f"  FEASIBLE convex weights (w_1,...,w_{n - k + 1}) = ({weights})")
         else:
             print(f"  INFEASIBLE: {result.message}")
             if equality_only.success:

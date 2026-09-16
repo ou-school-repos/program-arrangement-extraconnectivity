@@ -42,7 +42,7 @@ def linear_model(x, a, b):
 
 popt, _ = curve_fit(linear_model, x_model, log_T)
 a_fit, b_fit = popt
-print(f"Search fit: log10(T) = {a_fit:.4f}" f" + {b_fit:.4f} * (R-2)*log10(R)")
+print(f"Search fit: log10(T) = {a_fit:.4f} + {b_fit:.4f} * (R-2)*log10(R)")
 
 
 # ── Best fit predictor: T = c * R^3 * log(R) ────────────────

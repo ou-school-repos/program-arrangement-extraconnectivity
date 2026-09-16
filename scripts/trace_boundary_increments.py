@@ -30,8 +30,7 @@ def main():
         print("step vertex boundary increment")
         for step, vertex, boundary, increment in trace(vertices, n, k):
             print(
-                f"{step:>4} {''.join(map(str, vertex)):>6} "
-                f"{boundary:>8} {increment:>9}"
+                f"{step:>4} {''.join(map(str, vertex)):>6} {boundary:>8} {increment:>9}"
             )
     return 0
 

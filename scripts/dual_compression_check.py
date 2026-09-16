@@ -153,9 +153,7 @@ def main():
     print(
         f"averaging inequality Phi(V)<=avg(Phi(C),Phi(D)) holds: {avg_holds}/{tested}"
     )
-    print(
-        "EXISTENCE (max(PhiC,PhiD) >= Phi0) holds: " f"{tested - both_worsen}/{tested}"
-    )
+    print(f"EXISTENCE (max(PhiC,PhiD) >= Phi0) holds: {tested - both_worsen}/{tested}")
     print(
         f"both C and D strictly decrease Phi (existence fails): {both_worsen}/{tested}"
     )
@@ -167,7 +165,7 @@ def main():
         tag = "EXIST-OK" if safe else "EXIST-FAIL"
         print(
             f"  {tag} A({n},{k}) R={R} (a,b)=({a},{b}) V'={V} "
-            f"Phi0={p0} PhiC={pc} PhiD={pd} avg={(pc+pd)/2}"
+            f"Phi0={p0} PhiC={pc} PhiD={pd} avg={(pc + pd) / 2}"
         )
 
     print("\n--- re-checking single-pair EXIST-FAILs against ALL symbol pairs ---")

@@ -78,7 +78,7 @@ def main():
     print(f"m>=2 stress trials tested: {total}")
     print(f"existence failures (best achievable Phi < Phi0): {len(fails)}")
     for n, k, R, V, p0, best in fails[:15]:
-        print(f"  FAIL A({n},{k}) m={n-k} R={R} Phi0={p0} best={best}")
+        print(f"  FAIL A({n},{k}) m={n - k} R={R} Phi0={p0} best={best}")
         print(f"    V'={V}")
 
 

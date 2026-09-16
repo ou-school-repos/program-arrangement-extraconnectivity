@@ -74,15 +74,15 @@ def verify(R: int, vertices: list[str], expected_nk1: int, expected_const: int) 
     print(f"R={R}: |N(V')| = {nbr_count}")
     print(f"  nk1 coeff: A000788={expected_nk1}, Cheng={cheng_nk1} ({nk1_cmp})")
     print(f"  constant:  A000788={expected_const}, Cheng={cheng_const} ({const_cmp})")
-    print(f"  A000788: ({coeff})({R}) - {expected_const}" f" = {predicted}  {a_match}")
+    print(f"  A000788: ({coeff})({R}) - {expected_const} = {predicted}  {a_match}")
     print(
         f"  Cheng:   ({cheng_coeff})({R}) - {cheng_const}"
         f" = {cheng_predicted}  {c_match}"
     )
 
-    assert (
-        nbr_count == predicted
-    ), f"A000788 prediction failed: expected {predicted}, got {nbr_count}"
+    assert nbr_count == predicted, (
+        f"A000788 prediction failed: expected {predicted}, got {nbr_count}"
+    )
 
 
 # All minimum-cut vertex sets from exhaustive search (R=2..9)

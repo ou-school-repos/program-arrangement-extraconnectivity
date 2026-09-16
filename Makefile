@@ -274,6 +274,8 @@ format:	##H @Dev Format C++ sources (clang-format)
 	-prettier -w $$(git ls-files .clang-format '*.json' '.*.y*ml' '*.md')
 	-black $$(git ls-files '*.py')
 	-isort $$(git ls-files '*.py')
+	-ruff format $$(git ls-files '*.py')
+	-ruff check --fix $$(git ls-files '*.py')
 	-pre-commit run --all-files
 	-shfmt -w $$(git ls-files '*.sh')
 	clang-format -i $(SRCS)

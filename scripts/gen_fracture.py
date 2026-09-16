@@ -55,9 +55,9 @@ def gen_fracture_dot(d, output):
                     f.write(f"    f{i} -- f{j};\n")
 
         # Splintered vertex (connected via only 1 edge to maintain connectivity)
-        f.write(f'    f{R-1} [fillcolor=orange, label="N{R-1}\\n(Splintered)"];\n')
+        f.write(f'    f{R - 1} [fillcolor=orange, label="N{R - 1}\\n(Splintered)"];\n')
         f.write(
-            f'    f0 -- f{R-1} [color=red, penwidth=2.0, label=" Rigidity Break"];\n'
+            f'    f0 -- f{R - 1} [color=red, penwidth=2.0, label=" Rigidity Break"];\n'
         )
         f.write("}\n")
 

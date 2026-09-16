@@ -282,7 +282,7 @@ def main():
         if len(vertices) < a + b:
             print(
                 f"\n  SKIP A({n},{k}) a={a} b={b}:"
-                f" only {len(vertices)} vertices, need {a+b}"
+                f" only {len(vertices)} vertices, need {a + b}"
             )
             continue
 
@@ -323,7 +323,7 @@ def main():
             )
             print(
                 f"  Inductive bound: f({a})+f({b}) = {result2['f_a']}+{result2['f_b']}"
-                f" = {result2['f_a']+result2['f_b']}"
+                f" = {result2['f_a'] + result2['f_b']}"
             )
             print(f"  |∂(A∪B)| ≥ f(a)+f(b)-X_cross: {status2}")
             print(f"  Worst slack: {result2['worst_slack']}")

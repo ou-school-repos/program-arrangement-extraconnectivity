@@ -139,14 +139,12 @@ def run(n: int, k: int, ca: int, cb: int) -> int:
                 worst_pair = (Fa, Fb, shared)
         if (i + 1) % 200 == 0:
             print(
-                f"  ... {i+1}/{len(opt_a)} tight-A fibers done, "
+                f"  ... {i + 1}/{len(opt_a)} tight-A fibers done, "
                 f"{checked:,} pairs checked so far, running max(I-Delta)={worst}",
                 flush=True,
             )
 
-    print(
-        f"  checked {checked:,} disjoint tight-fiber pairs; " f"max(I-Delta) = {worst}"
-    )
+    print(f"  checked {checked:,} disjoint tight-fiber pairs; max(I-Delta) = {worst}")
     if worst >= 0:
         print("  *** CRITICAL-CASE VIOLATION (I >= Delta) ***")
         print("  witness:", worst_pair)

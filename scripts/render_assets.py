@@ -21,7 +21,7 @@ def gen_comparison_dot(d, output):
 
     with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Comparison_{d} {{\n")
-        label = f'"Stability Analysis (R={R})' f'\\nOptimal vs Fractured"'
+        label = f'"Stability Analysis (R={R})\\nOptimal vs Fractured"'
         f.write(
             f"  graph [label={label},"
             f" labelloc=t,"
@@ -29,9 +29,7 @@ def gen_comparison_dot(d, output):
             f" fontsize=20];\n"
         )
         f.write(
-            '  node [fontname="Helvetica",'
-            " style=filled, shape=circle,"
-            " width=0.6];\n"
+            '  node [fontname="Helvetica", style=filled, shape=circle, width=0.6];\n'
         )
         f.write("  edge [penwidth=1.2];\n")
 
@@ -62,11 +60,9 @@ def gen_comparison_dot(d, output):
 
         # The Fractured/Splintered Node
         lbl = to_bin(R - 1, d)
-        f.write(f"    f{R-1} [fillcolor=orange," f' label="{lbl}\n(Splintered)"];\n')
+        f.write(f'    f{R - 1} [fillcolor=orange, label="{lbl}\n(Splintered)"];\n')
         f.write(
-            f"    f0 -- f{R-1} [color=red,"
-            f" penwidth=3.0,"
-            f' label="Rigidity\nBreak"];\n'
+            f'    f0 -- f{R - 1} [color=red, penwidth=3.0, label="Rigidity\nBreak"];\n'
         )
         f.write("  }\n")
         f.write("}\n")
