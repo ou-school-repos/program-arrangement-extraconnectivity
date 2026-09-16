@@ -1236,7 +1236,7 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     The nonempty case uses `hb_cross_collisions_closed`; the empty arrangement
     has the empty Hamming ball as its witness. -/
 theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k) :
+    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R →
@@ -1246,7 +1246,7 @@ theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube
     have hnk : k ≤ n := by
       obtain ⟨hkn, _⟩ := h_cond
       omega
-    refine ⟨?_, fun V hV => h_lower 0 n k V hV hnk⟩
+    refine ⟨?_, fun V hV => h_lower 0 n k h_cond V hV hnk⟩
     refine ⟨∅, by simp, ?_⟩
     simp [external_neighbors, C_constant, E_seq, sum_bit_length]
   · have hR1 : 1 ≤ R := by omega
@@ -1257,7 +1257,7 @@ theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube
 /-- The unconditional globally optimal growth-strategy corollary. -/
 theorem globally_optimal_growth_strategy
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k) :
+    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R →
       external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧

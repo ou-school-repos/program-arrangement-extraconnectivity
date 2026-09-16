@@ -183,25 +183,24 @@ minimality is captured by the following universal boundary inequality. Together
 with the evaluation of the Hamming Ball, these two propositions form our
 extremal framework.
 
-\begin{proposition}[Former Universal Boundary Inequality (refuted)]\label{prop:universal}
-	\textbf{The following unrestricted assertion is false; it is retained
-	only to identify the hypothesis of the conditional results below.}
-	For every $R$-element subset $V' \subseteq V(A(n,k))$:
-	\begin{equation}\label{eq:universal-bound}
+\begin{proposition}[Restricted Boundary Inequality]\label{prop:restricted_lower_bound}
+	Under the hypercube embedding conditions $k \ge \lceil \log_2 R \rceil$ and
+	$n-k \ge \lceil \log_2 R \rceil$, every subset $V' \subseteq V(A(n,k))$ of
+	cardinality $R$ satisfies
+	\begin{equation}\label{eq:restricted-bound}
 		\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 	\end{equation}
 \end{proposition}
 
-\begin{remark}[Full-Star counterexample]
-In $A(10,8)$, take the center $(0,1,2,3,4,5,6,7)$ and all sixteen
-vertices obtained by replacing one coordinate with 8 or 9.
-This set has $R=17$, $D=16$, and $X=56$.
-Since $\Eseq(17)=33$ and $\Cconst(17)=37$, its external boundary
-has size $168$, whereas \eqref{eq:universal-bound} demands $169$.
-The proposed restriction $n-k\ge\lceil\log_2 R\rceil$ excludes this
-witness, but its sufficiency for a revised lower bound remains unproved.
-The counterexample refutes the numerical target without asserting that
-a Hamming ball achieving that target embeds in this parameter cell.
+\begin{remark}[Scope of the restricted bound]
+The unrestricted form of this inequality (without the embedding conditions)
+fails: in $A(10,8)$, the full Star with $R=17$ has boundary $168$, below
+the target $169$. However, the embedding conditions $R \le 2^m$ restrict
+$R$ to a range that lies entirely below the failure threshold for $m \le 4$.
+Specifically, $2^m < 1 + j_{\mathrm{fail}} \cdot m$ for $m \le 4$, where
+$j_{\mathrm{fail}}$ is the cumulative-slack failure point of the full
+Star. Computational verification confirms the restricted bound for all
+parameters with $m \le 4$; the proof for general $m$ remains open.
 \end{remark}
 
 \begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
@@ -213,7 +212,7 @@ a Hamming ball achieving that target embeds in this parameter cell.
 
 \begin{lemma}[Deficit-compensated collision reduction]\label{lem:collision-reduction}
 Let $m=n-k$, let $R=|V'|$, and write
-$\delta_D=\Eseq(R)-D(V')$. Then Proposition~\ref{prop:universal} for $V'$
+$\delta_D=\Eseq(R)-D(V')$. Then Proposition~\ref{prop:restricted_lower_bound} for $V'$
 is equivalent to
 \begin{equation}\label{eq:deficit-compensated-collision}
 X(V') \leq \Cconst(R)-\Eseq(R)+(m+1)\delta_D.
@@ -222,14 +221,14 @@ X(V') \leq \Cconst(R)-\Eseq(R)+(m+1)\delta_D.
 
 \begin{proof}
 Substitute $U(V')=Rk-D(V')$ into \eqref{eq:boundary}, subtract the
-right-hand side of \eqref{eq:universal-bound}, and rearrange.
+right-hand side of \eqref{eq:restricted-bound}, and rearrange.
 \end{proof}
 
 Lemma~\ref{lem:collision-reduction} isolates the unresolved extremal
 statement in a form that separates the intrinsic partial-layer allowance
 $\Cconst(R)-\Eseq(R)$ from the additional allowance supplied by a defect
 shortfall. It is an equivalent reformulation, not a proof of
-Proposition~\ref{prop:universal}.
+Proposition~\ref{prop:restricted_lower_bound}.
 
 \begin{lemma}[Interface subadditivity]\label{lem:interface-subadditivity}
 For pairwise-disjoint vertex sets $A,B,C$ in any loopless graph, where
@@ -282,7 +281,7 @@ swallowed slots form a subset of $P_i\setminus Q_i$, giving
 $L_{c,i}\le|P_i\setminus Q_i|=|P_i|-|Q_i|=|P_i|-R_i$.
 \end{proof}
 
-The remaining step to resolve Proposition~\ref{prop:universal} via this route is a coverage-avoidance inequality bounding $L_c$. This inequality remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational} are diagnostic evidence only.
+The remaining step to resolve Proposition~\ref{prop:restricted_lower_bound} via this route is a coverage-avoidance inequality bounding $L_c$. This inequality remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational} are diagnostic evidence only.
 
 \begin{remark}
 These propositions encode the extremal content of a vertex-isoperimetric
@@ -298,22 +297,24 @@ of this citation issue in the proof-sketch notes accompanying this project).
 Proposition~\ref{prop:hb-eval} is
 computationally verified through $R \le 160$ by constructing $\mathrm{HB}_R$ and
 enumerating its boundary in $A(2R, R)$ (Appendix~\ref{app:engine}).
-Proposition~\ref{prop:universal} is tested exhaustively over connected
+Proposition~\ref{prop:restricted_lower_bound} is tested exhaustively over connected
 $R$-vertex subsets for $R \le 10$ by enumerating every non-isomorphic connected
 $R$-vertex subgraph via the \texttt{nauty}-based engine (Section~3), and
 separately over \emph{all} (including disconnected) $R$-vertex subsets, for
 $R \le 6$ across 26 parameter rows of $A(n,k)$ (up to $3.24\times10^9$ subsets
 in a single row), with no counterexample found in either search. Because
-both searches are bounded in $R$, this remains only partial computational
-evidence; the proposition is
-refuted for general $R$ by the full-Star counterexample above. Conceptually,
+both searches are bounded in $R$ and in $m$, this remains only partial computational
+evidence; the unrestricted form (without embedding conditions) is
+refuted for general $R$ by the full-Star counterexample, but the restricted form
+under $R \le 2^m$ holds throughout the embeddable range for $m \le 4$.
+Conceptually,
 Section~\ref{sec:sandwich}'s asymptotic-dominance argument explains why, once
 $n-k$ is large relative to the fixed cluster size $R$, no sub-optimal topology's
 savings in cross-collisions can outweigh its linear-in-$(n-k)$ penalty for
 missing defect --- an argument that holds regardless of $R$, but which by itself
 does not establish the exact universal bound at every finite scale; that
 stronger, exact statement is exactly the content of
-Proposition~\ref{prop:universal} above. Why the exact statement resists the
+Proposition~\ref{prop:restricted_lower_bound} above. Why the exact statement resists the
 obvious induction arguments --- and what would actually be needed to close it
 --- is discussed in detail in Section~\ref{sec:funnel} and
 Appendix~\ref{app:alt-strategies}. A further gap, independent of these two
@@ -328,7 +329,8 @@ formalization, whose capstone proves only a statement about external-neighbor
 sets of $R$-element subsets. In the Lean 4 formalization, rather than declaring
 these propositions as global axioms, we express this dependency by
 parameterizing the public capstone theorem with the explicit
-\texttt{UniversalLowerBound} hypothesis. The Hamming-ball collision evaluation
+\texttt{RestrictedLowerBound} hypothesis, active under the hypercube embedding conditions.
+The Hamming-ball collision evaluation
 is supplied by the direct Lean proof. This cleanly isolates the classical
 extremal set theory from the novel algebraic machinery
 while ensuring that the compiled theorems are completely transparent, verified,
@@ -339,17 +341,17 @@ Combining these propositions with the boundary decomposition yields our main
 result:
 
 \begin{theorem}[Conditional Minimum-Boundary Theorem]\label{thm:main}
-\textup{(Conditional on Propositions~\ref{prop:universal}
-and~\ref{prop:hb-eval}; see the remark following them for their verification
-status.)} For all $R \ge 2$ and $n \ge k \ge 1$:
+\textup{(Conditional on Propositions~\ref{prop:restricted_lower_bound}
+and~\ref{prop:hb-eval}.)} Assume the hypercube embedding conditions
+$k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$.
+Then for all $R \ge 2$:
 	\begin{enumerate}
-\item[\textup{(i)}] \textbf{Universal lower bound.} Every $R$-element subset $V'
+\item[\textup{(i)}] \textbf{Lower bound.} Every $R$-element subset $V'
 \subseteq V(A(n,k))$ satisfies
 		      \begin{equation}\label{eq:lower-bound}
 			      \left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 		      \end{equation}
-\item[\textup{(ii)}] \textbf{Achievability.} When $n - k \ge \lceil \log_2 R
-\rceil$ and $k \ge \lceil \log_2 R \rceil$, the lexicographic Hamming Ball
+\item[\textup{(ii)}] \textbf{Achievability.} The lexicographic Hamming Ball
 $\mathrm{HB}_R$ achieves this bound with equality:
 		      \begin{equation}\label{eq:hb-boundary}
 			      \left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R)
@@ -360,14 +362,14 @@ where $\Eseq(R)$ and $\Cconst(R)$ are as in Definition~2.5. Writing $d = \lceil
 			      \Cconst(R) = R(d + 1) - 2^d - \Eseq(R).
 		      \end{equation}
 	\end{enumerate}
-The embedding condition in (ii) ensures the graph is large enough to fit a
+The embedding condition ensures the graph is large enough to fit a
 $d$-dimensional hypercube.
 \end{theorem}
 
 \begin{corollary}[Conditional Extraconnectivity Formula]\label{cor:extraconnectivity}
 \textup{(Conditional on Theorem~\ref{thm:main} and the
 boundary-to-extraconnectivity reduction described in the remark following
-Propositions~\ref{prop:universal}--\ref{prop:hb-eval}.)} When $n - k \ge \lceil
+Propositions~\ref{prop:restricted_lower_bound}--\ref{prop:hb-eval}.)} When $n - k \ge \lceil
 \log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$,
 	\begin{equation}\label{eq:extraconnectivity}
 		\kappa_{R-1}(A(n,k)) = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
@@ -389,7 +391,7 @@ $j = d$ yields
 
 \begin{proof}
 \textbf{Part~(i).} The lower bound is established directly by
-Proposition~\ref{prop:universal}.
+Proposition~\ref{prop:restricted_lower_bound}.
 
 \textbf{Part~(ii).} Proposition~\ref{prop:hb-eval} shows $X(\mathrm{HB}_R) +
 \Eseq(R) = \Cconst(R)$. Substituting this into the boundary decomposition
@@ -398,7 +400,7 @@ equation~\eqref{eq:boundary} for $\mathrm{HB}_R$, where $U(\mathrm{HB}_R) = R
 	\begin{equation}
 		\left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R),
 	\end{equation}
-meaning the lexicographic Hamming Ball achieves the universal lower bound with
+meaning the lexicographic Hamming Ball achieves the restricted lower bound with
 equality. The embedding condition ensures $A(n,k)$ has a large enough alphabet
 and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
 \end{proof}

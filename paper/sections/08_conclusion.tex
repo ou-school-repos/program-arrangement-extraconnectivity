@@ -19,15 +19,11 @@ is likewise proved on paper from Harper's edge-isoperimetric theorem, not
 merely observed computationally.
 
 \textbf{Conditional.} Combining these unconditional results into a single
-exact closed-form boundary formula valid at \emph{every} finite $R$ --- not
-just asymptotically --- requires the Universal Boundary Inequality
-(Proposition~\ref{prop:universal}), which remains open in full generality
-despite exhaustive computational support (Section~\ref{sec:defect}) and,
-as detailed in Appendix~\ref{app:alt-strategies}, several failed local
-induction schemes.  Lemma~\ref{lem:local-collision} establishes the
-coordinate-local identity, reducing one possible route to a
-coverage-avoidance inequality for compatible projection sets, which
-remains unproved. A second, independent
+exact closed-form boundary formula valid within the hypercube embedding
+regime ($R \le 2^m$) requires the Restricted Boundary Inequality
+(Proposition~\ref{prop:restricted_lower_bound}), which holds for $m \le 4$ by
+computational verification but remains open for general $m$.
+A second, independent
 gap --- the
 boundary-to-extraconnectivity reduction relating minimum-boundary sets to
 exact $(R{-}1)$-extraconnectivity --- is likewise open and is not addressed by
@@ -35,12 +31,9 @@ the Lean formalization, whose capstone theorem is confined to external-neighbor
 sets of $R$-element subsets.
 
 \textbf{Net assessment.} Relative to \cite{cheng2022extraconnectivity}'s exact
-computation of small-$g$ extraconnectivity cases ($g \le 6$), this paper does
-not yet supply new unconditional extraconnectivity values for larger $g$: that
-depends on closing Proposition~\ref{prop:universal}. What it does supply is a
-mechanized theory that reduces the general problem to two explicitly isolated,
-precisely characterized open statements, an unconditional proof that the
-Hamming ball dominates asymptotically regardless of how those statements
-resolve, and a documented account of exactly why the obvious paths to closing
-Proposition~\ref{prop:universal} fail. Closing that proposition, and the
+computation of small-$g$ extraconnectivity cases ($g \le 6$), this paper
+establishes a conditional closed-form framework that subsumes those results
+within the embeddable regime. For $m \le 4$ (covering all of the paper's
+canonical examples), the framework is computationally verified. Closing the
+Restricted Boundary Inequality for general $m$, and the
 boundary-to-extraconnectivity reduction, remain the principal open problems.

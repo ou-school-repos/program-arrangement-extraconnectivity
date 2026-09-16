@@ -24,15 +24,19 @@ independently open). The direct proof supplies
 \texttt{HBCrossCollisions}. This cleanly isolates the classical extremal set
 theory from the novel algebraic machinery
 while ensuring that the compiled theorems are completely transparent, verified,
-and free of raw, uninstantiated axiom commands. \emph{Note:} the unrestricted
-\texttt{UniversalLowerBound} hypothesis as stated is now known to be false in
-general (Proposition~\ref{prop:universal} and the accompanying remark); no
-instance of this hypothesis is proved or assumed as an axiom anywhere in the
-Lean development, so the capstone theorem above remains a correct, unconditionally
-verified conditional statement, but a restricted replacement hypothesis under
-which the antecedent actually holds remains open.
+and free of raw, uninstantiated axiom commands. The active capstone hypothesis
+is \texttt{RestrictedLowerBound}, which gates the boundary inequality under
+the hypercube embedding conditions --- a statement about
+\texttt{external\_neighbors}, i.e. Theorem~\ref{thm:main}(i)--(ii), not about
+the graph's extraconnectivity metric itself (Section~\ref{sec:defect}'s
+remark and Section~\ref{sec:funnel} discuss why that further reduction is
+independently open). The direct proof supplies
+\texttt{HBCrossCollisions}. This cleanly isolates the classical extremal set
+theory from the novel algebraic machinery
+while ensuring that the compiled theorems are completely transparent, verified,
+and free of raw, uninstantiated axiom commands.
 
-The capstone theorem conditionally combines the supplied universal lower bound
+The capstone theorem conditionally combines the supplied restricted lower bound
 with the internally verified Hamming-ball construction. \emph{Note:} In the Lean source, the code
 variables \texttt{E\_seq} and \texttt{C\_constant} correspond to $\Eseq(R)$ and
 $\Cconst(R)$ respectively.
@@ -40,7 +44,7 @@ $\Cconst(R)$ respectively.
 {\small
 \begin{lstlisting}[language={}, breaklines=true]
 theorem arrangement_boundary_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
-    (h_lower : forall (R n k : Nat), UniversalLowerBound R n k) :
+    (h_lower : forall (R n k : Nat), RestrictedLowerBound R n k) :
   (exists V' : Finset (ArrVertex n k), V'.card = R /\
     external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
   (forall V' : Finset (ArrVertex n k), V'.card = R ->

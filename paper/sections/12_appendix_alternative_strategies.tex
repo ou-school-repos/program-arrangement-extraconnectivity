@@ -3,7 +3,7 @@
 \begin{quote}
 \textit{Everything in this appendix is a research sketch, not a result.
 Nothing here is proven, checked, or claimed to be correct; it is recorded
-only so that future work on Proposition~\ref{prop:universal} does not
+only so that future work on Proposition~\ref{prop:restricted_lower_bound} does not
 restart from nothing. Neither strategy below has been carried past an
 informal whiteboard stage.}
 \end{quote}
@@ -90,7 +90,7 @@ independent test. Combining $\mathrm{total\_coord\_edges} = |\partial
 V| + X$, $\mathrm{total\_coord\_edges} = U(m+1) - Rk$, and $D = Rk - U$
 gives $\Phi = X + (m+1)D = mRk - |\partial V|$: the $U$ terms cancel
 identically, so $\Phi \le \Cconst(R) + m\Eseq(R)$ is exactly
-Proposition~\ref{prop:universal} restated, term for term. At fixed
+Proposition~\ref{prop:restricted_lower_bound} restated, term for term. At fixed
 $R,k,m$, maximizing $X$ \emph{is} minimizing $|\partial V|$ --- the
 original problem, not a new adversarial target --- so a construction
 with large $X_{\text{cross}}$ but also large boundary demonstrates
@@ -157,7 +157,7 @@ $R=17$ has all four equal to $-2$; and $A(8,5)$ at $R=15$ has gaps
 $(-2,-3,-3,-3,-3)$.  Whether a nonzero recursive profile correction exists
 uniformly, and whether it admits a closed form formalizable in Lean, remains
 open.  These are finite computational certificates only and do not alter
-Proposition~\ref{prop:universal} or its formal hypothesis status.
+Proposition~\ref{prop:restricted_lower_bound} or its formal hypothesis status.
 
 \paragraph{Full-Star spine: an exact restricted-family calculation.}
 There is nevertheless an exact calculation for the maximally symmetric star
@@ -229,7 +229,7 @@ been established; it is not known whether a suitable $f$ exists.
 
 \medskip
 \noindent None of these directions currently has a confirmed, closed
-path to Proposition~\ref{prop:universal}. Both induction skeletons
+path to Proposition~\ref{prop:restricted_lower_bound}. Both induction skeletons
 tried are refuted in their naive, per-step form: marginal peeling's
 per-vertex bound (Lemma~\ref{lem:subadditivity},
 Theorem~\ref{thm:defect}'s induction skeleton, and the proved
@@ -247,7 +247,7 @@ The Lyapunov direction ($\Psi$ over fiber-size multisets, distinct from
 $\Phi$) remains a from-scratch invariant search with no candidate
 potential shown to work. These are research opinions, not mathematical
 claims, and should not be read as evidence toward
-Proposition~\ref{prop:universal} itself; the exhaustive computational
+Proposition~\ref{prop:restricted_lower_bound} itself; the exhaustive computational
 sweep (Appendix~\ref{app:engine}) remains the only supporting evidence
 for the proposition as of this writing.
 

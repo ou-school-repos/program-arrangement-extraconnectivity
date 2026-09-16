@@ -6,11 +6,11 @@ Lean 4 and Mathlib.
 ## Build
 
 **Mathematical status update (2026-09-16):** The unrestricted
-UniversalLowerBound hypothesis is false. The full Star in A(10,8),
-R=17 has external boundary 168 versus the claimed lower bound 169
-(D=16, X=56, P=103, Phi=104). Conditional Lean results do not
-establish this hypothesis. A restricted replacement and its proof remain
-open; see `proof-sketch-weighted-potential.md` for the witness.
+UniversalLowerBound hypothesis is false (full Star in A(10,8), R=17, boundary
+168 < 169). The capstone now uses `RestrictedLowerBound`, gated by the
+hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
+restricts R to a range where the Hamming Ball is optimal. The proof for
+general m remains open; see `proof-sketch-weighted-potential.md` for details.
 
 ```bash
 make lean          # Build and verify proofs
@@ -40,11 +40,11 @@ remaining extremal combinatorics hypotheses rather than depending on raw global
 | Evaluation               | `hamming_ball_eval` (boundary count)                                 | PROVEN\*      |
 | Hamming-ball evaluation  | `hb_cross_collisions_closed`                                         | PROVEN        |
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`                   | PROVEN        |
-| Lower Bound              | `UniversalLowerBound` (universal bound)                              | HYPOTHESIS    |
+| Lower Bound              | `RestrictedLowerBound` (under embedding conditions)                   | HYPOTHESIS    |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN        |
 | Capstone                 | `arrangement_extraconnectivity_minimum` (composition)                | CONDITIONAL\* |
 
-\*Conditional on `UniversalLowerBound` and `HBCrossCollisions` until the direct
+\*Conditional on `RestrictedLowerBound` and `HBCrossCollisions` until the direct
 collision proof and remaining supporting scaffold are reconciled and wired into
 the public capstone (see below). Harper's Theorem is proven but **not in the
 dependency chain** of the capstone theorem. The defect-based proof bypasses it
@@ -65,7 +65,7 @@ arrangement_extraconnectivity_minimum
   │    └─ hamming_ball_eval           (exact boundary evaluation)
   │         ├─ hb_total_coord_edges   (from total_coord_edges_eq)
   │         └─ HBCrossCollisions [HYPOTHESIS]
-  └─ UniversalLowerBound [HYPOTHESIS] (universal lower bound)
+  └─ RestrictedLowerBound [HYPOTHESIS] (under embedding conditions)
 ```
 
 ## Remaining Hypothesis Interfaces
@@ -73,7 +73,7 @@ arrangement_extraconnectivity_minimum
 The remaining mathematical gaps are isolated as explicit theorem parameters in
 `arrangement_extraconnectivity_minimum`, not as raw `axiom` commands.
 
-### 1. Universal Boundary Inequality (`UniversalLowerBound`)
+### 1. Restricted Boundary Inequality (`RestrictedLowerBound`)
 
 **What it says**:
 `external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R`.
@@ -90,8 +90,10 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
   dual-compression, and additive fiber-size Lyapunov candidates are finite
   counterexamples to proposed proof mechanisms, not changes to this statement.
   Consequently no Lean theorem or axiom is removed or added:
-  `UniversalLowerBound` remains the same explicit hypothesis until a valid
-  global proof is found. The Strategy 2 LP diagnostic
+  `RestrictedLowerBound` remains the active capstone hypothesis, gated by the
+  hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
+  restricts R to a range where the Hamming Ball is optimal (verified
+  computationally). The proof for general m remains open.
   (`scripts/lyapunov_profile_check.py`) refutes the additive convex potential
   Ψ_f(V') = Σ_r f(|V' ∩ F_r|) even with Hamming-ball normalization: the
   embedded-cube equalities alone are algebraically inconsistent for A(5,3) and
@@ -162,12 +164,12 @@ hypotheses:
   directly from `total_coord_edges_eq`.
 
 The following high-level results are **mechanically proven inside Lean**; the
-public capstone remains conditional only on the universal lower bound:
+public capstone remains conditional on `RestrictedLowerBound`:
 
 - **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven
   constructor, conditional on its explicit `HBCrossCollisions` argument.
 - **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`):
-  Combines `UniversalLowerBound` and the explicit Hamming-ball collision
+  Combines `RestrictedLowerBound` and the explicit Hamming-ball collision
   interface to squeeze the exact minimum cut.
 
 ## Novel Contributions

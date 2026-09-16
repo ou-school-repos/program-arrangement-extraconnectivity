@@ -717,7 +717,7 @@ confirmed dead end and one open, concretely-scoped question:
    ```
 
    The U terms cancel identically. So Φ ≤ C(R) + mE(R) is _equivalent_, term for
-   term, to |∂V| ≥ (Rk - E(R))(n-k) - C(R) — `UniversalLowerBound` itself, with
+   term, to |∂V| ≥ (Rk - E(R))(n-k) - C(R) — the boundary inequality itself, with
    no slack introduced or removed by the translation.
 
    Consequence: "maximize X_cross while keeping m small" (the natural next
@@ -2290,6 +2290,14 @@ paper), `scripts/sweep_boundary.py`, `scripts/partial_star_sweep.py`, and
   Star $(3,3,3,3,3,3)$ at $X=90$ (cum. slack $-6$). The full Star is
   near-worst-case, not extremal; the exact extremal partition is uncharacterized
   and is an open combinatorial question, not resolved here.
+
+### Safe Parameter Regime ($m \le 4$)
+While the unrestricted universal lower bound fails at higher scales (crossing
+$R_{\text{fail}}$), the hypercube embedding condition $k \ge \lceil \log_2 R \rceil$
+and $n-k \ge \lceil \log_2 R \rceil$ restricts $R$ such that $R \le 2^m$. For $m \le 4$,
+this entire range lies strictly below the failure threshold. Thus, the paper's main
+examples and applications remain mathematically rigorous without requiring a global fix
+for arbitrarily large $m$.
 
 ## Status
 

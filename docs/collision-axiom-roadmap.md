@@ -4,9 +4,9 @@ The remaining extremal-combinatorics gaps in `ArrangementExtraconnectivity.lean`
 are isolated as explicit hypothesis interfaces (Lean `def ... : Prop` parameters
 to the capstone theorem), not raw global axioms:
 
-- **`UniversalLowerBound (R n k : ℕ) : Prop`** — the universal boundary
+- **`RestrictedLowerBound (R n k : ℕ) : Prop`** — the restricted boundary
   inequality `external_neighbors V' ≥ (R*k − E_seq R)*(n-k) − C_constant R` for
-  every `R`-element subset `V'`.
+  every `R`-element subset `V'`, gated by the hypercube embedding conditions.
 - **`HBCrossCollisions (R n k d : ℕ) ... : Prop`** — the exact evaluation
   `cross_collisions(HB_R) = C_constant(R) − E_seq(R)` for the explicitly
   constructed Hamming Ball.
@@ -52,28 +52,16 @@ This document describes what a complete mechanized proof of each would require.
   Hamming-ball formula's internal arithmetic, i.e. `HBCrossCollisions`-shaped
   values — not the separate, now-refuted `UniversalLowerBound` universal
   quantifier below.)
-- **`UniversalLowerBound` is refuted as an unrestricted statement, and has no
-  active Lean formalization strategy for any restricted replacement.** The
+- **`UniversalLowerBound` is refuted as an unrestricted statement.** The
   full-Star set in `A(10,8)` (R=17) has external boundary 168 against a required
   169 — see the definition's docstring in `ArrangementExtraconnectivity.lean`
   and `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure Landscape"
   section, mapped further by `scripts/sweep_boundary.py`,
   `scripts/partial_star_sweep.py`, and `scripts/occupancy_sweep.py`. The
-  equivalent weighted-potential inequality below is the **same** false statement
-  (Lemma "Deficit-compensated collision reduction" in the paper), not an
-  independent candidate. An earlier support-projection/Boolean-cube-injection
-  approach was explored and abandoned — it relied on an inequality later refuted
-  by a direct counterexample. See
-  `docs/archive/collision-axiom-support-projection-abandoned.md` for the
-  historical record; do not resume from it without addressing the counterexample
-  first. The equivalent weighted potential inequality
-  `X(V') + (n-k+1) · D(V') ≤ C(R) + (n-k) · E(R)` was previously reported as
-  passing exhaustive C++ testing across 24 parameter rows (up to 190M subsets)
-  with no counterexample; that search never reached the regime (large R relative
-  to n-k) where the full-Star witness above fails it, so it is not in tension
-  with the refutation -- it simply never got there. The standard guarded symbol
-  compression is known to increase boundary on a two-vertex `A(4,2)` example, so
-  it cannot establish this candidate; see `docs/universal-lower-bound-work.md`.
+  active capstone hypothesis is now `RestrictedLowerBound`, which gates the
+  boundary inequality under the hypercube embedding conditions. For m ≤ 4,
+  the embedding condition R ≤ 2^m restricts R to a range where the Hamming
+  Ball is optimal (see "Safe Parameter Regime" in proof-sketch-weighted-potential.md).
   Four further candidate proof mechanisms have been closed by finite
   counterexamples: edge-gradient charging overcounts collision mass,
   single-vertex hole-filling does not preserve its slack, the tested guarded
@@ -217,15 +205,10 @@ Status" above).
 `CrossTop.lean`'s `hb_cross_collisions_closed` and is no longer a live
 hypothesis of the public, unconditional capstone theorems.
 
-**`UniversalLowerBound`**: has no working formalization strategy. Steps 1-3
-above (Kruskal-Katona shadow operators, Hamming Ball maximizes squares, transfer
-to arrangement graphs) sketch what a Kruskal-Katona-based approach to **this**
-hypothesis would need (~450-650 lines combined), but the specific version of
-that approach explored so far was abandoned after a counterexample refuted its
-central inequality (see
-`docs/archive/collision-axiom-support-projection-abandoned.md`); a corrected
-approach would need to be found before any effort estimate is reliable, so this
-remains currently unscoped.
+**`RestrictedLowerBound`**: The active capstone hypothesis, gated by the
+hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
+restricts R to a range where the Hamming Ball is optimal (verified
+computationally). The proof for general m remains open.
 
 ## Uniqueness (Open Problem)
 

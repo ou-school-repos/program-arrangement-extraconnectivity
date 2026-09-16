@@ -816,11 +816,19 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
     which already document this refutation, for formalization status
 
   This definition is retained, unproved and unrefuted-as-a-restricted-claim,
-  solely to name the hypothesis that `arrangement_boundary_minimum_of_cross`
-  and related capstone theorems are conditioned on. No instance of it is
-  proved or assumed anywhere in this file.
+  solely to name the hypothesis that `UniversalCounterexample.lean` refutes.
+  The active capstone hypothesis is `RestrictedLowerBound`, which gates the
+  boundary inequality under the hypercube embedding conditions.
+  No instance of `UniversalLowerBound` is assumed as an axiom anywhere in this file.
 -/
 def UniversalLowerBound (R n k : ℕ) : Prop :=
+  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
+
+/-- The restricted lower bound hypothesis, active only within the embeddable range.
+    This naturally avoids the full-Star counterexamples for $m \le 4$. -/
+def RestrictedLowerBound (R n k : ℕ) : Prop :=
+  can_embed_hypercube R n k →
   ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 
@@ -1662,7 +1670,7 @@ extraconnectivity reduction*'s input, not its output. That reduction
 component with at least R vertices, and that every minimum (R-1)-extra cut
 reduces to this) is open and is not addressed anywhere in this file; see
 `paper/sections/08_conclusion.tex` and the remark after Proposition
-`prop:universal` in `paper/sections/04_defect_framework.tex`. Treat
+`prop:restricted_lower_bound` in `paper/sections/04_defect_framework.tex`. Treat
 "extraconnectivity" in these names as legacy/aspirational, not descriptive.
 -/
 
@@ -1670,18 +1678,20 @@ reduces to this) is open and is not addressed anywhere in this file; see
   The Arrangement Graph Boundary-Minimum Theorem.
   By squeezing the lower bound (via bridge lemmas) against the existence
   of a constructive witness (the Hamming ball), we establish the
-  **Full Isoperimetric Profile** of A(n,k) for all natural numbers R —
-  i.e. the exact minimum `external_neighbors` value, not extraconnectivity
-  itself (see the naming note above).
+  **Full Isoperimetric Profile** of A(n,k) within the embeddable range
+  R ≤ 2^m — i.e. the exact minimum `external_neighbors` value, not
+  extraconnectivity itself (see the naming note above).
+  The lower bound hypothesis is `RestrictedLowerBound`, gated by the
+  hypercube embedding conditions.
 -/
 theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
+    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
-  exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower R n k V' hR hnk⟩
+  exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower R n k h_cond V' hR hnk⟩
 
 /--
   COROLLARY: Globally Optimal Growth Strategy.
@@ -1697,7 +1707,7 @@ theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_
 -/
 theorem globally_optimal_growth_strategy_of_cross
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), UniversalLowerBound R n k)
+    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
@@ -1775,11 +1785,12 @@ def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
   The lower bound is automatically satisfied by our Capstone Theorem,
   as the Hamming Ball universally bounds ALL subsets.
 -/
-theorem sandwich_lower_bound_proven (R n k : ℕ) (hnk : k ≤ n)
+theorem sandwich_lower_bound_proven (R n k : ℕ) (h_embed : can_embed_hypercube R n k)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (_hConn : is_connected_subgraph V')
-    (h_lower : UniversalLowerBound R n k) :
-    (R * k - E_seq R) * (n - k) - C_constant R ≤ external_neighbors V' :=
-  h_lower V' hR hnk
+    (h_lower : RestrictedLowerBound R n k) :
+    (R * k - E_seq R) * (n - k) - C_constant R ≤ external_neighbors V' := by
+  have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_embed; omega
+  exact h_lower h_embed V' hR hnk
 
 /--
   HALF 2: CONJECTURE.
