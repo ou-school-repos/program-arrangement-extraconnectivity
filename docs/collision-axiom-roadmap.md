@@ -15,45 +15,66 @@ This document describes what a complete mechanized proof of each would require.
 
 ## Current Status
 
-- **`HBCrossCollisions` is not yet on the stable capstone path.**
-  `CrossTop.lean` contains a direct proof candidate
-  (`hb_cross_collisions_closed`) for every `R ≥ 1`, but the public capstone
-  still accepts `HBCrossCollisions` as an explicit hypothesis. It must remain an
-  interface until the supporting proof work is reconciled, including the
-  `CrossRecurrence` route and the remaining unstable-scaffold obligations. Only
-  then should the direct route be promoted, its hypothesis removed from
-  `arrangement_extraconnectivity_minimum`, and the status changed to proven.
-- **Why the driver route remains research scaffolding.** The strong induction
-  driver `hb_cross_collisions_of_recurrence` in `CrossCollisionsResearch.lean`
-  is complete and reduces `HBCrossCollisions` to three interface lemmas —
-  `CrossBaseOne` and `CrossDimStable` are proven, but the third,
-  `CrossRecurrence`, is genuinely circular as an induction step: its
+- **`HBCrossCollisions` is fully closed and unconditionally integrated.**
+  `CrossTop.lean`'s `hb_cross_collisions_closed` proves it for every `R ≥ 1`
+  with no strong induction, no `CrossDimStable`, and no `CrossRecurrence`, and
+  `CrossTop.lean`'s `arrangement_boundary_minimum` /
+  `globally_optimal_growth_strategy` already call
+  `arrangement_extraconnectivity_minimum`'s conditional capstone
+  (`arrangement_boundary_minimum_of_cross`) with `hb_cross_collisions_closed`
+  discharging its `HBCrossCollisions` hypothesis directly. The conditional
+  capstone in `ArrangementExtraconnectivity.lean` is intentionally kept as a
+  general-purpose interface (any future alternate proof of `HBCrossCollisions`
+  can still plug into it); it is not leftover debt. `ProofAudit.lean`
+  mechanically confirms both `hb_cross_collisions_closed` and
+  `arrangement_boundary_minimum` contain zero `sorry` dependencies. This item
+  is done; no further Lean work is queued for it.
+- **Why the driver route was abandoned (kept for research reference only).**
+  The strong induction driver `hb_cross_collisions_of_recurrence` in
+  `CrossCollisionsResearch.lean` reduced `HBCrossCollisions` to three
+  interface lemmas — `CrossBaseOne` and `CrossDimStable` are proven, but the
+  third, `CrossRecurrence`, is genuinely circular as an induction step: its
   `ext_cube(d,m)` term is not an arithmetic quantity but is _equivalent to_
   `HBCrossCollisions(m)` itself (the RHS of `CrossRecurrence` is a set
-  cardinality whose evaluation _is_ the theorem at the smaller size `m`), so the
-  driver would be handing itself its own conclusion as a hypothesis with nothing
-  new supplied. `CrossTop` proposes a direct, non-recursive closed-form identity
-  with its own combinatorial proof (a vertex is double-counted in the top-heavy
-  ball's boundary iff it is a cube vertex; every top-strip cube vertex has
-  multiplicity ≥ 1 via its "bottom partner"; summing the excess multiplicity
-  reduces to a plain edge-boundary count in one lower dimension).
-  `CrossRecurrence` and its driver have been archived to
-  `docs/archive/CrossRecurrenceDriver.lean` for reference but remains a required
-  reconciliation point before the direct route can be promoted into the stable
-  capstone.
+  cardinality whose evaluation _is_ the theorem at the smaller size `m`), so
+  the driver would be handing itself its own conclusion as a hypothesis with
+  nothing new supplied. `CrossTop` supersedes this with a direct,
+  non-recursive closed-form identity and its own combinatorial proof (a
+  vertex is double-counted in the top-heavy ball's boundary iff it is a cube
+  vertex; every top-strip cube vertex has multiplicity ≥ 1 via its "bottom
+  partner"; summing the excess multiplicity reduces to a plain edge-boundary
+  count in one lower dimension). `CrossRecurrence` and its driver are archived
+  to `docs/archive/CrossRecurrenceDriver.lean` for historical reference only;
+  there is nothing left to reconcile.
 - **Formula values verified** via `predict --verify R` (predict.cpp) for
   `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
-  `arrangement` nauty-based search covers `R ≤ 10`.
-- **`UniversalLowerBound` has no active Lean formalization strategy right now.**
+  `arrangement` nauty-based search covers `R ≤ 10`. (This verifies the
+  Hamming-ball formula's internal arithmetic, i.e. `HBCrossCollisions`-shaped
+  values — not the separate, now-refuted `UniversalLowerBound` universal
+  quantifier below.)
+- **`UniversalLowerBound` is refuted as an unrestricted statement, and has no
+  active Lean formalization strategy for any restricted replacement.** The
+  full-Star set in `A(10,8)` (R=17) has external boundary 168 against a
+  required 169 — see the definition's docstring in
+  `ArrangementExtraconnectivity.lean` and
+  `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure Landscape"
+  section, mapped further by `scripts/sweep_boundary.py`,
+  `scripts/partial_star_sweep.py`, and `scripts/occupancy_sweep.py`. The
+  equivalent weighted-potential inequality below is the *same* false
+  statement (Lemma "Deficit-compensated collision reduction" in the paper),
+  not an independent candidate.
   An earlier support-projection/Boolean-cube-injection approach was explored and
   abandoned — it relied on an inequality later refuted by a direct
   counterexample. See
   `docs/archive/collision-axiom-support-projection-abandoned.md` for the
   historical record; do not resume from it without addressing the counterexample
-  first. The current math-first candidate is the equivalent weighted potential
-  inequality `X(V') + (n-k+1) · D(V') ≤ C(R) + (n-k) · E(R)`. Exhaustive C++
-  testing now covers 24 parameter rows (up to 190M subsets) with no
-  counterexample. The standard guarded symbol compression is known to increase
+  first. The equivalent weighted potential inequality
+  `X(V') + (n-k+1) · D(V') ≤ C(R) + (n-k) · E(R)` was previously reported as
+  passing exhaustive C++ testing across 24 parameter rows (up to 190M
+  subsets) with no counterexample; that search never reached the regime
+  (large R relative to n-k) where the full-Star witness above fails it, so it
+  is not in tension with the refutation -- it simply never got there. The
+  standard guarded symbol compression is known to increase
   boundary on a two-vertex `A(4,2)` example, so it cannot establish this
   candidate; see `docs/universal-lower-bound-work.md`. Four further candidate
   proof mechanisms have been closed by finite counterexamples: edge-gradient
@@ -65,13 +86,16 @@ This document describes what a complete mechanized proof of each would require.
   lock w_1=0, w_2=m+1, giving Ψ=4(m+1) < 8m=Φ for every 4-cycle when m≥2). These
   closures do not alter any Lean interface; a global structural approach
   (submodular analysis of C(R)+mE(R) directly, rather than vertex-by-vertex or
-  fiber-by-fiber construction) remains to be formalized.
+  fiber-by-fiber construction) remains to be formalized, but any such approach
+  must now target a *restricted* form of the inequality, not the unrestricted
+  one, since the latter is false.
 
 ## Immediate Lean Work Queue
 
-1. `UniversalLowerBound` needs a formalization strategy from scratch (see
-   "Current Status" above); it is the only live mathematical hypothesis of the
-   capstone.
+1. Define and formalize a *restricted* replacement for `UniversalLowerBound`
+   (see "Current Status" above) once the restricted regime is characterized
+   mathematically -- it is the sole remaining open hypothesis of the capstone.
+   `HBCrossCollisions` requires no further work (done, see above).
 2. The archived recurrence driver remains available for research reference but
    is not a work-queue item.
 
