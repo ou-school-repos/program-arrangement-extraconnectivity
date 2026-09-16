@@ -455,7 +455,47 @@ def main():
             if g_vals[-1] - g_vals[0] > 0.5:
                 inconsistent += 1
                 if shown_inconsistencies < 5:
-                    print(f"  INCONSISTENT state: G values = {g_vals}")
+                    sorted_entries = sorted(entries, key=lambda e: e["G"])
+                    g_min, g_max = (
+                        sorted_entries[0]["G"],
+                        sorted_entries[-1]["G"],
+                    )
+                    print(f"\n  INCONSISTENT state: {_state}")
+                    print(f"    G_min = {g_min:.1f}  |  G_max = {g_max:.1f}")
+
+                    e_min, e_max = sorted_entries[0], sorted_entries[-1]
+
+                    for label, e in [("MIN", e_min), ("MAX", e_max)]:
+                        print(f"    --- Set forcing G={e['G']:.1f} ({label}) ---")
+                        print(f"    V = {e['set']}")
+
+                        V = e["set"]
+                        print("    Split Menu:")
+                        for p in range(k):
+                            fibers = defaultdict(list)
+                            for v in V:
+                                fibers[v[p]].append(v)
+                            if len(fibers) < 2:
+                                continue
+
+                            phi_V = phi(V, n, k, m)
+                            sum_phi_F = sum(phi(fv, n, k, m) for fv in fibers.values())
+                            sum_P_c = sum(
+                                potential(len(fv), m) for fv in fibers.values()
+                            )
+                            overhead = phi_V - sum_phi_F
+                            P_surplus = potential(len(V), m) - sum_P_c
+                            gap = P_surplus - overhead
+
+                            child_sizes = tuple(
+                                sorted(len(fv) for fv in fibers.values())
+                            )
+                            print(
+                                f"      p={p}: children={child_sizes}"
+                                f"  gap={gap}"
+                                f"  (overhead={overhead}, surplus={P_surplus})"
+                            )
+
                     shown_inconsistencies += 1
 
         if total_multi == 0:
