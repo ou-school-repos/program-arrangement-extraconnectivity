@@ -2,8 +2,3 @@
 proofs/.lake/
 proofs/**/lake-manifest.json
 pr-comments*.md
-
-# docs/ is math/Lean-notation-heavy throughout (V', F_a, B_ba, X_cross,
-# ...): every file mixes bare underscores in identifiers with real
-# _emphasis_ spans, which prettier's markdown emphasis normalizer breaks
-docs/**/*.md
