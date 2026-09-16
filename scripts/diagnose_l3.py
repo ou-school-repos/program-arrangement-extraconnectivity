@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Diagnose L3 violations: understand the bound direction for sum_s f(c_{p,s}) vs f(Delta_D_p + 1).
+"""Diagnose L3 violations: understand the bound direction for
+sum_s f(c_{p,s}) vs f(Delta_D_p + 1).
 
 For each subset where L3 fails, print the exact fiber partition and check:
 1. Is sum_s f(c_{p,s}) > f(Delta_D_p + 1)? (L3 bound is wrong direction)
@@ -128,29 +129,29 @@ def diagnose_l3(m_val):
             print(f"    sum_s f(c_{{p,s}}) = {ex['sum_f_children']}")
             print(f"    f(Delta_D_p + 1) = {ex['f_bound']}")
             print(f"    f(R) = {ex['f_concentrated']}")
-            print(
-                f"    Ratio sum/f_bound = {ex['sum_f_children']/max(ex['f_bound'],1):.2f}"
-            )
+            ratio = ex["sum_f_children"] / max(ex["f_bound"], 1)
+            print(f"    Ratio sum/f_bound = {ratio:.2f}")
             print(f"    L3 holds? {ex['sum_f_children'] <= ex['f_bound'] + 1e-9}")
 
         # Check: is f superadditive?
-        print(f"\n  Superadditivity check:")
+        print("\n  Superadditivity check:")
         for a in range(1, R):
             b = R - a
             fa = f_func(a, m)
             fb = f_func(b, m)
             fab = f_func(R, m)
             print(
-                f"    f({a}) + f({b}) = {fa + fb}, f({a}+{b}) = {fab}, superadditive? {fa + fb <= fab}"
+                f"    f({a}) + f({b}) = {fa + fb}, "
+                f"f({a}+{b}) = {fab}, superadditive? {fa + fb <= fab}"
             )
 
         # Check: what is the concentrated partition bound?
-        print(f"\n  Concentrated partition bound:")
+        print("\n  Concentrated partition bound:")
         print(f"    f(R) = f({R}) = {f_func(R, m)}")
         print(
             f"    f(Delta_D_p + 1) for Delta_D_p = R-1 = {R-1}: f({R}) = {f_func(R, m)}"
         )
-        print(f"    So f(R) = f(Delta_D_p + 1) for concentrated partition")
+        print("    So f(R) = f(Delta_D_p + 1) for concentrated partition")
 
 
 def check_master_inequality_forms(m_val):
@@ -187,19 +188,10 @@ def check_master_inequality_forms(m_val):
                 D += R - len(roots)
 
             # Compute mu_sum
-            directions = []
-            all_external = set()
+            multiplicity = {}
             for p in range(k):
                 ext, _ = coord_boundary_and_roots(vertices, p, n)
-                directions.append(ext)
-                all_external |= ext
-
-            total_dir = sum(len(d) for d in directions)
-            X = total_dir - len(all_external)
-
-            multiplicity = {}
-            for d in directions:
-                for w in d:
+                for w in ext:
                     multiplicity[w] = multiplicity.get(w, 0) + 1
             mu_sum = sum(mu for mu in multiplicity.values() if mu >= 2)
 
@@ -228,11 +220,13 @@ def check_master_inequality_forms(m_val):
                 f_bound_sum += f_func(Delta_D_p + 1, m)
 
             # Exact master: mu_sum + (m+1)*D + sum_p sum_s P(c_{p,s}, m) <= k * P(R, m)
-            # Which simplifies to: mu_sum + (m+2)*D + sum_p sum_s f(c_{p,s}, m) <= k * P(R, m)
+            # Which simplifies to: mu_sum + (m+2)*D + sum_p sum_s f(c_{p,s}, m)
+            # <= k * P(R, m)
             lhs_exact = mu_sum + (m + 2) * D + split_f_sum
             rhs_exact = k * P(R, m)
 
-            # User's master: 2R(R-1) + max(0, 2(m-3)*P_1) + (m+2)*D + sum_p f(Delta_D_p + 1) <= k * P(R)
+            # User's master: 2R(R-1) + max(0, 2(m-3)*P_1) + (m+2)*D
+            # + sum_p f(Delta_D_p + 1) <= k * P(R)
             bound_mu = 2 * R * (R - 1) + 2 * (m - 3) * P1
             lhs_user = bound_mu + (m + 2) * D + f_bound_sum
             rhs_user = k * P(R, m)
@@ -244,11 +238,12 @@ def check_master_inequality_forms(m_val):
                 user_violations += 1
 
         print(
-            f"  R={R}: exact_viol={exact_violations}/{total}, user_viol={user_violations}/{total}"
+            f"  R={R}: exact_viol={exact_violations}/{total}, "
+            f"user_viol={user_violations}/{total}"
         )
 
 
 if __name__ == "__main__":
-    for m in [2, 3, 4]:
-        diagnose_l3(m)
-        check_master_inequality_forms(m)
+    for overhang in [2, 3, 4]:
+        diagnose_l3(overhang)
+        check_master_inequality_forms(overhang)

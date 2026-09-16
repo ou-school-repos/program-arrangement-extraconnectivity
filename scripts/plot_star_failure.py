@@ -15,8 +15,14 @@ def main():
     exact_cost = child_potential + collision_cost + defect_cost
 
     figure, axis = plt.subplots(figsize=(7.2, 3.8))
-    axis.barh([0], [budget], color="#d9e8f5", edgecolor="#234e70", height=0.48,
-              label=r"Arithmetic budget $4P(17)=676$")
+    axis.barh(
+        [0],
+        [budget],
+        color="#d9e8f5",
+        edgecolor="#234e70",
+        height=0.48,
+        label=r"Arithmetic budget $4P(17)=676$",
+    )
     left = 0
     components = [
         (child_potential, "child P", "#4c78a8"),
@@ -24,28 +30,52 @@ def main():
         (defect_cost, r"$5D$", "#e45756"),
     ]
     for width, label, color in components:
-        axis.barh([1], [width], left=left, color=color, edgecolor="white",
-                  height=0.48, label=f"{label} = {width}")
-        axis.text(left + width / 2, 1, str(width), ha="center", va="center",
-                  color="white", fontweight="bold")
+        axis.barh(
+            [1],
+            [width],
+            left=left,
+            color=color,
+            edgecolor="white",
+            height=0.48,
+            label=f"{label} = {width}",
+        )
+        axis.text(
+            left + width / 2,
+            1,
+            str(width),
+            ha="center",
+            va="center",
+            color="white",
+            fontweight="bold",
+        )
         left += width
 
     axis.axvline(budget, color="#222222", linestyle="--", linewidth=1.4)
     axis.annotate(
         r"exact cost $684$  ($+8$ over budget)",
-        xy=(exact_cost, 1), xytext=(budget - 90, 1.42),
+        xy=(exact_cost, 1),
+        xytext=(budget - 90, 1.42),
         arrowprops={"arrowstyle": "-|>", "color": "#222222"},
-        ha="center", va="bottom",
+        ha="center",
+        va="bottom",
     )
-    axis.text((budget + exact_cost) / 2, 0.32, r"slack $=676-684=-8$",
-              ha="center", va="center", color="#b2182b", fontweight="bold")
+    axis.text(
+        (budget + exact_cost) / 2,
+        0.32,
+        r"slack $=676-684=-8$",
+        ha="center",
+        va="center",
+        color="#b2182b",
+        fontweight="bold",
+    )
     axis.set_yticks([0, 1], ["budget", "full Star cost"])
     axis.set_xlim(0, 735)
     axis.set_xlabel("units")
-    axis.set_title(r"Coordinate-averaged squeeze failure: full Star $S_4\subset A(8,4)$")
+    axis.set_title(
+        r"Coordinate-averaged squeeze failure: full Star $S_4\subset A(8,4)$"
+    )
     axis.grid(axis="x", alpha=0.2)
-    axis.legend(loc="upper left", bbox_to_anchor=(0, -0.22), ncol=2,
-                frameon=False)
+    axis.legend(loc="upper left", bbox_to_anchor=(0, -0.22), ncol=2, frameon=False)
     figure.tight_layout()
 
     output_dir = Path("docs/figures")
