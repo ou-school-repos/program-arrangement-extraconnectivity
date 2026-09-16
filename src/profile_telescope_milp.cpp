@@ -6,6 +6,7 @@
 //       [--star-only]
 //       [--max-r=R] [--max-sets=N] [--g-cap=N]
 //       [--time-limit=SECONDS] [--workers=N]
+//       [--dump-positive-menus] [--dump-ledger]
 //
 // Modes:
 //   per-set      One constraint per concrete set (default, original).
@@ -372,6 +373,106 @@ void print_state(const State &state) {
     std::cout << "}";
 }
 
+void print_subset(const Subset &subset, const std::vector<Vertex> &vertices) {
+    std::cout << "{";
+    for (std::size_t i = 0; i < subset.size(); ++i) {
+        if (i)
+            std::cout << ",";
+        const Vertex &vertex = vertices[subset[i]];
+        std::cout << "(";
+        for (std::size_t j = 0; j < vertex.size(); ++j) {
+            if (j)
+                std::cout << ",";
+            std::cout << vertex[j];
+        }
+        std::cout << ")";
+    }
+    std::cout << "}";
+}
+
+void dump_split_menu(const Subset &subset, const std::vector<Vertex> &vertices,
+                     int n, int k) {
+    const int m = n - k;
+    const std::int64_t x_parent = cross_collisions_of(subset, vertices, n, k);
+    const std::int64_t d_parent = defect_of(subset, vertices, k);
+    const std::int64_t p_parent = potential(static_cast<int>(subset.size()), m);
+    for (int position = 0; position < k; ++position) {
+        const std::vector<Subset> fibers = fibers_of(subset, vertices, position);
+        if (fibers.size() < 2)
+            continue;
+        std::vector<int> sizes;
+        std::int64_t x_children = 0;
+        std::int64_t d_children = 0;
+        std::int64_t p_children = 0;
+        for (const Subset &fiber : fibers) {
+            sizes.push_back(static_cast<int>(fiber.size()));
+            x_children += cross_collisions_of(fiber, vertices, n, k);
+            d_children += defect_of(fiber, vertices, k);
+            p_children += potential(static_cast<int>(fiber.size()), m);
+        }
+        std::sort(sizes.begin(), sizes.end());
+        const std::int64_t delta_x = x_parent - x_children;
+        const std::int64_t delta_d = d_parent - d_children;
+        const std::int64_t overhead = delta_x +
+            static_cast<std::int64_t>(m + 1) * delta_d;
+        const std::int64_t surplus = p_parent - p_children;
+        std::cout << "    p=" << position << " sizes=(";
+        for (std::size_t i = 0; i < sizes.size(); ++i) {
+            if (i)
+                std::cout << ",";
+            std::cout << sizes[i];
+        }
+        std::cout << ") dX=" << delta_x << " dD=" << delta_d
+                  << " overhead=" << overhead << " surplus=" << surplus
+                  << " gap=" << surplus - overhead << '\n';
+    }
+}
+
+void dump_split_ledger(const Subset &subset, const std::vector<Vertex> &vertices,
+                       int n, int k, const std::map<State, int> &state_index,
+                       const std::vector<IntVar> &g,
+                       const CpSolverResponse &response) {
+    const int m = n - k;
+    const State parent_state = state_of(subset, vertices, k);
+    const int parent_index = state_index.at(parent_state);
+    const std::int64_t parent_g = SolutionIntegerValue(response, g[parent_index]);
+    const std::int64_t phi_parent = phi_of(subset, vertices, n, k);
+    const std::int64_t p_parent = potential(static_cast<int>(subset.size()), m);
+    std::cout << "  parent G=" << parent_g << " state=";
+    print_state(parent_state);
+    std::cout << " V=";
+    print_subset(subset, vertices);
+    std::cout << '\n';
+    for (int position = 0; position < k; ++position) {
+        const std::vector<Subset> fibers = fibers_of(subset, vertices, position);
+        if (fibers.size() < 2)
+            continue;
+        std::int64_t phi_children = 0;
+        std::int64_t p_children = 0;
+        std::int64_t child_g_sum = 0;
+        std::vector<int> sizes;
+        for (const Subset &fiber : fibers) {
+            phi_children += phi_of(fiber, vertices, n, k);
+            p_children += potential(static_cast<int>(fiber.size()), m);
+            const int child_index = state_index.at(state_of(fiber, vertices, k));
+            child_g_sum += SolutionIntegerValue(response, g[child_index]);
+            sizes.push_back(static_cast<int>(fiber.size()));
+        }
+        std::sort(sizes.begin(), sizes.end());
+        const std::int64_t gap = p_parent - p_children -
+            (phi_parent - phi_children);
+        const std::int64_t rhs = gap + child_g_sum;
+        std::cout << "    p=" << position << " sizes=(";
+        for (std::size_t i = 0; i < sizes.size(); ++i) {
+            if (i)
+                std::cout << ",";
+            std::cout << sizes[i];
+        }
+        std::cout << ") gap=" << gap << " child_G=" << child_g_sum
+                  << " rhs=" << rhs << " slack=" << rhs - parent_g << '\n';
+    }
+}
+
 // ---- Model builders ------------------------------------------------------
 
 // Per-set: one constraint per concrete set (original behavior).
@@ -522,7 +623,8 @@ int main(int argc, char **argv) {
                   << " [--mode=per-set|relaxed-state|exact-menu]"
                   << " [--max-r=R] [--max-sets=N] [--g-cap=N]"
                   << " [--time-limit=SECONDS] [--workers=N]"
-                  << " [--print-positive-g] [--minimize-sum-g]\n";
+                  << " [--print-positive-g] [--minimize-sum-g]"
+                  << " [--dump-positive-menus] [--dump-ledger]\n";
         return 1;
     }
     const int n = std::atoi(argv[1]);
@@ -536,6 +638,8 @@ int main(int argc, char **argv) {
     bool print_positive_g = false;
     bool minimize_sum_g = false;
     bool star_only = false;
+    bool dump_positive_menus = false;
+    bool dump_ledger = false;
     for (int argument = 3; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--mode=", 0) == 0)
@@ -556,6 +660,10 @@ int main(int argc, char **argv) {
             minimize_sum_g = true;
         else if (option == "--star-only")
             star_only = true;
+        else if (option == "--dump-positive-menus")
+            dump_positive_menus = true;
+        else if (option == "--dump-ledger")
+            dump_ledger = true;
         else {
             std::cerr << "Unknown option: " << option << '\n';
             return 1;
@@ -751,6 +859,45 @@ int main(int argc, char **argv) {
             std::cout << "  G=" << value << " state=";
             print_state(states[index]);
             std::cout << '\n';
+        }
+    }
+    if (dump_positive_menus) {
+        std::map<std::pair<int, Menu>, std::size_t> representatives;
+        for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
+            if (choices_by_subset[i].empty())
+                continue;
+            const int parent = parent_states[i];
+            if (SolutionIntegerValue(response, g[parent]) == 0)
+                continue;
+            representatives.try_emplace(
+                std::make_pair(parent, menu_of(choices_by_subset[i])), i);
+        }
+        std::cout << "Positive-G menu representatives: "
+                  << representatives.size() << '\n';
+        for (const auto &[key, index] : representatives) {
+            const int parent = key.first;
+            std::cout << "  G=" << SolutionIntegerValue(response, g[parent])
+                      << " state=";
+            print_state(states[parent]);
+            std::cout << " V=";
+            print_subset(subsets[index], vertices);
+            std::cout << '\n';
+            dump_split_menu(subsets[index], vertices, n, k);
+        }
+    }
+    if (dump_ledger) {
+        std::map<std::pair<int, Menu>, std::size_t> representatives;
+        for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
+            if (!choices_by_subset[i].empty()) {
+                representatives.try_emplace(
+                    std::make_pair(parent_states[i], menu_of(choices_by_subset[i])), i);
+            }
+        }
+        std::cout << "Ledger menu representatives: " << representatives.size() << '\n';
+        for (const auto &[key, index] : representatives) {
+            static_cast<void>(key);
+            dump_split_ledger(subsets[index], vertices, n, k, state_index, g,
+                              response);
         }
     }
     return 0;
