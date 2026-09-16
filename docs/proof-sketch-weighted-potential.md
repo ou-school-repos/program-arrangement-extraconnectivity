@@ -126,7 +126,7 @@ Since vertex compression in A(n,k) fails (Step 1), and transfer from H(k,n) is
 open (Step 3), a direct approach on the root structure of A(n,k) may be more
 tractable.
 
-Define a **root compression** at position p: given two roots r₁ <\_colex r₂, if
+Define a **root compression** at position p: given two roots r₁ <_colex r₂, if
 the r₂-fiber contains more V'-members than the r₁-fiber, move one vertex from
 the r₂-fiber to the r₁-fiber by changing its symbol at position p.
 
@@ -354,10 +354,10 @@ or finding a counterexample to it.
 ### Strategy 2 sketch: Global Lyapunov function on fiber multisets (refuted by LP)
 
 1. **State space.** Let 𝓕(V') be the multiset of nonzero fiber sizes across all
-   k coordinates: 𝓕(V') = ⋃ₚ {|F\_{p,r}| : r ∈ U_p(V')}.
+   k coordinates: 𝓕(V') = ⋃ₚ {|F_{p,r}| : r ∈ U_p(V')}.
 
 2. **Candidate potential.** Since D(V') = Rk − |𝓕(V')|, a natural candidate is
-   Φ(V') = Σₚ Σᵣ f(|F\_{p,r}|) for a convex f (e.g. f = E_seq or f(c) = C(c,2)).
+   Φ(V') = Σₚ Σᵣ f(|F_{p,r}|) for a convex f (e.g. f = E_seq or f(c) = C(c,2)).
    Convexity would make concentrating vertices into fewer, larger fibers — which
    the Hamming ball maximizes — strictly increase Φ.
 
@@ -583,11 +583,11 @@ do the rest — is **false in general**, confirmed by an explicit, fully
 hand-verified counterexample, not merely a case where the crude ΔX bound was too
 generous.
 
-A(5,3) (k=3, m=2), R: 2→3. v=[1,2,3]. V*old={u1,u2} with u1=[1,2,4] (sharing
+A(5,3) (k=3, m=2), R: 2→3. v=[1,2,3]. V_old={u1,u2} with u1=[1,2,4] (sharing
 root (1,2) at p=3 with v, so s=1) and u2=[4,5,3] (sharing no root with v).
 Verified directly via per-coordinate `coord_boundary` computation (not naive
 neighbor-list overlap, which over-counts: two V-members sharing a root both
-border the same external point through the \_same* coordinate, contributing
+border the same external point through the *same* coordinate, contributing
 bd_mult=1, not 2 — this tripped up the first pass of verification and was caught
 and corrected before accepting the result):
 
@@ -604,12 +604,12 @@ and corrected before accepting the result):
 **Implication.** This is not a case the crude `(k-s)m` bound merely
 overestimates — the actual, correctly-computed ΔX genuinely violates the
 per-step target. No tightening of the ΔX bound alone can fix this: the per-step
-inequality is false as stated, for a configuration with verified D*old=0. Any
+inequality is false as stated, for a configuration with verified D_old=0. Any
 repair must abandon step-locality — e.g. an amortized/potential-method argument
 (bank surplus from early steps, spend it on later deficits) rather than
 requiring every step to individually satisfy the marginal bound. Note that
 proving the amortized (cumulative) version directly is a rephrasing of the
-\_original* global claim (the per-step terms telescope back into
+*original* global claim (the per-step terms telescope back into
 X(V')+(m+1)D(V') ≤ C(R)+mE(R)), so this refutation removes the main advantage
 marginal induction offered — reducing an R-vertex claim to a 1-vertex check —
 not just one candidate bound within it.
@@ -624,9 +624,9 @@ for Φ=X+(m+1)D (not just D) was tested and is presently unresolved, with one
 confirmed dead end and one open, concretely-scoped question:
 
 1. **A first "verification" was caught as tautological.** Computing the
-   recombination penalty (X*cross, ΔD_cross) *by subtracting the known fiber
+   recombination penalty (X_cross, ΔD_cross) *by subtracting the known fiber
    totals from the already-computed Φ(V')* makes the identity
-   Φ(V')=ΣΦ(F*α)+penalty hold by construction for any partition of any set —
+   Φ(V')=ΣΦ(F_α)+penalty hold by construction for any partition of any set —
    checking it against the target is circular, since it just restates
    Φ(V')≤target using an answer already in hand. A real test requires bounding
    the penalty from fiber sizes alone, _before_ knowing Φ(V').
@@ -654,8 +654,8 @@ confirmed dead end and one open, concretely-scoped question:
    O(R²) vs O(log R) gap to show up.
 
    **This does not prove Strategy 3b is dead** — it only shows the generic
-   combinatorial upper bounds on X*cross (pairwise count, degree count) are too
-   loose to confirm the inequality at moderate-to-large R. Whether the \_true,
+   combinatorial upper bounds on X_cross (pairwise count, degree count) are too
+   loose to confirm the inequality at moderate-to-large R. Whether the *true,
    tightly-argued* worst-case X_cross for a genuine adversarial fiber pair stays
    down near O(log R) — the way earlier "crude bound achievable but the
    trade-off saves it" patterns played out elsewhere in this document — has not
@@ -664,9 +664,9 @@ confirmed dead end and one open, concretely-scoped question:
    been.
 
 4. **A specific R=20 adversarial construction (k=3) was checked and collapses.**
-   F*a = {(1,y,3): y∈Y}, F_b = {(2,z,3): z∈Z}, |Y|=|Z|=10, Y∩Z=∅. All 100 pairs
+   F_a = {(1,y,3): y∈Y}, F_b = {(2,z,3): z∈Z}, |Y|=|Z|=10, Y∩Z=∅. All 100 pairs
    are genuinely distance-2, but every pair sharing the same z (or same y)
-   generates the \_same* collision target — bd_mult counts distinct coordinates,
+   generates the *same* collision target — bd_mult counts distinct coordinates,
    not pairs, so 100 raw pair-interactions collapse to X_cross=20, comfortably
    under the slack of 63 at m=20. **This collapse is a property of k=3
    specifically, not of A(n,k) in general:** with only one non-p coordinate
@@ -675,11 +675,11 @@ confirmed dead end and one open, concretely-scoped question:
    targets.
 
 5. **A k=5 counter-construction shows the collapse is not universal.** Fix a
-   base tuple over positions 2–5; let F*a={u_i} and F_b={v_i} for i=2..5, where
+   base tuple over positions 2–5; let F_a={u_i} and F_b={v_i} for i=2..5, where
    u_i (resp. v_i) is the base with position i replaced by a fresh symbol α_i
    (resp. β_i), and position 1 fixed to a (resp. b). Only matched pairs
    (u_i,v_i) are distance-2 (mismatched i≠j give distance 3, contributing 0),
-   and each matched pair uses a \_different* q=i, so their targets don't
+   and each matched pair uses a *different* q=i, so their targets don't
    coincide. Hand-checked at k=5, n=14, m=9: 4 valid pairs, X_cross=8, no
    collapse — confirmed distinct from the k=3 collapse case.
 
@@ -913,7 +913,7 @@ section's first draft omitted entirely.
 
 **The corrected per-pair picture has two channels, not one:**
 
-1. **Distance-1 (root-sharing) channel — genuinely m-linear.** If u∈F*a, v∈F_b
+1. **Distance-1 (root-sharing) channel — genuinely m-linear.** If u∈F_a, v∈F_b
    share a root at the partition coordinate p (agree everywhere except p), every
    extension (r, γ) with γ not already used by u or v is a shared external
    neighbor: exactly m+1−|{u_p,v_p}| = m−1 of them (generalizing to c_a,c_b>1
@@ -942,7 +942,7 @@ pairs collide on a target — which is precisely the phenomenon the capacity bou
 needs to control, not a side issue.
 
 **The remaining open problem, precisely, and now correctly scoped:** bound |I| =
-|eb(F*a)∩eb(F_b)| from (c_a, c_b, m) alone, where I is the union of \_both*
+|eb(F_a)∩eb(F_b)| from (c_a, c_b, m) alone, where I is the union of *both*
 channels above, adjusted for their mutual overcounting. This is strictly harder
 than "sum a 0–2 count over distance-2 pairs" — that undercounts (by omitting
 channel 1) and overcounts (by ignoring collisions) at the same time. No such
