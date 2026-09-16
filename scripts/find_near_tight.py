@@ -5,8 +5,14 @@ from __future__ import annotations
 
 from itertools import combinations, permutations
 
-from lib import (boundary_metrics, build_fibers, c_constant, e_seq,
-                 is_connected, neighbors)
+from lib import (
+    boundary_metrics,
+    build_fibers,
+    c_constant,
+    e_seq,
+    is_connected,
+    neighbors,
+)
 
 
 def find_near_tight(n: int, k: int, size: int, max_slack: int = 2) -> None:
