@@ -222,6 +222,7 @@ int main(int argc, char **argv) {
         State state = restart == 0 ? initial : best;
         const double temperature_start = 3.0;
         const double temperature_floor = 0.05;
+        const double temperature_reheat = 0.5 * temperature_start;
         double temperature = temperature_start;
         int accepted = 0;
         for (int step = 0; step < steps; ++step) {
@@ -255,7 +256,7 @@ int main(int argc, char **argv) {
             }
             temperature *= 0.9999;
             if (temperature < temperature_floor)
-                temperature = temperature_start;
+                temperature = temperature_reheat;
             if ((step + 1) % 1'000'000 == 0) {
                 const double elapsed = std::chrono::duration<double>(
                     std::chrono::steady_clock::now() - started).count();
