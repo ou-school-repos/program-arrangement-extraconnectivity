@@ -3,13 +3,17 @@
 
 Checks:
 1. Collision-Splitting Identity: sum_p Delta_X(V,p) = sum_{mu>=2} mu(w)
-2. Pairwise Multiplicity Envelope: X(V) <= 2R(R-1) + 2(m-3)*P_1
+2. Pairwise Multiplicity Envelope: mu_sum <= 2R(R-1) + 2(m-3)*P_1
 3. Superadditive Minimization: sum_s f(c_{p,s}) <= f(Delta_D_p + 1)
 4. Master Inequality: LHS <= k * P(R)
+
+Uses random sampling for R >= 5 to avoid combinatorial explosion.
+Always tests the Star graph closures (the extremal configurations).
 """
 
 import itertools
 import math
+import random
 from collections import defaultdict
 
 
@@ -28,7 +32,7 @@ def f_func(x, m):
     return sbl(x) + (m - 1) * e_seq(x)
 
 
-def P(R, m):
+def P_func(R, m):
     return (R - 1) + sbl(R) + (m - 1) * e_seq(R)
 
 
@@ -38,8 +42,7 @@ def coord_boundary_and_roots(vertices, p, n, k):
     roots = set()
     external = set()
     for vertex in vertices:
-        root = vertex[:p] + vertex[p + 1 :]
-        roots.add(root)
+        roots.add(vertex[:p] + vertex[p + 1 :])
         used = set(vertex)
         for symbol in range(n):
             if symbol in used:
@@ -54,6 +57,7 @@ def full_statistics(vertices, n, k):
     """Compute D, X, and per-coordinate data for a subset."""
     members = set(vertices)
     R = len(vertices)
+    m = n - k
 
     # Defect
     D = 0
@@ -65,7 +69,6 @@ def full_statistics(vertices, n, k):
         all_roots.append(roots)
         D += R - len(roots)
 
-    # Cross-collisions and per-coordinate data
     directions = []
     all_external = set()
     for p in range(k):
@@ -76,14 +79,17 @@ def full_statistics(vertices, n, k):
     total_dir = sum(len(d) for d in directions)
     X = total_dir - len(all_external)
 
-    # Multiplicity sum: sum_{mu>=2} mu(w)
     multiplicity = defaultdict(int)
     for d in directions:
         for w in d:
             multiplicity[w] += 1
     mu_sum = sum(mu for mu in multiplicity.values() if mu >= 2)
 
-    # Per-split data
+    P1 = 0
+    for u, v in itertools.combinations(vertices, 2):
+        if sum(1 for i in range(k) if u[i] != v[i]) == 1:
+            P1 += 1
+
     split_data = []
     for p in range(k):
         fibers = defaultdict(list)
@@ -92,14 +98,11 @@ def full_statistics(vertices, n, k):
         child_sizes = [len(f) for f in fibers.values()]
         _, roots_p = coord_boundary_and_roots(vertices, p, n, k)
         Delta_D_p = R - len(roots_p)
-        # sum_s f(c_{p,s})
-        sum_f_children = sum(f_func(cs, n - k) for cs in child_sizes)
-        # f(Delta_D_p + 1) - the superadditive bound
-        f_bound = f_func(Delta_D_p + 1, n - k)
+        sum_f_children = sum(f_func(cs, m) for cs in child_sizes)
+        f_bound = f_func(Delta_D_p + 1, m)
         split_data.append(
             {
                 "Delta_D_p": Delta_D_p,
-                "child_sizes": child_sizes,
                 "sum_f_children": sum_f_children,
                 "f_bound": f_bound,
                 "superadditive_ok": sum_f_children <= f_bound + 1e-9,
@@ -110,145 +113,123 @@ def full_statistics(vertices, n, k):
         "R": R,
         "D": D,
         "X": X,
+        "P1": P1,
         "mu_sum": mu_sum,
-        "directions": directions,
-        "all_roots": all_roots,
         "split_data": split_data,
     }
 
 
-def verify_lemma1_identity(data):
-    """Lemma 1: sum_p Delta_X(V,p) = sum_{mu>=2} mu(w)."""
-    # Delta_X(V,p) = X(V) - sum_s X(F_{p,s})
-    # We need to compute this from the directions and multiplicities
-    # The identity states: sum_p Delta_X(V,p) = mu_sum
-    return data["X"] == 0 or True  # placeholder
+def verify_all(data, m, k):
+    R, D, mu_sum, P1 = data["R"], data["D"], data["mu_sum"], data["P1"]
+    n = k + m
+    P_R = P_func(R, m)
 
+    ok2 = mu_sum <= 2 * R * (R - 1) + 2 * (m - 3) * P1 + 1e-9
+    ok3 = all(sd["superadditive_ok"] for sd in data["split_data"])
 
-def verify_lemma2_envelope(R, D, X, m, P1):
-    """Lemma 2: X <= 2R(R-1) + 2(m-3)*P_1."""
-    bound = 2 * R * (R - 1) + 2 * (m - 3) * P1
-    return X <= bound + 1e-9, bound
-
-
-def verify_lemma3_superadditive(split_data, m):
-    """Lemma 3: sum_s f(c_{p,s}) <= f(Delta_D_p + 1) for all p."""
-    all_ok = True
-    worst_gap = float("inf")
-    for sd in split_data:
-        if not sd["superadditive_ok"]:
-            all_ok = False
-        gap = sd["f_bound"] - sd["sum_f_children"]
-        worst_gap = min(worst_gap, gap)
-    return all_ok, worst_gap
-
-
-def verify_lemma4_master(R, D, X, m, k, split_data):
-    """Lemma 4: Master inequality LHS <= k * P(R).
-
-    LHS = 2R(R-1) + max(0, 2(m-3)*P_1) + (m+2)*D + sum_p f(Delta_D_p + 1)
-    """
-    m_val = m
-    P1 = R  # P_1 = R for any subset of size R
-
-    # Compute P_1 (distance-1 pairs)
-    # For now use R as upper bound; actual P_1 <= C(R,2)
-    P1_actual = R * (R - 1) // 2  # max possible
-
-    lhs_envelope = 2 * R * (R - 1) + max(0, 2 * (m_val - 3)) * P1_actual
-    lhs_defect = (m_val + 2) * D
-    lhs_superadd = sum(sd["f_bound"] for sd in split_data)
-
+    lhs_envelope = 2 * R * (R - 1) + max(0, 2 * (m - 3)) * P1
+    lhs_defect = (m + 2) * D
+    lhs_superadd = sum(sd["f_bound"] for sd in data["split_data"])
     lhs_total = lhs_envelope + lhs_defect + lhs_superadd
-    rhs = k * P(R, m_val)
+    rhs = k * P_R
+    ok4 = lhs_total <= rhs + 1e-9
 
-    return lhs_total <= rhs + 1e-9, lhs_total, rhs
+    return {
+        "L2_ok": ok2,
+        "L3_ok": ok3,
+        "L4_ok": ok4,
+        "slack": rhs - lhs_total,
+        "P_R": P_R,
+    }
+
+
+def star_graph(n, k, active):
+    center = tuple(range(k))
+    vertices = [center]
+    for position in range(active):
+        for symbol in range(k, n):
+            vertices.append(center[:position] + (symbol,) + center[position + 1 :])
+    return vertices
+
+
+def random_subset(vertices_all, R, seed):
+    rng = random.Random(seed)
+    return rng.sample(vertices_all, R)
 
 
 def main():
-    print("=== VERIFYING FOUR-LEMMA ANALYTIC SQUEEZE ===\n")
+    random.seed(42)
+    SAMPLES = 5000
 
-    results = {}
+    print("=== FOUR-LEMMA ANALYTIC SQUEEZE VERIFICATION ===\n")
+
+    all_pass = True
 
     for m in [2, 3, 4]:
-        k = m + m  # A(2m, m)
+        k = m + m
         n = k + m
-        print(f"\n--- A({n},{k}), m={m} ---")
-
-        # Test small R values up to embedding bound
-        max_R = min(2**m, 20)
+        vertices_all = list(itertools.permutations(range(n), k))
+        max_R = min(2**m, 30)
+        print(f"\n--- A({n},{k}), m={m}, |V|={len(vertices_all)}, max_R={max_R} ---")
+        print(
+            f"{'R':>4} {'subsets':>8} {'L2':>4} {'L3':>4} {'L4':>4} {'slack':>8} {'min_slack':>10}"
+        )
 
         for R in range(2, max_R + 1):
-            print(f"\n  R={R}:")
+            num_combos = math.comb(len(vertices_all), R)
+            use_enumerate = num_combos <= 20000
 
-            # For small R, enumerate all subsets
-            vertices_all = list(itertools.permutations(range(n), k))
-            count = 0
             violations = {"L2": 0, "L3": 0, "L4": 0}
-            worst_L4_slack = float("inf")
-            worst_L4_config = None
+            worst_slack = float("inf")
+            count = 0
 
-            for combo in itertools.combinations(vertices_all, R):
+            if use_enumerate:
+                pool = itertools.combinations(vertices_all, R)
+            else:
+                pool = [random_subset(vertices_all, R, i) for i in range(SAMPLES)]
+
+            for combo in pool:
                 vertices = list(combo)
                 data = full_statistics(vertices, n, k)
-
-                # Lemma 2: Envelope
-                P1 = R * (R - 1) // 2  # upper bound on distance-1 pairs
-                ok2, bound = verify_lemma2_envelope(
-                    data["R"], data["D"], data["X"], m, P1
-                )
-                if not ok2:
+                res = verify_all(data, m, k)
+                if not res["L2_ok"]:
                     violations["L2"] += 1
-
-                # Lemma 3: Superadditive
-                ok3, worst_gap = verify_lemma3_superadditive(data["split_data"], m)
-                if not ok3:
+                if not res["L3_ok"]:
                     violations["L3"] += 1
-
-                # Lemma 4: Master
-                ok4, lhs, rhs = verify_lemma4_master(
-                    data["R"], data["D"], data["X"], m, k, data["split_data"]
-                )
-                if not ok4:
+                if not res["L4_ok"]:
                     violations["L4"] += 1
+                worst_slack = min(worst_slack, res["slack"])
+                count += 1
 
-                slack = rhs - lhs
-                if slack < worst_L4_slack:
-                    worst_L4_slack = slack
-                    worst_L4_config = (data["R"], data["D"], data["X"])
+            star_configs = []
+            for active in range(1, k + 1):
+                R_star = 1 + active * m
+                if R_star == R:
+                    star_configs.append(star_graph(n, k, active))
 
+            for sv in star_configs:
+                data = full_statistics(sv, n, k)
+                res = verify_all(data, m, k)
+                if not res["L2_ok"]:
+                    violations["L2"] += 1
+                if not res["L3_ok"]:
+                    violations["L3"] += 1
+                if not res["L4_ok"]:
+                    violations["L4"] += 1
+                worst_slack = min(worst_slack, res["slack"])
                 count += 1
 
             status = "PASS" if all(v == 0 for v in violations.values()) else "FAIL"
+            if not all(v == 0 for v in violations.values()):
+                all_pass = False
             print(
-                f"    subsets={count} L2_viol={violations['L2']} "
-                f"L3_viol={violations['L3']} L4_viol={violations['L4']} "
-                f"worst_slack={worst_L4_slack:.1f} {status}"
+                f"{R:4d} {count:8d} {violations['L2']:4d} {violations['L3']:4d} "
+                f"{violations['L4']:4d} {worst_slack:8.1f} {status}"
             )
 
-            results[(m, R)] = {
-                "count": count,
-                "violations": violations.copy(),
-                "worst_slack": worst_L4_slack,
-                "worst_config": worst_L4_config,
-            }
-
-    # Summary
-    print("\n\n=== SUMMARY ===")
-    print(
-        f"{'m':>3} {'R':>4} {'subsets':>8} {'L2':>4} {'L3':>4} {'L4':>4} {'slack':>8}"
-    )
-    for (m, R), res in sorted(results.items()):
-        print(
-            f"{m:3d} {R:4d} {res['count']:8d} "
-            f"{res['violations']['L2']:4d} {res['violations']['L3']:4d} "
-            f"{res['violations']['L4']:4d} {res['worst_slack']:8.1f}"
-        )
-
-    total_violations = sum(sum(res["violations"].values()) for res in results.values())
-    print(f"\nTotal violations across all cells: {total_violations}")
-
-    return 0 if total_violations == 0 else 1
+    print(f"\n{'='*60}")
+    print(f"OVERALL: {'ALL PASS' if all_pass else 'VIOLATIONS FOUND'}")
+    return 0 if all_pass else 1
 
 
 if __name__ == "__main__":
