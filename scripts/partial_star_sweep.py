@@ -102,7 +102,7 @@ def trace_spine(label, n, k, m, vertex_sequence):
     return first_cum_negative
 
 
-def partial_star_sequence(n, k, m, full_branches, extra_branch):
+def partial_star_sequence(n, k, full_branches, extra_branch):
     """Yield leaves: full_branches complete branches, then leaves of one more."""
     center = tuple(range(k))
     for position in range(full_branches):
@@ -112,7 +112,7 @@ def partial_star_sequence(n, k, m, full_branches, extra_branch):
         yield center[:extra_branch] + (symbol,) + center[extra_branch + 1 :]
 
 
-def spread_sequence(n, k, m, branch_counts):
+def spread_sequence(k, branch_counts):
     """Yield leaves distributed across branches per branch_counts (round-robin)."""
     center = tuple(range(k))
     remaining = list(branch_counts)
@@ -143,7 +143,7 @@ def main():
     k = b + 2
     n = k + m
 
-    seq = partial_star_sequence(n, k, m, b, b)
+    seq = partial_star_sequence(n, k, b, b)
     trace_spine(
         f"partial-Star: {b} full branches + branch {b+1} leaf-by-leaf", n, k, m, seq
     )
@@ -154,7 +154,7 @@ def main():
     spread_branches = min(k, leftover) if leftover > 0 else 1
     base, extra = divmod(leftover, spread_branches)
     counts = [base + (1 if i < extra else 0) for i in range(spread_branches)]
-    seq2 = spread_sequence(n, k, m, counts)
+    seq2 = spread_sequence(k, counts)
     trace_spine(
         f"non-Star spread across {spread_branches} branches (counts={counts})",
         n,
