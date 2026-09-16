@@ -113,8 +113,37 @@ witnesses are maintained in the accompanying research log.  They provide
 counterexample hunting and structural examples, but do not verify
 Proposition~\ref{prop:restricted_lower_bound} for arbitrary parameters.
 
-Under this formulation, core-guided search on \texttt{a10\_5\_hunt} certifies a
-lower-bound benchmark: every boundary size below $34$ is excluded for volume-26
-subgraphs of $A(10,5)$, advancing the certified front to $34 \le |\partial V| \le 297$
-without closing the gap to the $298$-element hypercube slice or the $297$ target;
-this is an evolving lower-bound record rather than a structural closure.
+\subsection{Exact Boolean model and certified floor}
+
+For $A(10,5)$ the vertex set $V$ has $|V| = 30{,}240$ injective $5$-tuples.  The
+model \texttt{a10\_5\_hunt} introduces per-vertex indicators: $x_v \in \{0,1\}$
+with $x_v = 1$ iff $v \in S$, and $y_v \in \{0,1\}$ recording membership of $v$
+in the external boundary set (exact under minimization).  The constraints
+encode the set-theoretic definition of $\extbd$:
+\begin{align}
+	\sum_{v \in V} x_v &= 26, \label{eq:volume} \\
+	x_v + y_v &\le 1 && \text{for all } v \in V, \label{eq:excl} \\
+	y_v &\ge x_u - x_v && \text{for all } \{u,v\} \in E. \label{eq:bound-indicator}
+\end{align}
+For a fixed $x$, minimizing $\sum_v y_v$ drives $y_v$ to $0$ on selected
+vertices and to $1$ exactly on external neighbors, so \eqref{eq:bound-indicator}
+enforces $y_v = 1$ iff $v \in \extbd(S)$.  The model searches for subsets with
+$\sum_v y_v \le \HuntTarget{}$ --- one below the $\SliceBoundary{}$-sized slice
+witness --- under an imposed cutoff, and proves infeasibility iteratively.
+
+\textbf{Global floor via a symmetry pin.}  A single vertex is pinned into $S$.
+Since $A(10,5)$ is vertex-transitive, every $26$-subset is automorphic to one
+containing the pinned vertex, and automorphisms preserve boundary size: a
+certified floor on the pinned search is a certified floor over all subsets.
+Core-guided conflict analysis has so far excluded every boundary size below
+$\CertFloor{}$, and no feasible witness at or below $\HuntTarget{}$ has been
+found (best = inf); the run archives more than $1.2$ million learned clauses,
+each a localized geometric dead-end of $A(10,5)$.  The certified containment is
+therefore
+\[
+	\CertFloor{} \le \min_{\substack{S \subseteq V\\ |S| = 26}} |\extbd(S)|
+	\le \SliceBoundary{},
+\]
+with $\HuntTarget{}$ a search target rather than an upper bound.  This floor is
+an evolving lower-bound record --- each successive core raises it --- and is
+tracked in the accompanying research log.

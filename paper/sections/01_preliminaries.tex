@@ -55,6 +55,38 @@ $V'$:
 	Its cardinality $|\extbd(V')|$ is the quantity we seek to minimize.
 \end{definition}
 
+\begin{definition}[Canonical Star]\label{def:star}
+Fix an ordering of the $n$ symbols and a coordinate $p$, and anchor that
+coordinate to the smallest symbol.  The \emph{canonical Star} $S_R$ of size $R$
+is the set of the first $R$ injective tuples in lexicographic order over the
+remaining $k-1$ coordinates, the other coordinates being filled from the
+remaining $n-1$ symbols.  Saturating one root at a time, the construction
+maximizes the density of a single coordinate fiber but confines every internal
+adjacency to that one line.
+\end{definition}
+
+\begin{definition}[Binary Hypercube Slice]\label{def:slice}
+Partition the $n$ symbols into $k$ disjoint pairs $P_1,\dots,P_k$ and allow
+coordinate $i$ to draw only from $P_i$.  The $2^k$ resulting injective tuples
+induce a subgraph isomorphic to the Boolean hypercube $Q_k$: two such tuples
+differ in exactly one coordinate precisely when their binary labels have
+Hamming distance $1$.  The \emph{binary slice} $\mathcal{C}_R$ of size $R$ is
+the subgraph induced by the first $R$ of these tuples in binary order.
+\end{definition}
+
+\begin{proposition}[Star--slice crossover at $A(10,5)$]\label{prop:crossover}
+At $A(10,5)$ and $R = 26$,
+\[
+	|\extbd(S_{26})| = \StarBoundary{}, \qquad
+	|\extbd(\mathcal{C}_{26})| = \SliceBoundary{},
+\]
+so the canonical Star is not a boundary-minimizing $26$-element subset.
+\end{proposition}
+
+Both values are the external-boundary cardinalities of fixed induced subgraphs
+and are therefore independent of the vertex ordering; they are obtained by
+direct enumeration of the two vertex sets (Section~\ref{sec:results}).
+
 Under Propositions~\ref{prop:restricted_lower_bound} and~\ref{prop:hb-eval}, the
 boundary-minimizing subset is the \emph{lexicographic Hamming Ball}: the first
 $R$ binary strings $0, 1, \ldots, R-1$, embedded as vertices via their binary

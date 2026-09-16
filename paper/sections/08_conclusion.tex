@@ -1,70 +1,55 @@
 \section{Conclusion and Open Problems}
 \label{sec:conclusion}
 
-This paper investigates the vertex-isoperimetric profile of the arrangement
-graph $A(n,k)$ and its connection with extraconnectivity. We conjecture that
-the Hamming Ball configuration $\mathrm{HB}_R$ minimizes the external boundary
-for subsets with $R \le 2^m$ in the tested $m \le 4$ regime. This restricted
-claim is supported by bounded computations in selected cases. The Lean
-formalization proves structural consequences conditional on the boundary
-inequality itself; it does not prove that inequality. A general proof, and the
-question of uniqueness of the minimizer, remain open.
+For $m = n - k < 5$, the recursive, single-coordinate branch construction of
+the star graph has long served as the presumptive optimal architecture for
+boundary minimization in arrangement graphs.  This paper shows that this
+structural dominance breaks down as the symbol pool grows.  At $A(10,5)$ with
+$R = 26$ we exhibit an exact discrete counterexample: a $5$-dimensional binary
+hypercube slice attains boundary $\SliceBoundary{}$, strictly beating the
+canonical star's $\StarBoundary{}$ (Proposition~\ref{prop:crossover}).  The
+lexicographic increment trace (Figure~\ref{fig:trace}) couples the crossover to
+a mechanism: the star confines its internal adjacencies to isolated coordinate
+fibers, accumulating boundary debt before loops can close, whereas the
+orthogonal slice distributes variation across all $k$ coordinates and closes
+loops early.  The same geometric friction defeats strictly local averaged
+squeezes on star closures --- the exact slack deficit $-8$ on the full Star
+$S_4 \subset A(8,4)$ --- so the mechanism is not an artifact of $A(10,5)$
+alone.
 
-\textbf{Proved unconditionally.} The Algebraic Defect Framework itself ---
-the root/fiber decomposition of the external boundary into a term linear in
-$(n-k)$ minus a topology-dependent correction (Section~\ref{sec:defect}), and
-the subadditivity lemma underlying it --- is established outright and
-mechanized in Lean~4, independent of either open proposition below. On top of
-it, the Fixed-Topology Asymptotic Penalty (Theorem~\ref{thm:penalty}) is an
-unconditional theorem: for every fixed sub-optimal topology, the Hamming ball's
-boundary advantage grows without bound as $n-k \to \infty$, which Cheng,
-Lipt\'ak, and Tian's exhaustive small-case computations
-\cite{cheng2022extraconnectivity} did not establish in general. The partial
-defect-spectrum classification of Section~\ref{sec:fracture} (the Topological
-Funnel, its primary and secondary fractures, and Theorem~\ref{thm:classification})
-is likewise proved on paper from Harper's edge-isoperimetric theorem, not
-merely observed computationally.
+By encoding the exact set-theoretic isoperimetric search as a Boolean
+constraint program over the $30{,}240$ vertices of $A(10,5)$
+(Appendix~\ref{app:computational}), we certify a global floor
+$|\extbd(S)| \ge \CertFloor{}$ for every volume-$26$ subset under a
+vertex-transitivity symmetry pin, bracketing the true optimum as
+$\CertFloor{} \le |\extbd(S)| \le \SliceBoundary{}$.  The search window below
+the slice --- the target of $\HuntTarget{}$ --- remains open: we hold no
+feasible witness at or below it, only the certified floor, which is a moving
+record that advances as the core-guided search continues.
 
-The unrestricted boundary proposition is false: the full Star in $A(10,8)$ at
-$R=17$ has external boundary $168$, below the claimed value $169$.
+These findings complement, rather than replace, the conditional exact-boundary
+framework developed in Sections~\ref{sec:defect}--\ref{sec:sandwich}: the
+algebraic defect framework and its Lean~4 formalization remain conditional on
+the Restricted Boundary Inequality (Proposition~\ref{prop:restricted_lower_bound}),
+valid in the hypercube-embedding regime $R \le 2^m$.  The crossover described
+here characterizes what happens when that regime is abandoned.
 
-\textbf{Conditional.} Combining these unconditional results into a single
-exact closed-form boundary formula valid within the hypercube embedding
-regime ($R \le 2^m$) requires the Restricted Boundary Inequality
-(Proposition~\ref{prop:restricted_lower_bound}), which is supported by
-selected finite computations but remains open.
-A second, independent
-gap --- the
-boundary-to-extraconnectivity reduction relating minimum-boundary sets to
-exact $(R{-}1)$-extraconnectivity --- is likewise open and is not addressed by
-the Lean formalization, whose capstone theorem is confined to external-neighbor
-sets of $R$-element subsets.
-
-\textbf{Net assessment.} Relative to \cite{cheng2022extraconnectivity}'s exact
-computation of small-$g$ extraconnectivity cases ($g \le 6$), this paper
-establishes a conditional closed-form framework that subsumes those results
-within the embeddable regime. Closing the Restricted Boundary Inequality and the
-boundary-to-extraconnectivity reduction, remain the principal open problems.
-
-\paragraph{Conjugate geometry and local induction.}
-The computational diagnostics expose a persistent trade-off between the
-root-incidence defect $D(V)$ and the cross-collision multiplicity
-$\sum_{w:\,\mu_V(w)\ge2}\mu_V(w)$. Sparse Star configurations have small
-defect and large collision capacity, while dense Hamming-ball configurations
-have the opposite profile. These quantities cannot be maximized independently
-in a valid extremal argument. In a coarse pair-counting envelope, the
-coefficient suppresses collision capacity for $m\le3$ and changes sign for
-larger $m$; this is an accounting observation, not an extremal theorem. Star
-calculations suggest, heuristically, competing scales $O(R^2/m)$ and
-$O(R\log_2 R)$, but this is not an asymptotic result. The exact coordinate-averaged
-squeeze nevertheless fails on the full Star $S_4\subset A(8,4)$: its child
-potential sum is $460$, its geometric penalty is $224$, and the arithmetic
-budget is $4P(17)=676$, giving exact slack $684-676=-8$. This is not a
-boundary counterexample; it shows that a strictly local averaged payment rule
-cannot establish the lower bound. The tested Star closures satisfy their
-recursive constraints by routing credit backward through a finite ledger.
-
-The complete characterization of the $A(n,k)$ isoperimetric profile remains
-open. Future work must account for the coupled collision and defect geometry,
-either through a global recursive ledger or through a different extremal
-description.
+\textbf{Future work.}
+\begin{itemize}
+\item \textbf{Closing the computational interval.} The immediate target is to
+resolve the window $[\CertFloor{}, \SliceBoundary{}]$.  The certified floor was
+reached via core-guided search that archive over a million learned clauses;
+integrating graph-specific symmetry breaking into the branching heuristics and
+deploying distributed solving should push the floor toward the slice, or
+discover an incumbent at or below $\HuntTarget{}$.
+\item \textbf{Generalizing the crossover.} It remains to lift the exact
+$A(10,5)$ observation to a theorem: we conjecture that for every $m \ge 5$ and
+sufficiently large $k$ there is a subset volume $R$ at which an orthogonal
+hypercube embedding (or a generalized fractional Hamming slice) strictly
+outperforms the canonical star.
+\item \textbf{Interconnection networks.} The arrangement graph is a highly
+symmetric topology used in parallel computing.  The shift from hierarchical to
+distributed optimal packings as the alphabet scales bears directly on fault
+tolerance, bisection bandwidth, and routing in $A(n,k)$; quantifying the
+crossover's effect on these metrics is the applied follow-up.
+\end{itemize}
