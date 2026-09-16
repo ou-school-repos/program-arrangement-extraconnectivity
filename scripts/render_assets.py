@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
+"""Render generated Graphviz DOT assets to bitmap files."""
+
 import os
 import subprocess
 
+from lib import write_cube_edges, write_graph_header
+
 
 def to_bin(i, d):
+    """Return the d-bit zero-padded binary string for integer i."""
     return bin(i)[2:].zfill(d)
 
 
@@ -16,19 +21,11 @@ def gen_comparison_dot(d, output):
     E_opt = d * (2 ** (d - 1))
     E_max = E_opt - d + 1
 
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         f.write(f"graph Comparison_{d} {{\n")
-        label = f'"Stability Analysis (R={R})' f'\\nOptimal vs Fractured"'
-        f.write(
-            f"  graph [label={label},"
-            f" labelloc=t,"
-            f' fontname="Helvetica-bold",'
-            f" fontsize=20];\n"
-        )
-        f.write(
-            '  node [fontname="Helvetica",'
-            " style=filled, shape=circle,"
-            " width=0.6];\n"
+        label = f'"Stability Analysis (R={R})\\nOptimal vs Fractured"'
+        write_graph_header(
+            f, label, 'fontname="Helvetica", style=filled, shape=circle, width=0.6'
         )
         f.write("  edge [penwidth=1.2];\n")
 
@@ -38,11 +35,7 @@ def gen_comparison_dot(d, output):
         f.write("    color=blue; fontcolor=blue; style=dashed;\n")
         for i in range(R):
             f.write(f'    o{i} [fillcolor=lightblue, label="{to_bin(i, d)}"];\n')
-        for i in range(R):
-            for bit in range(d):
-                j = i ^ (1 << bit)
-                if i < j:
-                    f.write(f"    o{i} -- o{j};\n")
+        write_cube_edges(f, "o", d, R)
         f.write("  }\n")
 
         # Fractured Cluster
@@ -51,19 +44,13 @@ def gen_comparison_dot(d, output):
         f.write("    color=red; fontcolor=red; style=dashed;\n")
         for i in range(R - 1):
             f.write(f'    f{i} [fillcolor=lightpink, label="{to_bin(i, d)}"];\n')
-        for i in range(R - 1):
-            for bit in range(d):
-                j = i ^ (1 << bit)
-                if i < j and j < R - 1:
-                    f.write(f"    f{i} -- f{j};\n")
+        write_cube_edges(f, "f", d, R - 1)
 
         # The Fractured/Splintered Node
         lbl = to_bin(R - 1, d)
-        f.write(f"    f{R-1} [fillcolor=orange," f' label="{lbl}\n(Splintered)"];\n')
+        f.write(f'    f{R - 1} [fillcolor=orange, label="{lbl}\n(Splintered)"];\n')
         f.write(
-            f"    f0 -- f{R-1} [color=red,"
-            f" penwidth=3.0,"
-            f' label="Rigidity\nBreak"];\n'
+            f'    f0 -- f{R - 1} [color=red, penwidth=3.0, label="Rigidity\nBreak"];\n'
         )
         f.write("  }\n")
         f.write("}\n")

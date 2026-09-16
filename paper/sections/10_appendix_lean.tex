@@ -1,0 +1,44 @@
+\section{Formal Verification in Lean 4}\label{app:lean}
+
+The Algebraic Defect Framework and the dimensional scaling bijections are
+mechanically verified in the Lean 4 proof assistant \cite{leanprover}, including
+the subadditivity lemma (\texttt{E\_add\_min\_le}) and the defect bound
+(\texttt{sum\_unique\_roots\_lower\_bound}) underlying Theorem~\ref{thm:defect}.
+The boundary decomposition~\eqref{eq:boundary} and the exact comparative
+identities used in Theorem~\ref{thm:penalty} are likewise mechanized in
+\texttt{Arrangement/PenaltyExact.lean} via \texttt{boundary\_identity},
+\texttt{penalty\_exact}, \texttt{penalty\_defect}, and \texttt{penalty\_ge}; the
+asymptotic-dominance conclusion in the prose is then the immediate large-$(n-k)$
+reading of those exact formulas. The Fracture Gap, Defect Continuity, Secondary
+Fracture Gap, and Partial Defect Classification results of
+Section~\ref{sec:fracture} are proven on paper from Harper's edge-isoperimetric
+theorem but are not yet mechanized. The entire graph theory of $A(n,k)$ is
+formalized from first principles; rather than declaring the unproved bounds as
+global axioms, we express the remaining capstone dependency by parameterizing
+the final exact boundary-minimum theorem with the explicit
+\texttt{RestrictedLowerBound} hypothesis --- a statement about
+\texttt{external\_neighbors} under the hypercube embedding conditions, i.e.
+Theorem~\ref{thm:main}(i)--(ii), not about
+the graph's extraconnectivity metric itself (Section~\ref{sec:defect}'s
+remark and Section~\ref{sec:funnel} discuss why that further reduction is
+independently open). The direct proof supplies
+\texttt{HBCrossCollisions}. This cleanly isolates the classical extremal set
+theory from the novel algebraic machinery
+while ensuring that the compiled theorems are completely transparent, verified,
+and free of raw, uninstantiated axiom commands.
+
+The capstone theorem conditionally combines the supplied restricted lower bound
+with the internally verified Hamming-ball construction. \emph{Note:} In the Lean source, the code
+variables \texttt{E\_seq} and \texttt{C\_constant} correspond to $\Eseq(R)$ and
+$\Cconst(R)$ respectively.
+
+{\small
+\begin{lstlisting}[language={}, breaklines=true]
+theorem arrangement_boundary_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
+    (h_lower : forall (R n k : Nat), RestrictedLowerBound R n k) :
+  (exists V' : Finset (ArrVertex n k), V'.card = R /\
+    external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
+  (forall V' : Finset (ArrVertex n k), V'.card = R ->
+    external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
+\end{lstlisting}
+}

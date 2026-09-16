@@ -7,11 +7,11 @@ Fits log10(T) = a + b*(R-2)*log10(R) to search data.
 """
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
 matplotlib.use("pdf")
-import matplotlib.pyplot as plt  # noqa: E402
 
 # ── Actual measured search times from README.md ──────────────
 search_R = np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -36,16 +36,18 @@ x_model = (search_R - 2) * np.log10(search_R)
 
 
 def linear_model(x, a, b):
+    """Affine model a + b*x, used to fit log10(search time) vs. (R-2)*log10(R)."""
     return a + b * x
 
 
 popt, _ = curve_fit(linear_model, x_model, log_T)
 a_fit, b_fit = popt
-print(f"Search fit: log10(T) = {a_fit:.4f}" f" + {b_fit:.4f} * (R-2)*log10(R)")
+print(f"Search fit: log10(T) = {a_fit:.4f} + {b_fit:.4f} * (R-2)*log10(R)")
 
 
 # ── Best fit predictor: T = c * R^3 * log(R) ────────────────
 def pred_model(r, c):
+    """Model T = c * r^3 * log(r), used to fit predictor wall-clock time vs. R."""
     return c * r**3 * np.log(r)
 
 

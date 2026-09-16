@@ -1,46 +1,88 @@
 # Collision Axiom Formalization Roadmap
 
-The `external_neighbors_collision_bound` axiom in `ArrangementExtraconnectivity.lean`
-asserts that for any R-vertex subset V' of A(n,k):
+The remaining extremal-combinatorics gaps in `ArrangementExtraconnectivity.lean`
+are isolated as explicit hypothesis interfaces (Lean `def ... : Prop` parameters
+to the capstone theorem), not raw global axioms:
 
-```
-|N(V')| ≥ sum_unique_roots(V') · (n-k) - C_constant(R)
-```
+- **`RestrictedLowerBound (R n k : ℕ) : Prop`** — the restricted boundary
+  inequality `external_neighbors V' ≥ (R*k − E_seq R)*(n-k) − C_constant R` for
+  every `R`-element subset `V'`, gated by the hypercube embedding conditions.
+- **`HBCrossCollisions (R n k d : ℕ) ... : Prop`** — the exact evaluation
+  `cross_collisions(HB_R) = C_constant(R) − E_seq(R)` for the explicitly
+  constructed Hamming Ball.
 
-This document describes what a complete mechanized proof would require.
+This document describes what a complete mechanized proof of each would require.
 
 ## Current Status
 
-- **Isolated as explicit Lean hypotheses** in the stable capstone theorem, rather
-  than declared as raw global axioms.
-- **Arithmetic & inductive scaffold for C_constant(R)** lives in
-  `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`. The file now
-  checks standalone, but several unstable binary-reflection/arithmetic
-  placeholders remain explicit `sorry`s while the scaffold is repaired.
-- **Formula values verified** via `predict --verify R` (predict.cpp)
-- **Exhaustive topology search** confirms uniqueness for small R
-- TODO(review): the Kruskal-Katona justification is still a roadmap claim; the
-  support-projection bridge below is not validated and should not be read as a
-  completed proof.
+- **`HBCrossCollisions` is fully closed and unconditionally integrated.**
+  `CrossTop.lean`'s `hb_cross_collisions_closed` proves it for every `R ≥ 1`
+  with no strong induction, no `CrossDimStable`, and no `CrossRecurrence`, and
+  `CrossTop.lean`'s `arrangement_boundary_minimum` /
+  `globally_optimal_growth_strategy` already call
+  `arrangement_extraconnectivity_minimum`'s conditional capstone
+  (`arrangement_boundary_minimum_of_cross`) with `hb_cross_collisions_closed`
+  discharging its `HBCrossCollisions` hypothesis directly. The conditional
+  capstone in `ArrangementExtraconnectivity.lean` is intentionally kept as a
+  general-purpose interface (any future alternate proof of `HBCrossCollisions`
+  can still plug into it); it is not leftover debt. `ProofAudit.lean`
+  mechanically confirms both `hb_cross_collisions_closed` and
+  `arrangement_boundary_minimum` contain zero `sorry` dependencies. This item is
+  done; no further Lean work is queued for it.
+- **Why the driver route was abandoned (kept for research reference only).** The
+  strong induction driver `hb_cross_collisions_of_recurrence` in
+  `CrossCollisionsResearch.lean` reduced `HBCrossCollisions` to three interface
+  lemmas — `CrossBaseOne` and `CrossDimStable` are proven, but the third,
+  `CrossRecurrence`, is genuinely circular as an induction step: its
+  `ext_cube(d,m)` term is not an arithmetic quantity but is **equivalent to**
+  `HBCrossCollisions(m)` itself (the RHS of `CrossRecurrence` is a set
+  cardinality whose evaluation **is** the theorem at the smaller size `m`), so
+  the driver would be handing itself its own conclusion as a hypothesis with
+  nothing new supplied. `CrossTop` supersedes this with a direct, non-recursive
+  closed-form identity and its own combinatorial proof (a vertex is
+  double-counted in the top-heavy ball's boundary iff it is a cube vertex; every
+  top-strip cube vertex has multiplicity ≥ 1 via its "bottom partner"; summing
+  the excess multiplicity reduces to a plain edge-boundary count in one lower
+  dimension). `CrossRecurrence` and its driver are archived to
+  `docs/archive/CrossRecurrenceDriver.lean` for historical reference only; there
+  is nothing left to reconcile.
+- **Formula values verified** via `predict --verify R` (predict.cpp) for
+  `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
+  `arrangement` nauty-based search covers `R ≤ 10`. (This verifies the
+  Hamming-ball formula's internal arithmetic, i.e. `HBCrossCollisions`-shaped
+  values — not the separate, now-refuted `UniversalLowerBound` universal
+  quantifier below.)
+- **`UniversalLowerBound` is refuted as an unrestricted statement.** The
+  full-Star set in `A(10,8)` (R=17) has external boundary 168 against a required
+  169 — see the definition's docstring in `ArrangementExtraconnectivity.lean`
+  and `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure Landscape"
+  section, mapped further by `scripts/sweep_boundary.py`,
+  `scripts/partial_star_sweep.py`, and `scripts/occupancy_sweep.py`. The active
+  capstone hypothesis is now `RestrictedLowerBound`, which gates the boundary
+  inequality under the hypercube embedding conditions. For m ≤ 4, the embedding
+  condition R ≤ 2^m restricts R to a range where the Hamming Ball is optimal
+  (see "Safe Parameter Regime" in proof-sketch-weighted-potential.md). Four
+  further candidate proof mechanisms have been closed by finite counterexamples:
+  edge-gradient charging overcounts collision mass, single-vertex hole-filling
+  does not preserve its slack, the tested guarded Pinto-style dual-compression
+  pair has no admissible non-worsening branch on finite witnesses, and the
+  additive convex fiber-size Lyapunov ansatz `Psi_f(V') = sum_s N_s(V') w_s` is
+  dead — refuted by both LP infeasibility and a closed-form 4-cycle argument
+  (the R=1,2 anchors lock w_1=0, w_2=m+1, giving Psi=4(m+1) < 8m=Phi for every
+  4-cycle when m>=2). These closures do not alter any Lean interface; a global
+  structural approach (submodular analysis of C(R)+mE(R) directly, rather than
+  vertex-by-vertex or fiber-by-fiber construction) remains to be formalized, but
+  any such approach must now target a **restricted** form of the inequality, not
+  the unrestricted one, since the latter is false.
 
 ## Immediate Lean Work Queue
 
-1. Finish the three `HBCrossCollisions` interface lemmas in
-   `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`:
-   `CrossBaseOne`, `CrossDimStable`, and `CrossRecurrence`.
-2. Discharge the remaining explicit `sorry`s in the unstable scaffold:
-   closed-form arithmetic, binary-reflection half lemmas, the recurrence
-   driver, `CrossDimStable`, and `CrossRecurrence`.
-3. Promote the completed `HBCrossCollisions` proof into the stable proof path
-   and remove the corresponding hypothesis parameter from
-   `arrangement_extraconnectivity_minimum`.
-4. TODO(review): delete or relabel the support-projection path; it does not
-   currently attack `UniversalLowerBound` as claimed.
-
-Done mechanically: `CrossCollisionsResearch.lean` now standalone-checks with
-warnings. Started: `CrossBaseOne` now has a local singleton-collision proof in
-`CrossCollisionsResearch.lean`: a singleton has disjoint coordinate-boundary
-pieces, so `total_coord_edges = external_neighbors` and `cross_collisions = 0`.
+1. Define and formalize a **restricted** replacement for `UniversalLowerBound`
+   (see "Current Status" above) once the restricted regime is characterized
+   mathematically -- it is the sole remaining open hypothesis of the capstone.
+   `HBCrossCollisions` requires no further work (done, see above).
+2. The archived recurrence driver remains available for research reference but
+   is not a work-queue item.
 
 ## The Core Equivalence: Collisions ≡ 4-Cycles
 
@@ -49,9 +91,10 @@ if and only if they form a 4-cycle (square) with w and some vertex w'.
 
 **Proof sketch**: If drop_pos(u, p) and drop_pos(v, p) produce the same root r,
 then extending r with the same fresh symbol s at position p yields a single
-neighbor w. But u and v differ at position p (since they're in different fibers),
-so the "collision" w is simultaneously adjacent to both u and v. The fourth
-vertex w' is obtained by swapping the fresh symbol at p in the other direction.
+neighbor w. But u and v differ at position p (since they're in different
+fibers), so the "collision" w is simultaneously adjacent to both u and v. The
+fourth vertex w' is obtained by swapping the fresh symbol at p in the other
+direction.
 
 **Implication**: Counting collisions is exactly counting 4-cycles in the
 subgraph induced by V' ∪ N(V').
@@ -61,36 +104,40 @@ subgraph induced by V' ∪ N(V').
 ### What's needed
 
 The **Kruskal-Katona theorem** states that among all k-element families of
-r-element sets, the initial segment in colex order minimizes the shadow
-(the family of (r-1)-element subsets contained in at least one member).
+r-element sets, the initial segment in colex order minimizes the shadow (the
+family of (r-1)-element subsets contained in at least one member).
 
 ### Mathlib status
 
 - `Mathlib.Combinatorics.SetFamily.Shadow` provides basic shadow definitions
-- The full KK inequality is **not yet in Mathlib**
-- Shadow operators for `Finset (Fin d → Bool)` (bit-vectors) need to be
-  connected to the existing `SetFamily.Shadow` infrastructure
+- `Mathlib.Combinatorics.SetFamily.KruskalKatona` has the full KK inequality for
+  standard set families
+- Connecting that theorem to `A(n,k)`'s ordered, injective-sequence structure is
+  exactly the open problem — see "Current Status" above; a previous attempt at
+  this connection was abandoned (archived).
 
 ### Estimated effort
 
 ~200-300 lines for:
 
 - Colex ordering on `Finset (Fin d → Bool)`
-- KK inequality statement and proof
-- Connection between shadow size and 4-cycle count
+- Connection between shadow size and 4-cycle count, proven correctly (the
+  archived attempt's version of this connection was refuted)
 
 ## Step 2: Hamming Ball Maximizes Squares
 
 ### What's needed
 
-Prove that among all R-element subsets of the d-dimensional hypercube Q_d,
-the initial segment in binary lexicographic order (the Hamming Ball)
-maximizes the number of 4-cycles.
+Prove that among all R-element subsets of the d-dimensional hypercube Q_d, the
+initial segment in binary lexicographic order (the Hamming Ball) maximizes the
+number of 4-cycles.
 
 ### Proof approach
 
-1. Define the "square count" function: `squares(S) = |{(u,v,w) : u,v ∈ S, w ∈ N(S), adj(u,w) ∧ adj(v,w)}|`
-2. Show that square count is monotone under compression (shifting toward the Hamming Ball)
+1. Define the "square count" function:
+   `squares(S) = |{(u,v,w) : u,v ∈ S, w ∈ N(S), adj(u,w) ∧ adj(v,w)}|`
+2. Show that square count is monotone under compression (shifting toward the
+   Hamming Ball)
 3. Apply KK to conclude the Hamming Ball is optimal
 
 ### Estimated effort
@@ -99,52 +146,68 @@ maximizes the number of 4-cycles.
 
 ## Step 3: Transfer to Arrangement Graphs
 
-### What's needed
-
-Show that the permutation constraint (no duplicate symbols) in A(n,k) only
-**removes** edges compared to the full Hamming graph H(k,n). Therefore:
-
-- Any collision bound proven for hypercubes transfers to A(n,k)
-- The arrangement graph can only have **fewer** collisions than the hypercube
-- This means the external boundary is at least as large as the hypercube bound
-
-### Key lemma
-
-```
-A(n,k) ⊆ H(k,n)  as graphs (isometric embedding)
-⟹ squares_A(S) ≤ squares_H(S)  for any S
-⟹ collisions_A(S) ≤ collisions_H(S)
-⟹ |N_A(S)| ≥ |N_H(S)|
-```
-
-TODO(review): the boundary inequality chain is the one the review says is
-directionally invalid; keep this section marked as stale until the lemma is
-rederived or removed.
+The permutation constraint (no duplicate symbols) in A(n,k) should relate
+collision counts in A(n,k) to collision counts in the full Hamming graph H(k,n),
+but the specific inequality chain explored for this was flagged as directionally
+invalid and has been moved to
+`docs/archive/collision-axiom-support-projection-abandoned.md`. This step needs
+to be rederived from scratch, not resumed from the archived version.
 
 ### Estimated effort
 
-~100-150 lines (mostly boilerplate connecting the two graph definitions)
+~100-150 lines (mostly boilerplate connecting the two graph definitions), plus
+whatever it costs to find a valid version of the transfer inequality.
 
 ## Step 4: Deriving C_constant(R)
 
-### Status: COMPLETED (Arithmetic & Inductive Driver)
+### Status: SUPERSEDED (see `CrossTop.lean`, "Current Status" above)
 
-We have formally proved the entire arithmetic and inductive backbone for the $C\_constant(R)$ recurrence in `proofs/Arrangement/unstable/CrossCollisionsResearch.lean`:
+`proofs/Arrangement/unstable/CrossCollisionsResearch.lean` formally proves the
+entire arithmetic and inductive backbone for a **recursive** form of the
+`C_constant(R)` identity:
 
-- Verified the binary reflection arithmetic decompositions of `E_seq` and `sum_bit_length` on the natural numbers, handling all exact subtractions on $\mathbb{N}$ safely without truncation.
-- Formally proved the exact recurrence $C(R) = C(2^{d-1}) + C(m) + ext\_cube(d, m) + m$ where $R = 2^{d-1} + m$ and $0 < m \le 2^{d-1}$.
-- Implemented a complete strong induction driver `hb_cross_collisions_of_recurrence` using `Nat.strong_induction_on` which derives the final target statement `HBCrossCollisions` for all $R \ge 1$ unconditionally, reducing the entire collision axiom to three pure combinatorial interface lemmas:
-  1. `CrossBaseOne` (single-vertex ball has 0 collisions)
-  2. `CrossDimStable` (fresh dimensions don't change the set)
-  3. `CrossRecurrence` (the corrected combinatorial split)
+- Verified the binary reflection arithmetic decompositions of `E_seq` and
+  `sum_bit_length` on the natural numbers, handling all exact subtractions on
+  $\mathbb{N}$ safely without truncation.
+- Formally proved the exact recurrence
+  $C(R) = C(2^{d-1}) + C(m) + ext\_cube(d, m) + m$ where $R = 2^{d-1} + m$ and
+  $0 < m \le 2^{d-1}$.
+- Implemented a complete strong induction driver
+  `hb_cross_collisions_of_recurrence` using `Nat.strong_induction_on` which
+  reduces the final target statement `HBCrossCollisions` for all $R \ge 1$ to
+  three pure combinatorial interface lemmas:
+  1. `CrossBaseOne` (single-vertex ball has 0 collisions) — proven
+  2. `CrossDimStable` (fresh dimensions don't change the set) — proven
+  3. `CrossRecurrence` (the corrected combinatorial split) — genuinely circular
+     as a proof target (see "Current Status"), not merely unfinished
+
+This arithmetic work is not wasted — `E_seq_sum_decomposition`,
+`sum_bit_length_sum_decomposition`, `sum_bit_length_pow`, and
+`E_seq_le_sum_bit_length` are reused directly by `CrossTop.lean`'s closed-form
+route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 ### What remains
 
-Proving the three combinatorial interface lemmas over the definitions of `cross_collisions` and `hamming_ball_subset` to cleanly plug into the proven induction driver.
+Nothing. The direct `CrossTop.lean` route is already wired into the public,
+unconditional capstone (`arrangement_boundary_minimum`,
+`globally_optimal_growth_strategy`), which calls
+`arrangement_extraconnectivity_minimum`'s conditional capstone with
+`hb_cross_collisions_closed` discharging `HBCrossCollisions` directly. The
+recurrence driver and its scaffold obligations are archived and superseded, not
+pending. `UniversalLowerBound` remains the separate, still-open
+universal-boundary obligation (now known false unrestricted; see "Current
+Status" above).
 
 ## Total Remaining Estimated Effort
 
-**~400-650 lines of Lean 4** (with the ~150-line arithmetic and inductive structure of Step 4 now fully completed, leaving only the combinatorial interface logic and the other steps), with potential Mathlib contributions required for the Kruskal-Katona theorem infrastructure.
+**`HBCrossCollisions`**: done. It is discharged unconditionally by
+`CrossTop.lean`'s `hb_cross_collisions_closed` and is no longer a live
+hypothesis of the public, unconditional capstone theorems.
+
+**`RestrictedLowerBound`**: The active capstone hypothesis, gated by the
+hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
+restricts R to a range where the Hamming Ball is optimal (verified
+computationally). The proof for general m remains open.
 
 ## Uniqueness (Open Problem)
 
@@ -153,73 +216,20 @@ external boundary, but does not prove it is the **unique** minimizer.
 
 ### What uniqueness would require
 
-- Show that equality in the defect bound `D(V') = E_seq(|V'|)` forces
-  V' to be isomorphic to a Hamming Ball
-- This is equivalent to showing that E_seq is **strictly** subadditive
-  for non-Hamming-Ball partitions
+- Show that equality in the defect bound `D(V') = E_seq(|V'|)` forces V' to be
+  isomorphic to a Hamming Ball
+- This is equivalent to showing that E_seq is **strictly** subadditive for
+  non-Hamming-Ball partitions
 - The computational search confirms uniqueness for small R (one minimum-cut
   topology class per R); formula values verified via `predict --verify`
-- Formalized as `uniqueness_conjecture` using the full automorphism group
-  S_n × S_k (symbol permutation σ + coordinate permutation τ)
+- Formalized as `uniqueness_conjecture` using the full automorphism group S_n ×
+  S_k (symbol permutation σ + coordinate permutation τ)
 
 ### Why this is hard
 
-Equality cases in Kruskal-Katona are known but technically involved.
-The transfer to arrangement graphs adds another layer of complexity
-because the permutation constraint may create additional minimizers
-in degenerate cases (small n-k).
+Equality cases in Kruskal-Katona are known but technically involved. The
+transfer to arrangement graphs adds another layer of complexity because the
+permutation constraint may create additional minimizers in degenerate cases
+(small n-k).
 
 This remains an open question for future work.
-
-## Future Work: Bypassing Custom Compressions via Boolean Cube Injection
-
-### The Breakthrough: The Boolean Cube Projection Mapping
-
-Previously, it was assumed that formalizing the Kruskal-Katona shadow bounds in $A(n,k)$ would require developing custom, coordinate-aware compression operators on the ordered, injective sequences of $A(n,k)$ from scratch. This was considered a high-barrier task because standard UV-compressions fail to preserve the sequence-level injectivity constraints without complex set-wise conditional guards.
-
-TODO(review): the claimed breakthrough is not validated. The support
-projection is a scaffold, not a completed reduction to Mathlib's KK theorem.
-
-We have discovered a mathematical breakthrough that **bypasses custom sequence compressions entirely** by projecting subsets of $A(n,k)$ directly into the Boolean hypercube, where we can apply Mathlib's standard, built-in Kruskal-Katona theorem (`Mathlib.Combinatorics.SetFamily.KruskalKatona`) **as-is**!
-
-### 1. The Support Projection to k-Subsets
-
-Every vertex $v \in A(n,k)$ is an injective sequence of length $k$ using symbols from $[n]$. The image of $v$ (its set of active symbols) is therefore a subset of $[n]$ of size exactly $k$. We define the support projection $\phi$:
-
-$$\phi(V') = \{ \text{image}(v) \mid v \in V' \} \subseteq \mathcal{P}_k([n])$$
-
-In Lean, for any $V' : \text{Finset } (A(n,k))$, its support projection $\phi(V')$ is a set family of $k$-sets, which satisfies the uniform size constraint:
-`Set.Sized k ↑(\phi V')`
-where `\phi V'` has type `Finset (Finset (Fin n))`.
-
-### 2. Standard Shadows and Arrangement Graph Collisions
-
-Mathlib's standard shadow of $\phi(V')$, denoted $\partial(\phi(V'))$, consists of all $(k-1)$-element subsets obtained by removing one element from a subset in $\phi(V')$.
-
-By definition, our `unique_roots` counts are coordinate-wise projections. The key combinatorial identity linking the two universes is that **arrangement-graph root collisions are directly bounded from above by the hypercube shadow of the projected subset**:
-
-$$\text{sum\_unique\_roots}(V') \le k \cdot |\phi(V')| - |\partial(\phi(V'))|$$
-
-TODO(review): the singleton counterexample flags this inequality as false in its
-current form.
-
-Since the size of the external boundary is inversely proportional to the number of collisions, minimizing the external boundary of $V'$ is mathematically equivalent to maximizing the cardinality of the shadow $|\partial(\phi(V'))|$ for a given subset size.
-
-### 3. Applying Mathlib's Kruskal-Katona As-Is
-
-Because the projected image $\phi(V')$ is a standard family of $k$-sets over a finite universe `Fin n`, we can immediately invoke Mathlib's verified Kruskal-Katona theorem:
-
-```lean
-theorem Finset.kruskal_katona {n r : ℕ} {𝒜 𝒞 : Finset (Finset (Fin n))}
-    (h𝒜r : Set.Sized r ↑𝒜) (h𝒞𝒜 : 𝒞.card ≤ 𝒜.card) (h𝒞 : Colex.IsInitSeg 𝒞 r) :
-     𝒞.shadow.card ≤ 𝒜.shadow.card
-```
-
-This establishes that among all families of $k$-sets of a given size, the shadow is minimized (meaning collisions are maximized) when the family is an initial segment of the colexicographical order:
-
-- TODO(review): the colex correspondence is not established; do not present it
-  as exact until the support projection is repaired.
-- TODO(review): the pullback claim is currently unsupported and should be
-  rewritten as an open direction rather than a proof.
-
-This elegant injection strategy completely eliminates the "factorial trap" and the "set-wise injectivity trap," allowing us to mechanize the complete proof of `lower_bound_all_embeddings` and `external_neighbors_collision_bound` using Mathlib's existing, stable combinatorics infrastructure!

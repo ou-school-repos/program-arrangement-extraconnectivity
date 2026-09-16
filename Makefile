@@ -9,6 +9,9 @@ CXX      = g++
 CXXFLAGS = -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -fopenmp
 LDFLAGS  =
 
+# Machine-local configuration (such as an /opt OR-Tools installation) is
+# supplied by the caller's environment (for example, through direnv/.envrc).
+
 SRC_OPT   = src/arrangement.cpp
 BIN_OPT   = arrangement
 R         ?= 8
@@ -22,7 +25,38 @@ SITE_OUT   = site.zip
 SRC_PRED  = src/predict.cpp
 BIN_PRED  = predict
 
-SRCS      = $(SRC_OPT) $(SRC_PRED)
+SRC_UNIVERSAL = src/universal_lower_bound.cpp
+BIN_UNIVERSAL = universal_check
+
+SRC_SLACK = src/check_amortized_slack.cpp
+BIN_SLACK = check_amortized_slack
+
+SRC_UNIQUENESS = src/check_uniqueness.cpp
+BIN_UNIQUENESS = check_uniqueness
+
+SRC_SWEEP_DEFICIT = src/sweep_deficit.cpp
+BIN_SWEEP_DEFICIT = sweep_deficit
+
+# Optional dependency: this target is deliberately not part of `make build`.
+# Install OR-Tools separately, then override these if its package uses
+# non-standard include/library paths.
+SRC_GHOSTS = src/search_ghosts.cpp
+BIN_GHOSTS = search_ghosts
+SRC_TRIPLES = src/search_triples.cpp
+BIN_TRIPLES = search_triples
+SRC_SINGLE = src/search_single.cpp
+BIN_SINGLE = search_single
+SRC_PROFILE_TELESCOPE = src/profile_telescope_milp.cpp
+BIN_PROFILE_TELESCOPE = profile_telescope_milp
+SRC_A10_RECON = scripts/a10_5_recon.cpp
+BIN_A10_RECON = a10_5_recon
+SRC_A10_HUNT = scripts/a10_5_hunt.cpp
+BIN_A10_HUNT = a10_5_hunt
+ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
+ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
+ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
+
+SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK) $(SRC_UNIQUENESS) $(SRC_SWEEP_DEFICIT)
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
@@ -93,7 +127,19 @@ endef
 ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 .PHONY: build
-build: $(BIN_OPT) $(BIN_PRED)	##H @Build Compile all binaries
+build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE)	##H @Build Compile all binaries
+
+.PHONY: $(BIN_A10_RECON)
+$(BIN_A10_RECON): $(SRC_A10_RECON)
+	@$(call print_info,Building $@)
+	$(CXX) -O3 -std=c++17 -Wall -Wextra -Wpedantic -o $@ $<
+	@$(call print_success,Build complete.)
+
+.PHONY: $(BIN_A10_HUNT)
+$(BIN_A10_HUNT): $(SRC_A10_HUNT)
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) -DOR_PROTO_DLL= -fwrapv $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
 
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
 $(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
@@ -102,6 +148,46 @@ $(BIN_OPT): $(ARRANGEMENT_HDRS)
 $(BIN_OPT) $(BIN_PRED): %: src/%.cpp
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) $(EXTRA_CFLAGS) $(LDFLAGS) -o $@ $< $(EXTRA_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_UNIVERSAL): $(SRC_UNIVERSAL)	##H @Dev Build the all-subsets UniversalLowerBound checker
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_SLACK): $(SRC_SLACK)	##H @Dev Build the amortized-slack critical-case checker (Prop 5.3)
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_UNIQUENESS): $(SRC_UNIQUENESS)	##H @Dev Build the tight-fiber Hamming-ball-uniqueness checker
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_SWEEP_DEFICIT): $(SRC_SWEEP_DEFICIT)	##H @Dev Build the multi-cell worst-margin deficit sweep (Prop 5.3)
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_GHOSTS): $(SRC_GHOSTS)	##H @Dev Build the optional OR-Tools CP-SAT ghost maximizer
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_TRIPLES): $(SRC_TRIPLES)	##H @Dev Build the optional OR-Tools CP-SAT tripartite interface adversary
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_SINGLE): $(SRC_SINGLE)	##H @Dev Build the optional OR-Tools CP-SAT one-fiber defect/collision adversary
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_PROFILE_TELESCOPE): $(SRC_PROFILE_TELESCOPE)	##H @Dev Build the bounded CP-SAT profile-telescope feasibility probe
+	@$(call print_info,Building $@ with OR-Tools)
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
 	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -121,6 +207,7 @@ benchmark: build	##H @Run Benchmark search for R=2..$(R)
 .PHONY: run/predict
 run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
 	./$(BIN_PRED) $(R)
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test
@@ -176,14 +263,25 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	flake8 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 
+.PHONY: pylint
+pylint:	##H @Dev Run pylint only
+	pylint $$(git ls-files '*.py')
+
+.PHONY: mypy
+mypy:	##H @Dev Run mypy only
+	mypy $$(git ls-files '*.py')
+
 .PHONY: format
 format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
 	find . -not -path '*/.lake/*' -name '*.md' -exec sed -i 's/[[:space:]]*$$//' {} +
-	-prettier -w .
+	-prettier -w $$(git ls-files .clang-format '*.json' '.*.y*ml' '*.md')
 	-black $$(git ls-files '*.py')
 	-isort $$(git ls-files '*.py')
+	-ruff format $$(git ls-files '*.py')
+	-ruff check --fix $$(git ls-files '*.py')
 	-pre-commit run --all-files
+	-shfmt -w $$(git ls-files '*.sh')
 	clang-format -i $(SRCS)
 	@$(call print_success,Format complete.)
 
@@ -191,9 +289,6 @@ format:	##H @Dev Format C++ sources (clang-format)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lean 4 Proofs
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-LAKE_HOME ?= $(HOME)/.cache/lake
-export LAKE_HOME
-
 .PHONY: lean
 lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
@@ -225,6 +320,7 @@ lean:	##H @Build Build Lean 4 proofs (proofs/)
 		END { if (in_decl) process_buf(); }' \
 		proofs/Arrangement/*.lean proofs/Arrangement/unstable/*.lean 2>/dev/null || true
 	@printf "\033[1;32m--------------------------------\033[0m\n"
+	cd proofs && lake env lean Arrangement/ProofAudit.lean
 	@$(call print_success,Lean proofs verified.)
 
 .PHONY: cache lean/cache _lean/cache
@@ -313,7 +409,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN_OPT) $(BIN_PRED) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_A10_RECON) $(BIN_A10_HUNT) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
