@@ -23,13 +23,13 @@
 #include "ortools/sat/sat_parameters.pb.h"
 
 namespace {
+using operations_research::Domain;
 using operations_research::sat::BoolVar;
 using operations_research::sat::CpModelBuilder;
 using operations_research::sat::CpSolverResponse;
 using operations_research::sat::CpSolverStatus;
 using operations_research::sat::CpSolverStatus_Name;
 using operations_research::sat::IntVar;
-using operations_research::Domain;
 using operations_research::sat::LinearExpr;
 using operations_research::sat::Model;
 using operations_research::sat::NewSatParameters;
@@ -102,13 +102,14 @@ BoolVar iff_all(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     model.AddBoolOr(negatives).OnlyEnforceIf(Not(result));
     return result;
 }
-}  // namespace
+} // namespace
 
 int main(int argc, char **argv) {
     if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " n k R "
-                  << "[--objective=slack|collision-excess|collisions|local-residual] "
-                  << "[--time-limit=SECONDS] [--no-symmetry-break]\n";
+        std::cerr
+            << "Usage: " << argv[0] << " n k R "
+            << "[--objective=slack|collision-excess|collisions|local-residual] "
+            << "[--time-limit=SECONDS] [--no-symmetry-break]\n";
         return 1;
     }
     const int n = std::atoi(argv[1]);
@@ -137,7 +138,8 @@ int main(int argc, char **argv) {
     if (k < 1 || k > n || size < 1 ||
         (objective != "slack" && objective != "collision-excess" &&
          objective != "collisions" && objective != "local-residual")) {
-        std::cerr << "Require 1 <= k <= n, positive R, and a valid objective.\n";
+        std::cerr
+            << "Require 1 <= k <= n, positive R, and a valid objective.\n";
         return 1;
     }
 
@@ -153,10 +155,12 @@ int main(int argc, char **argv) {
     std::vector<std::vector<int>> adjacency(count);
     for (int id = 0; id < count; ++id) {
         std::vector<int> used(n, 0);
-        for (int symbol : vertices[id]) used[symbol] = 1;
+        for (int symbol : vertices[id])
+            used[symbol] = 1;
         for (int position = 0; position < k; ++position) {
             for (int symbol = 0; symbol < n; ++symbol) {
-                if (used[symbol]) continue;
+                if (used[symbol])
+                    continue;
                 auto neighbor = vertices[id];
                 neighbor[position] = symbol;
                 adjacency[id].push_back(index.at(neighbor));
@@ -172,11 +176,13 @@ int main(int argc, char **argv) {
         sum_members += in_set[id];
     }
     cp.AddEquality(sum_members, size);
-    if (symmetry_break) cp.AddEquality(in_set[0], 1);
+    if (symmetry_break)
+        cp.AddEquality(in_set[0], 1);
 
     for (int id = 0; id < count; ++id) {
         std::vector<BoolVar> adjacent;
-        for (int neighbor : adjacency[id]) adjacent.push_back(in_set[neighbor]);
+        for (int neighbor : adjacency[id])
+            adjacent.push_back(in_set[neighbor]);
         const BoolVar has_neighbor = iff_any(cp, adjacent);
         ext[id] = iff_all(cp, {has_neighbor, Not(in_set[id])});
         boundary += ext[id];
@@ -195,14 +201,16 @@ int main(int argc, char **argv) {
         }
         for (const auto &[root, members] : root_members) {
             std::vector<BoolVar> literals;
-            for (int id : members) literals.push_back(in_set[id]);
+            for (int id : members)
+                literals.push_back(in_set[id]);
             const BoolVar occupied = iff_any(cp, literals);
             occupied_roots += occupied;
             if (position == 0) {
                 coord0_projections.push_back(occupied);
                 std::vector<int> compatible;
                 for (int symbol = 0; symbol < n; ++symbol) {
-                    if (std::find(root.begin(), root.end(), symbol) == root.end())
+                    if (std::find(root.begin(), root.end(), symbol) ==
+                        root.end())
                         compatible.push_back(symbol);
                 }
                 coord0_compatible_symbols.push_back(std::move(compatible));
@@ -216,7 +224,8 @@ int main(int argc, char **argv) {
     const std::int64_t total_slots = static_cast<std::int64_t>(size) * k;
     // X = total coordinate boundary - ordinary external boundary.
     const LinearExpr defect = total_slots - occupied_roots;
-    const LinearExpr collisions = (m + 1) * occupied_roots - total_slots - boundary;
+    const LinearExpr collisions =
+        (m + 1) * occupied_roots - total_slots - boundary;
     const LinearExpr defect_deficit = e - defect;
     const LinearExpr collision_excess = collisions - (m + 1) * defect_deficit;
     const LinearExpr slack = boundary - rhs(n, k, size);
@@ -228,8 +237,10 @@ int main(int argc, char **argv) {
         e_values[slice_size] = e_seq(slice_size);
         c_values[slice_size] = c_constant(slice_size);
     }
-    const std::int64_t max_e = *std::max_element(e_values.begin(), e_values.end());
-    const std::int64_t max_c = *std::max_element(c_values.begin(), c_values.end());
+    const std::int64_t max_e =
+        *std::max_element(e_values.begin(), e_values.end());
+    const std::int64_t max_c =
+        *std::max_element(c_values.begin(), c_values.end());
     std::vector<IntVar> slice_sizes(n), e_by_slice(n), c_by_slice(n);
     std::vector<BoolVar> is_empty(n);
     LinearExpr sum_e0, sum_c0, void0;
@@ -240,11 +251,13 @@ int main(int argc, char **argv) {
         c_by_slice[symbol] = cp.NewIntVar(Domain(0, max_c));
         LinearExpr members_in_slice;
         for (int id = 0; id < count; ++id) {
-            if (vertices[id][0] == symbol) members_in_slice += in_set[id];
+            if (vertices[id][0] == symbol)
+                members_in_slice += in_set[id];
         }
         cp.AddEquality(slice_sizes[symbol], members_in_slice);
         cp.AddEquality(slice_sizes[symbol], 0).OnlyEnforceIf(is_empty[symbol]);
-        cp.AddGreaterThan(slice_sizes[symbol], 0).OnlyEnforceIf(Not(is_empty[symbol]));
+        cp.AddGreaterThan(slice_sizes[symbol], 0)
+            .OnlyEnforceIf(Not(is_empty[symbol]));
         cp.AddElement(slice_sizes[symbol], e_values, e_by_slice[symbol]);
         cp.AddElement(slice_sizes[symbol], c_values, c_by_slice[symbol]);
         sum_e0 += e_by_slice[symbol];
@@ -266,10 +279,14 @@ int main(int argc, char **argv) {
     if (exact_defect_deficit >= 0)
         cp.AddEquality(defect_deficit, exact_defect_deficit);
 
-    if (objective == "slack") cp.Minimize(slack);
-    else if (objective == "collisions") cp.Maximize(collisions);
-    else if (objective == "local-residual") cp.Maximize(local_residual);
-    else cp.Maximize(collision_excess);
+    if (objective == "slack")
+        cp.Minimize(slack);
+    else if (objective == "collisions")
+        cp.Maximize(collisions);
+    else if (objective == "local-residual")
+        cp.Maximize(local_residual);
+    else
+        cp.Maximize(collision_excess);
 
     SatParameters parameters;
     parameters.set_num_search_workers(8);
@@ -284,8 +301,9 @@ int main(int argc, char **argv) {
               << (has_time_limit ? std::to_string(time_limit) + " s" : "none")
               << "; symmetry " << (symmetry_break ? "on" : "off")
               << "; defect deficit "
-              << (exact_defect_deficit >= 0 ? std::to_string(exact_defect_deficit)
-                                            : "unconstrained")
+              << (exact_defect_deficit >= 0
+                      ? std::to_string(exact_defect_deficit)
+                      : "unconstrained")
               << ")...\n";
     const CpSolverResponse response = SolveCpModel(cp.Build(), &model);
     std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
@@ -304,17 +322,19 @@ int main(int argc, char **argv) {
     std::cout << "D(F) = " << d << ", E(R)-D(F) = " << delta_d
               << ", X(F) = " << x << '\n';
     std::cout << "X - (m+1)(E-D) = " << value(collision_excess)
-              << ", compensated ledger = "
-              << (c - e + (m + 1) * delta_d - x) << '\n';
+              << ", compensated ledger = " << (c - e + (m + 1) * delta_d - x)
+              << '\n';
     std::cout << "C(R)-E(R) = " << (c - e)
               << ", target excess = " << (value(collision_excess) - (c - e))
               << '\n';
     if (objective == "local-residual")
-        std::cout << "coordinate-0 local residual = " << value(local_residual) << '\n';
+        std::cout << "coordinate-0 local residual = " << value(local_residual)
+                  << '\n';
 
     std::vector<int> members;
     for (int id = 0; id < count; ++id) {
-        if (SolutionIntegerValue(response, in_set[id])) members.push_back(id);
+        if (SolutionIntegerValue(response, in_set[id]))
+            members.push_back(id);
     }
     std::cout << "Empty-slice immune-slot audit:\n";
     for (int position = 0; position < k; ++position) {
@@ -334,8 +354,8 @@ int main(int argc, char **argv) {
             } else {
                 for (const auto &[projection, unused] : projections) {
                     (void)unused;
-                    if (std::find(projection.begin(), projection.end(), symbol) ==
-                        projection.end()) {
+                    if (std::find(projection.begin(), projection.end(),
+                                  symbol) == projection.end()) {
                         ++void_slots;
                     }
                 }
@@ -345,33 +365,30 @@ int main(int argc, char **argv) {
         }
         const std::int64_t delta_e = e - sum_e;
         const std::int64_t delta_c = c - sum_c;
-        const std::int64_t required_gap =
-            m * size - delta_c - m * delta_e;
+        const std::int64_t required_gap = m * size - delta_c - m * delta_e;
         const std::int64_t void_lower =
             static_cast<std::int64_t>(projections.size()) *
             std::max<std::int64_t>(0, m + 1 - support);
         const std::int64_t nonempty_residual =
             std::max<std::int64_t>(0, required_gap - void_slots);
-        const char *void_status = required_gap <= 0
-                                      ? "vacuous"
-                                      : (void_slots >= required_gap ? "covers" : "no");
-        std::cout << "  coordinate " << position
-                  << ": support=" << support
-                  << ", |pi|=" << projections.size()
-                  << ", void=" << void_slots
-                  << ", lower=" << void_lower
-                  << ", dC=" << delta_c
-                  << ", dE=" << delta_e
-                  << ", required=" << required_gap
+        const char *void_status =
+            required_gap <= 0 ? "vacuous"
+                              : (void_slots >= required_gap ? "covers" : "no");
+        std::cout << "  coordinate " << position << ": support=" << support
+                  << ", |pi|=" << projections.size() << ", void=" << void_slots
+                  << ", lower=" << void_lower << ", dC=" << delta_c
+                  << ", dE=" << delta_e << ", required=" << required_gap
                   << ", void=" << void_status
                   << ", nonempty-residual=" << nonempty_residual << '\n';
     }
     std::cout << "F = {";
     for (const int id : members) {
         std::cout << ' ';
-        for (int symbol : vertices[id]) std::cout << symbol;
+        for (int symbol : vertices[id])
+            std::cout << symbol;
     }
     std::cout << " }\n";
     if (response.status() != CpSolverStatus::OPTIMAL)
-        std::cout << "WARNING: FEASIBLE is an incumbent, not a certified extremum.\n";
+        std::cout
+            << "WARNING: FEASIBLE is an incumbent, not a certified extremum.\n";
 }

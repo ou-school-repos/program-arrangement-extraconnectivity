@@ -158,7 +158,8 @@ std::int64_t choose_bounded(int n, int r, std::int64_t cap) {
     return result;
 }
 
-std::int64_t subset_count_bounded(int vertex_count, int max_r, std::int64_t cap) {
+std::int64_t subset_count_bounded(int vertex_count, int max_r,
+                                  std::int64_t cap) {
     std::int64_t total = 0;
     for (int r = 1; r <= max_r; ++r) {
         const std::int64_t count = choose_bounded(vertex_count, r, cap - total);
@@ -188,8 +189,8 @@ void enumerate_subsets(int vertex_count, int max_r, std::vector<Subset> *out) {
 
 // ---- Geometry ------------------------------------------------------------
 
-State profile_state_of(const Subset &subset, const std::vector<Vertex> &vertices,
-                       int k) {
+State profile_state_of(const Subset &subset,
+                       const std::vector<Vertex> &vertices, int k) {
     State profiles;
     for (int position = 0; position < k; ++position) {
         std::map<int, int> fiber_sizes;
@@ -207,8 +208,9 @@ State profile_state_of(const Subset &subset, const std::vector<Vertex> &vertices
     return profiles;
 }
 
-State pairwise_state_of(const Subset &subset, const std::vector<Vertex> &vertices,
-                        int n, int k, const std::vector<Vertex> &relabelings) {
+State pairwise_state_of(const Subset &subset,
+                        const std::vector<Vertex> &vertices, int n, int k,
+                        const std::vector<Vertex> &relabelings) {
     State best_state;
     bool first = true;
     for (const Vertex &relabel : relabelings) {
@@ -242,8 +244,8 @@ State state_of(const Subset &subset, const std::vector<Vertex> &vertices, int n,
     return pairwise_state_of(subset, vertices, n, k, relabelings);
 }
 
-std::int64_t defect_of(const Subset &subset, const std::vector<Vertex> &vertices,
-                       int k) {
+std::int64_t defect_of(const Subset &subset,
+                       const std::vector<Vertex> &vertices, int k) {
     int roots = 0;
     for (int position = 0; position < k; ++position) {
         std::set<Vertex> seen;
@@ -258,7 +260,8 @@ std::int64_t defect_of(const Subset &subset, const std::vector<Vertex> &vertices
 }
 
 std::int64_t cross_collisions_of(const Subset &subset,
-                                 const std::vector<Vertex> &vertices, int n, int k) {
+                                 const std::vector<Vertex> &vertices, int n,
+                                 int k) {
     std::set<Vertex> members, external;
     for (const int id : subset)
         members.insert(vertices[id]);
@@ -284,15 +287,16 @@ std::int64_t cross_collisions_of(const Subset &subset,
     return directional_total - static_cast<std::int64_t>(external.size());
 }
 
-std::int64_t phi_of(const Subset &subset, const std::vector<Vertex> &vertices, int n,
-                    int k) {
+std::int64_t phi_of(const Subset &subset, const std::vector<Vertex> &vertices,
+                    int n, int k) {
     const int m = n - k;
     return cross_collisions_of(subset, vertices, n, k) +
            static_cast<std::int64_t>(m + 1) * defect_of(subset, vertices, k);
 }
 
-std::vector<Subset> fibers_of(const Subset &subset, const std::vector<Vertex> &vertices,
-                               int position) {
+std::vector<Subset> fibers_of(const Subset &subset,
+                              const std::vector<Vertex> &vertices,
+                              int position) {
     std::map<int, Subset> fibers;
     for (const int id : subset)
         fibers[vertices[id][position]].push_back(id);
@@ -460,7 +464,8 @@ bool parse_state_key(const std::string &text, State *state) {
     return true;
 }
 
-bool load_fixed_g(const std::string &path, std::map<State, std::int64_t> *table) {
+bool load_fixed_g(const std::string &path,
+                  std::map<State, std::int64_t> *table) {
     std::ifstream input(path);
     if (!input) {
         std::cerr << "Could not read G table: " << path << '\n';
@@ -480,7 +485,8 @@ bool load_fixed_g(const std::string &path, std::map<State, std::int64_t> *table)
         }
         State state;
         if (!parse_state_key(line.substr(0, separator), &state)) {
-            std::cerr << "Malformed state on G table line " << line_number << '\n';
+            std::cerr << "Malformed state on G table line " << line_number
+                      << '\n';
             return false;
         }
         try {
@@ -490,7 +496,8 @@ bool load_fixed_g(const std::string &path, std::map<State, std::int64_t> *table)
                 return false;
             }
             if (!table->emplace(std::move(state), value).second) {
-                std::cerr << "Duplicate state on G table line " << line_number << '\n';
+                std::cerr << "Duplicate state on G table line " << line_number
+                          << '\n';
                 return false;
             }
         } catch (const std::exception &) {
@@ -517,10 +524,11 @@ bool export_fixed_g(const std::string &path, const std::vector<State> &states,
     return true;
 }
 
-bool verify_fixed_g(const std::map<State, std::int64_t> &table,
-                    const std::vector<State> &states,
-                    const std::vector<std::vector<Transition>> &choices_by_subset,
-                    const std::vector<int> &parent_states) {
+bool verify_fixed_g(
+    const std::map<State, std::int64_t> &table,
+    const std::vector<State> &states,
+    const std::vector<std::vector<Transition>> &choices_by_subset,
+    const std::vector<int> &parent_states) {
     int missing_states = 0;
     for (const State &state : states) {
         if (!table.count(state))
@@ -588,7 +596,8 @@ void dump_split_menu(const Subset &subset, const std::vector<Vertex> &vertices,
     const std::int64_t d_parent = defect_of(subset, vertices, k);
     const std::int64_t p_parent = potential(static_cast<int>(subset.size()), m);
     for (int position = 0; position < k; ++position) {
-        const std::vector<Subset> fibers = fibers_of(subset, vertices, position);
+        const std::vector<Subset> fibers =
+            fibers_of(subset, vertices, position);
         if (fibers.size() < 2)
             continue;
         std::vector<int> sizes;
@@ -604,8 +613,8 @@ void dump_split_menu(const Subset &subset, const std::vector<Vertex> &vertices,
         std::sort(sizes.begin(), sizes.end());
         const std::int64_t delta_x = x_parent - x_children;
         const std::int64_t delta_d = d_parent - d_children;
-        const std::int64_t overhead = delta_x +
-            static_cast<std::int64_t>(m + 1) * delta_d;
+        const std::int64_t overhead =
+            delta_x + static_cast<std::int64_t>(m + 1) * delta_d;
         const std::int64_t surplus = p_parent - p_children;
         std::cout << "    p=" << position << " sizes=(";
         for (std::size_t i = 0; i < sizes.size(); ++i) {
@@ -619,17 +628,19 @@ void dump_split_menu(const Subset &subset, const std::vector<Vertex> &vertices,
     }
 }
 
-void dump_split_ledger(const Subset &subset, const std::vector<Vertex> &vertices,
-                       int n, int k, const std::map<State, int> &state_index,
+void dump_split_ledger(const Subset &subset,
+                       const std::vector<Vertex> &vertices, int n, int k,
+                       const std::map<State, int> &state_index,
                        const std::vector<IntVar> &g,
                        const CpSolverResponse &response,
                        const std::string &state_kind,
                        const std::vector<Vertex> &relabelings) {
     const int m = n - k;
-    const State parent_state = state_of(
-        subset, vertices, n, k, state_kind, relabelings);
+    const State parent_state =
+        state_of(subset, vertices, n, k, state_kind, relabelings);
     const int parent_index = state_index.at(parent_state);
-    const std::int64_t parent_g = SolutionIntegerValue(response, g[parent_index]);
+    const std::int64_t parent_g =
+        SolutionIntegerValue(response, g[parent_index]);
     const std::int64_t phi_parent = phi_of(subset, vertices, n, k);
     const std::int64_t p_parent = potential(static_cast<int>(subset.size()), m);
     std::cout << "  parent G=" << parent_g << " state=";
@@ -638,7 +649,8 @@ void dump_split_ledger(const Subset &subset, const std::vector<Vertex> &vertices
     print_subset(subset, vertices);
     std::cout << '\n';
     for (int position = 0; position < k; ++position) {
-        const std::vector<Subset> fibers = fibers_of(subset, vertices, position);
+        const std::vector<Subset> fibers =
+            fibers_of(subset, vertices, position);
         if (fibers.size() < 2)
             continue;
         std::int64_t phi_children = 0;
@@ -648,14 +660,14 @@ void dump_split_ledger(const Subset &subset, const std::vector<Vertex> &vertices
         for (const Subset &fiber : fibers) {
             phi_children += phi_of(fiber, vertices, n, k);
             p_children += potential(static_cast<int>(fiber.size()), m);
-            const int child_index = state_index.at(state_of(
-                fiber, vertices, n, k, state_kind, relabelings));
+            const int child_index = state_index.at(
+                state_of(fiber, vertices, n, k, state_kind, relabelings));
             child_g_sum += SolutionIntegerValue(response, g[child_index]);
             sizes.push_back(static_cast<int>(fiber.size()));
         }
         std::sort(sizes.begin(), sizes.end());
-        const std::int64_t gap = p_parent - p_children -
-            (phi_parent - phi_children);
+        const std::int64_t gap =
+            p_parent - p_children - (phi_parent - phi_children);
         const std::int64_t rhs = gap + child_g_sum;
         std::cout << "    p=" << position << " sizes=(";
         for (std::size_t i = 0; i < sizes.size(); ++i) {
@@ -671,8 +683,9 @@ void dump_split_ledger(const Subset &subset, const std::vector<Vertex> &vertices
 // ---- Model builders ------------------------------------------------------
 
 // Per-set: one constraint per concrete set (original behavior).
-void build_per_set(const std::vector<std::vector<Transition>> &choices_by_subset,
-                   CpModelBuilder *model, std::vector<IntVar> *g) {
+void build_per_set(
+    const std::vector<std::vector<Transition>> &choices_by_subset,
+    CpModelBuilder *model, std::vector<IntVar> *g) {
     int constrained_sets = 0;
     int choice_count = 0;
     for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
@@ -690,8 +703,7 @@ void build_per_set(const std::vector<std::vector<Transition>> &choices_by_subset
             LinearExpr children_sum = std::accumulate(
                 t.child_states.begin(), t.child_states.end(), LinearExpr{},
                 [&g](LinearExpr acc, int child) { return acc + (*g)[child]; });
-            model->AddLessOrEqual((*g)[t.parent_state],
-                                  t.gap + children_sum)
+            model->AddLessOrEqual((*g)[t.parent_state], t.gap + children_sum)
                 .OnlyEnforceIf(choose[c]);
             ++choice_count;
         }
@@ -734,8 +746,7 @@ void build_relaxed_state(
             LinearExpr children_sum = std::accumulate(
                 key.child_states.begin(), key.child_states.end(), LinearExpr{},
                 [&g](LinearExpr acc, int child) { return acc + (*g)[child]; });
-            model->AddLessOrEqual((*g)[state_idx],
-                                  key.gap + children_sum)
+            model->AddLessOrEqual((*g)[state_idx], key.gap + children_sum)
                 .OnlyEnforceIf(choose[c]);
             ++c;
             ++choice_count;
@@ -750,8 +761,8 @@ void build_relaxed_state(
 // identical disjunctive constraints, so retaining one is exactly equivalent.
 void build_exact_menu(
     const std::vector<std::vector<Transition>> &choices_by_subset,
-    const std::vector<int> &parent_states,
-    CpModelBuilder *model, std::vector<IntVar> *g) {
+    const std::vector<int> &parent_states, CpModelBuilder *model,
+    std::vector<IntVar> *g) {
 
     struct MenuEntry {
         int parent_state = 0;
@@ -800,8 +811,7 @@ void build_exact_menu(
             LinearExpr children_sum = std::accumulate(
                 t.child_states.begin(), t.child_states.end(), LinearExpr{},
                 [&g](LinearExpr acc, int child) { return acc + (*g)[child]; });
-            model->AddLessOrEqual((*g)[t.parent_state],
-                                  t.gap + children_sum)
+            model->AddLessOrEqual((*g)[t.parent_state], t.gap + children_sum)
                 .OnlyEnforceIf(choose[c]);
             ++choice_count;
         }
@@ -815,14 +825,13 @@ struct SolveResult {
     std::vector<IntVar> g;
 };
 
-SolveResult build_and_solve(
-    const std::string &mode, bool minimize_sum_g,
-    std::int64_t g_cap, int workers, double time_limit,
-    const std::vector<std::vector<Transition>> &choices_by_subset,
-    const std::vector<int> &parent_states,
-    const std::map<State, int> &state_index,
-    int singleton_state,
-    const std::vector<std::int64_t> &pin_state_max) {
+SolveResult
+build_and_solve(const std::string &mode, bool minimize_sum_g,
+                std::int64_t g_cap, int workers, double time_limit,
+                const std::vector<std::vector<Transition>> &choices_by_subset,
+                const std::vector<int> &parent_states,
+                const std::map<State, int> &state_index, int singleton_state,
+                const std::vector<std::int64_t> &pin_state_max) {
     CpModelBuilder model;
     const int num_states = static_cast<int>(state_index.size());
     std::vector<IntVar> g;
@@ -861,7 +870,7 @@ SolveResult build_and_solve(
     return {SolveCpModel(model.Build(), &solver_model), std::move(g)};
 }
 
-}  // namespace
+} // namespace
 
 int main(int argc, char **argv) {
     if (argc < 3) {
@@ -949,7 +958,8 @@ int main(int argc, char **argv) {
     }
     if (n < 1 || k < 1 || k > n || max_r < 1 || max_sets < 1 || g_cap < 0 ||
         time_limit <= 0 || workers < 1) {
-        std::cerr << "Require 1 <= k <= n, positive caps, and positive solver limits.\n";
+        std::cerr << "Require 1 <= k <= n, positive caps, and positive solver "
+                     "limits.\n";
         return 1;
     }
 
@@ -963,9 +973,10 @@ int main(int argc, char **argv) {
         } while (std::next_permutation(relabel.begin(), relabel.end()));
     }
     max_r = std::min(max_r, static_cast<int>(vertices.size()));
-    const std::string run_label = verify_g_path.empty()
-        ? "mode=" + mode + "; state=" + state_kind
-        : "direct fixed-G verification; state=" + state_kind;
+    const std::string run_label =
+        verify_g_path.empty()
+            ? "mode=" + mode + "; state=" + state_kind
+            : "direct fixed-G verification; state=" + state_kind;
 
     std::vector<Subset> subsets;
     if (star_only) {
@@ -976,23 +987,22 @@ int main(int argc, char **argv) {
                       << " for A(" << n << "," << k << ").\n";
             return 1;
         }
-        std::cout << "Star closure of A(" << n << "," << k << ") through R="
-                  << max_r << ": " << subsets.size() << " sets; " << run_label
-                  << "; workers=" << workers
+        std::cout << "Star closure of A(" << n << "," << k
+                  << ") through R=" << max_r << ": " << subsets.size()
+                  << " sets; " << run_label << "; workers=" << workers
                   << ", time limit=" << time_limit << " s.\n";
     } else {
         const std::int64_t estimate = subset_count_bounded(
             static_cast<int>(vertices.size()), max_r, max_sets);
         if (estimate > max_sets) {
             std::cerr << "Refusing to enumerate more than --max-sets="
-                      << max_sets
-                      << " subsets (raise the cap explicitly).\n";
+                      << max_sets << " subsets (raise the cap explicitly).\n";
             return 1;
         }
         std::cout << "Enumerating " << estimate << " subsets of A(" << n << ","
                   << k << ") through R=" << max_r << "; " << run_label
-                  << "; workers=" << workers
-                  << ", time limit=" << time_limit << " s.\n";
+                  << "; workers=" << workers << ", time limit=" << time_limit
+                  << " s.\n";
         subsets.reserve(static_cast<std::size_t>(estimate));
         enumerate_subsets(static_cast<int>(vertices.size()), max_r, &subsets);
     }
@@ -1016,8 +1026,8 @@ int main(int argc, char **argv) {
     const int m = n - k;
     for (const Subset &subset : subsets) {
         std::vector<Transition> choices;
-        const int parent_state = register_state(state_of(
-            subset, vertices, n, k, state_kind, relabelings));
+        const int parent_state = register_state(
+            state_of(subset, vertices, n, k, state_kind, relabelings));
         parent_states.push_back(parent_state);
         if (subset.size() >= 2) {
             const std::int64_t phi_parent = phi_of(subset, vertices, n, k);
@@ -1034,9 +1044,8 @@ int main(int argc, char **argv) {
                 for (const Subset &fiber : fibers) {
                     phi_children += phi_of(fiber, vertices, n, k);
                     p_children += potential(static_cast<int>(fiber.size()), m);
-                    child_states.push_back(
-                        register_state(state_of(
-                            fiber, vertices, n, k, state_kind, relabelings)));
+                    child_states.push_back(register_state(state_of(
+                        fiber, vertices, n, k, state_kind, relabelings)));
                 }
                 choices.push_back(
                     {parent_state,
@@ -1055,9 +1064,9 @@ int main(int argc, char **argv) {
     }
 
     // Stats.
-    const int concrete_sets = static_cast<int>(std::count_if(
-        choices_by_subset.begin(), choices_by_subset.end(),
-        [](const auto &choices) { return !choices.empty(); }));
+    const int concrete_sets = static_cast<int>(
+        std::count_if(choices_by_subset.begin(), choices_by_subset.end(),
+                      [](const auto &choices) { return !choices.empty(); }));
 
     std::cout << "Stats:\n"
               << "  vertices=" << vertices.size() << '\n'
@@ -1067,21 +1076,22 @@ int main(int argc, char **argv) {
               << "  distinct_menus=" << distinct_menus.size() << '\n';
 
     const Subset singleton{0};
-    const int singleton_state = register_state(state_of(
-        singleton, vertices, n, k, state_kind, relabelings));
+    const int singleton_state = register_state(
+        state_of(singleton, vertices, n, k, state_kind, relabelings));
 
     if (!verify_g_path.empty()) {
         std::map<State, std::int64_t> fixed_g;
         if (!load_fixed_g(verify_g_path, &fixed_g))
             return 1;
         return verify_fixed_g(fixed_g, states, choices_by_subset, parent_states)
-            ? 0 : 2;
+                   ? 0
+                   : 2;
     }
 
     // Build CP-SAT model and solve.
     SolveResult baseline = build_and_solve(
-        mode, minimize_sum_g, g_cap, workers, time_limit,
-        choices_by_subset, parent_states, state_index, singleton_state, {});
+        mode, minimize_sum_g, g_cap, workers, time_limit, choices_by_subset,
+        parent_states, state_index, singleton_state, {});
 
     const CpSolverResponse &response = baseline.response;
     std::vector<IntVar> &g = baseline.g;
@@ -1112,7 +1122,8 @@ int main(int argc, char **argv) {
         return SolutionIntegerValue(response, g[left]) >
                SolutionIntegerValue(response, g[right]);
     });
-    for (int rank = 0; rank < std::min(5, static_cast<int>(order.size())); ++rank) {
+    for (int rank = 0; rank < std::min(5, static_cast<int>(order.size()));
+         ++rank) {
         const int index = order[rank];
         std::cout << "  G=" << SolutionIntegerValue(response, g[index])
                   << " state=";
@@ -1166,10 +1177,13 @@ int main(int argc, char **argv) {
         for (std::size_t i = 0; i < choices_by_subset.size(); ++i) {
             if (!choices_by_subset[i].empty()) {
                 representatives.try_emplace(
-                    std::make_pair(parent_states[i], menu_of(choices_by_subset[i])), i);
+                    std::make_pair(parent_states[i],
+                                   menu_of(choices_by_subset[i])),
+                    i);
             }
         }
-        std::cout << "Ledger menu representatives: " << representatives.size() << '\n';
+        std::cout << "Ledger menu representatives: " << representatives.size()
+                  << '\n';
         for (const auto &[key, index] : representatives) {
             static_cast<void>(key);
             dump_split_ledger(subsets[index], vertices, n, k, state_index, g,
@@ -1201,9 +1215,8 @@ int main(int argc, char **argv) {
             std::vector<std::int64_t> pin(states.size(), -1);
             pin[state_idx] = 0;
             SolveResult pinned = build_and_solve(
-                mode, false, g_cap, workers, time_limit,
-                choices_by_subset, parent_states, state_index, singleton_state,
-                pin);
+                mode, false, g_cap, workers, time_limit, choices_by_subset,
+                parent_states, state_index, singleton_state, pin);
             if (is_infeasible(pinned.response)) {
                 std::cout << "    pin G=0: INFEASIBLE\n";
                 // Binary search for minimum feasible G.
@@ -1213,10 +1226,10 @@ int main(int argc, char **argv) {
                     const std::int64_t mid = (lo + hi) / 2;
                     std::vector<std::int64_t> pin_mid(states.size(), -1);
                     pin_mid[state_idx] = mid;
-                    SolveResult trial = build_and_solve(
-                        mode, false, g_cap, workers, time_limit,
-                        choices_by_subset, parent_states, state_index,
-                        singleton_state, pin_mid);
+                    SolveResult trial =
+                        build_and_solve(mode, false, g_cap, workers, time_limit,
+                                        choices_by_subset, parent_states,
+                                        state_index, singleton_state, pin_mid);
                     if (is_feasible(trial.response))
                         hi = mid;
                     else if (is_infeasible(trial.response))
@@ -1229,35 +1242,38 @@ int main(int argc, char **argv) {
                 if (inconclusive)
                     std::cout << "    UNKNOWN (binary search inconclusive)\n";
                 else
-                    std::cout << "    forced_G >= " << lo
-                              << " (baseline was " << base_value << ")\n";
+                    std::cout << "    forced_G >= " << lo << " (baseline was "
+                              << base_value << ")\n";
             } else if (is_feasible(pinned.response)) {
                 std::cout << "    pin G=0: FEASIBLE (movable)\n";
                 // Re-solve with minimize_sum_g to find where credit relocates.
                 SolveResult optimized = build_and_solve(
-                    mode, true, g_cap, workers, time_limit,
-                    choices_by_subset, parent_states, state_index, singleton_state,
-                    pin);
+                    mode, true, g_cap, workers, time_limit, choices_by_subset,
+                    parent_states, state_index, singleton_state, pin);
                 if (is_feasible(optimized.response)) {
                     std::vector<int> opt_order(states.size());
                     std::iota(opt_order.begin(), opt_order.end(), 0);
-                    std::sort(opt_order.begin(), opt_order.end(),
-                        [&](int l, int r) {
-                            return SolutionIntegerValue(optimized.response, optimized.g[l]) >
-                                   SolutionIntegerValue(optimized.response, optimized.g[r]);
+                    std::sort(
+                        opt_order.begin(), opt_order.end(), [&](int l, int r) {
+                            return SolutionIntegerValue(optimized.response,
+                                                        optimized.g[l]) >
+                                   SolutionIntegerValue(optimized.response,
+                                                        optimized.g[r]);
                         });
-                    const char *label = optimized.response.status() == CpSolverStatus::OPTIMAL
-                        ? "relocated assignment (min sum G="
-                        : "relocated assignment (non-optimal, sum G=";
+                    const char *label =
+                        optimized.response.status() == CpSolverStatus::OPTIMAL
+                            ? "relocated assignment (min sum G="
+                            : "relocated assignment (non-optimal, sum G=";
                     bool any_positive = false;
                     for (const int idx : opt_order) {
-                        const std::int64_t val =
-                            SolutionIntegerValue(optimized.response, optimized.g[idx]);
+                        const std::int64_t val = SolutionIntegerValue(
+                            optimized.response, optimized.g[idx]);
                         if (val == 0)
                             break;
                         if (!any_positive) {
                             std::cout << "    " << label
-                                      << optimized.response.objective_value() << "):\n";
+                                      << optimized.response.objective_value()
+                                      << "):\n";
                             any_positive = true;
                         }
                         std::cout << "      G=" << val << " state=";

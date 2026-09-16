@@ -134,7 +134,8 @@ int main(int argc, char **argv) {
     }
     if ((objective != "min_J" && objective != "max_J") || k < 1 || k > n ||
         ca < 1 || cb < 1 || cc < 1) {
-        std::cerr << "Require valid positive sizes and objective min_J or max_J.\n";
+        std::cerr
+            << "Require valid positive sizes and objective min_J or max_J.\n";
         return 1;
     }
 
@@ -216,8 +217,8 @@ int main(int argc, char **argv) {
         boundary_a += ext_a[id];
         boundary_b += ext_b[id];
         boundary_c += ext_c[id];
-        sum_j += ext_a[id] + ext_b[id] + ext_c[id] - ext_ab[id] -
-                 ext_ac[id] - ext_bc[id] + ext_abc[id];
+        sum_j += ext_a[id] + ext_b[id] + ext_c[id] - ext_ab[id] - ext_ac[id] -
+                 ext_bc[id] + ext_abc[id];
     }
     if (tight) {
         cp.AddEquality(boundary_a, rhs(n, k, ca));
@@ -236,8 +237,10 @@ int main(int argc, char **argv) {
     model.Add(NewSatParameters(parameters));
     std::cout << "Building tripartite model for A(" << n << ',' << k << ") "
               << ca << '+' << cb << '+' << cc << " (N=" << count << ")...\n";
-    std::cout << "Searching for " << objective << " (limit " << time_limit_seconds
-              << " s; symmetry on; tight=" << (tight ? "yes" : "no") << ")...\n";
+    std::cout << "Searching for " << objective << " (limit "
+              << time_limit_seconds
+              << " s; symmetry on; tight=" << (tight ? "yes" : "no")
+              << ")...\n";
     const CpSolverResponse response = SolveCpModel(cp.Build(), &model);
     std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
     if (response.status() != CpSolverStatus::OPTIMAL &&
@@ -248,7 +251,8 @@ int main(int argc, char **argv) {
         return SolutionIntegerValue(response, variable);
     };
     std::cout << "J = " << SolutionIntegerValue(response, sum_j) << '\n';
-    const auto print_set = [&](const char *name, const std::vector<BoolVar> &set) {
+    const auto print_set = [&](const char *name,
+                               const std::vector<BoolVar> &set) {
         std::cout << name << " = {";
         for (int id = 0; id < count; ++id) {
             if (!value(set[id]))
@@ -264,18 +268,26 @@ int main(int argc, char **argv) {
     print_set("C", in_c);
     std::cout << "Per-vertex signed boundary signature:\n";
     for (int id = 0; id < count; ++id) {
-        const std::int64_t contribution = value(ext_a[id]) + value(ext_b[id]) +
-            value(ext_c[id]) - value(ext_ab[id]) - value(ext_ac[id]) -
-            value(ext_bc[id]) + value(ext_abc[id]);
-        if (contribution == 0 && !value(in_a[id]) && !value(in_b[id]) && !value(in_c[id]))
+        const std::int64_t contribution =
+            value(ext_a[id]) + value(ext_b[id]) + value(ext_c[id]) -
+            value(ext_ab[id]) - value(ext_ac[id]) - value(ext_bc[id]) +
+            value(ext_abc[id]);
+        if (contribution == 0 && !value(in_a[id]) && !value(in_b[id]) &&
+            !value(in_c[id]))
             continue;
         for (const int symbol : vertices[id])
             std::cout << symbol;
-        std::cout << " in=" << (value(in_a[id]) ? 'A' : value(in_b[id]) ? 'B' : value(in_c[id]) ? 'C' : '-')
-                  << " ext=(" << value(ext_a[id]) << value(ext_b[id]) << value(ext_c[id])
-                  << ';' << value(ext_ab[id]) << value(ext_ac[id]) << value(ext_bc[id])
-                  << ';' << value(ext_abc[id]) << ") J=" << contribution << '\n';
+        std::cout << " in="
+                  << (value(in_a[id])   ? 'A'
+                      : value(in_b[id]) ? 'B'
+                      : value(in_c[id]) ? 'C'
+                                        : '-')
+                  << " ext=(" << value(ext_a[id]) << value(ext_b[id])
+                  << value(ext_c[id]) << ';' << value(ext_ab[id])
+                  << value(ext_ac[id]) << value(ext_bc[id]) << ';'
+                  << value(ext_abc[id]) << ") J=" << contribution << '\n';
     }
     if (response.status() != CpSolverStatus::OPTIMAL)
-        std::cout << "WARNING: FEASIBLE is an incumbent, not a certified extremum.\n";
+        std::cout
+            << "WARNING: FEASIBLE is an incumbent, not a certified extremum.\n";
 }

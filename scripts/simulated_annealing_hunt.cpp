@@ -35,8 +35,8 @@ std::string render(uint64_t vertex) {
     return result;
 }
 
-void enumerate_vertices(std::vector<uint64_t> &vertices, std::vector<int> &prefix,
-                        std::vector<bool> &used) {
+void enumerate_vertices(std::vector<uint64_t> &vertices,
+                        std::vector<int> &prefix, std::vector<bool> &used) {
     if (static_cast<int>(prefix.size()) == K) {
         vertices.push_back(pack(prefix));
         return;
@@ -78,14 +78,13 @@ struct State {
         for (int vertex : initial)
             for (int neighbor : adjacency[vertex])
                 ++counts[neighbor];
-        for (int vertex = 0; vertex < static_cast<int>(adjacency.size()); ++vertex)
+        for (int vertex = 0; vertex < static_cast<int>(adjacency.size());
+             ++vertex)
             refresh_boundary(vertex);
         score = static_cast<int>(boundary_list.size());
     }
 
-    int boundary_size() const {
-        return static_cast<int>(boundary_list.size());
-    }
+    int boundary_size() const { return static_cast<int>(boundary_list.size()); }
 
     int swap_vertices(int outgoing, int incoming) {
         members[outgoing] = false;
@@ -98,11 +97,13 @@ struct State {
         for (int neighbor : adjacency[incoming])
             ++counts[neighbor];
         std::vector<int> changed = adjacency[outgoing];
-        changed.insert(changed.end(), adjacency[incoming].begin(), adjacency[incoming].end());
+        changed.insert(changed.end(), adjacency[incoming].begin(),
+                       adjacency[incoming].end());
         changed.push_back(outgoing);
         changed.push_back(incoming);
         std::sort(changed.begin(), changed.end());
-        changed.erase(std::unique(changed.begin(), changed.end()), changed.end());
+        changed.erase(std::unique(changed.begin(), changed.end()),
+                      changed.end());
         for (int vertex : changed)
             refresh_boundary(vertex);
         score = boundary_size();
@@ -167,7 +168,8 @@ bool connected(const State &state, int start) {
 
 int exact_boundary(const State &state) {
     std::vector<bool> external(state.members.size(), false);
-    for (int vertex = 0; vertex < static_cast<int>(state.members.size()); ++vertex)
+    for (int vertex = 0; vertex < static_cast<int>(state.members.size());
+         ++vertex)
         if (state.members[vertex])
             for (int neighbor : state.adjacency[vertex])
                 if (!state.members[neighbor])
@@ -197,10 +199,13 @@ int main(int argc, char **argv) {
             for (int symbol = 0; symbol < N; ++symbol) {
                 bool present = false;
                 for (int q = 0; q < K; ++q)
-                    present |= static_cast<int>((vertices[i] >> ((K - 1 - q) * 5)) & 0x1F) == symbol;
+                    present |=
+                        static_cast<int>((vertices[i] >> ((K - 1 - q) * 5)) &
+                                         0x1F) == symbol;
                 if (!present)
                     adjacency[i].push_back(index[(vertices[i] & ~mask) |
-                                                 (static_cast<uint64_t>(symbol) << ((K - 1 - p) * 5))]);
+                                                 (static_cast<uint64_t>(symbol)
+                                                  << ((K - 1 - p) * 5))]);
             }
         }
     }
@@ -235,19 +240,23 @@ int main(int argc, char **argv) {
             const int old_score = state.score;
             state.swap_vertices(outgoing, incoming);
             const int delta = state.score - old_score;
-            const bool accept = connected(state, incoming) &&
-                (delta <= 0 || std::uniform_real_distribution<double>(0.0, 1.0)(rng) <
-                 std::exp(-delta / std::max(temperature, 1e-9)));
+            const bool accept =
+                connected(state, incoming) &&
+                (delta <= 0 ||
+                 std::uniform_real_distribution<double>(0.0, 1.0)(rng) <
+                     std::exp(-delta / std::max(temperature, 1e-9)));
             if (accept) {
                 ++accepted;
                 if (state.score < best.score) {
                     best = state;
                     if (best.score != exact_boundary(best)) {
-                        std::cerr << "incremental boundary verification failed\n";
+                        std::cerr
+                            << "incremental boundary verification failed\n";
                         return 2;
                     }
-                    std::cout << "hit boundary=" << best.score << " restart=" << restart
-                              << " step=" << step << "\n";
+                    std::cout << "hit boundary=" << best.score
+                              << " restart=" << restart << " step=" << step
+                              << "\n";
                     if (best.score < 298)
                         goto done;
                 }
@@ -258,23 +267,26 @@ int main(int argc, char **argv) {
             if (temperature < temperature_floor)
                 temperature = temperature_reheat;
             if ((step + 1) % 1'000'000 == 0) {
-                const double elapsed = std::chrono::duration<double>(
-                    std::chrono::steady_clock::now() - started).count();
-                std::cout << "progress restart=" << restart + 1 << "/" << restarts
-                          << " step=" << step + 1 << "/" << steps
+                const double elapsed =
+                    std::chrono::duration<double>(
+                        std::chrono::steady_clock::now() - started)
+                        .count();
+                std::cout << "progress restart=" << restart + 1 << "/"
+                          << restarts << " step=" << step + 1 << "/" << steps
                           << " (" << 100.0 * (step + 1) / steps << "%)"
                           << " best=" << best.score << " accepted=" << accepted
                           << " elapsed=" << elapsed << "s\n";
             }
         }
-        std::cout << "restart=" << restart + 1 << "/" << restarts << " best="
-                  << best.score << " accepted=" << accepted << "\n";
+        std::cout << "restart=" << restart + 1 << "/" << restarts
+                  << " best=" << best.score << " accepted=" << accepted << "\n";
     }
 
 done:
-    std::cout << "best boundary=" << best.score
-              << " connected=" << (connected(best, seed.front()) ? "true" : "false")
-              << " verified=" << (exact_boundary(best) == best.score ? "true" : "false")
+    std::cout << "best boundary=" << best.score << " connected="
+              << (connected(best, seed.front()) ? "true" : "false")
+              << " verified="
+              << (exact_boundary(best) == best.score ? "true" : "false")
               << "\nvertices:\n";
     for (int vertex = 0; vertex < static_cast<int>(vertices.size()); ++vertex)
         if (best.members[vertex])

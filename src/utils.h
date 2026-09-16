@@ -10,7 +10,7 @@
 #include <string>
 
 // ── Formatting helpers ─────────────────────────────────────────────────────
-inline constexpr const char* PRUNE_SEP = "   ";
+inline constexpr const char *PRUNE_SEP = "   ";
 
 /// Format an integer with thousands separators, e.g. 1234567 -> "1,234,567".
 inline std::string fcom(uint64_t n) {
@@ -20,7 +20,8 @@ inline std::string fcom(uint64_t n) {
     return s;
 }
 
-/// Format a non-negative floating-point value with thousands separators and fixed precision.
+/// Format a non-negative floating-point value with thousands separators and
+/// fixed precision.
 inline std::string fcom(double n, int precision = 1) {
     std::ostringstream out;
     out << std::fixed << std::setprecision(precision) << n;
@@ -84,7 +85,8 @@ inline int count_internal_edges(const uint64_t *verts, int n) {
 ///   n:     total number of symbols in the alphabet (graph parameter)
 ///   k:     sequence length (graph parameter, derived from encoding)
 ///   R:     number of vertices in verts[]
-inline int64_t count_external_neighbors(const uint64_t *verts, int n, int r_val) {
+inline int64_t count_external_neighbors(const uint64_t *verts, int n,
+                                        int r_val) {
     (void)verts;
     (void)n;
     (void)r_val;

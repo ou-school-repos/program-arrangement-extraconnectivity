@@ -16,9 +16,9 @@
 #include <string>
 #include <vector>
 
-#include "ortools/sat/cp_model_solver.h"
 #include "ortools/sat/cp_model.h"
 #include "ortools/sat/cp_model.pb.h"
+#include "ortools/sat/cp_model_solver.h"
 #include "ortools/sat/sat_parameters.pb.h"
 
 namespace {
@@ -27,6 +27,7 @@ using operations_research::sat::BoolVar;
 using operations_research::sat::CpModelBuilder;
 using operations_research::sat::CpSolverResponse;
 using operations_research::sat::CpSolverStatus;
+using operations_research::sat::CpSolverStatus_Name;
 using operations_research::sat::LinearExpr;
 using operations_research::sat::Model;
 using operations_research::sat::NewSatParameters;
@@ -34,7 +35,6 @@ using operations_research::sat::Not;
 using operations_research::sat::SatParameters;
 using operations_research::sat::SolutionIntegerValue;
 using operations_research::sat::SolveCpModel;
-using operations_research::sat::CpSolverStatus_Name;
 
 std::int64_t e_seq(int size) {
     std::int64_t total = 0;
@@ -95,8 +95,7 @@ BoolVar iff_any(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     return result;
 }
 
-BoolVar iff_all(CpModelBuilder &model,
-                const std::vector<BoolVar> &literals) {
+BoolVar iff_all(CpModelBuilder &model, const std::vector<BoolVar> &literals) {
     BoolVar result = model.NewBoolVar();
     model.AddBoolAnd(literals).OnlyEnforceIf(result);
     std::vector<BoolVar> negated;
@@ -128,7 +127,8 @@ int main(int argc, char **argv) {
         constexpr const char *kObjective = "--objective=";
         constexpr const char *kTimeLimit = "--time-limit=";
         if (option.rfind(kObjective, 0) == 0) {
-            objective = option.substr(std::char_traits<char>::length(kObjective));
+            objective =
+                option.substr(std::char_traits<char>::length(kObjective));
         } else if (option.rfind(kTimeLimit, 0) == 0) {
             try {
                 time_limit_seconds = std::stod(
@@ -175,9 +175,10 @@ int main(int argc, char **argv) {
         }
     }
 
-    std::cout << "Building CP-SAT model for A(" << n << ',' << k << ") c_a="
-              << ca << " c_b=" << cb << " (N=" << count << "; targets "
-              << rhs(n, k, ca) << ", " << rhs(n, k, cb) << ")...\n";
+    std::cout << "Building CP-SAT model for A(" << n << ',' << k
+              << ") c_a=" << ca << " c_b=" << cb << " (N=" << count
+              << "; targets " << rhs(n, k, ca) << ", " << rhs(n, k, cb)
+              << ")...\n";
     CpModelBuilder cp;
     std::vector<BoolVar> in_a(count), in_b(count), ext_a(count), ext_b(count),
         ghosts(count);
@@ -230,7 +231,9 @@ int main(int argc, char **argv) {
         std::vector<BoolVar> explainers;
         for (const int u : adjacency[target]) {
             for (const int v : adjacency[target]) {
-                if (u == v || std::find(adjacency[u].begin(), adjacency[u].end(), v) == adjacency[u].end())
+                if (u == v ||
+                    std::find(adjacency[u].begin(), adjacency[u].end(), v) ==
+                        adjacency[u].end())
                     continue;
                 explainers.push_back(iff_all(cp, {in_a[u], in_b[v]}));
             }
@@ -249,8 +252,7 @@ int main(int argc, char **argv) {
     } else {
         // total_loss - Delta - S(F_a) - S(F_b)
         cp.Maximize(total_loss - recombination_slack -
-                    (sum_ext_a - rhs(n, k, ca)) -
-                    (sum_ext_b - rhs(n, k, cb)));
+                    (sum_ext_a - rhs(n, k, ca)) - (sum_ext_b - rhs(n, k, cb)));
     }
 
     Model model;
@@ -263,7 +265,8 @@ int main(int argc, char **argv) {
               << (symmetry_break ? "on" : "off") << ")...\n";
     const CpSolverResponse response = SolveCpModel(cp.Build(), &model);
     std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
-    if (response.status() != CpSolverStatus::OPTIMAL && response.status() != CpSolverStatus::FEASIBLE)
+    if (response.status() != CpSolverStatus::OPTIMAL &&
+        response.status() != CpSolverStatus::FEASIBLE)
         return 0;
     std::cout << "objective value = " << response.objective_value() << '\n';
     const auto value_of = [&](const LinearExpr &expression) {
@@ -275,13 +278,13 @@ int main(int argc, char **argv) {
     const std::int64_t t = value_of(sum_ghosts);
     const std::int64_t slack_a = value_of(sum_ext_a) - rhs(n, k, ca);
     const std::int64_t slack_b = value_of(sum_ext_b) - rhs(n, k, cb);
-    std::cout << "I = " << i << ", B_ba = " << b_ba_value << ", B_ab = "
-              << b_ab_value << ", T = " << t << '\n';
+    std::cout << "I = " << i << ", B_ba = " << b_ba_value
+              << ", B_ab = " << b_ab_value << ", T = " << t << '\n';
     std::cout << "loss = " << (i + b_ba_value + b_ab_value)
-              << ", Delta = " << recombination_slack
-              << ", S(F_a) = " << slack_a
+              << ", Delta = " << recombination_slack << ", S(F_a) = " << slack_a
               << ", S(F_b) = " << slack_b << '\n';
-    const auto print_set = [&](const char *name, const std::vector<BoolVar> &set) {
+    const auto print_set = [&](const char *name,
+                               const std::vector<BoolVar> &set) {
         std::cout << name << " = {";
         for (int id = 0; id < count; ++id) {
             if (!SolutionIntegerValue(response, set[id]))
@@ -296,5 +299,6 @@ int main(int argc, char **argv) {
     print_set("F_b", in_b);
     print_set("ghosts", ghosts);
     if (response.status() != CpSolverStatus::OPTIMAL)
-        std::cout << "WARNING: FEASIBLE is an incumbent, not a certified maximum.\n";
+        std::cout
+            << "WARNING: FEASIBLE is an incumbent, not a certified maximum.\n";
 }

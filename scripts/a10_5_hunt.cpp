@@ -31,7 +31,8 @@ int encode(const Vertex &vertex) {
     return code;
 }
 
-void enumerate_vertices(int position, Vertex &vertex, std::array<bool, 10> &used,
+void enumerate_vertices(int position, Vertex &vertex,
+                        std::array<bool, 10> &used,
                         std::vector<Vertex> &vertices) {
     if (position == 5) {
         vertices.push_back(vertex);
@@ -107,8 +108,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    std::cout << "A(10,5): vertices=" << vertices.size()
-              << " directed_edges=";
+    std::cout << "A(10,5): vertices=" << vertices.size() << " directed_edges=";
     std::size_t edge_count = 0;
     for (const auto &neighbors : adjacency)
         edge_count += neighbors.size();
@@ -153,23 +153,25 @@ int main(int argc, char **argv) {
     parameters.set_max_time_in_seconds(time_limit_seconds);
     parameters.set_log_search_progress(true);
     solver.Add(NewSatParameters(parameters));
-    auto boundary_size = [&](const operations_research::sat::CpSolverResponse &response) {
-        std::vector<bool> selected_flags(vertices.size(), false);
-        for (std::size_t id = 0; id < selected.size(); ++id)
-            selected_flags[id] = SolutionBooleanValue(response, selected[id]);
-        std::vector<bool> external(vertices.size(), false);
-        for (std::size_t u = 0; u < adjacency.size(); ++u) {
-            if (!selected_flags[u])
-                continue;
-            for (const int v : adjacency[u])
-                if (!selected_flags[v])
-                    external[v] = true;
-        }
-        int count = 0;
-        for (const bool value : external)
-            count += value;
-        return count;
-    };
+    auto boundary_size =
+        [&](const operations_research::sat::CpSolverResponse &response) {
+            std::vector<bool> selected_flags(vertices.size(), false);
+            for (std::size_t id = 0; id < selected.size(); ++id)
+                selected_flags[id] =
+                    SolutionBooleanValue(response, selected[id]);
+            std::vector<bool> external(vertices.size(), false);
+            for (std::size_t u = 0; u < adjacency.size(); ++u) {
+                if (!selected_flags[u])
+                    continue;
+                for (const int v : adjacency[u])
+                    if (!selected_flags[v])
+                        external[v] = true;
+            }
+            int count = 0;
+            for (const bool value : external)
+                count += value;
+            return count;
+        };
     solver.Add(NewFeasibleSolutionObserver(
         [&](const operations_research::sat::CpSolverResponse &response) {
             const char *temporary = "checkpoint_solution.txt.tmp";

@@ -38,7 +38,8 @@ int encode(const Vertex &vertex) {
     return code;
 }
 
-void enumerate_vertices(int position, Vertex &vertex, std::array<bool, kSymbols> &used,
+void enumerate_vertices(int position, Vertex &vertex,
+                        std::array<bool, kSymbols> &used,
                         std::vector<Vertex> &vertices) {
     if (position == kSize) {
         vertices.push_back(vertex);
@@ -88,7 +89,8 @@ int main(int argc, char **argv) {
         }
     }
     if (floor < 0 || floor > kSliceBoundary) {
-        std::cerr << "lower bound must be between 0 and " << kSliceBoundary << "\n";
+        std::cerr << "lower bound must be between 0 and " << kSliceBoundary
+                  << "\n";
         return 2;
     }
 
@@ -171,12 +173,13 @@ int main(int argc, char **argv) {
         return 2;
     }
     const int roots = (incidence_total + kVolume * kSize) / (kSize + 1);
-    std::cout << "slice |ext|=" << boundary_count << " coord_incidences="
-              << incidence_total << " cross=" << uniqueness << " roots=" << roots
-              << " residual=(" << boundary_count + uniqueness << ")\n";
+    std::cout << "slice |ext|=" << boundary_count
+              << " coord_incidences=" << incidence_total
+              << " cross=" << uniqueness << " roots=" << roots << " residual=("
+              << boundary_count + uniqueness << ")\n";
     for (int position = 0; position < kSize; ++position)
-        std::cout << "  coord " << position << ": external=" << external_count[position]
-                  << "\n";
+        std::cout << "  coord " << position
+                  << ": external=" << external_count[position] << "\n";
     if (floor > 0)
         std::cout << "resuming with proven lower bound >= " << floor << "\n";
 
@@ -271,7 +274,8 @@ int main(int argc, char **argv) {
             for (const int id : line) {
                 x_sum += selected[id];
                 model.AddImplication(selected[id], occupied[l]);
-                model.AddGreaterOrEqual(boundary[id], occupied[l] - selected[id]);
+                model.AddGreaterOrEqual(boundary[id],
+                                        occupied[l] - selected[id]);
             }
             model.AddLessOrEqual(occupied[l], x_sum);
         }

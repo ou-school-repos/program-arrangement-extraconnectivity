@@ -60,12 +60,12 @@ int main() {
                 for (int d = 0; d < 2; ++d)
                     for (int e = 0; e < 2; ++e)
                         if (binary_ball.size() < 26)
-                            binary_ball.push_back(
-                                {pairs[0][a], pairs[1][b], pairs[2][c],
-                                 pairs[3][d], pairs[4][e]});
+                            binary_ball.push_back({pairs[0][a], pairs[1][b],
+                                                   pairs[2][c], pairs[3][d],
+                                                   pairs[4][e]});
 
-    std::cout << "Full Star boundary: "
-              << calculate_boundary(star, n, k) << "\n";
+    std::cout << "Full Star boundary: " << calculate_boundary(star, n, k)
+              << "\n";
     std::cout << "Binary 5D slice boundary: "
               << calculate_boundary(binary_ball, n, k) << "\n";
     return 0;
