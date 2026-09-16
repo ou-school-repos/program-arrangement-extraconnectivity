@@ -222,13 +222,13 @@ int main(int argc, char **argv) {
         std::vector<std::vector<int>> lines;
         lines.reserve(kSize * 5040);
         for (int position = 0; position < kSize; ++position) {
-            std::vector<std::array<int, kSize>> roots;
+            std::vector<std::array<int, kSize>> line_roots;
             std::array<int, kSize> root{};
-            std::array<bool, kSymbols> used{};
+            std::array<bool, kSymbols> root_used_symbols{};
             std::function<void(int, int)> build = [&](int cursor, int depth) {
                 if (cursor == kSize) {
                     if (depth == kSize - 1)
-                        roots.push_back(root);
+                        line_roots.push_back(root);
                     return;
                 }
                 if (cursor == position) {
@@ -236,16 +236,16 @@ int main(int argc, char **argv) {
                     return;
                 }
                 for (int symbol = 0; symbol < kSymbols; ++symbol) {
-                    if (used[symbol])
+                    if (root_used_symbols[symbol])
                         continue;
-                    used[symbol] = true;
+                    root_used_symbols[symbol] = true;
                     root[cursor] = symbol;
                     build(cursor + 1, depth + 1);
-                    used[symbol] = false;
+                    root_used_symbols[symbol] = false;
                 }
             };
             build(0, 0);
-            for (const std::array<int, kSize> &line_root : roots) {
+            for (const std::array<int, kSize> &line_root : line_roots) {
                 std::vector<int> members;
                 members.reserve(kSymbols);
                 std::array<bool, kSymbols> root_used{};

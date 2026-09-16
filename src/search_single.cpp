@@ -338,10 +338,10 @@ int main(int argc, char **argv) {
     }
     std::cout << "Empty-slice immune-slot audit:\n";
     for (int position = 0; position < k; ++position) {
-        std::vector<int> slice_sizes(n, 0);
+        std::vector<int> observed_slice_sizes(n, 0);
         std::map<std::vector<int>, int> projections;
         for (const int id : members) {
-            ++slice_sizes[vertices[id][position]];
+            ++observed_slice_sizes[vertices[id][position]];
             auto projection = vertices[id];
             projection.erase(projection.begin() + position);
             projections.emplace(std::move(projection), 0);
@@ -349,7 +349,7 @@ int main(int argc, char **argv) {
         int support = 0;
         std::int64_t sum_e = 0, sum_c = 0, void_slots = 0;
         for (int symbol = 0; symbol < n; ++symbol) {
-            if (slice_sizes[symbol] != 0) {
+            if (observed_slice_sizes[symbol] != 0) {
                 ++support;
             } else {
                 for (const auto &[projection, unused] : projections) {
@@ -360,8 +360,8 @@ int main(int argc, char **argv) {
                     }
                 }
             }
-            sum_e += e_seq(slice_sizes[symbol]);
-            sum_c += c_constant(slice_sizes[symbol]);
+            sum_e += e_seq(observed_slice_sizes[symbol]);
+            sum_c += c_constant(observed_slice_sizes[symbol]);
         }
         const std::int64_t delta_e = e - sum_e;
         const std::int64_t delta_c = c - sum_c;
