@@ -9,7 +9,7 @@ minimal or forced profile-potential values.
 import argparse
 from collections import defaultdict
 
-from deficit_telescope_probe import run_dp, star_graph
+from deficit_telescope_probe import compute_state, run_dp, star_graph
 
 
 def fiber_closure(seed, k):
@@ -53,12 +53,15 @@ def trace_lineage(n, k, size):
             break
         child = max(children, key=lambda item: (ceilings[item], len(item), item))
         child_sizes = tuple(sorted(len(item) for item in children))
+        state = compute_state(current, k)
+        max_fiber = max(fiber_size for profile in state for fiber_size in profile)
         print(
             f"step={step} R={len(current)} ceiling={ceilings[current]}"
-            f" p={entry['best_p']} gap={entry['gap']}"
+            f" max_fiber={max_fiber} p={entry['best_p']} gap={entry['gap']}"
             f" children={child_sizes} -> next_R={len(child)}"
             f" next_ceiling={ceilings[child]}"
         )
+        print(f"  state={state}")
         current = child
         step += 1
 
