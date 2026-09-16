@@ -129,10 +129,11 @@ std::int64_t choose_bounded(int n, int r, std::int64_t cap) {
     r = std::min(r, n - r);
     std::int64_t result = 1;
     for (int i = 1; i <= r; ++i) {
-        if (result > cap / (n - r + i))
+        const __int128 next =
+            static_cast<__int128>(result) * (n - r + i) / i;
+        if (next > cap)
             return cap + 1;
-        result *= n - r + i;
-        result /= i;
+        result = static_cast<std::int64_t>(next);
     }
     return result;
 }
