@@ -1,5 +1,8 @@
 #include <array>
+#include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
@@ -13,8 +16,10 @@ using operations_research::sat::CpSolverStatus_Name;
 using operations_research::sat::IntVar;
 using operations_research::sat::LinearExpr;
 using operations_research::sat::Model;
+using operations_research::sat::NewFeasibleSolutionObserver;
 using operations_research::sat::NewSatParameters;
 using operations_research::sat::SatParameters;
+using operations_research::sat::SolutionBooleanValue;
 using operations_research::sat::SolveCpModel;
 
 using Vertex = std::array<int, 5>;
@@ -42,11 +47,25 @@ void enumerate_vertices(int position, Vertex &vertex, std::array<bool, 10> &used
     }
 }
 
-int main() {
+int main(int argc, char **argv) {
     constexpr int n = 10;
     constexpr int k = 5;
     constexpr int volume = 26;
     constexpr int cutoff = 297;
+
+    int start_lb = 0;
+    if (argc > 1) {
+        try {
+            start_lb = std::stoi(argv[1]);
+        } catch (const std::exception &) {
+            std::cerr << "usage: " << argv[0] << " [proven-lower-bound]\n";
+            return 2;
+        }
+        if (start_lb < 0 || start_lb > cutoff) {
+            std::cerr << "lower bound must be between 0 and " << cutoff << "\n";
+            return 2;
+        }
+    }
 
     std::vector<Vertex> vertices;
     Vertex vertex{};
@@ -80,6 +99,8 @@ int main() {
     for (const auto &neighbors : adjacency)
         edge_count += neighbors.size();
     std::cout << edge_count << "\n";
+    if (start_lb > 0)
+        std::cout << "resuming with proven lower bound >= " << start_lb << "\n";
 
     CpModelBuilder model;
     std::vector<BoolVar> selected;
@@ -100,6 +121,8 @@ int main() {
         boundary_expr += variable;
     model.AddEquality(volume_expr, volume);
     model.AddLessOrEqual(boundary_expr, cutoff);
+    if (start_lb > 0)
+        model.AddGreaterOrEqual(boundary_expr, start_lb);
     model.Minimize(boundary_expr);
 
     // One pinned vertex is symmetry-safe because A(10,5) is vertex-transitive.
@@ -117,6 +140,24 @@ int main() {
     // No solver time limit: stop externally or when CP-SAT proves the cutoff.
     parameters.set_log_search_progress(true);
     solver.Add(NewSatParameters(parameters));
+    solver.Add(NewFeasibleSolutionObserver(
+        [&](const operations_research::sat::CpSolverResponse &response) {
+            const char *temporary = "checkpoint_solution.txt.tmp";
+            std::ofstream output(temporary);
+            if (!output)
+                return;
+            output << "boundary " << response.objective_value() << '\n';
+            for (std::size_t id = 0; id < selected.size(); ++id) {
+                if (!SolutionBooleanValue(response, selected[id]))
+                    continue;
+                const Vertex &saved = vertices[id];
+                for (int symbol : saved)
+                    output << symbol;
+                output << '\n';
+            }
+            output.close();
+            std::rename(temporary, "checkpoint_solution.txt");
+        }));
     const auto response = SolveCpModel(model.Build(), &solver);
 
     std::cout << "status: " << CpSolverStatus_Name(response.status()) << '\n';
