@@ -129,11 +129,17 @@ std::int64_t choose_bounded(int n, int r, std::int64_t cap) {
     r = std::min(r, n - r);
     std::int64_t result = 1;
     for (int i = 1; i <= r; ++i) {
-        const __int128 next =
-            static_cast<__int128>(result) * (n - r + i) / i;
-        if (next > cap)
+        std::int64_t numerator = n - r + i;
+        std::int64_t denominator = i;
+        const std::int64_t numerator_gcd = std::gcd(numerator, denominator);
+        numerator /= numerator_gcd;
+        denominator /= numerator_gcd;
+        const std::int64_t result_gcd = std::gcd(result, denominator);
+        result /= result_gcd;
+        denominator /= result_gcd;
+        if (denominator != 1 || result > cap / numerator)
             return cap + 1;
-        result = static_cast<std::int64_t>(next);
+        result *= numerator;
     }
     return result;
 }
@@ -431,7 +437,8 @@ int main(int argc, char **argv) {
         std::cerr << "Usage: " << argv[0] << " n k"
                   << " [--mode=per-set|relaxed-state|exact-menu]"
                   << " [--max-r=R] [--max-sets=N] [--g-cap=N]"
-                  << " [--time-limit=SECONDS] [--workers=N]\n";
+                  << " [--time-limit=SECONDS] [--workers=N]"
+                  << " [--print-positive-g] [--minimize-sum-g]\n";
         return 1;
     }
     const int n = std::atoi(argv[1]);
@@ -442,6 +449,8 @@ int main(int argc, char **argv) {
     double time_limit = 30.0;
     int workers = 1;
     std::string mode = "per-set";
+    bool print_positive_g = false;
+    bool minimize_sum_g = false;
     for (int argument = 3; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--mode=", 0) == 0)
@@ -456,6 +465,10 @@ int main(int argc, char **argv) {
             time_limit = std::stod(option.substr(13));
         else if (option.rfind("--workers=", 0) == 0)
             workers = std::stoi(option.substr(10));
+        else if (option == "--print-positive-g")
+            print_positive_g = true;
+        else if (option == "--minimize-sum-g")
+            minimize_sum_g = true;
         else {
             std::cerr << "Unknown option: " << option << '\n';
             return 1;
@@ -567,6 +580,13 @@ int main(int argc, char **argv) {
     const int singleton_state = register_state(state_of(singleton, vertices, k));
     model.AddEquality(g[singleton_state], 0);
 
+    if (minimize_sum_g) {
+        LinearExpr total_g;
+        for (const IntVar &variable : g)
+            total_g += variable;
+        model.Minimize(total_g);
+    }
+
     if (mode == "per-set") {
         std::cout << "Building per-set model:\n";
         build_per_set(choices_by_subset, &model, &g);
@@ -597,6 +617,8 @@ int main(int argc, char **argv) {
             return std::max(acc, SolutionIntegerValue(response, var));
         });
     std::cout << "G range: [0, " << maximum_g << "] (cap " << g_cap << ")\n";
+    if (minimize_sum_g)
+        std::cout << "sum G: " << response.objective_value() << '\n';
     std::cout << "Largest profile states:\n";
     std::vector<int> order(states.size());
     std::iota(order.begin(), order.end(), 0);
@@ -610,6 +632,24 @@ int main(int argc, char **argv) {
                   << " state=";
         print_state(states[index]);
         std::cout << '\n';
+    }
+    if (print_positive_g) {
+        int positive_count = 0;
+        for (const int index : order) {
+            const std::int64_t value = SolutionIntegerValue(response, g[index]);
+            if (value == 0)
+                break;
+            ++positive_count;
+        }
+        std::cout << "Positive-G states: " << positive_count << '\n';
+        for (const int index : order) {
+            const std::int64_t value = SolutionIntegerValue(response, g[index]);
+            if (value == 0)
+                break;
+            std::cout << "  G=" << value << " state=";
+            print_state(states[index]);
+            std::cout << '\n';
+        }
     }
     return 0;
 }
