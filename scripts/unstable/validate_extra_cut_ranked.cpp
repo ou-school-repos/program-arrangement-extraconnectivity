@@ -49,6 +49,34 @@ static void report_progress(std::uint64_t discovered,
               << std::flush;
 }
 
+static bool star_connected(const PackedArrangementGraph &graph,
+                           const std::vector<std::uint64_t> &star) {
+    if (star.empty())
+        return true;
+
+    std::vector<bool> seen(star.size(), false);
+    std::vector<std::size_t> pending{0};
+    seen[0] = true;
+    std::size_t reached = 1;
+    while (!pending.empty()) {
+        const std::uint64_t current = star[pending.back()];
+        pending.pop_back();
+        graph.for_each_neighbor(current, [&](const std::uint64_t neighbor) {
+            const auto match = std::find(star.begin(), star.end(), neighbor);
+            if (match == star.end())
+                return;
+            const std::size_t index =
+                static_cast<std::size_t>(match - star.begin());
+            if (!seen[index]) {
+                seen[index] = true;
+                pending.push_back(index);
+                ++reached;
+            }
+        });
+    }
+    return reached == star.size();
+}
+
 int main(int argc, char **argv) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " n k\n";
@@ -81,6 +109,12 @@ int main(int argc, char **argv) {
                 (static_cast<std::uint64_t>(symbol) << (6 * position)));
         }
     }
+
+    if (!star_connected(graph, star)) {
+        std::cerr << "Error: constructed Star is not connected.\n";
+        return 1;
+    }
+    std::cout << "Subset S connectivity verified.\n";
 
     Bitset visited(graph.valid_count);
     for (const std::uint64_t code : star)
