@@ -81,7 +81,7 @@ Legend:
 |      18 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  /  |
 |      19 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
 |      20 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
-|      21 |  ∘  |  ∘  |  ∘  |  ⊞  |  /  |  /  |  /  |  /  |
+|      21 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
 |      22 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
 |      23 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
 |      24 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
@@ -133,6 +133,7 @@ boundary**, while $|∂H|$ denotes the **Hamming baseline** for volume `R`.
 | `A(18,7)` |   160,392,960 |  6,175,128,960 |    612,220,032 |  78 |  77 |  2,772 |  3,200 | 428 | `7,(7,11)`  |
 | `A(19,7)` |   253,955,520 | 10,666,131,840 |    893,871,739 |  85 |  84 |  3,276 |  3,783 | 507 | `7,(7,12)`  |
 | `A(20,7)` |   390,700,800 | 17,776,886,400 |  1,280,000,000 |  92 |  91 |  3,822 |  4,356 | 534 | `7,(7,13)`  |
+| `A(21,7)` |   586,051,200 | 15,823,382,400 |  1,801,088,541 |  99 |  98 |  4,410 |  4,982 | 572 | `7,(14,7)`  |
 | **k=8**   |               |                |                |     |     |        |        |     |             |
 | `A(14,8)` |   121,080,960 |  2,905,943,040 |  1,475,789,056 |  49 |  48 |  1,176 |  1,423 | 247 | `6,(8,6)`   |
 | `A(15,8)` |   259,459,200 |  7,264,857,600 |  2,562,890,625 |  57 |  56 |  1,568 |  1,903 | 335 | `6,(8,7)`   |
@@ -141,6 +142,58 @@ boundary**, while $|∂H|$ denotes the **Hamming baseline** for volume `R`.
 | `A(18,8)` | 1,764,322,560 | 70,572,902,400 | 11,019,960,576 |  81 |  80 |  3,080 |  3,782 | 702 | `7,(8,10)`  |
 | **k=9**   |               |                |                |     |     |        |        |     |             |
 | `A(15,9)` | 1,816,214,400 | 49,037,788,800 | 38,443,359,375 |  55 |  54 |  1,512 |  1,894 | 382 | `6,(9,6)`   |
+
+## TODOs
+
+For the ranked backend, the best next target is below.
+
+### 1. A(13,10)
+
+- (n^k = 13^{10}=13,785,849,184) — impossible flat
+- (V=13P\_{10}=1,037,836,800)
+- Visited bitset: ~124 MiB
+- Degree: (10(3)=30)
+- Directed neighbor visits: ~31.1 billion
+- Estimated runtime: 10–20 minutes
+
+This is probably the best balance of low memory and useful coverage.
+
+### 2. A(21,7)
+
+- (n^k=1,801,088,541)
+- (V=586,051,200)
+- Visited bitset: ~70 MiB
+- Directed neighbor visits: ~57.4 billion
+- Estimated runtime: 20–30 minutes
+
+Less memory, but more neighbor work.
+
+### 3. A(15,9)
+
+- (V=1,816,214,400)
+- Visited bitset: ~216 MiB
+- Directed neighbor visits: ~98.1 billion
+- Estimated runtime: 25–40 minutes
+
+### 4. A(14,10)
+
+- (V=3,632,428,800)
+- Visited bitset: ~433 MiB
+- Directed neighbor visits: ~145.3 billion
+- Estimated runtime: 40–60 minutes
+
+I would run them in this order:
+
+```bash
+nohup /usr/bin/time -v -o .tmp/A13_k10.time \
+  ./bin/validate_extra_cut_ranked 13 10 \
+  > .tmp/A13_k10.log 2>&1 &
+```
+
+Then A(21,7), followed by A(15,9).
+
+A(19,8) and A(16,9) are substantially riskier because the frontier may exceed 16
+GB even though the rank bitset itself is manageable.
 
 ## New result: `A(16,8)`
 
@@ -243,6 +296,27 @@ valid 54-extra cut: yes
 therefore kappa_54(A(15,9)) <= 1512
 Hamming baseline: 1894; Star boundary: 1512
 Embedding gate: d = 6, k = 9, n-k = 6 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+
+$ ./bin/validate_extra_cut_ranked 21 7
+Building rank-indexed A(21,7)...
+Total valid vertices: 586051200
+Visited bitset: 73256400 bytes
+R = 99
+Candidate g = 98
+Subset S connectivity verified.
+|S| = 99
+|N(S)| = 4410
+Validating 98-extra cut properties...
+BFS progress: 586046691 / 586046691 (100.0%)
+component sizes after deletion:
+  99
+  586046691
+valid 98-extra cut: yes
+therefore kappa_98(A(21,7)) <= 4410
+Hamming baseline: 4982; Star boundary: 4410
+Embedding gate: d = 7, k = 7, n-k = 14 (open)
 HARD COUNTEREXAMPLE: RestrictedLowerBound
 ```
 
