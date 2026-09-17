@@ -93,6 +93,12 @@ paper/archive/
 *.png
 *.pdf
 
+# images
+*.jp*g
+*.gif
+# *.png
+*.webp
+
 ####################
 ## Python Ignores ##
 ####################

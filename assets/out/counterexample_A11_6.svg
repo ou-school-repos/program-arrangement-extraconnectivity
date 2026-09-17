@@ -37,7 +37,7 @@
     <text x="74" y="721" font-size="14">share k−2 = 4 fixed coordinates; the resulting common</text>
     <text x="74" y="742" font-size="14">external neighbors contribute to X (not to internal edge count).</text>
 
-    <rect x="650" y="285" width="450" height="420" fill="none" stroke="black" stroke-width="2"/>
+    <rect x="650" y="275" width="450" height="480" fill="none" stroke="black" stroke-width="2"/>
     <text x="680" y="322" font-size="21" font-weight="bold">Boundary comparison</text>
     <line x1="680" y1="340" x2="1070" y2="340" stroke="black"/>
     <text x="680" y="378" font-size="18">degree · R = kmR = 6·5·31 = 930</text>
