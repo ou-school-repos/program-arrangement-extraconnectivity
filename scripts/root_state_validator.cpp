@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <climits>
 #include <functional>
 #include <iostream>
@@ -314,9 +315,28 @@ void random_test(const Instance &instance) {
               << "): randomized add/remove checks passed\n";
 }
 
+struct SearchProgress {
+    std::chrono::steady_clock::time_point started =
+        std::chrono::steady_clock::now();
+    std::uint64_t next_report = 1'000'000;
+
+    void report(std::uint64_t nodes, int depth, int best) {
+        if (nodes < next_report)
+            return;
+        const double elapsed = std::chrono::duration<double>(
+                                    std::chrono::steady_clock::now() - started)
+                                    .count();
+        const double rate = elapsed > 0.0 ? nodes / elapsed : 0.0;
+        std::cout << "  progress nodes=" << nodes << " depth=" << depth
+                  << " best=" << best << " rate=" << rate << "/s\n"
+                  << std::flush;
+        next_report += 1'000'000;
+    }
+};
+
 void raw_dfs(const Instance &instance, State &state, std::vector<int> &subset,
              int target_size, int &best_boundary, std::uint64_t &nodes_visited,
-             bool use_bound) {
+             bool use_bound, SearchProgress &progress) {
     if (state.selected_count == target_size) {
         best_boundary = std::min(best_boundary, state.boundary_size);
         return;
@@ -330,8 +350,9 @@ void raw_dfs(const Instance &instance, State &state, std::vector<int> &subset,
         state.add(vertex);
         subset.push_back(vertex);
         ++nodes_visited;
+        progress.report(nodes_visited, state.selected_count, best_boundary);
         raw_dfs(instance, state, subset, target_size, best_boundary,
-                nodes_visited, use_bound);
+                nodes_visited, use_bound, progress);
         subset.pop_back();
         state.remove(vertex);
     }
@@ -344,15 +365,17 @@ void compare_dfs_pruning(const Instance &instance, int target_size) {
     std::uint64_t nodes_unpruned = 0;
     State unpruned_state(instance);
     std::vector<int> unpruned_subset;
+    SearchProgress unpruned_progress;
     raw_dfs(instance, unpruned_state, unpruned_subset, target_size,
-            best_unpruned, nodes_unpruned, false);
+            best_unpruned, nodes_unpruned, false, unpruned_progress);
 
     int best_pruned = INT_MAX;
     std::uint64_t nodes_pruned = 0;
     State pruned_state(instance);
     std::vector<int> pruned_subset;
+    SearchProgress pruned_progress;
     raw_dfs(instance, pruned_state, pruned_subset, target_size, best_pruned,
-            nodes_pruned, true);
+            nodes_pruned, true, pruned_progress);
 
     assert(best_unpruned == best_pruned);
     const double reduction =
