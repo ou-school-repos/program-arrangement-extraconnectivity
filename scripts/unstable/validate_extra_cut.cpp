@@ -2,8 +2,9 @@
 //
 // This proves only an upper bound: if the post-deletion component test passes,
 // it establishes kappa_g(A(n,k)) <= |N(S)|. It does not prove optimality.
-// Usage: validate_extra_cut [n k] [--json]
+// Usage: validate_extra_cut [n k] [--json] [--screen]
 // Default output is a concise human-readable report; --json emits strict JSON.
+// `--screen` performs only the arithmetic Star/Hamming comparison.
 
 #include <algorithm>
 #include <array>
@@ -245,15 +246,20 @@ int main(int argc, char **argv) {
     int n = 11;
     int k = 6;
     bool json_output = false;
+    bool screen_only = false;
     int positional = 0;
     for (int arg = 1; arg < argc; ++arg) {
         const std::string value = argv[arg];
         if (value == "-h" || value == "--help") {
-            std::cout << "Usage: " << argv[0] << " [n k] [--json]\n";
+            std::cout << "Usage: " << argv[0] << " [n k] [--json] [--screen]\n";
             return 0;
         }
         if (value == "--json") {
             json_output = true;
+            continue;
+        }
+        if (value == "--screen") {
+            screen_only = true;
             continue;
         }
         if (value.rfind("--", 0) == 0) {
@@ -265,7 +271,7 @@ int main(int argc, char **argv) {
         else if (positional == 1)
             k = std::stoi(value);
         else {
-            std::cerr << "Usage: " << argv[0] << " [n k] [--json]\n";
+            std::cerr << "Usage: " << argv[0] << " [n k] [--json] [--screen]\n";
             return 1;
         }
         ++positional;
@@ -302,7 +308,7 @@ int main(int argc, char **argv) {
     else
         arithmetic_classification = "SATISFIES HAMMING OPTIMALITY";
 
-    if (star_boundary >= hamming_boundary) {
+    if (screen_only) {
         if (json_output) {
             dump_skipped_json(std::cout, n, k, valid_count, g, volume, degree,
                               d, embedding_gate, star_boundary,
