@@ -23,6 +23,7 @@ search_triples
 search_single
 /profile_*
 /audit_surrogate
+/diagnose_defect_collision
 /a10_*_*
 /simulated_annealing*
 /root_state_validator
