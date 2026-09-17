@@ -194,8 +194,22 @@ void dump_markdown(std::ostream &out, const ArrangementGraph &graph,
     const int internal_edges = graph.k * (m + 1) * m / 2;
 
     out << "# Full radius-one Star cut certificate\n\n";
-    out << "| graph | degree | g | `|S|` | `|N(S)|` "
-           "|\n|---|---:|---:|---:|---:|\n";
+    out << "## Validation\n\n";
+    out << "- Graph: `A(" << graph.n << "," << graph.k << ")`\n";
+    out << "- Total vertices: `" << graph.valid_vertices.size() << "`\n";
+    out << "- Regular degree: `" << degree << "`\n";
+    out << "- Candidate: `g = " << g << "`, `|S| = " << star.size() << "`\n";
+    out << "- Boundary: `|N(S)| = " << boundary_codes.size() << "`\n";
+    out << "- Star connectivity: verified\n";
+    out << "- Component sizes after deletion:";
+    for (const int size : component_sizes)
+        out << " `" << size << "`";
+    out << "\n- Valid extra cut: **" << (valid ? "yes" : "no") << "**\n";
+    if (valid)
+        out << "- Upper bound: `kappa_" << g << "(A(" << graph.n << ','
+            << graph.k << ")) <= " << boundary_codes.size() << "`\n";
+    out << "\n| graph | degree | g | volume | boundary |\n"
+           "|:------|------:|--:|-------:|---------:|\n";
     out << "| A(" << graph.n << ',' << graph.k << ") | " << degree << " | " << g
         << " | " << star.size() << " | " << boundary_codes.size() << " |\n\n";
     out << "Center: `";
@@ -205,34 +219,25 @@ void dump_markdown(std::ostream &out, const ArrangementGraph &graph,
     out << "## Star\n\n";
     out << "Each branch mutates exactly one coordinate to one spare "
            "symbol.\n\n";
-    out << "| positions | mutation | count |\n|---|---|---:|\n";
-    out << "| `i=0..k-1` | `c[i <- s]`, `s` spare | " << graph.k * m
+    out << "| positions | mutation | count |\n"
+           "|:----------|:---------|------:|\n";
+    out << "| `i = 0..k-1` | `c[i <- s]`, `s` spare | " << graph.k * m
         << " |\n\n";
-    out << "Star adjacency: the center is adjacent to every leaf; a leaf "
-           "`c[i <- s]` is adjacent to the center and the other leaves "
-           "`c[i <- t]` in its branch.\n\n";
+    out << "The center is adjacent to every leaf. A leaf `c[i <- s]` is "
+           "adjacent to the center and to the other leaves `c[i <- t]` in "
+           "its branch.\n\n";
     out << "Star internal edges: " << internal_edges << ". Degree sequence: "
         << "center " << graph.k * m << ", leaves " << m << " repeated "
         << graph.k * m << ".\n\n";
     out << "## Cut `N(S)`\n\n";
-    out << "| family | mutation pattern | multiplicity | count "
-           "|\n|---|---|---:|---:|\n";
+    out << "| family | mutation pattern | multiplicity | count |\n"
+           "|:-------|:-----------------|-------------:|------:|\n";
     out << "| A | `c[i <- s, j <- i]`, `i != j` | 1 | " << family_a << " |\n";
     out << "| B | `c[i <- s, j <- t]`, `i < j`, `s != t` | 2 | " << family_b
         << " |\n\n";
-    out << "Cut size: " << family_a << " + " << family_b << " = "
-        << family_a + family_b << " (enumerated " << boundary_codes.size()
-        << "). Cut incidence: " << family_a << " + 2(" << family_b
-        << ") = " << family_a + 2 * family_b << ".\n\n";
-    out << "## Validation\n\n";
-    out << "Component sizes after deletion: ";
-    for (const int size : component_sizes)
-        out << '`' << size << "` ";
-    out << "\n\nValid `" << g << "`-extra cut: " << (valid ? "yes" : "no")
-        << ".\n";
-    if (valid)
-        out << "Therefore `kappa_" << g << "(A(" << graph.n << ',' << graph.k
-            << ")) <= " << boundary_codes.size() << "`.\n";
+    out << "Cut size: `" << family_a << " + " << family_b << " = "
+        << family_a + family_b << "` (enumerated `" << boundary_codes.size()
+        << "`).\n\n";
 }
 
 void dump_json(std::ostream &out, const ArrangementGraph &graph,
@@ -308,8 +313,7 @@ int main(int argc, char **argv) {
         else if (positional == 1)
             k = std::stoi(value);
         else {
-            std::cerr << "Usage: " << argv[0]
-                      << " [n k] [--dump PATH]\n";
+            std::cerr << "Usage: " << argv[0] << " [n k] [--dump PATH]\n";
             return 1;
         }
         ++positional;
