@@ -85,10 +85,11 @@ This document describes what a complete mechanized proof of each would require.
 2. The archived recurrence driver remains available for research reference but
    is not a work-queue item.
 
-## The Core Equivalence: Collisions ≡ 4-Cycles
+## External multiplicity excess is not a 4-cycle count
 
-**Claim**: Two distinct vertices u, v ∈ V' produce the same external neighbor w
-if and only if they form a 4-cycle (square) with w and some vertex w'.
+The collision quantity counts multiplicity excess at external vertices. A shared
+external neighbor can be an open-square corner without the fourth corner being
+present, so this quantity is not equal to the number of induced 4-cycles.
 
 **Proof sketch**: If drop_pos(u, p) and drop_pos(v, p) produce the same root r,
 then extending r with the same fresh symbol s at position p yields a single
@@ -97,8 +98,8 @@ fibers), so the "collision" w is simultaneously adjacent to both u and v. The
 fourth vertex w' is obtained by swapping the fresh symbol at p in the other
 direction.
 
-**Implication**: Counting collisions is exactly counting 4-cycles in the
-subgraph induced by V' ∪ N(V').
+Consequently, any 4-cycle interpretation must be stated as a separate special
+case with its additional occupancy hypotheses.
 
 ## Step 1: Kruskal-Katona Shadow Operators in Lean
 

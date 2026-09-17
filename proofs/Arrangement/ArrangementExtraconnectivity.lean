@@ -55,7 +55,7 @@ unrestricted isoperimetric theorem is claimed here.
 | `HBCrossCollisions` | Hamming Ball's exact cross-collision equality | Proved by `CrossTop.hb_cross_collisions_closed` |
 
 Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
-`arrangement_extraconnectivity_minimum`, not raw `axiom` declarations.
+the boundary-minimum composition theorem, not raw `axiom` declarations.
 **`UniversalLowerBound` is refuted**: the full-Star set in `A(10,8)` (center
 plus all sixteen single-coordinate replacements by symbol 8 or 9) has R = 17,
 external boundary 168, while the formula demands ≥ 169. See the definition's

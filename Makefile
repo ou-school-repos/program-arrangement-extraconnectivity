@@ -170,6 +170,16 @@ ARRANGEMENT_HDRS = $(wildcard src/*.h)
 .PHONY: build
 build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE)	##H @Build Compile all binaries
 
+CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
+
+.PHONY: certificates
+certificates:	##H @Build Compile the finite certificate/oracle tools
+	@mkdir -p $(CERTIFICATE_BUILD)
+	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/fdp_certificate.cpp -o $(CERTIFICATE_BUILD)/fdp_certificate
+	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/max_q_oracle.cpp -o $(CERTIFICATE_BUILD)/max_q_oracle
+	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/audit_orbits.cpp -o $(CERTIFICATE_BUILD)/audit_orbits
+	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/opt_orbits.cpp -o $(CERTIFICATE_BUILD)/opt_orbits
+
 $(BIN_A10_RECON): $(SRC_A10_RECON)
 	@$(call print_info,Building $@)
 	$(CXX) -O3 -std=c++17 -Wall -Wextra -Wpedantic -o $@ $<

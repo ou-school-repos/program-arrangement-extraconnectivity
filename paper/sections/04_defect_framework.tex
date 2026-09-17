@@ -245,12 +245,12 @@ equal or unequal unused symbols.  Removing a pair need not produce the pure
 Star $S_{j-2}$, so the recurrence must retain these local configurations.
 \end{remark}
 
-\begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
+\begin{theorem}[Hamming Ball Evaluation]\label{prop:hb-eval}
 	The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
 	\begin{equation}\label{eq:hb-eval}
 		X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R).
 	\end{equation}
-\end{proposition}
+\end{theorem}
 
 \begin{lemma}[Deficit-compensated collision reduction]\label{lem:collision-reduction}
 Let $m=n-k$, let $R=|V'|$, and write
@@ -400,9 +400,8 @@ Combining these propositions with the boundary decomposition yields our
 conditional main result:
 
 \begin{theorem}[Conditional Minimum-Boundary Theorem]\label{thm:main}
-\textup{(Conditional on the open Restricted Boundary Hypothesis
-\ref{prop:restricted_lower_bound} and the Hamming-ball evaluation
-\ref{prop:hb-eval}.)} Assume the hypercube embedding conditions
+\textup{(Conditional only on the per-instance open Restricted Boundary
+Hypothesis \ref{prop:restricted_lower_bound}.)} Assume the hypercube embedding conditions
 $k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$.
 Then for all $R \ge 2$:
 	\begin{enumerate}

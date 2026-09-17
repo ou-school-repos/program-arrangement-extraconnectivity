@@ -1,6 +1,6 @@
 // Count orbits of R-subsets attaining the target formula G (Q == G), using the
 // patched canonicalizer.  Usage: opt_orbits n k R
-#include "../arrangement_core.hpp"
+#include "../scripts/arrangement_core.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <functional>

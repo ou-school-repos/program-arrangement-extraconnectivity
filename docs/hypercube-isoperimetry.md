@@ -84,4 +84,7 @@ boundary statement:
 TODO(review): the concluding summary still overstates the final status of the
 penalty story; keep it marked until the theorem wording is corrected.
 
-The combination of **Lean 4 formalization** (0 sorry, 4 explicit axioms) and **exhaustive C++ search** (verified via `predict --verify`) provides the strongest evidence to date for the Hamming Ball's optimality. The novel Algebraic Defect Squeeze is fully mechanized, while standard extremal combinatorics results are isolated as explicit, documented axioms.
+The combination of the Lean 4 formalization and the finite C++ certificate/oracle
+audits provides evidence for the Hamming-ball construction in the documented
+cells. The universal lower-bound interface remains open; the predictor alone
+does not verify it.

@@ -45,7 +45,7 @@ remaining extremal combinatorics hypotheses rather than depending on raw global
 | Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`                   | PROVEN        |
 | Lower Bound              | `RestrictedLowerBound` (under embedding conditions)                  | HYPOTHESIS    |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN        |
-| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)                | CONDITIONAL\* |
+| Capstone                 | `arrangement_boundary_minimum` (composition)                         | CONDITIONAL\* |
 
 <!-- markdownlint-enable MD013 -->
 
@@ -58,7 +58,7 @@ algebraic subadditivity of E_seq.
 ## Dependency Graph
 
 ```text
-arrangement_extraconnectivity_minimum
+arrangement_boundary_minimum
   ├─ exists_optimal_embedding
   │    ├─ hamming_ball_subset         (explicit construction)
   │    │    ├─ embed_vertex           (Cube d → ArrVertex n k)
@@ -76,7 +76,7 @@ arrangement_extraconnectivity_minimum
 ## Remaining Hypothesis Interfaces
 
 The remaining mathematical gaps are isolated as explicit theorem parameters in
-`arrangement_extraconnectivity_minimum`, not as raw `axiom` commands.
+`arrangement_boundary_minimum`, not as raw `axiom` commands.
 
 ### 1. Restricted Boundary Inequality (`RestrictedLowerBound`)
 
@@ -88,9 +88,9 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
 - Conceptually justified by Section 6's Tug-of-War scaling logic: any
   sub-optimal defect is penalized by at least (n-k) boundary nodes, which
   eventually eclipses any cross-collision differences.
-- Computationally confirmed via `predict --verify R` through $R \le 160$ and
-  exhaustively for $R \le 10$ using `arrangement`. The configured predictor
-  ceiling is 260, but the complete sweep through that ceiling is still pending.
+- The predictor only evaluates the Hamming-ball witness; it cannot confirm a
+  universal lower bound. The separate certificate/oracle bundle covers only the
+  finite cells listed in the paper.
 - The recently tested edge-gradient, single-vertex hole-filling, guarded
   dual-compression, and additive fiber-size Lyapunov candidates are finite
   counterexamples to proposed proof mechanisms, not changes to this statement.

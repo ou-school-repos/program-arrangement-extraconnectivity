@@ -53,4 +53,3 @@ theorem not_forall_restricted_lower_bound :
   fun h => full_star_11_6_refutes_restricted_lower_bound (h 31 11 6)
 
 end Arrangement
-

@@ -14,10 +14,10 @@ def UniversalLowerBound (R n k : ℕ) : Prop :=
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 ```
 
-**Role:** Supplies the _universally quantified lower bound_. For **every**
-R-vertex subset V', the external boundary is bounded below by the predicted
-boundary. Still unproven in Lean (no formalization strategy currently active;
-see `docs/collision-axiom-roadmap.md`).
+**Role:** Historical unrestricted lower-bound interface. It is refuted by the
+full-Star examples and is not used by the live capstone. The active interface is
+the per-instance `RestrictedLowerBound R n k`, which is also an open hypothesis
+and is false when universally quantified over all parameters.
 
 ### Lemma: `hamming_ball_eval` (Upper Bound Witness)
 
