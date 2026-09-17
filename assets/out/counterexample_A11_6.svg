@@ -24,7 +24,7 @@
       <rect x="130" y="495" width="90" height="38" rx="19"/><rect x="130" y="405" width="90" height="38" rx="19"/>
       <circle cx="270" cy="450" r="30" fill="black"/>
     </g>
-    <text x="252" y="456" font-size="14" fill="white">c</text>
+    <text x="270" y="450" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="white">c</text>
     <text x="256" y="390" font-size="16">K₆</text><text x="351" y="430" font-size="16">K₆</text>
     <text x="351" y="520" font-size="16">K₆</text><text x="256" y="560" font-size="16">K₆</text>
     <text x="161" y="520" font-size="16">K₆</text><text x="161" y="430" font-size="16">K₆</text>
