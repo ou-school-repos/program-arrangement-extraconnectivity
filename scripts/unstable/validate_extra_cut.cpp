@@ -2,12 +2,14 @@
 //
 // This proves only an upper bound: if the post-deletion component test passes,
 // it establishes kappa_g(A(n,k)) <= |N(S)|. It does not prove optimality.
-// Usage: validate_extra_cut [n k]
+// Usage: validate_extra_cut [n k] [--dump PATH]
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <numeric>
 #include <queue>
+#include <string>
 #include <vector>
 
 struct ArrangementGraph {
@@ -106,15 +108,199 @@ bool connected(const ArrangementGraph &graph,
     return reached == static_cast<int>(subset.size());
 }
 
+void print_vertex(std::ostream &out, const std::vector<int> &vertex) {
+    out << '(';
+    for (size_t i = 0; i < vertex.size(); ++i) {
+        if (i != 0)
+            out << ',';
+        out << vertex[i];
+    }
+    out << ')';
+}
+
+void print_bitset(std::ostream &out, const ArrangementGraph &graph,
+                  const std::vector<unsigned char> &mask) {
+    for (const auto &vertex : graph.valid_vertices)
+        out << (mask[graph.encode(vertex)] != 0 ? '1' : '0');
+    out << '\n';
+}
+
+bool adjacent(const std::vector<int> &left, const std::vector<int> &right) {
+    int differences = 0;
+    for (size_t i = 0; i < left.size(); ++i)
+        differences += left[i] != right[i];
+    return differences == 1;
+}
+
+void print_graph6(std::ostream &out,
+                  const std::vector<std::vector<int>> &vertices,
+                  bool complement) {
+    const size_t count = vertices.size();
+    if (count <= 62) {
+        out << static_cast<char>(count + 63);
+    } else if (count <= 258047) {
+        out << '~' << static_cast<char>((count >> 12 & 63) + 63)
+            << static_cast<char>((count >> 6 & 63) + 63)
+            << static_cast<char>((count & 63) + 63);
+    } else {
+        out << "~" << "~" << static_cast<char>((count >> 30 & 63) + 63)
+            << static_cast<char>((count >> 24 & 63) + 63)
+            << static_cast<char>((count >> 18 & 63) + 63)
+            << static_cast<char>((count >> 12 & 63) + 63)
+            << static_cast<char>((count >> 6 & 63) + 63)
+            << static_cast<char>((count & 63) + 63);
+    }
+
+    int bits = 0;
+    int value = 0;
+    auto emit_bit = [&](const bool bit) {
+        value = (value << 1) | (bit ? 1 : 0);
+        if (++bits == 6) {
+            out << static_cast<char>(value + 63);
+            bits = 0;
+            value = 0;
+        }
+    };
+    for (size_t i = 0; i < count; ++i) {
+        for (size_t j = i + 1; j < count; ++j) {
+            const bool edge = adjacent(vertices[i], vertices[j]);
+            emit_bit(complement ? !edge : edge);
+        }
+    }
+    if (bits != 0)
+        out << static_cast<char>((value << (6 - bits)) + 63);
+    out << '\n';
+}
+
+void dump_certificate(const std::string &path, const ArrangementGraph &graph,
+                      const std::vector<std::vector<int>> &star,
+                      const std::vector<int> &boundary_codes,
+                      const std::vector<int> &component_sizes, int g) {
+    std::ofstream out(path);
+    if (!out) {
+        std::cerr << "Error: cannot open dump file '" << path << "'.\n";
+        return;
+    }
+
+    const int degree = graph.k * (graph.n - graph.k);
+    std::vector<unsigned char> star_mask(graph.status.size(), 0);
+    std::vector<unsigned char> cut_mask(graph.status.size(), 0);
+    for (const auto &vertex : star)
+        star_mask[graph.encode(vertex)] = 1;
+    for (const int code : boundary_codes)
+        cut_mask[code] = 1;
+
+    out << "# Exact certificate for the full radius-one Star cut\n";
+    out << "n=" << graph.n << " k=" << graph.k << " graph_degree=" << degree
+        << " g=" << g << " |S|=" << star.size()
+        << " |cut|=" << boundary_codes.size() << "\n";
+    out << "# Vertices are generated in lexicographic order and encoded as "
+           "base-n tuples.\n";
+    out << "# A cut witness is (star_index, changed_coordinate).\n";
+    out << "center=";
+    print_vertex(out, star.front());
+    out << "\nstar_definition=S={center} union {c[i <- s]: 0<=i<k, k<=s<n}\n";
+
+    out << "STAR index vertex internal_degree boundary_incidence\n";
+    for (size_t index = 0; index < star.size(); ++index) {
+        int internal_degree = 0;
+        int boundary_incidence = 0;
+        for (const int neighbor : graph.encoded_neighbors(star[index])) {
+            if (star_mask[neighbor] != 0)
+                ++internal_degree;
+            if (cut_mask[neighbor] != 0)
+                ++boundary_incidence;
+        }
+        out << "STAR " << index << ' ';
+        print_vertex(out, star[index]);
+        out << ' ' << internal_degree << ' ' << boundary_incidence << '\n';
+    }
+
+    out << "CUT index vertex multiplicity witnesses\n";
+    for (size_t index = 0; index < boundary_codes.size(); ++index) {
+        const int code = boundary_codes[index];
+        const auto &vertex = graph.valid_vertices[graph.flat_index[code]];
+        std::vector<std::pair<int, int>> witnesses;
+        for (size_t star_index = 0; star_index < star.size(); ++star_index) {
+            for (int position = 0; position < graph.k; ++position) {
+                std::vector<int> changed = star[star_index];
+                for (int symbol = 0; symbol < graph.n; ++symbol) {
+                    if (symbol == changed[position])
+                        continue;
+                    changed[position] = symbol;
+                    if (graph.encode(changed) == code)
+                        witnesses.emplace_back(static_cast<int>(star_index),
+                                               position);
+                }
+            }
+        }
+        out << "CUT " << index << ' ';
+        print_vertex(out, vertex);
+        out << ' ' << witnesses.size() << " [";
+        for (size_t w = 0; w < witnesses.size(); ++w) {
+            if (w != 0)
+                out << ',';
+            out << witnesses[w].first << ':' << witnesses[w].second;
+        }
+        out << "]\n";
+    }
+
+    out << "COMPONENT_SIZES";
+    for (const int size : component_sizes)
+        out << ' ' << size;
+    out << "\n";
+    out << "STAR_BITSET_LEX_ORDER\n";
+    print_bitset(out, graph, star_mask);
+    out << "CUT_BITSET_LEX_ORDER\n";
+    print_bitset(out, graph, cut_mask);
+    std::vector<std::vector<int>> cut_vertices;
+    cut_vertices.reserve(boundary_codes.size());
+    std::transform(boundary_codes.begin(), boundary_codes.end(),
+                   std::back_inserter(cut_vertices), [&graph](const int code) {
+                       return graph.valid_vertices[graph.flat_index[code]];
+                   });
+    out << "STAR_GRAPH6\n";
+    print_graph6(out, star, false);
+    out << "STAR_COMPLEMENT_GRAPH6\n";
+    print_graph6(out, star, true);
+    out << "CUT_GRAPH6\n";
+    print_graph6(out, cut_vertices, false);
+    out << "CUT_COMPLEMENT_GRAPH6\n";
+    print_graph6(out, cut_vertices, true);
+}
+
 int main(int argc, char **argv) {
     int n = 11;
     int k = 6;
-    if (argc == 3) {
-        n = std::stoi(argv[1]);
-        k = std::stoi(argv[2]);
-    } else if (argc != 1) {
-        std::cerr << "Usage: " << argv[0] << " [n k]\n";
-        return 1;
+    std::string dump_path;
+    int positional = 0;
+    for (int arg = 1; arg < argc; ++arg) {
+        const std::string value = argv[arg];
+        if (value == "-h" || value == "--help") {
+            std::cout << "Usage: " << argv[0] << " [n k] [--dump PATH]\n";
+            return 0;
+        }
+        if (value == "--dump") {
+            if (arg + 1 >= argc) {
+                std::cerr << "Error: --dump requires a path.\n";
+                return 1;
+            }
+            dump_path = argv[++arg];
+            continue;
+        }
+        if (value.rfind("--", 0) == 0) {
+            std::cerr << "Error: unknown option '" << value << "'.\n";
+            return 1;
+        }
+        if (positional == 0)
+            n = std::stoi(value);
+        else if (positional == 1)
+            k = std::stoi(value);
+        else {
+            std::cerr << "Usage: " << argv[0] << " [n k] [--dump PATH]\n";
+            return 1;
+        }
+        ++positional;
     }
     if (n <= k || k < 1) {
         std::cerr << "Error: require n > k >= 1.\n";
@@ -149,11 +335,13 @@ int main(int argc, char **argv) {
     std::cout << "Subset S connectivity verified.\n";
 
     int boundary_count = 0;
+    std::vector<int> boundary_codes;
     for (const auto &vertex : star) {
         for (const int neighbor : graph.encoded_neighbors(vertex)) {
             if (graph.status[neighbor] != 0)
                 continue;
             graph.status[neighbor] = 2;
+            boundary_codes.push_back(neighbor);
             ++boundary_count;
         }
     }
@@ -201,9 +389,15 @@ int main(int argc, char **argv) {
     }
 
     if (!valid) {
+        if (!dump_path.empty())
+            dump_certificate(dump_path, graph, star, boundary_codes,
+                             component_sizes, g);
         std::cout << "valid " << g << "-extra cut: no\n";
         return 0;
     }
+    if (!dump_path.empty())
+        dump_certificate(dump_path, graph, star, boundary_codes,
+                         component_sizes, g);
     std::cout << "valid " << g << "-extra cut: yes\n";
     std::cout << "therefore kappa_" << g << "(A(" << n << ',' << k
               << ")) <= " << boundary_count << "\n";
