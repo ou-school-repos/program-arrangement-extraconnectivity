@@ -9,6 +9,7 @@
 //
 //   D <= E(R)
 //   X + D <= C(R) + (n-k)(E(R)-D).
+//   Q(S)-Q(S-v) <= 1+ceil(log2 R)+(n-k-1) popcount(R-1).
 //
 // This is a finite adversarial search, not a universal proof.
 
@@ -69,36 +70,58 @@ struct Search {
     Int node_limit;
     std::uint64_t leaves = 0;
     bool limited = false;
+    bool reported_counterexample = false;
     std::vector<bool> selected;
     std::vector<std::vector<int>> root_count;
+    std::vector<int> incidence;
+    int boundary_size = 0;
     std::vector<int> chosen;
     Best defect_slack;
     Best collision_slack;
     Best boundary_best;
+    Best peeling_margin;
 
     Search(const Instance &instance, int size, Int limit)
         : graph(instance), target(size), node_limit(limit),
           selected(instance.vertices.size(), false), root_count(instance.k),
-          chosen{0} {
-        selected[0] = true;
+          incidence(instance.vertices.size(), 0), chosen{0} {
         for (int position = 0; position < graph.k; ++position)
             root_count[position].assign(graph.lines[position].size(), 0);
-        add(0);
+        add(0, false);
     }
 
-    void add(int vertex) {
+    void add(int vertex, bool record = true) {
+        if (boundary_size > 0 && !selected[vertex] && incidence[vertex] > 0)
+            --boundary_size;
         selected[vertex] = true;
-        if (chosen.empty() || chosen.back() != vertex)
+        if (record)
             chosen.push_back(vertex);
-        for (int position = 0; position < graph.k; ++position)
-            ++root_count[position][graph.root_id[position][vertex]];
+        for (int position = 0; position < graph.k; ++position) {
+            const int root = graph.root_id[position][vertex];
+            if (root_count[position][root]++ != 0)
+                continue;
+            boundary_size += static_cast<int>(std::count_if(
+                graph.lines[position][root].begin(),
+                graph.lines[position][root].end(), [&](const int member) {
+                    return ++incidence[member] == 1 && !selected[member];
+                }));
+        }
     }
 
-    void remove(int vertex) {
-        for (int position = 0; position < graph.k; ++position)
-            --root_count[position][graph.root_id[position][vertex]];
+    void remove(int vertex, bool erase_chosen = true) {
         selected[vertex] = false;
-        if (!chosen.empty() && chosen.back() == vertex)
+        for (int position = 0; position < graph.k; ++position) {
+            const int root = graph.root_id[position][vertex];
+            if (--root_count[position][root] != 0)
+                continue;
+            for (const int member : graph.lines[position][root]) {
+                if (--incidence[member] == 0 && !selected[member])
+                    --boundary_size;
+            }
+        }
+        if (incidence[vertex] > 0)
+            ++boundary_size;
+        if (erase_chosen)
             chosen.pop_back();
     }
 
@@ -128,22 +151,41 @@ struct Search {
                         boundary[member] = true;
             }
         }
-        const Int boundary_size = static_cast<Int>(
+        const Int external_boundary_size = static_cast<Int>(
             std::count(boundary.begin(), boundary.end(), true));
-        const Int collision = active_roots * m - defect - boundary_size;
+        const Int collision =
+            active_roots * m - defect - external_boundary_size;
         const Int defect_margin = E - defect;
         const Int collision_margin = C + defect_margin * m - collision - defect;
 
         defect_slack.update(defect_margin, chosen);
         collision_slack.update(collision_margin, chosen);
-        boundary_best.update(boundary_size, chosen);
+        boundary_best.update(external_boundary_size, chosen);
 
-        if (defect_margin < 0 || collision_margin < 0) {
+        const Int q_before = m * r * graph.k - boundary_size;
+        const Int threshold =
+            1 + ceil_log2_plus_one(r - 1) +
+            (m - 1) * __builtin_popcount(static_cast<unsigned>(r - 1));
+        Int best_drop = std::numeric_limits<Int>::max();
+        for (const int vertex : chosen) {
+            remove(vertex, false);
+            const Int q_after = m * (r - 1) * graph.k - boundary_size;
+            best_drop = std::min(best_drop, q_before - q_after);
+            add(vertex, false);
+        }
+        peeling_margin.update(threshold - best_drop, chosen);
+
+        if (!reported_counterexample &&
+            (defect_margin < 0 || collision_margin < 0 ||
+             threshold < best_drop)) {
+            reported_counterexample = true;
             std::cout << "COUNTEREXAMPLE leaves=" << leaves
-                      << " boundary=" << boundary_size << " defect=" << defect
-                      << " collision=" << collision
+                      << " boundary=" << external_boundary_size
+                      << " defect=" << defect << " collision=" << collision
                       << " defect-margin=" << defect_margin
-                      << " collision-margin=" << collision_margin << " subset=";
+                      << " collision-margin=" << collision_margin
+                      << " peeling-margin=" << threshold - best_drop
+                      << " subset=";
             for (int vertex : chosen)
                 std::cout << ' ' << vertex;
             std::cout << '\n';
@@ -220,11 +262,16 @@ int main(int argc, char **argv) {
     print_result("min_defect_margin", search.defect_slack);
     print_result("min_collision_margin", search.collision_slack);
     print_result("min_boundary", search.boundary_best);
+    print_result("min_peeling_margin", search.peeling_margin);
     std::cout << "defect_lemma_on_scan="
               << (search.defect_slack.value >= 0 ? "yes" : "no") << '\n';
     std::cout << "collision_lemma_on_scan="
               << (search.collision_slack.value >= 0 ? "yes" : "no") << '\n';
-    return search.defect_slack.value >= 0 && search.collision_slack.value >= 0
+    std::cout << "peeling_lemma_on_scan="
+              << (search.peeling_margin.value >= 0 ? "yes" : "no") << '\n';
+    return search.defect_slack.value >= 0 &&
+                   search.collision_slack.value >= 0 &&
+                   search.peeling_margin.value >= 0
                ? 0
                : 1;
 }
