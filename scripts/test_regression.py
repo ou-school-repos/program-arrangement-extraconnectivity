@@ -32,6 +32,7 @@ def main() -> int:
                 text=True,
             )
             output = json.loads(result.stdout)
+            deep_check = output.get("deep_check", "completed")
             actual = {
                 "n": output["graph"]["n"],
                 "k": output["graph"]["k"],
@@ -40,7 +41,11 @@ def main() -> int:
                 "g": output["cut_properties"]["g"],
                 "R": output["cut_properties"]["R"],
                 "boundary": output["cut_properties"]["actual_boundary"],
-                "components": sorted(output["component_sizes"]),
+                "components": (
+                    None
+                    if deep_check == "skipped"
+                    else sorted(output["component_sizes"])
+                ),
                 "hamming_boundary": output["hamming_comparison"]["hamming_boundary"],
                 "embedding_gate": output["hamming_comparison"]["embedding_gate"],
                 "classification": output["hamming_comparison"]["classification"],

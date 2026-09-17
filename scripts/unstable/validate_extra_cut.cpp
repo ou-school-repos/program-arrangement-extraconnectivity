@@ -188,6 +188,7 @@ void dump_json(std::ostream &out, const ArrangementGraph &graph,
         << ", \"star_boundary\": " << boundary_codes.size()
         << ", \"hamming_boundary\": " << hamming_boundary
         << ", \"classification\": \"" << classification << "\"},\n";
+    out << "  \"deep_check\": \"completed\",\n";
     out << "  \"center_vertex\": ";
     print_json_array(out, center);
     out << ",\n  \"spare_symbols\": [";
@@ -218,6 +219,26 @@ void dump_json(std::ostream &out, const ArrangementGraph &graph,
         out << component_sizes[i];
     }
     out << "]\n}\n";
+}
+
+void dump_skipped_json(std::ostream &out, int n, int k, std::size_t valid_count,
+                       int g, int volume, int degree, int d,
+                       bool embedding_gate, long long star_boundary,
+                       long long hamming_boundary,
+                       const std::string &classification) {
+    out << "{\n  \"graph\": {\"n\": " << n << ", \"k\": " << k
+        << ", \"m\": " << n - k << ", \"degree\": " << degree
+        << ", \"valid_vertices\": " << valid_count << "},\n"
+        << "  \"cut_properties\": {\"g\": " << g << ", \"R\": " << volume
+        << ", \"target_volume\": " << volume
+        << ", \"actual_boundary\": " << star_boundary << "},\n"
+        << "  \"hamming_comparison\": {\"d\": " << d
+        << ", \"embedding_gate\": " << (embedding_gate ? "true" : "false")
+        << ", \"star_boundary\": " << star_boundary
+        << ", \"hamming_boundary\": " << hamming_boundary
+        << ", \"classification\": \"" << classification << "\"},\n"
+        << "  \"deep_check\": \"skipped\",\n"
+        << "  \"valid\": null,\n  \"component_sizes\": null\n}\n";
 }
 
 int main(int argc, char **argv) {
@@ -253,6 +274,50 @@ int main(int argc, char **argv) {
         std::cerr << "Error: require n > k >= 1.\n";
         return 1;
     }
+    const bool show_progress = !json_output;
+
+    const int m = n - k;
+    const int degree = k * m;
+    const int volume = 1 + degree;
+    const int g = volume - 1;
+    std::size_t valid_count = 1;
+    for (int position = 0; position < k; ++position)
+        valid_count *= static_cast<std::size_t>(n - position);
+    const long long star_boundary =
+        static_cast<long long>(k) * (k - 1) * m +
+        static_cast<long long>(k) * (k - 1) / 2 * m * (m - 1);
+    const int d = bit_length(volume - 1);
+    const bool embedding_gate = d <= k && d <= m;
+    const long long hamming_potential =
+        collision_constant(volume) +
+        static_cast<long long>(m) * defect_sum(volume);
+    const long long hamming_boundary =
+        static_cast<long long>(volume) * degree - hamming_potential;
+    std::string arithmetic_classification;
+    if (star_boundary < hamming_boundary && embedding_gate)
+        arithmetic_classification = "HARD COUNTEREXAMPLE: RestrictedLowerBound";
+    else if (star_boundary < hamming_boundary)
+        arithmetic_classification =
+            "SOFT COUNTEREXAMPLE: UniversalLowerBound only";
+    else
+        arithmetic_classification = "SATISFIES HAMMING OPTIMALITY";
+
+    if (star_boundary >= hamming_boundary) {
+        if (json_output) {
+            dump_skipped_json(std::cout, n, k, valid_count, g, volume, degree,
+                              d, embedding_gate, star_boundary,
+                              hamming_boundary, arithmetic_classification);
+        } else {
+            std::cout << "A(" << n << ',' << k << ") arithmetic screening\n"
+                      << "R = " << volume << ", g = " << g
+                      << ", Star boundary = " << star_boundary
+                      << ", Hamming baseline = " << hamming_boundary << '\n'
+                      << "Deep check: skipped\n"
+                      << arithmetic_classification << '\n';
+        }
+        return 0;
+    }
+
     // A(14,8) needs 14^8 = 1,475,789,056 one-byte status slots.  Keep a
     // finite guard, but do not reject that useful boundary case outright.
     constexpr std::size_t max_code_space = 2'000'000'000;
@@ -266,7 +331,6 @@ int main(int argc, char **argv) {
         }
         code_space *= static_cast<std::size_t>(n);
     }
-    const bool show_progress = !json_output;
 
     if (show_progress)
         std::cout << "Building A(" << n << ',' << k << ")...\n";
@@ -288,7 +352,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    const int g = static_cast<int>(star.size()) - 1;
     if (show_progress) {
         std::cout << "\nCandidate g = " << g << "\n";
         std::cout << "|S| = " << star.size() << "\n";
@@ -316,6 +379,12 @@ int main(int argc, char **argv) {
     if (n == 11 && k == 6 && boundary_count != 450) {
         std::cerr << "Error: expected |N(S)| = 450 for A(11,6), got "
                   << boundary_count << ".\n";
+        return 1;
+    }
+    if (static_cast<long long>(boundary_count) != star_boundary) {
+        std::cerr << "Error: closed-form Star boundary disagrees with "
+                  << "enumeration (formula " << star_boundary << ", got "
+                  << boundary_count << ").\n";
         return 1;
     }
 
@@ -355,26 +424,10 @@ int main(int argc, char **argv) {
             valid = false;
     }
 
-    const int volume = static_cast<int>(star.size());
-    const int d = bit_length(volume - 1);
-    const bool embedding_gate = d <= k && d <= n - k;
-    const long long hamming_potential =
-        collision_constant(volume) +
-        static_cast<long long>(n - k) * defect_sum(volume);
-    const long long hamming_boundary =
-        static_cast<long long>(volume) * k * (n - k) - hamming_potential;
-    std::string classification;
-    if (!valid) {
-        classification = "INVALID EXTRA CUT";
-    } else if (boundary_count < hamming_boundary && embedding_gate) {
-        classification = "HARD COUNTEREXAMPLE: RestrictedLowerBound";
-    } else if (boundary_count < hamming_boundary) {
-        classification = "SOFT COUNTEREXAMPLE: UniversalLowerBound only";
-    } else {
-        classification = "SATISFIES HAMMING OPTIMALITY";
-    }
+    std::string classification = arithmetic_classification;
 
     if (!valid) {
+        classification = "INVALID EXTRA CUT";
         if (json_output) {
             dump_json(std::cout, graph, center, star, boundary_codes,
                       component_sizes, g, false, d, embedding_gate,
