@@ -324,6 +324,33 @@ struct Metrics {
     bool found = false;
 };
 
+std::vector<int> orbit_representatives(
+    const Instance &instance, const State &state, const int start,
+    const std::vector<Automorphism> &stabilizer, Metrics &metrics) {
+    std::vector<unsigned char> seen(instance.vertices.size(), 0);
+    std::vector<int> representatives;
+    for (int vertex = 0; vertex < static_cast<int>(instance.vertices.size());
+         ++vertex) {
+        if (state.selected[vertex] || seen[vertex])
+            continue;
+        int orbit_size = 0;
+        int representative = vertex;
+        for (const Automorphism &automorphism : stabilizer) {
+            const int image = automorphism.apply(vertex, instance);
+            if (seen[image] == 0) {
+                seen[image] = 1;
+                ++orbit_size;
+            }
+            representative = std::min(representative, image);
+        }
+        metrics.orbit_skipped += static_cast<std::uint64_t>(orbit_size - 1);
+        if (representative >= start)
+            representatives.push_back(representative);
+    }
+    std::sort(representatives.begin(), representatives.end());
+    return representatives;
+}
+
 bool search(const Instance &instance, State &state, std::vector<int> &subset,
             const int crossover_depth, const unsigned timeout_ms,
             const std::uint64_t max_calls,
@@ -358,17 +385,9 @@ bool search(const Instance &instance, State &state, std::vector<int> &subset,
     }
 
     const int start = subset.back() + 1;
-    for (int vertex = start;
-         vertex < static_cast<int>(instance.vertices.size()); ++vertex) {
-        const bool representative = !std::any_of(
-            stabilizer.begin(), stabilizer.end(),
-            [&instance, vertex](const Automorphism &automorphism) {
-                return automorphism.apply(vertex, instance) < vertex;
-            });
-        if (!representative) {
-            ++metrics.orbit_skipped;
-            continue;
-        }
+    const std::vector<int> representatives =
+        orbit_representatives(instance, state, start, stabilizer, metrics);
+    for (const int vertex : representatives) {
         std::vector<Automorphism> next_stabilizer;
         std::copy_if(stabilizer.begin(), stabilizer.end(),
                      std::back_inserter(next_stabilizer),
