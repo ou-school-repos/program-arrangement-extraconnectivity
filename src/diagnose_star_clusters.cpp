@@ -2,22 +2,24 @@
 //
 // Usage: ./diagnose_star_clusters n k [max_j]
 //
-// S_j consists of the center (0,1,...,k-1) and every one-coordinate leaf
-// in the first j coordinate directions.  Thus |S_j| = 1 + j(n-k).
-
-#include "../scripts/arrangement_core.hpp"
+// This diagnostic deliberately does not construct A(n,k). It materializes
+// only the O(k(n-k)) vertices in the Star being tested, so large probes do
+// not allocate the factorial-sized arrangement graph.
 
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
 
 using Int = std::int64_t;
-using arrangement::Instance;
+using Vertex = std::vector<int>;
+using Subset = std::vector<Vertex>;
 
 Int e_seq(int r) {
     Int result = 0;
@@ -43,58 +45,67 @@ Int c_constant(int r) {
     return result;
 }
 
-std::vector<int> star(const Instance &graph, int active_coordinates) {
-    std::vector<int> result;
-    std::vector<int> center(graph.k);
-    for (int coordinate = 0; coordinate < graph.k; ++coordinate)
+Subset star(int n, int k, int active_coordinates) {
+    Subset result;
+    Vertex center(k);
+    for (int coordinate = 0; coordinate < k; ++coordinate)
         center[coordinate] = coordinate;
-    result.push_back(graph.index.at(graph.encode(center)));
+    result.push_back(center);
     for (int coordinate = 0; coordinate < active_coordinates; ++coordinate) {
-        for (int symbol = graph.k; symbol < graph.n; ++symbol) {
-            auto leaf = center;
+        for (int symbol = k; symbol < n; ++symbol) {
+            Vertex leaf = center;
             leaf[coordinate] = symbol;
-            result.push_back(graph.index.at(graph.encode(leaf)));
+            result.push_back(std::move(leaf));
         }
     }
     return result;
 }
 
-Int boundary(const Instance &graph, const std::vector<int> &subset) {
-    std::vector<bool> selected(graph.vertices.size(), false);
-    for (int vertex : subset)
-        selected[vertex] = true;
-    std::vector<bool> external(graph.vertices.size(), false);
-    for (int position = 0; position < graph.k; ++position) {
-        std::vector<bool> active(graph.lines[position].size(), false);
-        for (int vertex : subset)
-            active[graph.root_id[position][vertex]] = true;
-        for (int root = 0; root < static_cast<int>(active.size()); ++root) {
-            if (!active[root])
-                continue;
-            for (int member : graph.lines[position][root])
-                if (!selected[member])
-                    external[member] = true;
+using Root = std::pair<int, Vertex>;
+
+std::set<Root> active_roots(const Subset &subset) {
+    std::set<Root> roots;
+    for (const Vertex &vertex : subset) {
+        for (std::size_t coordinate = 0; coordinate < vertex.size();
+             ++coordinate) {
+            Vertex root = vertex;
+            root.erase(root.begin() + static_cast<std::ptrdiff_t>(coordinate));
+            roots.emplace(static_cast<int>(coordinate), std::move(root));
         }
     }
-    return std::count(external.begin(), external.end(), true);
+    return roots;
 }
 
-Int defect(const Instance &graph, const std::vector<int> &subset) {
-    int active_roots = 0;
-    for (int position = 0; position < graph.k; ++position) {
-        std::vector<bool> active(graph.lines[position].size(), false);
-        for (int vertex : subset)
-            active[graph.root_id[position][vertex]] = true;
-        active_roots += std::count(active.begin(), active.end(), true);
+Int defect(const Subset &subset, int k) {
+    const Int active = static_cast<Int>(active_roots(subset).size());
+    return static_cast<Int>(subset.size()) * k - active;
+}
+
+Int boundary(const Subset &subset, int n, int k) {
+    const std::set<Vertex> selected(subset.begin(), subset.end());
+    std::set<Vertex> external;
+    for (const Vertex &vertex : subset) {
+        for (int coordinate = 0; coordinate < k; ++coordinate) {
+            for (int symbol = 0; symbol < n; ++symbol) {
+                if (symbol == vertex[coordinate])
+                    continue;
+                if (std::find(vertex.begin(), vertex.end(), symbol) !=
+                    vertex.end())
+                    continue;
+                Vertex neighbor = vertex;
+                neighbor[coordinate] = symbol;
+                if (!selected.count(neighbor))
+                    external.insert(std::move(neighbor));
+            }
+        }
     }
-    return static_cast<Int>(subset.size()) * graph.k - active_roots;
+    return static_cast<Int>(external.size());
 }
 
-int agreement(const Instance &graph, int u, int v) {
+int agreement(const Vertex &u, const Vertex &v) {
     int result = 0;
-    for (int coordinate = 0; coordinate < graph.k; ++coordinate)
-        result +=
-            graph.vertices[u][coordinate] == graph.vertices[v][coordinate];
+    for (std::size_t coordinate = 0; coordinate < u.size(); ++coordinate)
+        result += u[coordinate] == v[coordinate];
     return result;
 }
 
@@ -104,24 +115,23 @@ struct PairResult {
     int v = -1;
 };
 
-PairResult pair_margin(const Instance &graph, const std::vector<int> &subset) {
-    const Int m = graph.n - graph.k;
+PairResult pair_margin(const Subset &subset, int n, int k) {
+    const Int m = n - k;
     const int r = static_cast<int>(subset.size());
-    const Int q_before = m * r * graph.k - boundary(graph, subset);
+    const Int q_before = m * r * k - boundary(subset, n, k);
     const Int budget =
         c_constant(r) + m * e_seq(r) - c_constant(r - 2) - m * e_seq(r - 2);
     PairResult result;
-    for (std::size_t i = 0; i < subset.size(); ++i) {
-        for (std::size_t j = i + 1; j < subset.size(); ++j) {
-            std::vector<int> reduced;
-            for (std::size_t index = 0; index < subset.size(); ++index)
+    for (int i = 0; i < r; ++i) {
+        for (int j = i + 1; j < r; ++j) {
+            Subset reduced;
+            for (int index = 0; index < r; ++index)
                 if (index != i && index != j)
                     reduced.push_back(subset[index]);
-            const Int q_after =
-                m * (r - 2) * graph.k - boundary(graph, reduced);
+            const Int q_after = m * (r - 2) * k - boundary(reduced, n, k);
             const Int margin = budget - (q_before - q_after);
             if (margin > result.margin)
-                result = {margin, subset[i], subset[j]};
+                result = {margin, i, j};
         }
     }
     return result;
@@ -143,25 +153,25 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    const Instance graph(n, k);
     const Int m = n - k;
-    std::cout << "A(" << n << ',' << k << ") full-Star spine, m=" << m << '\n';
+    std::cout << "A(" << n << ',' << k
+              << ") full-Star spine (formula-only), m=" << m << '\n';
     std::cout << "j R D X boundary B_slack pair_margin pair\n";
     for (int j = 0; j <= max_j; ++j) {
-        const auto subset = star(graph, j);
+        const Subset subset = star(n, k, j);
         const int r = static_cast<int>(subset.size());
-        const Int d = defect(graph, subset);
-        const Int b = boundary(graph, subset);
+        const Int d = defect(subset, k);
+        const Int b = boundary(subset, n, k);
         const Int u = r * k - d;
         const Int x = u * m - d - b;
         const Int bound = (r * k - e_seq(r)) * m - c_constant(r);
         const PairResult pair =
-            r >= 2 ? pair_margin(graph, subset) : PairResult{};
+            r >= 2 ? pair_margin(subset, n, k) : PairResult{};
         std::cout << j << ' ' << r << ' ' << d << ' ' << x << ' ' << b << ' '
                   << b - bound << ' ' << pair.margin << ' ' << pair.u << ','
                   << pair.v;
         if (pair.u >= 0)
-            std::cout << " c=" << agreement(graph, pair.u, pair.v);
+            std::cout << " c=" << agreement(subset[pair.u], subset[pair.v]);
         std::cout << '\n';
     }
 }

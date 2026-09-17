@@ -94,7 +94,9 @@ rather than treating coordinate agreement as a sufficient statistic.
 ## Full-Star pair-peeling shoreline: A(10,8) (2026-09-17)
 
 The native `diagnose_star_clusters` probe evaluates the established radius-one
-full-Star spine $S_j$ in $A(10,8)$, where $m=2$ and $|S_j|=1+2j$:
+full-Star spine $S_j$ without constructing the full arrangement. It stores only
+the $O(k(n-k))$ Star vertices and derives the local fiber counts and boundary
+from them. For $A(10,8)$, where $m=2$ and $|S_j|=1+2j$:
 
 ```text
 time ./diagnose_star_clusters 10 8 8
@@ -109,7 +111,21 @@ The pair-peeling margins along the spine were:
 |   8 |  17 |          -3 |             -1 |
 
 Thus pair peeling fails at $R=15$, before the surrogate boundary inequality
-fails at the known full-Star counterexample $R=17$. Pair peeling is therefore
-a sufficient safe-regime mechanism, not an exact characterization of the
-surrogate's failure threshold. The C++ probe uses the radius-one Star
-definition from `scripts/full_star_spine.py`, not a full coordinate subspace.
+fails at the known full-Star counterexample $R=17$. Pair peeling is therefore a
+sufficient safe-regime mechanism, not an exact characterization of the
+surrogate's failure threshold. The C++ probe uses the radius-one Star definition
+from `scripts/full_star_spine.py`, not a full coordinate subspace.
+
+The formula-only implementation was then run on larger parameters without the
+factorial-sized arrangement allocation:
+
+```text
+time ./diagnose_star_clusters 12 10 10
+time ./diagnose_star_clusters 15 12 12
+```
+
+For $A(12,10)$, the surrogate first fails at $R=17$ and the pair margin is
+already $-1$ there. For $A(15,12)$, the surrogate first fails at $R=19$ and the
+pair margin is $-7$. Both runs complete in under one second, confirming that the
+previous multi-gigabyte behavior was caused entirely by unnecessary full-graph
+construction.
