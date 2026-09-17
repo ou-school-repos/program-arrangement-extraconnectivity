@@ -8,10 +8,10 @@ import Arrangement.PenaltyExact
   `Σᵣ choose (|S ∩ r|) 2`.
 
 It is useful for exploratory edge-density arguments, but it is deliberately
-kept separate from `cross_collisions`.  The latter counts multiplicity excess
-at external boundary vertices.  They are not interchangeable: two adjacent
-vertices in `A(4,2)` already give a counterexample to the equality
-`fiber_pair_count = cross_collisions + defect`.
+kept separate from `cross_collisions`. The latter counts multiplicity excess
+at external boundary vertices. They are not interchangeable: the explicit
+three-vertex Star below in `A(4,2)` has `fiber_pair_count = 3` but
+`cross_collisions + defect = 2`.
 -/
 
 namespace Arrangement

@@ -13,16 +13,18 @@ import Mathlib.Data.Fintype.Basic
 import Arrangement.ArrDefs
 
 /-!
-# Arrangement Graph Extraconnectivity
+# Arrangement Graph Boundary Framework
 
-Formal verification of the isoperimetric profile of the arrangement graph A(n,k).
+Formal verification of the boundary identities and conditional isoperimetric
+framework for the arrangement graph A(n,k). The unrestricted lower-bound claim
+is refuted by the Star counterexample documented below.
 
 ## Main Result
 
-`arrangement_extraconnectivity_minimum`: For all R-element subsets V' of A(n,k),
-  min |N(V')| = (R·k − A000788(R))·(n−k) − C_constant(R)
-
-achieved uniquely by the Hamming Ball embedding.
+The formal development proves the exact boundary identities, the defect bound,
+and the Hamming-ball evaluation. The global minimum-boundary conclusion is
+conditional on the explicitly named `RestrictedLowerBound` interface; no
+unrestricted isoperimetric theorem is claimed here.
 
 ## Proof Architecture
 
@@ -50,7 +52,7 @@ achieved uniquely by the Hamming Ball embedding.
 | Interface | Role | Status |
 |-------|------|--------|
 | `UniversalLowerBound` | Universal boundary inequality (∀ V') | **False as stated**; see below |
-| `HBCrossCollisions` | Hamming Ball's exact cross-collision count (∃ witness) | Supplied by the direct `CrossTop` proof |
+| `HBCrossCollisions` | Hamming Ball's exact cross-collision equality | Proved by `CrossTop.hb_cross_collisions_closed` |
 
 Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
 `arrangement_extraconnectivity_minimum`, not raw `axiom` declarations.
@@ -1678,9 +1680,11 @@ reduces to this) is open and is not addressed anywhere in this file; see
   The Arrangement Graph Boundary-Minimum Theorem.
   By squeezing the lower bound (via bridge lemmas) against the existence
   of a constructive witness (the Hamming ball), we establish the
-  **Full Isoperimetric Profile** of A(n,k) within the embeddable range
-  R ≤ 2^m — i.e. the exact minimum `external_neighbors` value, not
-  extraconnectivity itself (see the naming note above).
+  **conditional** boundary profile of A(n,k) within the embeddable range.
+  The embedding condition makes the Hamming-ball witness available, but does
+  not prove the universal lower bound: that remains the explicit
+  `RestrictedLowerBound` hypothesis. This is a statement about
+  `external_neighbors`, not extraconnectivity itself (see the naming note above).
   The lower bound hypothesis is `RestrictedLowerBound`, gated by the
   hypercube embedding conditions.
 -/

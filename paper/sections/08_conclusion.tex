@@ -30,9 +30,11 @@ record that advances as the core-guided search continues.
 These findings complement, rather than replace, the conditional exact-boundary
 framework developed in Sections~\ref{sec:defect}--\ref{sec:sandwich}: the
 algebraic defect framework and its Lean~4 formalization remain conditional on
-the Restricted Boundary Inequality (Proposition~\ref{prop:restricted_lower_bound}),
-valid in the hypercube-embedding regime $R \le 2^m$.  The crossover described
-here characterizes what happens when that regime is abandoned.
+the Restricted Boundary Inequality (Proposition~\ref{prop:restricted_lower_bound}).
+The hypercube-embedding condition $R \le 2^m$ guarantees that the Hamming-ball
+construction fits, but does not prove the lower bound: full-Star counterexamples
+occur inside that range once $m \ge 5$. The crossover described here records
+that obstruction rather than a universally safe regime.
 
 \textbf{Future work.}
 \begin{itemize}
