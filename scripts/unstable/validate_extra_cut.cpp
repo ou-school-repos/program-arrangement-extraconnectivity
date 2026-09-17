@@ -108,6 +108,31 @@ bool connected(const ArrangementGraph &graph,
     return reached == static_cast<int>(subset.size());
 }
 
+long long defect_sum(int r) {
+    long long result = 0;
+    for (int i = 0; i < r; ++i)
+        result += __builtin_popcount(static_cast<unsigned>(i));
+    return result;
+}
+
+int bit_length(int value) {
+    int result = 0;
+    while (value > 0) {
+        ++result;
+        value >>= 1;
+    }
+    return result;
+}
+
+long long collision_constant(int r) {
+    if (r == 0)
+        return 0;
+    long long result = r - 1 - defect_sum(r);
+    for (int i = 1; i < r; ++i)
+        result += bit_length(i);
+    return result;
+}
+
 void print_json_array(std::ostream &out, const std::vector<int> &values) {
     out << '[';
     for (size_t i = 0; i < values.size(); ++i) {
@@ -121,7 +146,9 @@ void print_json_array(std::ostream &out, const std::vector<int> &values) {
 void dump_json(std::ostream &out, const ArrangementGraph &graph,
                const std::vector<std::vector<int>> &star,
                const std::vector<int> &boundary_codes,
-               const std::vector<int> &component_sizes, int g, bool valid) {
+               const std::vector<int> &component_sizes, int g, bool valid,
+               int d, bool embedding_gate, long long hamming_boundary,
+               const std::string &classification) {
     const int m = graph.n - graph.k;
     const int degree = graph.k * m;
     const int family_a = graph.k * (graph.k - 1) * m;
@@ -131,7 +158,12 @@ void dump_json(std::ostream &out, const ArrangementGraph &graph,
         << "},\n  \"cut_properties\": {\"g\": " << g
         << ", \"target_volume\": " << star.size()
         << ", \"actual_boundary\": " << boundary_codes.size()
-        << ", \"valid\": " << (valid ? "true" : "false") << "},\n";
+        << ", \"valid\": " << (valid ? "true" : "false") << "},\n"
+        << "  \"hamming_comparison\": {\"d\": " << d
+        << ", \"embedding_gate\": " << (embedding_gate ? "true" : "false")
+        << ", \"star_boundary\": " << boundary_codes.size()
+        << ", \"hamming_boundary\": " << hamming_boundary
+        << ", \"classification\": \"" << classification << "\"},\n";
     out << "  \"center_vertex\": ";
     print_json_array(out, star.front());
     out << ",\n  \"spare_symbols\": [";
@@ -289,22 +321,51 @@ int main(int argc, char **argv) {
             valid = false;
     }
 
+    const int volume = static_cast<int>(star.size());
+    const int d = bit_length(volume - 1);
+    const bool embedding_gate = d <= k && d <= n - k;
+    const long long hamming_potential =
+        collision_constant(volume) +
+        static_cast<long long>(n - k) * defect_sum(volume);
+    const long long hamming_boundary =
+        static_cast<long long>(volume) * k * (n - k) - hamming_potential;
+    std::string classification;
+    if (!valid) {
+        classification = "INVALID EXTRA CUT";
+    } else if (boundary_count < hamming_boundary && embedding_gate) {
+        classification = "HARD COUNTEREXAMPLE: RestrictedLowerBound";
+    } else if (boundary_count < hamming_boundary) {
+        classification = "SOFT COUNTEREXAMPLE: UniversalLowerBound only";
+    } else {
+        classification = "SATISFIES HAMMING OPTIMALITY";
+    }
+
     if (!valid) {
         if (json_output) {
             dump_json(std::cout, graph, star, boundary_codes, component_sizes,
-                      g, false);
+                      g, false, d, embedding_gate, hamming_boundary,
+                      classification);
         } else {
             std::cout << "valid " << g << "-extra cut: no\n";
+            std::cout << classification << "\n";
         }
         return 0;
     }
     if (json_output) {
         dump_json(std::cout, graph, star, boundary_codes, component_sizes, g,
-                  true);
+                  true, d, embedding_gate, hamming_boundary, classification);
     } else {
         std::cout << "valid " << g << "-extra cut: yes\n";
         std::cout << "therefore kappa_" << g << "(A(" << n << ',' << k
                   << ")) <= " << boundary_count << "\n";
+        std::cout << classification << "\n";
+        if (classification.find("COUNTEREXAMPLE") != std::string::npos) {
+            std::cout << "Hamming baseline: " << hamming_boundary
+                      << "; Star boundary: " << boundary_count << "\n";
+            std::cout << "Embedding gate: d = " << d << ", k = " << k
+                      << ", n-k = " << n - k << " ("
+                      << (embedding_gate ? "open" : "closed") << ")\n";
+        }
     }
     return 0;
 }
