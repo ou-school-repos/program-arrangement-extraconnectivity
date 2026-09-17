@@ -49,7 +49,7 @@ Legend:
 - `o` — satisfies the Hamming comparison.
 - `/` — invalid extra cut.
 - `~` — not applicable: outside `k < n` or rejected by guard.
-- `?` — not yet run.
+- `.` — not yet run.
 
 | `n \\ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
 | -------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -59,20 +59,20 @@ Legend:
 |       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
 |       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
 |       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |
-|       14 |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  X  |  ?  |
-|       15 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
-|       16 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
-|       17 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
-|       18 |  ?  |  ?  |  ?  |  ?  |  ?  |  x  |  X  |  ?  |
-|       19 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
+|       14 |  .  |  .  |  .  |  .  |  .  |  X  |  X  |  .  |
+|       15 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
+|       16 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
+|       17 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
+|       18 |  .  |  .  |  .  |  .  |  .  |  x  |  X  |  .  |
+|       19 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
 
 The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
 no non-Star topology gives a smaller hard counterexample.
 
-The additional confirmed cells are `A(14,6)`, `A(14,7)`, `A(15,7)`,
-`A(16,7)`, `A(17,7)`, `A(18,6)`, `A(18,7)`, and `A(19,7)`. The `?` cells
-have not been run; they are not negative results.
+The additional confirmed cells are `A(14,6)`, `A(14,7)`, `A(15,7)`, `A(16,7)`,
+`A(17,7)`, `A(18,6)`, `A(18,7)`, and `A(19,7)`. The `.` cells have not been run;
+they are not negative results.
 
 ## Representative hard counterexamples
 

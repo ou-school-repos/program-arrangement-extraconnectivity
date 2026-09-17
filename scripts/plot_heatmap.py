@@ -8,19 +8,26 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 
 LABELS = {
     "/": 0,
-    "v": 1,
-    "S": 2,
-    "H": 3,
+    "o": 1,
+    "x": 2,
+    "X": 3,
     "~": 4,
+    ".": 5,
 }
 
 ROWS = {
-    8: ["/", "/", "v", "v", "v", "v", "v", "~"],
-    9: ["/", "/", "v", "v", "v", "S", "v", "v"],
-    10: ["/", "/", "v", "v", "v", "S", "S", "S"],
-    11: ["/", "/", "v", "v", "v", "H", "S", "S"],
-    12: ["/", "/", "v", "v", "v", "H", "S", "S"],
-    13: ["/", "/", "v", "v", "v", "H", "H", "S"],
+    8: ["/", "/", "o", "o", "o", "o", "o", "~"],
+    9: ["/", "/", "o", "o", "o", "x", "o", "o"],
+    10: ["/", "/", "o", "o", "o", "x", "x", "x"],
+    11: ["/", "/", "o", "o", "o", "X", "x", "x"],
+    12: ["/", "/", "o", "o", "o", "X", "x", "x"],
+    13: ["/", "/", "o", "o", "o", "X", "X", "x"],
+    14: [".", ".", ".", ".", ".", "X", "X", "."],
+    15: [".", ".", ".", ".", ".", ".", "X", "."],
+    16: [".", ".", ".", ".", ".", ".", "X", "."],
+    17: [".", ".", ".", ".", ".", ".", "X", "."],
+    18: [".", ".", ".", ".", ".", "x", "X", "."],
+    19: [".", ".", ".", ".", ".", ".", "X", "."],
 }
 
 
@@ -35,9 +42,10 @@ def main() -> None:
             "#dd8452",  # soft
             "#c44e52",  # hard
             "#f2f2f2",  # irrelevant
+            "#ffffff",  # not run
         ]
     )
-    norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5], cmap.N)
+    norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5], cmap.N)
 
     figure, axis = plt.subplots(figsize=(8, 5))
     image = axis.imshow(values, cmap=cmap, norm=norm, aspect="auto")
@@ -56,10 +64,11 @@ def main() -> None:
         plt.Rectangle((0, 0), 1, 1, color=color, label=label)
         for color, label in [
             ("#cccccc", "/: invalid extra cut"),
-            ("#4c72b0", "v: satisfies Hamming comparison"),
-            ("#dd8452", "S: soft counterexample"),
-            ("#c44e52", "H: hard counterexample"),
+            ("#4c72b0", "o: satisfies Hamming comparison"),
+            ("#dd8452", "x: soft counterexample"),
+            ("#c44e52", "X: hard counterexample"),
             ("#f2f2f2", "~: irrelevant or non sequitur"),
+            ("#ffffff", ".: not yet run"),
         ]
     ]
     axis.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.02, 1))
