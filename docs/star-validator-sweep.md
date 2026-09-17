@@ -11,6 +11,9 @@ that is crucially strictly better than the Hamming ball local optimum.
 
 ```text
 m = n - k
+|V(A(n,k))| = nP_k = n!/(n-k)!
+deg(A(n,k)) = k*m
+|E(A(n,k))| = |V(A(n,k))|*k*m/2
 R = |S| = 1 + k*m
 g = R - 1 = k*m
 d = bit_length(R - 1)
@@ -27,6 +30,9 @@ The Hamming comparison is
 ```text
 H(n,k,R) = (R*k - E(R))*(n-k) - C(R)
 ```
+
+Here `E(R)` and `C(R)` are Hamming-collision correction terms; `E(R)` is not the
+graph edge count `|E(A(n,k))|` above.
 
 The embedding gate is open exactly when `d <= k` and `d <= n-k`.
 
@@ -93,9 +99,9 @@ The largest deeply certified hard counterexample so far is `A(16,8)`, with
 
 ## Representative hard counterexamples
 
-Sorted by valid-vertex count `\|V\| = nP_k`. Here `\|∂S\| = \|N(S)\|` is the
-measured Star boundary, while `∂_H(R)` denotes the Hamming-comparison baseline
-for volume `R`.
+Sorted by valid-vertex count `\|V\| = nP_k`. The graph edge count is
+`\|E\| = \|V\|*k(n-k)/2`. Here `\|∂S\| = \|N(S)\|` is the measured Star
+boundary, while `∂_H(R)` denotes the Hamming-comparison baseline for volume `R`.
 
 | graph     |     `\|V\|` |        `\|E\|` |         `n^k` | `R` | `g` | `\|∂S\|` | `\∂_H(R)` | `Δ` | `d,(k,n-k)` |
 | --------- | ----------: | -------------: | ------------: | --: | --: | -------: | --------: | --: | :---------- |
@@ -117,29 +123,39 @@ for volume `R`.
 | `A(20,7)` | 390,700,800 | 17,776,886,400 | 1,280,000,000 |  92 |  91 |    3,822 |     4,356 | 534 | `7,(7,13)`  |
 | `A(16,8)` | 518,918,400 | 16,605,388,800 | 4,294,967,296 |  65 |  64 |    2,016 |     2,417 | 401 | `7,(8,8)`   |
 
-## New result: `A(19,7)`
+## New result: `A(16,8)`
 
 Command:
 
 ```bash
-./bin/validate_extra_cut 19 7
+./bin/validate_extra_cut 16 8
 ```
 
 Output summary:
 
-```text
-Total valid vertices: 253955520
-Candidate g = 84
-|S| = 85
-|N(S)| = 3276
+```shell
+$ time ./bin/validate_extra_cut 16 8
+Building A(16,8)...
+Total valid vertices: 518918400
+R = 65
+Candidate g = 64
+|S| = 65
+Subset S connectivity verified.
+|N(S)| = 2016
+Validating 64-extra cut properties...
 component sizes after deletion:
-  85
-  253952159
-valid 84-extra cut: yes
-therefore kappa_84(A(19,7)) <= 3276
-Hamming baseline: 3783; Star boundary: 3276
-Embedding gate: d = 7, k = 7, n-k = 12 (open)
+  65
+  518916319
+valid 64-extra cut: yes
+therefore kappa_64(A(16,8)) <= 2016
+Hamming baseline: 2417; Star boundary: 2016
+Embedding gate: d = 7, k = 8, n-k = 8 (open)
 HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+
+real    3m59.012s
+user    3m55.815s
+sys     0m2.316s
 ```
 
 The comparison gap is `3783 - 3276 = 507`. Therefore the Star gives
