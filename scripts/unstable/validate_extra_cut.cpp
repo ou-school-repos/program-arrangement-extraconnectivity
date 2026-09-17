@@ -3,7 +3,8 @@
 // This proves only an upper bound: if the post-deletion component test passes,
 // it establishes kappa_g(A(n,k)) <= |N(S)|. It does not prove optimality.
 // Usage: validate_extra_cut [n k] [--dump PATH]
-// A .json dump is strict JSON; .md/.markdown and other suffixes are Markdown.
+// A .json dump is strict JSON; other suffixes produce a fixed-width text
+// certificate suitable for appendices and diff-based checks.
 
 #include <algorithm>
 #include <fstream>
@@ -183,81 +184,86 @@ class OutputMirror {
     bool active_;
 };
 
-void dump_markdown(std::ostream &out, const ArrangementGraph &graph,
-                   const std::vector<std::vector<int>> &star,
-                   const std::vector<int> &boundary_codes,
-                   const std::vector<int> &component_sizes, int g, bool valid) {
+void dump_text(std::ostream &out, const ArrangementGraph &graph,
+               const std::vector<std::vector<int>> &star,
+               const std::vector<int> &boundary_codes,
+               const std::vector<int> &component_sizes, int g, bool valid) {
     const int m = graph.n - graph.k;
     const int degree = graph.k * m;
     const int family_a = graph.k * (graph.k - 1) * m;
     const int family_b = graph.k * (graph.k - 1) / 2 * m * (m - 1);
     const int internal_edges = graph.k * (m + 1) * m / 2;
 
-    out << "# Full radius-one Star cut certificate\n\n";
-    out << "## Run summary\n\n"
-           "```text\n"
+    out << "FULL RADIUS-ONE STAR CUT CERTIFICATE\n"
+           "====================================\n\n"
+           "RUN SUMMARY\n"
+           "-----------\n"
         << "Building A(" << graph.n << ',' << graph.k << ")...\n"
         << "Total valid vertices: " << graph.valid_vertices.size() << "\n\n"
         << "Candidate g = " << g << "\n"
-        << "|S| = " << star.size() << "\n"
+        << "|S| = " << star.size()
+        << "\n"
            "Subset S connectivity verified.\n"
         << "|N(S)| = " << boundary_codes.size() << "\n"
-        << "Validating " << g << "-extra cut properties...\n"
+        << "Validating " << g
+        << "-extra cut properties...\n"
            "component sizes after deletion:\n";
     for (const int size : component_sizes)
         out << "  " << size << '\n';
-    out << "valid " << g << "-extra cut: " << (valid ? "yes" : "no")
-        << "\n";
+    out << "valid " << g << "-extra cut: " << (valid ? "yes" : "no") << "\n";
     if (valid)
         out << "therefore kappa_" << g << "(A(" << graph.n << ',' << graph.k
             << ")) <= " << boundary_codes.size() << "\n";
-    out << "```\n\n";
-    out << "## Validation\n\n";
-    out << "- Graph: `A(" << graph.n << "," << graph.k << ")`\n";
-    out << "- Total vertices: `" << graph.valid_vertices.size() << "`\n";
-    out << "- Regular degree: `" << degree << "`\n";
-    out << "- Candidate: `g = " << g << "`, `|S| = " << star.size() << "`\n";
-    out << "- Boundary: `|N(S)| = " << boundary_codes.size() << "`\n";
-    out << "- Star connectivity: verified\n";
-    out << "- Component sizes after deletion:";
+    out << "\nPARAMETERS\n----------\n";
+    out << "Graph             : A(" << graph.n << "," << graph.k << ")\n";
+    out << "Total vertices    : " << graph.valid_vertices.size() << "\n";
+    out << "Regular degree    : " << degree << "\n";
+    out << "Candidate g       : " << g << "\n";
+    out << "Subset |S|        : " << star.size() << "\n";
+    out << "Boundary |N(S)|   : " << boundary_codes.size() << "\n";
+    out << "Star connectivity : verified\n";
+    out << "Component sizes   :";
     for (const int size : component_sizes)
-        out << " `" << size << "`";
-    out << "\n- Valid extra cut: **" << (valid ? "yes" : "no") << "**\n";
+        out << ' ' << size;
+    out << "\nValid extra cut   : " << (valid ? "yes" : "no") << "\n";
     if (valid)
-        out << "- Upper bound: `kappa_" << g << "(A(" << graph.n << ','
-            << graph.k << ")) <= " << boundary_codes.size() << "`\n";
-    out << "\n| graph | degree | g | volume | boundary |\n"
-           "|:------|------:|--:|-------:|---------:|\n";
-    out << "| A(" << graph.n << ',' << graph.k << ") | " << degree << " | " << g
-        << " | " << star.size() << " | " << boundary_codes.size() << " |\n\n";
-    out << "Center: `";
+        out << "Upper bound       : kappa_" << g << "(A(" << graph.n << ','
+            << graph.k << ")) <= " << boundary_codes.size() << "\n";
+    out << "\nCENTER AND SPARE SYMBOLS\n------------------------\n"
+           "Center            : ";
     print_vertex(out, star.front());
-    out << "`; spare symbols: `{" << graph.k << ",...," << graph.n - 1
-        << "}`.\n\n";
-    out << "## Star\n\n";
-    out << "Each branch mutates exactly one coordinate to one spare "
-           "symbol.\n\n";
-    out << "| positions | mutation | count |\n"
-           "|:----------|:---------|------:|\n";
-    out << "| `i = 0..k-1` | `c[i <- s]`, `s` spare | " << graph.k * m
-        << " |\n\n";
-    out << "The center is adjacent to every leaf. A leaf `c[i <- s]` is\n"
-           "adjacent to the center and to the other leaves `c[i <- t]` in its\n"
-           "branch.\n\n";
-    out << "Star internal edges: " << internal_edges << ". Degree sequence: "
-        << "center " << graph.k * m << ", leaves " << m << " repeated "
-        << graph.k * m << ".\n\n";
-    out << "## Cut `N(S)`\n\n";
-    out << "| family | mutation pattern | multiplicity | count |\n"
-           "|:-------|:-----------------|-------------:|------:|\n";
-    out << "| A | `c[i <- s, j <- i]`, `i != j` | 1 | " << family_a << " |\n";
-    out << "| B | `c[i <- s, j <- t]`, `i < j`, `s != t` | 2 | " << family_b
-        << " |\n\n";
-    out << "Cut size: `" << family_a << " + " << family_b << " = "
-        << family_a + family_b << "` (enumerated `" << boundary_codes.size()
-        << "`).\n"
-           "Cut incidence: family A contributes one incidence per vertex;\n"
-           "family B contributes two.\n\n";
+    out << "\nSpare symbols     : {" << graph.k << ",...," << graph.n - 1
+        << "}\n\n";
+    out << "STAR\n----\n"
+           "Rule              : one coordinate replaced by one spare symbol\n"
+           "Leaves            : "
+        << graph.k * m
+        << "\n"
+           "Internal edges    : "
+        << internal_edges
+        << "\n"
+           "Degree sequence   : center "
+        << graph.k * m << "; leaves " << m << " repeated " << graph.k * m
+        << " times\n"
+           "Adjacency         : center-to-all leaves; each branch is a clique\n"
+           "                    together with the center\n\n"
+           "CUT N(S)\n--------\n"
+           "Family A          : c[i <- s, j <- i], i != j\n"
+           "  multiplicity    : 1\n"
+           "  count           : "
+        << family_a
+        << "\n"
+           "Family B          : c[i <- s, j <- t], i < j, s != t\n"
+           "  multiplicity    : 2\n"
+           "  count           : "
+        << family_b
+        << "\n"
+           "Cut size          : "
+        << family_a << " + " << family_b << " = " << family_a + family_b
+        << " (enumerated " << boundary_codes.size()
+        << ")\n"
+           "Cut incidence     : family A contributes one; family B contributes "
+           "two\n";
 }
 
 void dump_json(std::ostream &out, const ArrangementGraph &graph,
@@ -447,8 +453,8 @@ int main(int argc, char **argv) {
             dump_json(std::cout, graph, star, boundary_codes, component_sizes,
                       g, false);
         } else if (certificate_format) {
-            dump_markdown(std::cout, graph, star, boundary_codes,
-                          component_sizes, g, false);
+            dump_text(std::cout, graph, star, boundary_codes, component_sizes,
+                      g, false);
         } else {
             std::cout << "valid " << g << "-extra cut: no\n";
         }
@@ -458,8 +464,8 @@ int main(int argc, char **argv) {
         dump_json(std::cout, graph, star, boundary_codes, component_sizes, g,
                   true);
     } else if (certificate_format) {
-        dump_markdown(std::cout, graph, star, boundary_codes, component_sizes,
-                      g, true);
+        dump_text(std::cout, graph, star, boundary_codes, component_sizes, g,
+                  true);
     } else {
         std::cout << "valid " << g << "-extra cut: yes\n";
         std::cout << "therefore kappa_" << g << "(A(" << n << ',' << k
