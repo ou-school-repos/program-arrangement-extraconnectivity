@@ -367,7 +367,10 @@ csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
-	-cppcheck --language=c++ --std=c++17 --enable=information,performance,portability,style,unusedFunction,warning --check-level=exhaustive --quiet $(SRCS) | tee lint.log
+	-cppcheck --language=c++ --std=c++17 \
+		--enable=information,performance,portability,style,unusedFunction,warning \
+		--check-level=exhaustive --checkers-report=.cppcheck-checkers.txt \
+		--quiet $(SRCS) | tee lint.log
 	flake8 --jobs=1 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 

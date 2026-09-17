@@ -1537,11 +1537,12 @@ for every subset — this is the lemma the `X ≤ ΔE` bound above actually rest
 not `E_seq_add_bound`/`E_seq_list_sum_le` (lines 299-329), which are a separate,
 more specialized superadditivity tool used inside that theorem's own induction,
 not something to invoke directly here. Also relevant:
-`sandwich_lower_bound_proven` (proved) vs. `sandwich_upper_bound_conjecture` and
-`hypercube_fracture_gap_conjecture` (both still open, the latter marked
-"TODO(review)" in the file itself) — confirms the "defect ≤ E_seq" direction
-used above is on solid ground, while the collision-side bound the
-uniqueness-conjecture dependency above needs is exactly the still-open half.
+`sandwich_lower_bound_conditional` (conditional) vs.
+`sandwich_upper_bound_conjecture` and `hypercube_fracture_gap_conjecture` (both
+still open, the latter marked "TODO(review)" in the file itself) — confirms the
+"defect ≤ E_seq" direction used above is on solid ground, while the
+collision-side bound the uniqueness-conjecture dependency above needs is exactly
+the still-open half.
 
 **Explicit coordinate trace, A(6,3) c_a=c_b=4 (2026-09-13, same session).**
 Extended `check_amortized_slack.cpp` with a `(T, B_ab+B_ba)` histogram (keyed

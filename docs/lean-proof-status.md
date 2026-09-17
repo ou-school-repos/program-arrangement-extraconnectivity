@@ -49,11 +49,11 @@ remaining extremal combinatorics hypotheses rather than depending on raw global
 
 <!-- markdownlint-enable MD013 -->
 
-\*Conditional on `RestrictedLowerBound` and `HBCrossCollisions` until the direct
-collision proof and remaining supporting scaffold are reconciled and wired into
-the public capstone (see below). Harper's Theorem is proven but **not in the
-dependency chain** of the capstone theorem. The defect-based proof bypasses it
-entirely via algebraic subadditivity of E_seq.
+\*Conditional on the per-instance `RestrictedLowerBound` hypothesis. The
+Hamming-ball collision equality is proved directly by `CrossTop` and is used by
+the wrapper theorem. Harper's Theorem is proven but **not in the dependency
+chain** of the capstone theorem. The defect-based proof bypasses it entirely via
+algebraic subadditivity of E_seq.
 
 ## Dependency Graph
 
@@ -69,8 +69,8 @@ arrangement_extraconnectivity_minimum
   │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
   │    └─ hamming_ball_eval           (exact boundary evaluation)
   │         ├─ hb_total_coord_edges   (from total_coord_edges_eq)
-  │         └─ HBCrossCollisions [HYPOTHESIS]
-  └─ RestrictedLowerBound [HYPOTHESIS] (under embedding conditions)
+  │         └─ hb_cross_collisions_closed [PROVEN]
+  └─ RestrictedLowerBound R n k [HYPOTHESIS]
 ```
 
 ## Remaining Hypothesis Interfaces
@@ -97,21 +97,20 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
   Consequently no Lean theorem or axiom is removed or added:
   `RestrictedLowerBound` remains the active capstone hypothesis, gated by the
   hypercube embedding conditions. Those conditions do not establish the
-  inequality: A(11,6), R=31≤2^5 is already a Star counterexample. The proof
-  remains open. (`scripts/lyapunov_profile_check.py`) refutes the additive
-  convex potential Ψ_f(V') = Σ_r f(|V' ∩ F_r|) even with Hamming-ball
+  inequality: A(11,6), R=31≤2^5 is already a Star counterexample: the Star has
+  boundary 450 while the proposed bound is 476. Thus
+  `¬ ∀ R n k, RestrictedLowerBound R n k`; the public theorem now takes the
+  hypothesis per instance. (`scripts/lyapunov_profile_check.py`) refutes the
+  additive convex potential Ψ_f(V') = Σ_r f(|V' ∩ F_r|) even with Hamming-ball
   normalization: the embedded-cube equalities alone are algebraically
   inconsistent for A(5,3) and A(6,3), and A(4,3) admits equality weights that
   violate the corpus lower bound on an explicit witness.
 
 ### 2. Hamming-ball collision evaluation (`HBCrossCollisions`)
 
-`CrossTop.lean` contains a direct candidate theorem `hb_cross_collisions_closed`
-for nonempty Hamming balls. The public capstone does not yet import and consume
-that theorem; it continues to require `HBCrossCollisions` explicitly. The direct
-route can be promoted only after the remaining `CrossRecurrence` interface and
-unstable-scaffold obligations are reconciled, at which point the hypothesis
-parameter should be removed.
+`CrossTop.lean` proves `hb_cross_collisions_closed` for nonempty Hamming balls,
+and the `arrangement_boundary_minimum` wrapper consumes it directly. The lower
+bound remains an explicit per-instance `RestrictedLowerBound` hypothesis.
 
 ### Superseded: `CollisionAdjustedBound` / `sub_optimal_penalty`
 

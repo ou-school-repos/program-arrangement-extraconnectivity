@@ -257,8 +257,9 @@ def sum_bit_length : ℕ → ℕ
   | 0 => 0
   | n + 1 => sum_bit_length n + bit_length n
 
-/-- The collision constant: maximum "waste" (collisions + defect) for an
-    R-element subset. Equals the number of 4-cycles in the Hamming Ball. -/
+/-- The collision constant used by the Hamming-ball boundary formula. It records
+    external multiplicity excess/open-square corner overlap, not the number of
+    induced 4-cycles. -/
 def C_constant (R : ℕ) : ℕ :=
   (R - 1) + sum_bit_length R - E_seq R
 
@@ -1627,9 +1628,9 @@ lemma hb_total_coord_edges {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     via multiple dimensions. In the Hamming Ball, this corresponds exactly to
     swapping two active symbols, yielding C_constant R - E_seq R overlaps.
 
-    This explicitly counts the 4-cycles in the Hamming Ball. It is mathematically
-    equivalent to the existential half of the Kruskal-Katona Theorem and requires
-    extremal set theory shadow operators to prove formally. -/
+    This counts external multiplicity excess in the Hamming Ball. It is not an
+    induced 4-cycle count, and no Kruskal--Katona equivalence is asserted; the
+    closed form is proved directly in CrossTop. -/
 def HBCrossCollisions (R n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Prop :=
   cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R
 
@@ -1702,7 +1703,7 @@ theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_
 
   The "Squeeze" proof establishes that the Hamming Ball ordering is the
   Globally Optimal Growth Strategy for subgraphs in A(n,k).
-  This provides the **Full Isoperimetric Profile** for the graph:
+  This provides a **conditional boundary profile** for the graph:
   - The formula remains tight for every natural number R because the
     Hamming Ball ordering maintains the maximum possible internal
     "shielding" (defect minimization) at every step of growth (R → R+1).
@@ -1748,13 +1749,11 @@ theorem globally_optimal_growth_strategy_of_cross
   conjecture below remains a stronger, pointwise statement for each fixed
   `(R,n,k)`.
 
-  However, the exact boundary formula is `|N(V')| = U*(n-k) - X(V')`. If two graphs
+  However, the exact boundary formula is `|N(V')| = U*(n-k) - (X(V') + D(V'))`. If two graphs
   tie in unique roots `U`, the one that maximizes cross-collisions `X(V')` wins.
 
-  By the Kruskal-Katona theorem, the Hamming Ball strictly maximizes these 4-cycle
-  shadow overlaps. Thus, the collision constant `C_constant` acts as a
-  **Geometric Tie-Breaker**, mathematically isolating the Hamming Ball as the
-  strictly unique minimizer.
+  Any uniqueness or tie-breaking claim requires a separate extremal theorem;
+  it does not follow from the penalty identity or from Kruskal--Katona alone.
 
   This conjecture formally states that any set achieving the minimum boundary
   must be isomorphic to the Hamming Ball under the graph's automorphism group.
@@ -1778,18 +1777,19 @@ def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
     Relation.ReflTransGen (fun x y => arr_adjacent x y ∧ x ∈ V' ∧ y ∈ V') u v
 
 /--
-  THE CONNECTED ISOPERIMETRIC SANDWICH
+  CONDITIONAL CONNECTED ISOPERIMETRIC SANDWICH
 
   Computational enumeration reveals that the boundary of any Pareto-optimal
   connected R-vertex subgraph is perfectly sandwiched between:
   1. The Dense Limit: The Hamming Ball (Minimum boundary)
   2. The Sparse Limit: The Star Graph K_{1, R-1} (Maximum boundary for an optimal tree)
 
-  HALF 1: PROVEN.
-  The lower bound is automatically satisfied by our Capstone Theorem,
-  as the Hamming Ball universally bounds ALL subsets.
+  HALF 1: CONDITIONAL.
+  The lower bound follows only from the explicit `RestrictedLowerBound`
+  hypothesis for this instance; the Hamming Ball does not universally bound
+  all subsets.
 -/
-theorem sandwich_lower_bound_proven (R n k : ℕ) (h_embed : can_embed_hypercube R n k)
+theorem sandwich_lower_bound_conditional (R n k : ℕ) (h_embed : can_embed_hypercube R n k)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (_hConn : is_connected_subgraph V')
     (h_lower : RestrictedLowerBound R n k) :
     (R * k - E_seq R) * (n - k) - C_constant R ≤ external_neighbors V' := by

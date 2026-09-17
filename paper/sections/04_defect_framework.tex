@@ -179,11 +179,11 @@ closes the induction. Mechanically verified in Lean~4
 
 Instead of relying on a dimension-independent bound on the combined waste (which
 is sensitive to $n-k$ for sub-optimal topologies), the global boundary
-minimality is captured by the following universal boundary inequality. Together
-with the evaluation of the Hamming Ball, these two propositions form our
-extremal framework.
+minimality is isolated as the following explicit open interface. Together with
+the evaluation of the Hamming Ball, it defines the conditional extremal
+framework.
 
-\begin{conjecture}[Restricted Boundary Inequality]\label{prop:restricted_lower_bound}
+\begin{conjecture}[Open Restricted Boundary Hypothesis]\label{prop:restricted_lower_bound}
 	Under the hypercube embedding conditions $k \ge \lceil \log_2 R \rceil$ and
 	$n-k \ge \lceil \log_2 R \rceil$, every subset $V' \subseteq V(A(n,k))$ of
 	cardinality $R$ satisfies
@@ -193,17 +193,12 @@ extremal framework.
 \end{conjecture}
 
 \begin{remark}[Scope of the restricted bound]
-The unrestricted form of this inequality (without the embedding conditions)
-fails: in $A(10,8)$, the full Star with $R=17$ has boundary $168$, below
-the target $169$. More importantly, the embedding conditions do not by
-themselves establish the claim for general $m$. For example, the full Star in
-$A(12,6)$ at $R=37$ satisfies
-$k=m=6\ge\lceil\log_2 37\rceil$, but has boundary slack $-57$ relative to
-the proposed lower bound. The conditions are therefore a useful motivation
-for the Hamming embedding, not a proved safe-range criterion. Computational
-verification confirms the restricted bound for all tested parameters with
-$m\le4$; the general geometric statement remains open and must be given an
-additional range or shape hypothesis.
+The unrestricted form fails in $A(10,8)$ at $R=17$. More importantly, the
+embedding conditions themselves are insufficient: the full Star in $A(11,6)$
+at $R=31$ satisfies $\lceil\log_2 31\rceil=5\le6$ and $6+5\le11$, but has
+boundary $450$ while the proposed lower bound is $476$. The full Star in
+$A(12,6)$ at $R=37$ has slack $-57$ as well. Thus the embedding conditions
+motivate the construction but are not a safe-range criterion.
 \end{remark}
 
 \begin{remark}[Full-Star obstruction shoreline]
@@ -328,7 +323,10 @@ swallowed slots form a subset of $P_i\setminus Q_i$, giving
 $L_{c,i}\le|P_i\setminus Q_i|=|P_i|-|Q_i|=|P_i|-R_i$.
 \end{proof}
 
-The remaining step to resolve Proposition~\ref{prop:restricted_lower_bound} via this route is a coverage-avoidance inequality bounding $L_c$. This inequality remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational} are diagnostic evidence only.
+The remaining step to resolve a genuinely restricted version of this claim via
+this route is a coverage-avoidance inequality bounding $L_c$. This inequality
+remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational}
+are diagnostic evidence only.
 
 \begin{remark}
 These propositions encode the extremal content of a vertex-isoperimetric
@@ -376,8 +374,9 @@ cut---without increasing the cut. This reduction is not addressed in the Lean
 formalization, whose capstone proves only a statement about external-neighbor
 sets of $R$-element subsets. In the Lean 4 formalization, rather than declaring
 these propositions as global axioms, we express this dependency by
-parameterizing the public capstone theorem with the explicit
-\texttt{RestrictedLowerBound} hypothesis, active under the hypercube embedding conditions.
+parameterizing the public capstone theorem with the explicit, per-instance
+\texttt{RestrictedLowerBound} hypothesis. The embedding conditions alone do
+not make that hypothesis true.
 The Hamming-ball collision evaluation
 is supplied by the direct Lean proof. This cleanly isolates the classical
 extremal set theory from the novel algebraic machinery
@@ -385,12 +384,25 @@ while ensuring that the compiled theorems are completely transparent, verified,
 and free of raw, uninstantiated axiom commands.
 \end{remark}
 
-Combining these propositions with the boundary decomposition yields our main
-result:
+\begin{proposition}[Finite computer-assisted certificates]
+The C++ slice upper bound and exhaustive origin-pinned oracle establish the
+following finite cases, subject to the stated slice inequalities and the
+independent exhaustive checks. Every tested volume is certified for
+$A(n,2)$ with $n\le14$. For $k=3$, the certificate covers every volume in
+$A(5,3)$ except $R=5,6,7$, every volume in $A(6,3)$, $A(7,3)$, and $A(8,3)$
+except $R=5$; the omitted rows are settled by exhaustive enumeration. In the
+tested cases the exact values satisfy $Q_m(S)\le G_m(|S|)$, with equality in
+the reported tight rows. These are finite computer-assisted results, not a
+proof of the open restricted hypothesis.
+\end{proposition}
+
+Combining these propositions with the boundary decomposition yields our
+conditional main result:
 
 \begin{theorem}[Conditional Minimum-Boundary Theorem]\label{thm:main}
-\textup{(Conditional on Conjecture~\ref{prop:restricted_lower_bound}
-and~\ref{prop:hb-eval}.)} Assume the hypercube embedding conditions
+\textup{(Conditional on the open Restricted Boundary Hypothesis
+\ref{prop:restricted_lower_bound} and the Hamming-ball evaluation
+\ref{prop:hb-eval}.)} Assume the hypercube embedding conditions
 $k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$.
 Then for all $R \ge 2$:
 	\begin{enumerate}
