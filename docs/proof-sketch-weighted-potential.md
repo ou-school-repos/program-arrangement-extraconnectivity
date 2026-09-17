@@ -2388,3 +2388,54 @@ scan.
 The next proof task is to characterize the safe range and derive the pair-drop
 formula by coordinate-agreement type, rather than promote the finite audit to an
 unrestricted induction.
+
+### Current capstone status: the Star shoreline
+
+The formula-only Star diagnostic changes the scale of the investigation. For the
+radius-one full-Star spine with (j) active branches,
+
+\[ R=1+jm,\qquad D(S_j)=jm, \]
+
+and
+
+\[ X(S_j)=m(m-1)\binom{j}{2}. \]
+
+Consequently,
+
+\[ Q_m(S_j)=X(S_j)+(m+1)D(S_j) =m(m-1)\binom{j}{2}+jm(m+1). \]
+
+The (k)-dependence disappears after parameterizing the Star by (m=n-k) and (j);
+(k) only converts the branch count into the volume (R). The formula-only sweep
+recorded in `docs/profiling.md` gives the following first failures:
+
+| (m) | first negative pair margin | first negative boundary slack |
+| --: | -------------------------: | ----------------------------: |
+|   2 |                (j=7, R=15) |                   (j=8, R=17) |
+|   3 |                (j=6, R=19) |                   (j=6, R=19) |
+|   4 |                (j=4, R=17) |                   (j=4, R=17) |
+|   5 |                (j=4, R=21) |                   (j=6, R=31) |
+
+This table is an obstruction map, not a proof that these are universal
+thresholds for arbitrary subsets. It proves that unrestricted pair peeling is
+not the capstone lemma and that any safe-regime theorem must either impose a
+shape/range hypothesis or use a potential that accounts for Star collisions.
+
+The asymptotic mechanism is nevertheless clear. Since
+
+\[ E(R)=\tfrac12R\log*2R+O(R),\qquad \sum*{i=1}^{R-1}\lceil\log_2(i+1)\rceil
+=R\log_2R+O(R), \]
+
+we have
+
+\[ G_m(R)=\frac{m+1}{2}R\log_2R+O_m(R), \]
+
+whereas (Q_m(S_j)=\frac{m-1}{2m}R^2+O_m(R)). Thus every fixed (m\ge2) admits
+sufficiently large Star obstructions. The remaining mathematical task is not to
+extend the unrestricted surrogate, but to prove a restricted geometric lemma and
+state its exact domain honestly.
+
+The algebraic subadditivity audit supports the candidate potential over the
+tested ranges, but the manuscript should retain the distinction between that
+finite audit and a proof of the digit-sum inequalities. The capstone is reached
+only after those inequalities and the restricted geometric boundary lemma have
+both been established.

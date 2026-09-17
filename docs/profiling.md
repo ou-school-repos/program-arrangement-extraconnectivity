@@ -129,3 +129,22 @@ already $-1$ there. For $A(15,12)$, the surrogate first fails at $R=19$ and the
 pair margin is $-7$. Both runs complete in under one second, confirming that the
 previous multi-gigabyte behavior was caused entirely by unnecessary full-graph
 construction.
+
+## Full-Star dual sweep by $m=n-k$ (2026-09-17)
+
+The formula-only diagnostic was swept over $m\in\{2,3,4,5\}$ and several values
+of $k$. For fixed $m$ and Star branch count $j$, the margins were identical
+across all tested $k$. Thus $k$ affects the reported volume $R=1+jm$, but not
+the Star's defect, collision, boundary slack, or pair margin.
+
+| $m$ | First negative pair margin | First negative boundary slack |
+| --: | -------------------------: | ----------------------------: |
+|   2 |              $j=7$, $R=15$ |                 $j=8$, $R=17$ |
+|   3 |              $j=6$, $R=19$ |                 $j=6$, $R=19$ |
+|   4 |              $j=4$, $R=17$ |                 $j=4$, $R=17$ |
+|   5 |              $j=4$, $R=21$ |                 $j=6$, $R=31$ |
+
+This is evidence that the Star shoreline can be parameterized by $(m,j)$, with
+$k$ entering only through the volume conversion. It also separates the
+pair-peeling threshold from the final surrogate failure threshold: for $m=2$ and
+$m=5$, pair peeling fails strictly earlier.

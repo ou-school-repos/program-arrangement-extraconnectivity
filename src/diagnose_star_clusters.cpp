@@ -122,18 +122,26 @@ PairResult pair_margin(const Subset &subset, int n, int k) {
     const Int budget =
         c_constant(r) + m * e_seq(r) - c_constant(r - 2) - m * e_seq(r - 2);
     PairResult result;
-    for (int i = 0; i < r; ++i) {
-        for (int j = i + 1; j < r; ++j) {
-            Subset reduced;
-            for (int index = 0; index < r; ++index)
-                if (index != i && index != j)
-                    reduced.push_back(subset[index]);
-            const Int q_after = m * (r - 2) * k - boundary(reduced, n, k);
-            const Int margin = budget - (q_before - q_after);
-            if (margin > result.margin)
-                result = {margin, i, j};
-        }
-    }
+    auto consider = [&](int i, int j) {
+        Subset reduced;
+        for (int index = 0; index < r; ++index)
+            if (index != i && index != j)
+                reduced.push_back(subset[index]);
+        const Int q_after = m * (r - 2) * k - boundary(reduced, n, k);
+        const Int margin = budget - (q_before - q_after);
+        if (margin > result.margin)
+            result = {margin, i, j};
+    };
+
+    // The Star automorphism group has only three pair orbits: center-leaf,
+    // same-branch leaves, and leaves from different branches.  One
+    // representative of each orbit is therefore an exact exhaustive test.
+    const int leaves_per_branch = n - k;
+    consider(0, 1); // center and a leaf
+    if (leaves_per_branch >= 2)
+        consider(1, 2); // two leaves in one branch
+    if (r > 1 + leaves_per_branch)
+        consider(1, 1 + leaves_per_branch); // leaves in different branches
     return result;
 }
 
