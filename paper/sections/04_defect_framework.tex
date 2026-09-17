@@ -203,6 +203,49 @@ Star. Computational verification confirms the restricted bound for all
 parameters with $m \le 4$; the proof for general $m$ remains open.
 \end{remark}
 
+\begin{remark}[Full-Star obstruction shoreline]
+The formula-only Star diagnostic gives a sharper obstruction map without
+constructing the factorial-sized arrangement graph.  For the radius-one Star
+with $j$ active branches and $m=n-k$,
+\begin{equation}
+ R=1+jm,\qquad D(S_j)=jm,\qquad
+ X(S_j)=m(m-1)\frac{j(j-1)}{2}.
+\end{equation}
+Consequently,
+\begin{equation}
+ Q_m(S_j)=m(m-1)\frac{j(j-1)}{2}+jm(m+1).
+\end{equation}
+The observed first negative pair margins and first negative boundary slacks are
+shown below.  The values are independent of $k$ when $m$ and $j$ are fixed;
+$k$ only converts $j$ to the volume $R$.
+
+\begin{center}
+\begin{tabular}{c|c|c}
+ $m$ & first negative pair margin & first negative boundary slack \\
+ \hline
+ 2 & $j=7$, $R=15$ & $j=8$, $R=17$ \\
+ 3 & $j=6$, $R=19$ & $j=6$, $R=19$ \\
+ 4 & $j=4$, $R=17$ & $j=4$, $R=17$ \\
+ 5 & $j=4$, $R=21$ & $j=6$, $R=31$ \\
+ 6 & $j=3$, $R=19$ & $j=6$, $R=37$ \\
+ 8 & $j=4$, $R=33$ & $j=4$, $R=33$ \\
+ 10 & $j=4$, $R=41$ & $j=6$, $R=61$ \\
+ 12 & $j=6$, $R=73$ & $j=6$, $R=73$ \\
+ 15 & $j=5$, $R=76$ & $j=6$, $R=91$ \\
+ 20 & $j=4$, $R=81$ & $j=7$, $R=141$ \\
+\end{tabular}
+\end{center}
+
+This table is an obstruction map, not a proof that the Star thresholds are
+universal thresholds for arbitrary subsets.  In particular, it does not prove
+that every set below the Star threshold satisfies the restricted boundary
+inequality.  A proof of such a safe-region statement still requires a
+compression or extremal argument.  Pair removal also has four Star pair
+orbits: center--leaf, same-branch leaves, and different-branch leaves with
+equal or unequal unused symbols.  Removing a pair need not produce the pure
+Star $S_{j-2}$, so the recurrence must retain these local configurations.
+\end{remark}
+
 \begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
 	The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
 	\begin{equation}\label{eq:hb-eval}
