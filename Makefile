@@ -78,6 +78,8 @@ SRC_DIAGNOSE_STAR = src/diagnose_star_clusters.cpp
 BIN_DIAGNOSE_STAR = diagnose_star_clusters
 SRC_AUDIT_ORBITS = scripts/audit_orbits.cpp
 BIN_AUDIT_ORBITS = audit_orbits
+SRC_FDP_UNSTABLE = scripts/unstable/fdp.cpp
+BIN_FDP_UNSTABLE = fdp_unstable
 
 # Every top-level executable produced by this Makefile.  Keep this list
 # explicit: several source names intentionally map to different binary names
@@ -88,7 +90,7 @@ ALL_BINS = $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) \
 	$(BIN_A10_BOOST) $(BIN_A10_SMT) $(BIN_ROOT_STATE) $(BIN_PROFILE_DP) \
 	$(BIN_EMPIRICAL_GAMMA) $(BIN_TRANSFER) $(BIN_FIBER) $(BIN_WINDOW) \
 	$(BIN_ANNEAL) $(BIN_AUDIT_SURROGATE) $(BIN_DIAGNOSE_DEFECT) \
-	$(BIN_DIAGNOSE_STAR) $(BIN_AUDIT_ORBITS)
+	$(BIN_DIAGNOSE_STAR) $(BIN_AUDIT_ORBITS) $(BIN_FDP_UNSTABLE)
 LEGACY_PROFILE_BINS = a10_5_profile_dp transfer_dp_prototype fiber_ordering transfer_dp_window
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
@@ -243,6 +245,11 @@ $(BIN_AUDIT_ORBITS): $(SRC_AUDIT_ORBITS)
 	$(CXX) $(CXXFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
 
+$(BIN_FDP_UNSTABLE): $(SRC_FDP_UNSTABLE)
+	@$(call print_info,Building exploratory $@)
+	$(CXX) $(CXXFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
 $(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
 $(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
 $(BIN_OPT): $(ARRANGEMENT_HDRS)
@@ -360,7 +367,7 @@ csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
-	-cppcheck --language=c++ --std=c++17 --enable=warning,style,performance --quiet $(SRCS) | tee lint.log
+	-cppcheck --language=c++ --std=c++17 --enable=information,performance,portability,style,unusedFunction,warning --check-level=exhaustive --quiet $(SRCS) | tee lint.log
 	flake8 --jobs=1 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 
