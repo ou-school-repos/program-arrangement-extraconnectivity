@@ -445,7 +445,7 @@ struct SearchStats {
 
 struct ProgressReporter {
     std::atomic<std::uint64_t> nodes{0};
-    std::uint64_t interval = 10'000'000;
+    std::uint64_t interval = 25'000'000;
     long double expected_nodes = 0.0L;
     std::chrono::steady_clock::time_point started =
         std::chrono::steady_clock::now();
@@ -636,7 +636,7 @@ int main(int argc, char **argv) {
     const int k = argc > 2 ? std::stoi(argv[2]) : 2;
     const int target = argc > 3 ? std::stoi(argv[3]) : 5;
     int thread_count = available_threads();
-    std::uint64_t progress_interval = 10'000'000;
+    std::uint64_t progress_interval = 25'000'000;
     for (int argument = 4; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--threads=", 0) == 0)
