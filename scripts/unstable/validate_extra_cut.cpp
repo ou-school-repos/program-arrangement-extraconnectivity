@@ -194,6 +194,24 @@ void dump_markdown(std::ostream &out, const ArrangementGraph &graph,
     const int internal_edges = graph.k * (m + 1) * m / 2;
 
     out << "# Full radius-one Star cut certificate\n\n";
+    out << "## Run summary\n\n"
+           "```text\n"
+        << "Building A(" << graph.n << ',' << graph.k << ")...\n"
+        << "Total valid vertices: " << graph.valid_vertices.size() << "\n\n"
+        << "Candidate g = " << g << "\n"
+        << "|S| = " << star.size() << "\n"
+           "Subset S connectivity verified.\n"
+        << "|N(S)| = " << boundary_codes.size() << "\n"
+        << "Validating " << g << "-extra cut properties...\n"
+           "component sizes after deletion:\n";
+    for (const int size : component_sizes)
+        out << "  " << size << '\n';
+    out << "valid " << g << "-extra cut: " << (valid ? "yes" : "no")
+        << "\n";
+    if (valid)
+        out << "therefore kappa_" << g << "(A(" << graph.n << ',' << graph.k
+            << ")) <= " << boundary_codes.size() << "\n";
+    out << "```\n\n";
     out << "## Validation\n\n";
     out << "- Graph: `A(" << graph.n << "," << graph.k << ")`\n";
     out << "- Total vertices: `" << graph.valid_vertices.size() << "`\n";
@@ -223,9 +241,9 @@ void dump_markdown(std::ostream &out, const ArrangementGraph &graph,
            "|:----------|:---------|------:|\n";
     out << "| `i = 0..k-1` | `c[i <- s]`, `s` spare | " << graph.k * m
         << " |\n\n";
-    out << "The center is adjacent to every leaf. A leaf `c[i <- s]` is "
-           "adjacent to the center and to the other leaves `c[i <- t]` in "
-           "its branch.\n\n";
+    out << "The center is adjacent to every leaf. A leaf `c[i <- s]` is\n"
+           "adjacent to the center and to the other leaves `c[i <- t]` in its\n"
+           "branch.\n\n";
     out << "Star internal edges: " << internal_edges << ". Degree sequence: "
         << "center " << graph.k * m << ", leaves " << m << " repeated "
         << graph.k * m << ".\n\n";
@@ -237,7 +255,9 @@ void dump_markdown(std::ostream &out, const ArrangementGraph &graph,
         << " |\n\n";
     out << "Cut size: `" << family_a << " + " << family_b << " = "
         << family_a + family_b << "` (enumerated `" << boundary_codes.size()
-        << "`).\n\n";
+        << "`).\n"
+           "Cut incidence: family A contributes one incidence per vertex;\n"
+           "family B contributes two.\n\n";
 }
 
 void dump_json(std::ostream &out, const ArrangementGraph &graph,
@@ -329,11 +349,13 @@ int main(int argc, char **argv) {
     }
     const bool json_format = dump_path.size() >= 5 &&
                              dump_path.substr(dump_path.size() - 5) == ".json";
+    const bool certificate_format = !dump_path.empty();
+    const bool show_progress = !certificate_format;
 
-    if (!json_format)
+    if (show_progress)
         std::cout << "Building A(" << n << ',' << k << ")...\n";
     ArrangementGraph graph(n, k);
-    if (!json_format)
+    if (show_progress)
         std::cout << "Total valid vertices: " << graph.valid_vertices.size()
                   << "\n";
 
@@ -351,7 +373,7 @@ int main(int argc, char **argv) {
     }
 
     const int g = static_cast<int>(star.size()) - 1;
-    if (!json_format) {
+    if (show_progress) {
         std::cout << "\nCandidate g = " << g << "\n";
         std::cout << "|S| = " << star.size() << "\n";
     }
@@ -359,7 +381,7 @@ int main(int argc, char **argv) {
         std::cerr << "Error: constructed Star is not connected.\n";
         return 1;
     }
-    if (!json_format)
+    if (show_progress)
         std::cout << "Subset S connectivity verified.\n";
 
     int boundary_count = 0;
@@ -373,7 +395,7 @@ int main(int argc, char **argv) {
             ++boundary_count;
         }
     }
-    if (!json_format)
+    if (show_progress)
         std::cout << "|N(S)| = " << boundary_count << "\n";
     if (n == 11 && k == 6 && boundary_count != 450) {
         std::cerr << "Error: expected |N(S)| = 450 for A(11,6), got "
@@ -381,7 +403,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (!json_format)
+    if (show_progress)
         std::cout << "Validating " << g << "-extra cut properties...\n";
     std::vector<int> component_sizes;
     for (const auto &vertex : graph.valid_vertices) {
@@ -410,11 +432,11 @@ int main(int argc, char **argv) {
     }
 
     std::sort(component_sizes.begin(), component_sizes.end());
-    if (!json_format)
+    if (show_progress)
         std::cout << "component sizes after deletion:\n";
     bool valid = component_sizes.size() >= 2;
     for (const int size : component_sizes) {
-        if (!json_format)
+        if (show_progress)
             std::cout << "  " << size << '\n';
         if (size <= g)
             valid = false;
@@ -424,24 +446,24 @@ int main(int argc, char **argv) {
         if (json_format) {
             dump_json(std::cout, graph, star, boundary_codes, component_sizes,
                       g, false);
+        } else if (certificate_format) {
+            dump_markdown(std::cout, graph, star, boundary_codes,
+                          component_sizes, g, false);
         } else {
             std::cout << "valid " << g << "-extra cut: no\n";
-            if (!dump_path.empty())
-                dump_markdown(std::cout, graph, star, boundary_codes,
-                              component_sizes, g, false);
         }
         return 0;
     }
     if (json_format) {
         dump_json(std::cout, graph, star, boundary_codes, component_sizes, g,
                   true);
+    } else if (certificate_format) {
+        dump_markdown(std::cout, graph, star, boundary_codes, component_sizes,
+                      g, true);
     } else {
         std::cout << "valid " << g << "-extra cut: yes\n";
         std::cout << "therefore kappa_" << g << "(A(" << n << ',' << k
                   << ")) <= " << boundary_count << "\n";
-        if (!dump_path.empty())
-            dump_markdown(std::cout, graph, star, boundary_codes,
-                          component_sizes, g, true);
     }
     return 0;
 }
