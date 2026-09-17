@@ -238,17 +238,24 @@ class CompletionOracle {
         std::cout << "oracle: created " << selected.size()
                   << " selected and boundary variables\n"
                   << std::flush;
-        z3::expr volume = context.int_val(0);
-        z3::expr boundary_size = context.int_val(0);
-        for (int id = 0; id < static_cast<int>(selected.size()); ++id) {
-            volume = volume + z3::ite(selected[id], context.int_val(1),
-                                      context.int_val(0));
-            boundary_size =
-                boundary_size +
-                z3::ite(boundary[id], context.int_val(1), context.int_val(0));
-        }
-        solver.add(volume == kVolume);
-        solver.add(boundary_size <= kBoundaryCeiling);
+        std::vector<Z3_ast> volume_args;
+        std::vector<int> volume_coefficients(selected.size(), 1);
+        std::vector<Z3_ast> boundary_args;
+        std::vector<int> boundary_coefficients(boundary.size(), 1);
+        std::copy(selected.begin(), selected.end(),
+                  std::back_inserter(volume_args));
+        std::copy(boundary.begin(), boundary.end(),
+                  std::back_inserter(boundary_args));
+        solver.add(z3::expr(
+            context,
+            Z3_mk_pbeq(context, static_cast<unsigned>(volume_args.size()),
+                       volume_args.data(), volume_coefficients.data(),
+                       kVolume)));
+        solver.add(z3::expr(
+            context,
+            Z3_mk_pble(context, static_cast<unsigned>(boundary_args.size()),
+                       boundary_args.data(), boundary_coefficients.data(),
+                       kBoundaryCeiling)));
 
         std::vector<Z3_ast> aggregate_args;
         std::vector<int> aggregate_coefficients;
@@ -260,19 +267,18 @@ class CompletionOracle {
                     ("hybrid_a_" + std::to_string(active_lines.size()))
                         .c_str());
                 active_lines.push_back(active);
-                z3::expr occupied = context.bool_val(false);
-                z3::expr selected_on_line = context.int_val(0);
+                std::vector<Z3_ast> line_args;
+                std::vector<int> line_coefficients(line.size(), 1);
                 for (const int id : line) {
-                    occupied = occupied || selected[id];
-                    selected_on_line = selected_on_line +
-                                       z3::ite(selected[id], context.int_val(1),
-                                               context.int_val(0));
+                    line_args.push_back(selected[id]);
                     solver.add(implies(selected[id], active));
                     solver.add(implies(active && !selected[id], boundary[id]));
                 }
-                solver.add(implies(active, occupied));
-                solver.add(z3::ite(active, context.int_val(1),
-                                   context.int_val(0)) <= selected_on_line);
+                const z3::expr line_nonempty(
+                    context,
+                    Z3_mk_pbge(context, static_cast<unsigned>(line_args.size()),
+                               line_args.data(), line_coefficients.data(), 1));
+                solver.add(implies(active, line_nonempty));
                 if (active_lines.size() % 1000 == 0)
                     std::cout
                         << "oracle: line constraints=" << active_lines.size()
@@ -371,7 +377,18 @@ bool search(const Instance &instance, State &state, std::vector<int> &subset,
             return false;
         }
         ++metrics.oracle_calls;
+        const auto oracle_started = std::chrono::steady_clock::now();
+        std::cout << "search: oracle call " << metrics.oracle_calls
+                  << " at depth " << state.selected_count << '\n'
+                  << std::flush;
         const z3::check_result result = oracle.check(subset, timeout_ms);
+        const double oracle_seconds =
+            std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                          oracle_started)
+                .count();
+        std::cout << "search: oracle result " << result << " after "
+                  << oracle_seconds << "s\n"
+                  << std::flush;
         if (result == z3::sat) {
             ++metrics.sat;
             metrics.found = true;
