@@ -26,6 +26,7 @@ profile_telescope_milp
 /simulated_annealing*
 /root_state_validator
 /empirical_*
+/transfer_dp_*
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

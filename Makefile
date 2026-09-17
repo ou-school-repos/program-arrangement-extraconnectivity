@@ -62,6 +62,8 @@ SRC_PROFILE_DP = scripts/a10_5_profile_dp.cpp
 BIN_PROFILE_DP = a10_5_profile_dp
 SRC_EMPIRICAL_GAMMA = scripts/empirical_gamma_bound.cpp
 BIN_EMPIRICAL_GAMMA = empirical_gamma_bound
+SRC_TRANSFER = scripts/transfer_dp_prototype.cpp
+BIN_TRANSFER = transfer_dp_prototype
 SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
 BIN_ANNEAL = simulated_annealing_hunt
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
@@ -173,6 +175,11 @@ $(BIN_PROFILE_DP): $(SRC_PROFILE_DP) scripts/arrangement_core.hpp
 	@$(call print_success,Build complete.)
 
 $(BIN_EMPIRICAL_GAMMA): $(SRC_EMPIRICAL_GAMMA) scripts/arrangement_core.hpp
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_TRANSFER): $(SRC_TRANSFER) scripts/arrangement_core.hpp
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
