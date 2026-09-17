@@ -6,10 +6,13 @@
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <map>
 #include <numeric>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
+using arrangement::Automorphism;
 using arrangement::Instance;
 
 namespace {
@@ -61,6 +64,80 @@ struct StateHash {
         return hash;
     }
 };
+
+std::vector<Automorphism> full_automorphisms(const Instance &instance) {
+    std::vector<Automorphism> group;
+    std::vector<int> coordinates(instance.k);
+    std::iota(coordinates.begin(), coordinates.end(), 0);
+    std::vector<int> symbols(instance.n);
+    std::iota(symbols.begin(), symbols.end(), 0);
+    do {
+        do {
+            group.push_back({coordinates, symbols});
+        } while (std::next_permutation(symbols.begin(), symbols.end()));
+        std::iota(symbols.begin(), symbols.end(), 0);
+    } while (std::next_permutation(coordinates.begin(), coordinates.end()));
+    return group;
+}
+
+std::vector<Automorphism> context_automorphisms(
+    const Instance &instance, const std::vector<std::vector<int>> &fibers,
+    const std::vector<int> &order, const std::size_t next_step,
+    const std::vector<Automorphism> &full_group) {
+    std::map<std::vector<int>, int> fiber_ids;
+    for (int fiber = 0; fiber < static_cast<int>(fibers.size()); ++fiber)
+        fiber_ids[fibers[fiber]] = fiber;
+    std::vector<bool> processed(fibers.size(), false);
+    for (std::size_t i = 0; i < next_step; ++i)
+        processed[order[i]] = true;
+
+    std::vector<Automorphism> result;
+    for (const auto &automorphism : full_group) {
+        bool valid = true;
+        for (std::size_t i = 0; i < next_step && valid; ++i) {
+            std::vector<int> mapped(fibers[order[i]].size());
+            std::transform(fibers[order[i]].begin(), fibers[order[i]].end(),
+                           mapped.begin(), [&](const int vertex) {
+                               return automorphism.apply(vertex, instance);
+                           });
+            std::sort(mapped.begin(), mapped.end());
+            const auto found = fiber_ids.find(mapped);
+            valid = found != fiber_ids.end() && processed[found->second];
+        }
+        if (valid && next_step < order.size()) {
+            std::vector<int> mapped(fibers[order[next_step]].size());
+            std::transform(fibers[order[next_step]].begin(),
+                           fibers[order[next_step]].end(), mapped.begin(),
+                           [&](const int vertex) {
+                               return automorphism.apply(vertex, instance);
+                           });
+            std::sort(mapped.begin(), mapped.end());
+            valid = mapped == fibers[order[next_step]];
+        }
+        if (valid)
+            result.push_back(automorphism);
+    }
+    return result;
+}
+
+WindowState canonicalize(const WindowState &state, const Instance &instance,
+                         const std::vector<Automorphism> &context_group) {
+    if (context_group.size() <= 1 || state.envelope.empty())
+        return state;
+    WindowState best = state;
+    bool initialized = false;
+    for (const auto &automorphism : context_group) {
+        WindowState candidate = state;
+        for (auto &entry : candidate.envelope)
+            entry.vertex = automorphism.apply(entry.vertex, instance);
+        std::sort(candidate.envelope.begin(), candidate.envelope.end());
+        if (!initialized || candidate.envelope < best.envelope) {
+            best = std::move(candidate);
+            initialized = true;
+        }
+    }
+    return best;
+}
 
 std::vector<int> greedy_fiber_order(const Instance &instance,
                                     std::vector<std::vector<int>> &fibers) {
@@ -144,6 +221,7 @@ int main(int argc, char **argv) {
     const Instance instance(n, k);
     std::vector<std::vector<int>> fibers;
     const auto order = greedy_fiber_order(instance, fibers);
+    const auto full_group = full_automorphisms(instance);
     std::vector<std::unordered_map<WindowState, int, StateHash>> current(
         max_volume + 1);
     current[0][WindowState{}] = 0;
@@ -154,6 +232,8 @@ int main(int argc, char **argv) {
 
     for (std::size_t step = 0; step < order.size(); ++step) {
         const auto &fiber = fibers[order[step]];
+        const auto context_group = context_automorphisms(
+            instance, fibers, order, step + 1, full_group);
         std::vector<std::unordered_map<WindowState, int, StateHash>> next(
             max_volume + 1);
         std::size_t transitions = 0;
@@ -239,9 +319,12 @@ int main(int argc, char **argv) {
                     std::sort(envelope.begin(), envelope.end());
                     WindowState candidate{volume + added, finalized,
                                           std::move(envelope)};
-                    next[candidate.volume].emplace(std::move(candidate),
+                    candidate =
+                        canonicalize(candidate, instance, context_group);
+                    const int candidate_volume = candidate.volume;
+                    next[candidate_volume].emplace(std::move(candidate),
                                                    finalized);
-                    if (next[candidate.volume].size() > max_states)
+                    if (next[candidate_volume].size() > max_states)
                         break;
                 }
                 if (next[volume].size() > max_states)
@@ -257,6 +340,7 @@ int main(int argc, char **argv) {
             });
         std::cout << "step=" << step + 1 << '/' << order.size()
                   << " fiber=" << order[step] << " transitions=" << transitions
+                  << " context-group=" << context_group.size()
                   << " states=" << state_count << '\n';
         if (state_count > max_states) {
             std::cout << "state-limit-reached\n";
