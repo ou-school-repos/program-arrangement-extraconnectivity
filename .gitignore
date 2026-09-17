@@ -11,6 +11,7 @@
 *.gch
 
 # Compiled binaries
+bin/
 arrangement
 predict
 predict_test

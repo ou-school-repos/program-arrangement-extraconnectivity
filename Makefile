@@ -172,7 +172,27 @@ build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(
 
 CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
 
-.PHONY: certificates certificates-check fracture-arithmetic-check
+.PHONY: certificates certificates-check fracture-arithmetic-check tools
+
+# Standalone tools that do not require optional solver libraries.  Sources
+# using OR-Tools, Z3, or the MILP backend remain on their specialized targets
+# below, where the required include and link flags are available.
+AUTO_TOOL_SOURCES = $(wildcard src/*.c src/*.cc src/*.cpp scripts/*.c scripts/*.cc scripts/*.cpp scripts/unstable/*.c scripts/unstable/*.cc scripts/unstable/*.cpp)
+AUTO_TOOL_EXCLUDED = $(SRC_OPT) $(SRC_GHOSTS) $(SRC_TRIPLES) $(SRC_SINGLE) $(SRC_PROFILE_TELESCOPE) $(SRC_A10_HUNT) $(SRC_A10_BOOST) $(SRC_A10_SMT)
+AUTO_TOOL_SOURCES := $(filter-out $(AUTO_TOOL_EXCLUDED),$(AUTO_TOOL_SOURCES))
+AUTO_TOOL_BINS = $(addprefix bin/,$(notdir $(AUTO_TOOL_SOURCES:.c=)))
+AUTO_TOOL_BINS := $(AUTO_TOOL_BINS:.cc=)
+AUTO_TOOL_BINS := $(AUTO_TOOL_BINS:.cpp=)
+
+tools: $(AUTO_TOOL_BINS) ##H @Build Compile standalone C/C++ tools into bin/
+
+define AUTO_TOOL_template
+bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
+	@mkdir -p bin
+	$(CXX) $(CXXFLAGS) -o $$@ $$<
+endef
+$(foreach source,$(AUTO_TOOL_SOURCES),$(eval $(call AUTO_TOOL_template,$(source))))
+
 certificates:	##H @Build Compile the finite certificate/oracle tools
 	@mkdir -p $(CERTIFICATE_BUILD)
 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/fdp_certificate.cpp -o $(CERTIFICATE_BUILD)/fdp_certificate
