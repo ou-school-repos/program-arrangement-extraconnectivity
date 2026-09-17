@@ -3,6 +3,8 @@
 // a separate layer and must be validated before it is enabled.
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <climits>
 #include <cstdint>
 #include <iostream>
@@ -322,10 +324,33 @@ struct SearchStats {
     std::uint64_t cache_hits = 0;
 };
 
+struct ProgressReporter {
+    std::atomic<std::uint64_t> nodes{0};
+    std::uint64_t interval = 1'000'000;
+    std::chrono::steady_clock::time_point started =
+        std::chrono::steady_clock::now();
+
+    void record(const int depth) {
+        const std::uint64_t count = nodes.fetch_add(1) + 1;
+        if (interval == 0 || count % interval != 0)
+            return;
+        const double seconds = std::chrono::duration<double>(
+                                   std::chrono::steady_clock::now() - started)
+                                   .count();
+        const double rate = seconds > 0.0 ? count / seconds : 0.0;
+#ifdef _OPENMP
+#pragma omp critical(profile_dp_progress)
+#endif
+        std::cerr << "progress nodes=" << count << " depth=" << depth
+                  << " rate=" << rate << "/s\n";
+    }
+};
+
 void search(const Instance &instance, ProfileState &state,
             std::vector<int> &chosen, const int target, int &best,
             std::unordered_set<std::vector<int>, VectorHash> &seen,
-            SearchStats &stats, const std::vector<Automorphism> &stabilizer) {
+            SearchStats &stats, const std::vector<Automorphism> &stabilizer,
+            ProgressReporter *progress) {
     if (state.optimistic_bound(target) >= best) {
         ++stats.bound_prunes;
         return;
@@ -346,7 +371,10 @@ void search(const Instance &instance, ProfileState &state,
         state.add(vertex);
         chosen.push_back(vertex);
         ++stats.nodes;
-        search(instance, state, chosen, target, best, seen, stats, stabilizer);
+        if (progress != nullptr)
+            progress->record(state.selected_count);
+        search(instance, state, chosen, target, best, seen, stats, stabilizer,
+               progress);
         chosen.pop_back();
         state.remove(vertex);
     }
@@ -364,7 +392,7 @@ void search_parallel(const Instance &instance, const int target, int &best,
                      std::unordered_set<std::vector<int>, VectorHash> &seen,
                      SearchStats &stats,
                      const std::vector<Automorphism> &stabilizer,
-                     const int thread_count) {
+                     const int thread_count, ProgressReporter *progress) {
     // Vertex transitivity lets us pin one vertex without changing the
     // optimum, giving independent second-vertex branches to the workers.
     std::vector<int> origin(instance.k);
@@ -375,7 +403,8 @@ void search_parallel(const Instance &instance, const int target, int &best,
         ProfileState state(instance);
         state.add(origin_id);
         std::vector<int> chosen{origin_id};
-        search(instance, state, chosen, target, best, seen, stats, stabilizer);
+        search(instance, state, chosen, target, best, seen, stats, stabilizer,
+               progress);
         return;
     }
 
@@ -396,7 +425,7 @@ void search_parallel(const Instance &instance, const int target, int &best,
         int local_best = INT_MAX;
         local_stats.nodes = 1;
         search(instance, state, chosen, target, local_best, local_seen,
-               local_stats, stabilizer);
+               local_stats, stabilizer, progress);
 
 #ifdef _OPENMP
 #pragma omp critical(profile_dp_merge)
@@ -416,17 +445,21 @@ void search_parallel(const Instance &instance, const int target, int &best,
 int main(int argc, char **argv) {
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
-        std::cout << "usage: " << argv[0] << " [n k target] [--threads=N]\n";
+        std::cout << "usage: " << argv[0]
+                  << " [n k target] [--threads=N] [--progress=N]\n";
         return 0;
     }
     const int n = argc > 1 ? std::stoi(argv[1]) : 4;
     const int k = argc > 2 ? std::stoi(argv[2]) : 2;
     const int target = argc > 3 ? std::stoi(argv[3]) : 5;
     int thread_count = available_threads();
+    std::uint64_t progress_interval = 1'000'000;
     for (int argument = 4; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--threads=", 0) == 0)
             thread_count = std::stoi(option.substr(10));
+        else if (option.rfind("--progress=", 0) == 0)
+            progress_interval = std::stoull(option.substr(11));
         else {
             std::cerr << "unknown option: " << option << '\n';
             return 2;
@@ -442,16 +475,19 @@ int main(int argc, char **argv) {
         return 2;
     }
     const auto stabilizer = origin_stabilizer(instance);
+    ProgressReporter progress;
+    progress.interval = progress_interval;
     std::unordered_set<std::vector<int>, VectorHash> seen;
     SearchStats stats;
     int best = INT_MAX;
     if (thread_count == 1) {
         ProfileState state(instance);
         std::vector<int> chosen;
-        search(instance, state, chosen, target, best, seen, stats, stabilizer);
+        search(instance, state, chosen, target, best, seen, stats, stabilizer,
+               &progress);
     } else {
         search_parallel(instance, target, best, seen, stats, stabilizer,
-                        thread_count);
+                        thread_count, &progress);
     }
     std::cout << "A(" << n << ',' << k << ") R=" << target << " best=" << best
               << " nodes=" << stats.nodes
