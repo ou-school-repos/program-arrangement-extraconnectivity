@@ -24,15 +24,12 @@ namespace {
 
 using boost::multiprecision::cpp_int;
 
-cpp_int binomial(const int n, const int k) {
+cpp_int falling_factorial(const int n, const int k) {
     if (k < 0 || k > n)
         return 0;
-    const int reduced_k = std::min(k, n - k);
     cpp_int result = 1;
-    for (int i = 1; i <= reduced_k; ++i) {
-        result *= n - reduced_k + i;
-        result /= i;
-    }
+    for (int i = 0; i < k; ++i)
+        result *= n - i;
     return result;
 }
 
@@ -40,8 +37,8 @@ cpp_int raw_tree_nodes(const int vertices, const int target,
                        const bool pinned_origin) {
     cpp_int total = 0;
     for (int depth = 1; depth <= target; ++depth) {
-        total += pinned_origin ? binomial(vertices - 1, depth - 1)
-                               : binomial(vertices, depth);
+        total += pinned_origin ? falling_factorial(vertices - 1, depth - 1)
+                               : falling_factorial(vertices, depth);
     }
     return total;
 }
@@ -509,7 +506,7 @@ int main(int argc, char **argv) {
     const cpp_int expected_nodes = raw_tree_nodes(
         static_cast<int>(instance.vertices.size()), target, thread_count > 1);
     progress.expected_nodes = expected_nodes.convert_to<long double>();
-    std::cout << "raw baseline nodes=" << expected_nodes << " ("
+    std::cout << "raw ordered-transition nodes=" << expected_nodes << " ("
               << (thread_count > 1 ? "origin-pinned" : "full") << ")\n";
     std::unordered_set<std::vector<int>, VectorHash> seen;
     SearchStats stats;
@@ -528,6 +525,10 @@ int main(int argc, char **argv) {
               << " bound-prunes=" << stats.bound_prunes
               << " exact-cache-hits=" << stats.cache_hits
               << " threads=" << thread_count << " states=" << seen.size()
-              << '\n';
+              << '\n'
+              << "raw ordered-transition coverage="
+              << static_cast<double>(100.0L * stats.nodes /
+                                     expected_nodes.convert_to<long double>())
+              << "%\n";
     return 0;
 }
