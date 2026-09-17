@@ -54,6 +54,8 @@ SRC_A10_HUNT = scripts/a10_5_hunt.cpp
 BIN_A10_HUNT = a10_5_hunt
 SRC_A10_BOOST = scripts/a10_5_boost.cpp
 BIN_A10_BOOST = a10_5_boost
+SRC_A10_SMT = scripts/a10_5_smt_oracle.cpp
+BIN_A10_SMT = a10_5_smt_oracle
 SRC_ROOT_STATE = scripts/root_state_validator.cpp
 BIN_ROOT_STATE = root_state_validator
 SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
@@ -149,6 +151,11 @@ $(BIN_A10_HUNT): $(SRC_A10_HUNT)
 $(BIN_A10_BOOST): $(SRC_A10_BOOST)
 	@$(call print_info,Building $@ with OR-Tools)
 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) -DOR_PROTO_DLL= -fwrapv $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
+	@$(call print_success,Build complete.)
+
+$(BIN_A10_SMT): $(SRC_A10_SMT)
+	@$(call print_info,Building $@ with Z3)
+	$(CXX) $(CXXFLAGS) $(shell pkg-config --cflags z3) -o $@ $< $(shell pkg-config --libs z3)
 	@$(call print_success,Build complete.)
 
 $(BIN_ROOT_STATE): $(SRC_ROOT_STATE)
