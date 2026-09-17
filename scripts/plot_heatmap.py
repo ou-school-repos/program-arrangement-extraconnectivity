@@ -7,20 +7,20 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
 
 LABELS = {
-    "I": 0,
-    "S": 1,
-    "s": 2,
+    "/": 0,
+    "v": 1,
+    "S": 2,
     "H": 3,
-    "--": -1,
+    "~": 4,
 }
 
 ROWS = {
-    8: ["I", "I", "S", "S", "S", "S", "S", "--"],
-    9: ["I", "I", "S", "S", "S", "s", "S", "S"],
-    10: ["I", "I", "S", "S", "S", "s", "s", "s"],
-    11: ["I", "I", "S", "S", "S", "H", "s", "s"],
-    12: ["I", "I", "S", "S", "S", "H", "s", "s"],
-    13: ["I", "I", "S", "S", "S", "H", "H", "s"],
+    8: ["/", "/", "v", "v", "v", "v", "v", "~"],
+    9: ["/", "/", "v", "v", "v", "S", "v", "v"],
+    10: ["/", "/", "v", "v", "v", "S", "S", "S"],
+    11: ["/", "/", "v", "v", "v", "H", "S", "S"],
+    12: ["/", "/", "v", "v", "v", "H", "S", "S"],
+    13: ["/", "/", "v", "v", "v", "H", "H", "S"],
 }
 
 
@@ -28,8 +28,16 @@ def main() -> None:
     """Write the validator regime heatmap."""
     labels = list(ROWS.values())
     values = [[LABELS[label] for label in row] for row in labels]
-    cmap = ListedColormap(["#cccccc", "#4c72b0", "#dd8452", "#c44e52"])
-    norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5], cmap.N)
+    cmap = ListedColormap(
+        [
+            "#cccccc",  # invalid
+            "#4c72b0",  # Hamming-safe
+            "#dd8452",  # soft
+            "#c44e52",  # hard
+            "#f2f2f2",  # irrelevant
+        ]
+    )
+    norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5], cmap.N)
 
     figure, axis = plt.subplots(figsize=(8, 5))
     image = axis.imshow(values, cmap=cmap, norm=norm, aspect="auto")
@@ -47,10 +55,11 @@ def main() -> None:
     handles = [
         plt.Rectangle((0, 0), 1, 1, color=color, label=label)
         for color, label in [
-            ("#cccccc", "I: invalid extra cut"),
-            ("#4c72b0", "S: Hamming-safe Star"),
-            ("#dd8452", "s: soft counterexample"),
+            ("#cccccc", "/: invalid extra cut"),
+            ("#4c72b0", "v: satisfies Hamming comparison"),
+            ("#dd8452", "S: soft counterexample"),
             ("#c44e52", "H: hard counterexample"),
+            ("#f2f2f2", "~: irrelevant or non sequitur"),
         ]
     ]
     axis.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.02, 1))

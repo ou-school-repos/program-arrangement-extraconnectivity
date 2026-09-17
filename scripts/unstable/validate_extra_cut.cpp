@@ -253,7 +253,9 @@ int main(int argc, char **argv) {
         std::cerr << "Error: require n > k >= 1.\n";
         return 1;
     }
-    constexpr std::size_t max_code_space = 1'000'000'000;
+    // A(14,8) needs 14^8 = 1,475,789,056 one-byte status slots.  Keep a
+    // finite guard, but do not reject that useful boundary case outright.
+    constexpr std::size_t max_code_space = 2'000'000'000;
     std::size_t code_space = 1;
     for (int position = 0; position < k; ++position) {
         if (code_space > max_code_space / static_cast<std::size_t>(n)) {

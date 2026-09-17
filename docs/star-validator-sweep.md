@@ -42,22 +42,37 @@ The embedding gate is open exactly when `d <= k` and `d <= n-k`.
 
 ## Sweep map
 
-`H` means hard, `s` soft, `S` satisfies the Hamming comparison, and `I` is an
-invalid extra cut. A dash is outside `k < n`; later `k` values were rejected by
-the flat code-space guard.
+Legend:
+
+- `X` — hard counterexample to `RestrictedLowerBound`.
+- `x` — soft counterexample to `UniversalLowerBound` only.
+- `o` — satisfies the Hamming comparison.
+- `/` — invalid extra cut.
+- `~` — not applicable: outside `k < n` or rejected by guard.
+- `?` — not yet run.
 
 | `n \\ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
 | -------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-|        8 |  I  |  I  |  S  |  S  |  S  |  S  |  S  | --  |
-|        9 |  I  |  I  |  S  |  S  |  S  |  s  |  S  |  S  |
-|       10 |  I  |  I  |  S  |  S  |  S  |  s  |  s  |  s  |
-|       11 |  I  |  I  |  S  |  S  |  S  |  H  |  s  |  s  |
-|       12 |  I  |  I  |  S  |  S  |  S  |  H  |  s  |  s  |
-|       13 |  I  |  I  |  S  |  S  |  S  |  H  |  H  |  s  |
+|        8 |  /  |  /  |  o  |  o  |  o  |  o  |  o  |  ~  |
+|        9 |  /  |  /  |  o  |  o  |  o  |  x  |  o  |  o  |
+|       10 |  /  |  /  |  o  |  o  |  o  |  x  |  x  |  x  |
+|       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
+|       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
+|       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |
+|       14 |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  X  |  ?  |
+|       15 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
+|       16 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
+|       17 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
+|       18 |  ?  |  ?  |  ?  |  ?  |  ?  |  x  |  X  |  ?  |
+|       19 |  ?  |  ?  |  ?  |  ?  |  ?  |  ?  |  X  |  ?  |
 
 The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
 no non-Star topology gives a smaller hard counterexample.
+
+The additional confirmed cells are `A(14,6)`, `A(14,7)`, `A(15,7)`,
+`A(16,7)`, `A(17,7)`, `A(18,6)`, `A(18,7)`, and `A(19,7)`. The `?` cells
+have not been run; they are not negative results.
 
 ## Representative hard counterexamples
 
