@@ -128,42 +128,33 @@ CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
 tools: $(TOOL_BINS) ##H @Build Build all standalone C/C++ tools into bin/
 
 define TOOL_template
-bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
+bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)	##H @Tool Build $(notdir $(basename $(1))) into bin/
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) -o $$@ $$<
-
-$(notdir $(basename $(1))): bin/$(notdir $(basename $(1)))
 endef
 $(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
 
 # The nauty executable and the optional solver programs use non-default link
 # flags, so they remain explicit, but are grouped rather than mixed into the
 # ordinary tool list.
-arrangement: $(BIN_OPT) ##H @Build Build the nauty arrangement search
-predict: bin/predict ##H @Build Build the predictor
-universal_check: bin/universal_lower_bound ##H @Dev Alias for universal_lower_bound
-
-bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)
+bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)	##H @Tool Build arrangement into bin/
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $@ $< $(NAUTY_LIBS)
 
 optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
 
 define OPTIONAL_template
-bin/$(notdir $(basename $(1))): $(1)
+bin/$(notdir $(basename $(1))): $(1)	##H @Optional Build $(notdir $(basename $(1))) into bin/
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $$@ $$< $(ORTOOLS_LIBS)
-
-$(notdir $(basename $(1))): bin/$(notdir $(basename $(1)))
 endef
 $(foreach source,$(filter-out scripts/a10_5_smt_oracle.cpp,$(OPTIONAL_SOURCES)),$(eval $(call OPTIONAL_template,$(source))))
 
-bin/a10_5_smt_oracle: scripts/a10_5_smt_oracle.cpp
+bin/a10_5_smt_oracle: scripts/a10_5_smt_oracle.cpp	##H @Optional Build a10_5_smt_oracle into bin/
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) $$(shell pkg-config --cflags z3) -o $@ $< $$(shell pkg-config --libs z3)
-a10_5_smt_oracle: bin/a10_5_smt_oracle
 
-build: arrangement tools ##H @Build Build the core search and all standalone tools
+build: bin/arrangement tools ##H @Build Build the core search and all standalone tools
 
 certificates:	##H @Build Compile the finite certificate/oracle tools
 	@mkdir -p $(CERTIFICATE_BUILD)

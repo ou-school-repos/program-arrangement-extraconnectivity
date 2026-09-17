@@ -106,8 +106,8 @@ commands are `python3 scripts/check_universal_lower_bound.py --profile small`
 and `python3 scripts/check_universal_lower_bound.py --profile extended`. This
 remains finite evidence, not a proof.
 
-The C++ cross-check is built with `make universal_check` and invoked as, for
-example, `./universal_check 7 2 5`. It has a 250-million-subset default
+The C++ cross-check is built with `make bin/universal_lower_bound` and invoked as, for
+example, `bin/universal_lower_bound 7 2 5`. It has a 250-million-subset default
 safety limit; a deliberate larger run can supply `--max-subsets LIMIT`. The
 purpose is faster exhaustive evidence, not an unbounded claim.
 
@@ -126,7 +126,7 @@ proof merely maximizing collisions or merely maximizing defect is insufficient.
 
 ## Third Math Audit (2026-09-12, extended sweep)
 
-The exhaustive C++ verifier (`universal_check`) now covers 30 parameter rows,
+The exhaustive C++ verifier (`bin/universal_lower_bound`) now covers 30 parameter rows,
 including the 3,652,745,460-subset A(6,3) R=6 case, the 3,244,032,792-subset
 A(7,3) R=5 case, and the 61,949,040-subset A(6,5) R=3 case. 17 rows were
 cross-checked against the Python oracle (`check_universal_lower_bound.py`);
@@ -176,22 +176,22 @@ n−k=4 row.
 Commands used for the n−k=4 rows:
 
 ```bash
-g++ -O2 -std=c++17 -o /tmp/universal_check src/universal_lower_bound.cpp
-/tmp/universal_check 6 2 2
-/tmp/universal_check 6 2 3
-/tmp/universal_check 6 2 4
-/tmp/universal_check 6 2 5
-/tmp/universal_check 6 2 6
-/tmp/universal_check 7 3 2
-/tmp/universal_check 7 3 3
-/tmp/universal_check 7 3 4
+make bin/universal_lower_bound
+bin/universal_lower_bound 6 2 2
+bin/universal_lower_bound 6 2 3
+bin/universal_lower_bound 6 2 4
+bin/universal_lower_bound 6 2 5
+bin/universal_lower_bound 6 2 6
+bin/universal_lower_bound 7 3 2
+bin/universal_lower_bound 7 3 3
+bin/universal_lower_bound 7 3 4
 ```
 
 A(7,3) R=5 was run with `--max-subsets 4000000000` to lift the default
 250M safety cap:
 
 ```bash
-./universal_check 7 3 5 --max-subsets 4000000000
+bin/universal_lower_bound 7 3 5 --max-subsets 4000000000
 ```
 
 In the non-tight rows, positive slack is observed and grows with R for fixed
