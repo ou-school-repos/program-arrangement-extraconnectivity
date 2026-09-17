@@ -8,6 +8,7 @@
 #include <iostream>
 #include <numeric>
 #include <random>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -418,13 +419,29 @@ void canonicalization_test() {
 int main(int argc, char **argv) {
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
-        std::cout << "usage: " << argv[0]
-                  << "  (runs the built-in A(4,2) and A(5,3) tests)\n";
+        std::cout << "usage: " << argv[0] << " [n] [k] [target-size]\n"
+                  << "       " << argv[0]
+                  << " (runs the built-in A(4,2) and A(5,3) tests)\n";
         return 0;
     }
+    if (argc == 4) {
+        try {
+            const int n = std::stoi(argv[1]);
+            const int k = std::stoi(argv[2]);
+            const int target_size = std::stoi(argv[3]);
+            if (n < 1 || k < 1 || k > n || target_size < 1 ||
+                target_size > static_cast<int>(Instance(n, k).vertices.size()))
+                throw std::invalid_argument("invalid instance");
+            compare_dfs_pruning(Instance(n, k), target_size);
+            return 0;
+        } catch (const std::exception &) {
+            // Fall through to usage.
+        }
+    }
     if (argc > 1) {
-        std::cerr << "usage: " << argv[0]
-                  << "  (runs the built-in A(4,2) and A(5,3) tests)\n";
+        std::cerr << "usage: " << argv[0] << " [n] [k] [target-size]\n"
+                  << "       " << argv[0]
+                  << " (runs the built-in A(4,2) and A(5,3) tests)\n";
         return 2;
     }
     exhaustive_small_test();
@@ -433,5 +450,6 @@ int main(int argc, char **argv) {
     const Instance comparison_instance(5, 3);
     compare_dfs_pruning(comparison_instance, 4);
     compare_dfs_pruning(comparison_instance, 5);
+    compare_dfs_pruning(comparison_instance, 6);
     return 0;
 }
