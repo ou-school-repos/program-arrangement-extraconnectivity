@@ -66,6 +66,8 @@ SRC_TRANSFER = scripts/transfer_dp_prototype.cpp
 BIN_TRANSFER = transfer_dp_prototype
 SRC_FIBER = scripts/fiber_ordering.cpp
 BIN_FIBER = fiber_ordering
+SRC_WINDOW = scripts/transfer_dp_window.cpp
+BIN_WINDOW = transfer_dp_window
 SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
 BIN_ANNEAL = simulated_annealing_hunt
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
@@ -187,6 +189,11 @@ $(BIN_TRANSFER): $(SRC_TRANSFER) scripts/arrangement_core.hpp
 	@$(call print_success,Build complete.)
 
 $(BIN_FIBER): $(SRC_FIBER) scripts/arrangement_core.hpp
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_WINDOW): $(SRC_WINDOW) scripts/arrangement_core.hpp
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
