@@ -399,6 +399,7 @@ bool search(const Instance &instance, State &state, std::vector<int> &subset,
             return false;
         }
         ++metrics.unknown;
+        return false;
     }
 
     const int start = subset.back() + 1;
