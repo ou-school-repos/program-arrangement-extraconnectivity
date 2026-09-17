@@ -19,8 +19,7 @@ This document describes what a complete mechanized proof of each would require.
   `CrossTop.lean`'s `hb_cross_collisions_closed` proves it for every `R ≥ 1`
   with no strong induction, no `CrossDimStable`, and no `CrossRecurrence`, and
   `CrossTop.lean`'s `arrangement_boundary_minimum` /
-  `globally_optimal_growth_strategy` already call
-  `arrangement_boundary_minimum`'s conditional capstone
+  `globally_optimal_growth_strategy` already call the conditional capstone
   (`arrangement_boundary_minimum_of_cross`) with `hb_cross_collisions_closed`
   discharging its `HBCrossCollisions` hypothesis directly. The conditional
   capstone in `ArrangementExtraconnectivity.lean` is intentionally kept as a
@@ -132,11 +131,11 @@ family of (r-1)-element subsets contained in at least one member).
 
 ### What's needed (2)
 
-This is a possible auxiliary hypercube problem: prove that among all
-$R$-element subsets of the binary cube, the initial segment maximizes the
-chosen square statistic. Even if established, it would not identify the
-arrangement-graph quantity $X$, which is external multiplicity excess/open
-square-corner overlap rather than a 4-cycle count.
+This is a possible auxiliary hypercube problem: prove that among all $R$-element
+subsets of the binary cube, the initial segment maximizes the chosen square
+statistic. Even if established, it would not identify the arrangement-graph
+quantity $X$, which is external multiplicity excess/open square-corner overlap
+rather than a 4-cycle count.
 
 ### Proof approach
 
@@ -194,10 +193,10 @@ route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 ### What remains
 
-Nothing. The direct `CrossTop.lean` route is already wired into the public,
-unconditional capstone (`arrangement_boundary_minimum`,
-`globally_optimal_growth_strategy`), which calls
-`arrangement_boundary_minimum`'s conditional capstone with
+Nothing remains for the Hamming-ball evaluation. The direct `CrossTop.lean`
+route is wired into the public conditional boundary capstone
+(`arrangement_boundary_minimum`, `globally_optimal_growth_strategy`), which
+calls `arrangement_boundary_minimum`'s conditional capstone with
 `hb_cross_collisions_closed` discharging `HBCrossCollisions` directly. The
 recurrence driver and its scaffold obligations are archived and superseded, not
 pending. `UniversalLowerBound` remains the separate, still-open
@@ -207,8 +206,8 @@ Status" above).
 ## Total Remaining Estimated Effort
 
 **`HBCrossCollisions`**: done. It is discharged unconditionally by
-`CrossTop.lean`'s `hb_cross_collisions_closed` and is no longer a live
-hypothesis of the public, unconditional capstone theorems.
+`CrossTop.lean`'s `hb_cross_collisions_closed`; only the separate
+`RestrictedLowerBound` remains a live capstone hypothesis.
 
 **`RestrictedLowerBound`**: The active capstone hypothesis, gated by the
 hypercube embedding conditions. The embedding condition R ≤ 2^m is only a
@@ -217,8 +216,9 @@ proof for general m remains open.
 
 ## Uniqueness (Open Problem)
 
-The current proof establishes that the Hamming Ball **achieves** the minimum
-external boundary, but does not prove it is the **unique** minimizer.
+The current proof establishes that the Hamming Ball achieves the candidate
+boundary value; minimum status is conditional on `RestrictedLowerBound`, and
+uniqueness is not proved in general.
 
 ### What uniqueness would require
 
@@ -226,8 +226,9 @@ external boundary, but does not prove it is the **unique** minimizer.
   isomorphic to a Hamming Ball
 - This is equivalent to showing that E_seq is **strictly** subadditive for
   non-Hamming-Ball partitions
-- The computational search confirms uniqueness for small R (one minimum-cut
-  topology class per R); formula values verified via `predict --verify`
+- Finite orbit searches report one equality orbit in the checked small cells;
+  this is evidence only. Formula values are separately verified by
+  `predict --verify`.
 - Formalized as `uniqueness_conjecture` using the full automorphism group S_n ×
   S_k (symbol permutation σ + coordinate permutation τ)
 

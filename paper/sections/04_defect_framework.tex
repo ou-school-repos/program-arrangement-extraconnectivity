@@ -183,14 +183,16 @@ minimality is isolated as the following explicit open interface. Together with
 the evaluation of the Hamming Ball, it defines the conditional extremal
 framework.
 
-\begin{conjecture}[Open Restricted Boundary Hypothesis]\label{prop:restricted_lower_bound}
+\begin{definition}[Open Restricted Boundary Hypothesis]\label{prop:restricted_lower_bound}
 	Under the hypercube embedding conditions $k \ge \lceil \log_2 R \rceil$ and
 	$n-k \ge \lceil \log_2 R \rceil$, every subset $V' \subseteq V(A(n,k))$ of
 	cardinality $R$ satisfies
 	\begin{equation}\label{eq:restricted-bound}
 		\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 	\end{equation}
-\end{conjecture}
+The embedding conditions guarantee that the candidate Hamming ball exists;
+they do not prove this per-instance hypothesis.
+\end{definition}
 
 \begin{remark}[Scope of the restricted bound]
 The unrestricted form fails in $A(10,8)$ at $R=17$. More importantly, the
@@ -384,7 +386,20 @@ while ensuring that the compiled theorems are completely transparent, verified,
 and free of raw, uninstantiated axiom commands.
 \end{remark}
 
-\begin{proposition}[Finite computer-assisted certificates]
+\begin{proposition}[Finite computer-assisted certificates]\label{prop:finite-certificates}
+The certificate uses the following explicitly stated slice inequalities.  For a
+coordinate split with $U$ occupied projections, defect $d=R-U$, and $s$
+nonempty slices, its interface terms satisfy
+\begin{align}
+ \sum_c L_c &\le U\min(m,s-1)-d, \label{eq:line-slot-capacity}\\
+ Q_m'(S_c)+L_c &\le m(k-1)|S_c|. \label{eq:local-capacity}
+\end{align}
+The first inequality is the line-slot capacity bound; the second is the local
+boundary cap.  Since the same identity holds for every coordinate and
+$\sum_p d_p=D(S)\le \Eseq(R)$, the per-coordinate relaxation is combined using
+the upper concave envelope at average defect $\Eseq(R)/k$.  These are the
+mathematical inputs to the C++ relaxation; they are not currently Lean-checked.
+
 The C++ slice upper bound and exhaustive origin-pinned oracle establish the
 following finite cases, subject to the stated slice inequalities and the
 independent exhaustive checks. Every tested volume is certified for
@@ -396,13 +411,25 @@ the reported tight rows. These are finite computer-assisted results, not a
 proof of the open restricted hypothesis.
 \end{proposition}
 
+\begin{corollary}[Finite unconditional instances]
+For the finite graphs covered by Proposition~\ref{prop:finite-certificates},
+the certified inequality together with the Hamming-ball evaluation gives the
+exact minimum external boundary at every certified volume.  In particular,
+the reported rows include all tested volumes of $A(n,2)$ for $3\le n\le14$,
+all tested volumes of $A(6,3)$, $A(7,3)$, and $A(8,3)$, and the non-exceptional
+volumes of $A(5,3)$; the omitted $R=5,6,7$ cases in $A(5,3)$ and $R=5$ cases
+in the other $k=3$ rows are supplied by the exhaustive oracle.
+This is a computer-assisted result, not a Lean theorem.
+\end{corollary}
+
 Combining these propositions with the boundary decomposition yields our
 conditional main result:
 
 \begin{theorem}[Conditional Minimum-Boundary Theorem]\label{thm:main}
-\textup{(Conditional only on the per-instance open Restricted Boundary
-Hypothesis \ref{prop:restricted_lower_bound}.)} Assume the hypercube embedding conditions
-$k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$.
+\textup{(Conditional only on the per-instance open restricted-boundary
+hypothesis \ref{prop:restricted_lower_bound}.)} Assume the hypercube embedding
+conditions $k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$,
+and assume that per-instance hypothesis.
 Then for all $R \ge 2$:
 	\begin{enumerate}
 \item[\textup{(i)}] \textbf{Lower bound.} Every $R$-element subset $V'

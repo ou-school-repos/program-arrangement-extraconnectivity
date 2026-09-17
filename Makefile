@@ -172,13 +172,20 @@ build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(
 
 CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
 
-.PHONY: certificates
+.PHONY: certificates certificates-check fracture-arithmetic-check
 certificates:	##H @Build Compile the finite certificate/oracle tools
 	@mkdir -p $(CERTIFICATE_BUILD)
 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/fdp_certificate.cpp -o $(CERTIFICATE_BUILD)/fdp_certificate
 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/max_q_oracle.cpp -o $(CERTIFICATE_BUILD)/max_q_oracle
 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/audit_orbits.cpp -o $(CERTIFICATE_BUILD)/audit_orbits
 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/opt_orbits.cpp -o $(CERTIFICATE_BUILD)/opt_orbits
+
+certificates-check: certificates	##H @Test Run the finite certificate/oracle regression suite
+	CERT_BIN_DIR=$(CERTIFICATE_BUILD) certificates/soundness_check.sh
+
+fracture-arithmetic-check:	##H @Test Check the finite fracture arithmetic regression
+	$(CXX) -O2 -std=c++17 -Wall -Wextra scripts/unstable/fracture_arith_check.cpp -o /tmp/fracture_arith_check
+	/tmp/fracture_arith_check 12
 
 $(BIN_A10_RECON): $(SRC_A10_RECON)
 	@$(call print_info,Building $@)

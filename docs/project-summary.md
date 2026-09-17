@@ -26,15 +26,15 @@ super-exponential exhaustive search for the computational side of the project.
   internal edge count, because arrangement lines can contain triangles. At
   powers of two ($R=2^d$), it yields the perfect hypercube closed-form defect
   count $E(2^d) = d \cdot 2^{d-1}$.
-- **Neighbor-Set Closed-Form Expression:** The predicted extraconnectivity
-  function $\kappa_R$ is $$ \kappa*R = (R \cdot k - \text{A000788}(R))(n-k) -
-  C(R) $$ where $C(R) = (R-1) + \sum*{x=1}^{R-1} L(x) -
-  \text{A000788}(R)$
+- **Neighbor-Set Closed-Form Expression:** The conditional minimum-boundary
+  candidate is $$ (R \cdot k - \text{A000788}(R))(n-k) - C(R), $$ where
+  $$
+  C(R) = (R-1) + \sum\_{x=1}^{R-1} L(x) - \text{A000788}(R)
+  $$
   accounts for internal symbol collisions. This formula subsumes all published
-  case-by-case results for $R=2..7$
-  and is computationally supported beyond that range; in the formal development,
-  the exact universal lower bound and Hamming-ball collision evaluation remain
-  explicit hypothesis interfaces.
+  case-by-case results for $R=2..7$ and is computationally supported beyond that
+  range; in the formal development, the exact universal lower bound and
+  Hamming-ball collision evaluation remain explicit hypothesis interfaces.
 - **Topological Phase Transition:** A Hamming ball of size $R$ requires exactly
   $\lceil \log_2 R \rceil$ fresh symbols to embed the candidate construction.
   This is an embedding condition, not a proof of optimality: the restricted

@@ -20,6 +20,7 @@ lean_lib «Proofs» where
     `Arrangement.CrossTop,
     `Arrangement.CapacityBoundExamples,
     `Arrangement.UniversalCounterexample,
+    `Arrangement.RestrictedCounterexample,
     `Arrangement.unstable.ArrangementGraphUtils,
     `Arrangement.unstable.SupportProjection
   ]

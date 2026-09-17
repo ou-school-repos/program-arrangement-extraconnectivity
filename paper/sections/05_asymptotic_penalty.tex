@@ -122,9 +122,10 @@ Our explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit
 (Hamming Ball), we have $\Eseq(3) = 2$ and $\Cconst(3) = 3$. For the Sparse
 Limit (Star Graph), a $K_{1,2}$ structure yields defect $D = 2$,
 cross-collisions $X=1$, and a total correction $(X + D) = \binom{3}{2} = 3$. The
-limiting configurations collapse into a single isomorphism class because a Star
-Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which
-itself is the optimal Hamming Ball of size 3.
+As abstract graphs, both configurations are a three-vertex path, but their
+embedded root incidences need not agree; in particular, $X$ is not determined
+by the abstract graph. This records an abstract-topology coincidence, not
+uniqueness of embedded extremizers.
 
 \begin{theorem}[Fixed-Topology Asymptotic Penalty]\label{thm:penalty}
 Fix a connected topology (isomorphism type) on $R$ vertices, embedded as
@@ -134,7 +135,8 @@ $V'_{\mathrm{opt}} = \mathrm{HB}_R$. Then
 	\begin{equation}\label{eq:penalty-asymptotic}
 		\left| \extbd(V'_{\mathrm{sub}}) \right| - \left| \extbd(V'_{\mathrm{opt}}) \right| = \Delta D \cdot (n-k) + O_R(1),
 	\end{equation}
-where the $O_R(1)$ term depends only on the fixed topology (not on $n$ or $k$).
+where the $O_R(1)$ term depends only on the fixed embedded configuration (not
+on $n$ or $k$ once that configuration is realizable).
 Consequently, for every fixed sub-optimal topology there is a threshold
 $(n-k)_0$, depending only on that topology, beyond which $\left|
 \extbd(V'_{\mathrm{sub}}) \right| > \left| \extbd(V'_{\mathrm{opt}}) \right|$.
@@ -156,8 +158,8 @@ size:
 
 This formulation isolates the asymptotic behavior. The correction term
 $(X_{\mathrm{opt}} + D_{\mathrm{opt}}) - (X_{\mathrm{sub}} + D_{\mathrm{sub}})$
-is a genuine constant: $X$ and $D$ are combinatorial invariants of the fixed
-abstract $R$-vertex configuration and do not depend on the ambient dimensions
+is a genuine constant for a fixed embedded configuration: $X$ and $D$ do not
+depend on the ambient dimensions
 $n, k$ once they are large enough to realize it (the same dimension-independence
 exploited in the verification engine, Appendix~\ref{app:engine}). We emphasize
 that we do \emph{not} claim this correction is always non-negative --- the exact
@@ -231,19 +233,19 @@ competitors as the network dimensions scale.
 	\end{tabular}
 \end{table}
 
-The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins
-by 464 vertices against the tested Star Graph and by 190 vertices against the
-tested second-best connected subgraph. This is a fixed-topology asymptotic
-comparison, not a proof that the Hamming Ball is the unique minimizer.
+The numerical results give fixed-topology comparisons at $n=100$.  The margin
+of $464$ uses $k=4$, while the margin of $190$ uses $k=3$; they are not two
+competitors in one common parameter cell.  At the common choice $k=7$, the
+corresponding margins are $449$ and $182$.  These are fixed-topology
+comparisons, not proofs that the Hamming Ball is the unique minimizer.
 
 \paragraph{The Structural Inversion: Hypercubes vs.\ Arrangement Graphs.}
-In recent literature concerning hypercube variants like Augmented Cubes
-\cite{cheng2023augmented}, the optimal boundary-minimizing cut is frequently
-constructed using the Star Graph $K_{1, R-1}$. Why does the Star Graph represent
-the global optimum in hypercubes, but the absolute worst-case Sparse Limit in
-arrangement graphs? Our framework provides the exact mathematical mechanism for
-this \emph{structural inversion}. In hypercubes, the penalty for missing a unit
-of defect is a static constant. The Star Graph produces cross-collisions that
+Comparisons with hypercube variants such as Augmented Cubes
+\cite{cheng2023augmented} motivate examining Star Graphs as a competing
+construction, but this paper does not establish a universal Star optimum in
+either model.  The exact arrangement-graph mechanism is instead the
+fixed-topology penalty: missing defect contributes a term linear in $n-k$,
+while the Star produces cross-collisions that
 scale quadratically as $\binom{R-1}{2}$, quickly overpowering the static penalty
 and minimizing the boundary. In $A(n,k)$, however, the penalty for each missing
 unit of defect is $(n-k)$ (Theorem~\ref{thm:penalty}). Because $(n-k)$ scales

@@ -187,10 +187,10 @@ public capstone remains conditional on `RestrictedLowerBound`:
 - **Exact Penalty Framework**: `Arrangement/PenaltyExact.lean` proves the
   unconditional boundary identity and comparative penalty formulas used by the
   paper's asymptotic-penalty section.
-- **Sandwich conjecture & hypercube fracture gap**: retained as explicitly open
-  interfaces/diagnostics; the proposed sandwich upper bound is refuted by the
-  four-vertex path in A(6,3), and the fracture claims do not follow from Harper
-  because arrangement lines are cliques.
+- **Sandwich conjecture**: retained as explicitly open; the proposed universal
+  upper bound is refuted by the four-vertex path in A(6,3).
+- **Fracture gap**: the paper now states power-of-two and near-full arithmetic
+  gap theorems, but they are not yet part of the Lean dependency chain.
 
 ## Open Conjectures
 
@@ -199,7 +199,7 @@ rigorous bounty board for future Lean 4 contributors:
 
 - `uniqueness_conjecture`
 - `sandwich_upper_bound_conjecture`
-- `hypercube_fracture_gap_conjecture`
+- `hypercube_fracture_gap_conjecture` (pending formalization of the paper proof)
 
 ## Appendix: Finite Evidence Isolates the Remaining Induction Lemma
 

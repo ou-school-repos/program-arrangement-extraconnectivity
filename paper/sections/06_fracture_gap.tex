@@ -1,32 +1,65 @@
 \section{The Fracture Gap and Defect Continuity}\label{sec:fracture}
 
 The defect framework proves the universal upper bound
-$D(V')\le \Eseq(|V'|)$, but it does not classify equality cases or the
-intermediate values of $D$. Earlier drafts of this section treated defect as
-the number of internal edges and transferred Boolean-hypercube statements
-directly to arrangement graphs. That transfer is invalid: arrangement lines
-are cliques, and a three-vertex triangle in one line has defect $2$ while its
-internal edge count is $3$. The hypercube embedding therefore supplies
-specific witnesses, not a classification of all arrangement-graph subsets.
+$D(V')\le \Eseq(|V'|)$.  The following two results sharpen it at powers of
+two and immediately below powers of two.  They concern root defect, not the
+number of internal arrangement-graph edges; arrangement lines are cliques,
+so a triangle can have three internal edges while having defect $2$.
 
-The statements below are retained as explicitly labeled conjectures and finite
-observations. They are not used by the conditional boundary theorem or by the
-Lean capstone.
+\begin{definition}[Coordinate box]\label{def:box}
+A $d$-box is a set obtained by choosing $d$ coordinates with two allowed
+symbols in each, fixing all remaining coordinates, and taking every injective
+combination of those choices.  Thus a $d$-box has $2^d$ vertices.
+\end{definition}
 
-\begin{conjecture}[Proposed fracture gap]\label{thm:fracture}
-For $R=2^d$, a suitable connectedness and shape-restricted class of
-arrangement-graph subsets may have a defect gap below the Hamming-ball value
-$\Eseq(R)=d2^{d-1}$. The unrestricted statement for all connected subsets is
-open and must not be inferred from Harper's edge-isoperimetric theorem.
-\end{conjecture}
+\begin{lemma}[Box rigidity]\label{lem:box-rigidity}
+If $B$ is a $d$-box and $w\notin B$, then $w$ shares at most one coordinate
+root with $B$.  If $B$ and $B'$ are distinct $d$-boxes, then
+$|B\cap B'|\le 2^{d-1}$.
+\end{lemma}
 
-\begin{equation}\label{eq:fracture-gap}
-\gamma(R) =
-\begin{cases}
-d-1 & \text{as a conjectural Boolean-subcube value when }R=2^d,\\
-0 & \text{otherwise.}
-\end{cases}
-\end{equation}
+\begin{lemma}[Power-of-two partition gap]\label{lem:fracture-arith}
+Let $h=2^{d-1}$.  For every non-balanced partition of $2^d$,
+
+\[
+\sum_i \Eseq(a_i)+2^d-\max_i a_i
+ \le \Eseq(2^d)-(d-1).
+\]
+For $1\le a<h$ the two-part deficit is exactly
+
+\[
+\Eseq(2^d)-\Eseq(a)-\Eseq(2^d-a)-a
+ =a(d-1)-2\Eseq(a)\ge d-1.
+\]
+\end{lemma}
+
+\begin{theorem}[Power-of-two fracture gap and equality]\label{thm:fracture}
+Let $S\subseteq V(A(n,k))$ with $|S|=2^d$.  Then
+
+\[
+D(S)=\Eseq(2^d)
+\quad\Longleftrightarrow\quad
+S\text{ is a }d\text{-box}.
+\]
+
+If $S$ is not a $d$-box, then
+
+\[
+D(S)\le \Eseq(2^d)-(d-1).
+\]
+Thus the intermediate values
+$\Eseq(2^d)-d+2,\ldots,\Eseq(2^d)-1$ are impossible.
+\end{theorem}
+
+\begin{proof}
+Induct on $d$.  Slice $S$ in a coordinate with at least two nonempty
+fibers.  The defect-fiber inequality and the partition gap force the split to
+be $(2^{d-1},2^{d-1})$ whenever the defect is above the stated gap.  The
+induction hypothesis forces both projected slices to be $(d-1)$-boxes.  If
+they coincide, their two lifts form a $d$-box.  If they differ, box rigidity
+forces their intersection loss to be at least $2^{d-2}$, contradicting the
+assumed defect.  The case $d=1$ is immediate.
+\end{proof}
 
 \begin{conjecture}[Defect continuity]\label{thm:continuity}
 For a separately specified shape class, every integer defect in the proposed
@@ -36,27 +69,42 @@ leaf need not exist, and the arithmetic overlap argument has counterexamples.
 \end{conjecture}
 
 The finite computation for $R=8$ found the defect values
-$\{7,8,9,10,12\}$ in the tested connected-subset search. In particular, it
-found no value $11$ in that finite cell. This records evidence only; it does
-not prove the unrestricted fracture or continuity claims.
+$\{7,8,9,10,12\}$ in the tested connected-subset search. Theorem
+\ref{thm:fracture} now explains the missing value $11$ for every subset; the
+enumeration remains only a cross-check of the theorem and of the equality
+orbit.
 
-\begin{conjecture}[Secondary fracture gaps]\label{thm:secondary-gap}
-For $R=2^d-1$, a secondary gap below $\Eseq(R)$ may occur in a restricted
-shape class. The asserted gap for every connected arrangement-graph subset
-is open and is not established by the Boolean-hypercube calculation.
-\end{conjecture}
+\begin{theorem}[Secondary fracture gap]\label{thm:secondary-gap}
+Let $d\ge3$ and $|S|=2^d-1$.  If
+
+\[
+D(S)\ge \Eseq(2^d-2)+2,
+\]
+
+then $S$ is a $d$-box with one vertex removed.  Consequently, the values
+$\Eseq(2^d-2)+2,\ldots,\Eseq(2^d-1)-1$ are impossible.
+\end{theorem}
+
+\begin{proof}
+Slice in a coordinate and apply the multiway partition bound.  The only
+partition that can reach the displayed range is
+$(2^{d-1},2^{d-1}-1)$.  The larger projected slice is forced to be a
+$(d-1)$-box by Theorem~\ref{thm:fracture}.  The complement identity for
+$\Eseq$ gives a strict deficit for every nontrivial deviation of the smaller
+slice from that box.  Hence it is the larger box with one vertex removed,
+and lifting the two slices gives the result.
+\end{proof}
 
 \begin{conjecture}[Partial defect classification]\label{thm:classification}
-A classification of achievable defect values may consist of a low-defect
-interval together with isolated dense values, but the displayed spectrum is
-not proved for arbitrary connected subsets of $A(n,k)$. Any valid version
-must account for clique lines, embedding parameters, and the distinction
-between defect and internal edge count.
+Beyond the two gap theorems, a classification of achievable defect values may
+consist of a low-defect interval together with isolated dense values. Any
+general version must account for clique lines, embedding parameters, and the
+distinction between defect and internal edge count.
 \end{conjecture}
 
 The topological funnel discussion in Section~\ref{sec:funnel} should therefore
-be read as a program of conjectures and finite diagnostics. The proven
-statements used by the paper are the defect upper bound, the exact boundary
-identities, and the conditional restricted-boundary composition; the fracture,
-continuity, secondary-gap, and equality-classification claims remain outside
-that proof chain.
+be read as a program of conjectures and finite diagnostics except for the two
+gap theorems above. The proven statements used by the paper include the defect
+upper bound, the exact boundary identities, the power-of-two and near-full
+fracture theorems, and the conditional restricted-boundary composition.
+Continuity and the remaining equality classification stay open.

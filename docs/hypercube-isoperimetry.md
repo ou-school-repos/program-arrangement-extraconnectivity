@@ -69,12 +69,13 @@ This is advantageous because:
 
 ## Remaining Theoretical Gaps
 
-### Collision Constant $C(R)$ (Axiomatized)
+### Collision Constant $C(R)$ (Defined and evaluated for the Hamming ball)
 
 The constant
 $C(R) = (R-1) + \sum_{i=1}^{R-1} \text{bit\_length}(i) - A000788(R)$ bounds
-symbol collisions. Proving its minimality requires Kruskal-Katona shadow
-operators not yet in Mathlib. See
+symbol collisions. The Hamming-ball evaluation is proved in `CrossTop`; a
+general minimality theorem for arbitrary arrangement subsets is not supplied by
+Kruskal--Katona alone. See
 [collision-axiom-roadmap.md](collision-axiom-roadmap.md). TODO(review): do not
 present the shadow-operator reduction as completed until the support-projection
 bridge is repaired or removed.

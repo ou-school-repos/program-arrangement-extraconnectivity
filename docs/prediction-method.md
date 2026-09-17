@@ -4,7 +4,7 @@
 
 For large R, the exhaustive search becomes impractical (~72 sec for R=9, ~69
 minutes for R=10). The **predictor** (`predict.cpp`) bypasses the search
-entirely by constructing the known-optimal vertex set directly.
+entirely by constructing an explicit candidate vertex set directly.
 
 ## The Topological Phase Transition (Embedding Condition)
 
@@ -13,17 +13,21 @@ of $k$ elements must contain unique symbols from the set {1, ..., n}.
 
 To form a $d$-dimensional hypercube (size $R=2^d$), we start with a base vertex
 and flip $d$ distinct positions. Each flip must introduce a **fresh symbol** to
-avoid internal collisions. Therefore, the Hamming ball construction is valid in
-$A(n,k)$ if and only if:
+avoid internal collisions. Therefore, the Hamming ball construction is available
+in $A(n,k)$ when:
 
-$$ n - k \ge \lceil \log_2 R \rceil $$
+$$
+n-k \ge \lceil\log_2 R\rceil
+\quad\text{and}\quad
+k \ge \lceil\log_2 R\rceil.
+$$
 
 If this alphabet constraint is violated, the perfect hypercube cannot exist, and
 the graph enters a different connectivity regime.
 
 ## Key Insight: A000788 and the Hamming Ball
 
-The minimum (R-1)-extraconnectivity formula has the form:
+The conditional minimum-boundary formula has the form:
 
 ```text
 (Rk − E(R)) · (n−k) − C(R)
@@ -86,4 +90,5 @@ The search is bounded by Cayley's formula for labeled trees.
 - R=15: ~3 million years
 
 This gap explains the predictor's computational advantage; it does not prove
-that the construction is globally optimal in the arrangement graph.
+global optimality in the arrangement graph without the explicit restricted
+lower-bound hypothesis.
