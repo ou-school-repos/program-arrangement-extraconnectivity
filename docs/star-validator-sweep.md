@@ -73,7 +73,7 @@ Legend:
 |      14 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  /  |  /  |
 |      15 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  /  |  /  |
 |      16 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  /  |  /  |
-|      17 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
+|      17 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  /  |
 |      18 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
 |      19 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
 |      20 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
@@ -84,13 +84,13 @@ no non-Star topology gives a smaller hard counterexample.
 
 The `A(11,9)` case is now deeply confirmed as a soft counterexample after
 raising the flat-space guard. The complete `A(14, 1..8)` row is now confirmed.
-The feasible `A(15, 1..8)`, `A(16, 1..8)`, `A(17, 1..7)`, and `A(18, 1..7)`
+The feasible `A(15, 1..8)`, `A(16, 1..8)`, `A(17, 1..8)`, and `A(18, 1..7)`
 cells are also confirmed; their remaining cells are marked `/` because they were
 not run or were intractable. The `A(19,1..7)` and `A(20,1..7)` rows are now
 confirmed; their remaining cells are likewise marked `/`.
 
-The largest deeply certified hard counterexample so far is `A(16,8)`, with
-`R=65`, `g=64`, and `|N(S)|=2016` (~4 minutes to compute).
+The largest deeply certified hard counterexample so far is `A(17,8)`, with
+`R=73`, `g=72`, and `|N(S)|=2520` (~8 minutes to compute).
 
 ## Representative hard counterexamples
 
@@ -117,7 +117,7 @@ boundary**, while $|∂H|$ denotes the **Hamming baseline** for volume `R`.
 | `A(15,8)` | 259,459,200 |  7,264,857,600 | 2,562,890,625 |  57 |  56 |  1,568 |  1,903 | 335 | `6,(8,7)`   |
 | `A(20,7)` | 390,700,800 | 17,776,886,400 | 1,280,000,000 |  92 |  91 |  3,822 |  4,356 | 534 | `7,(7,13)`  |
 | `A(16,8)` | 518,918,400 | 16,605,388,800 | 4,294,967,296 |  65 |  64 |  2,016 |  2,417 | 401 | `7,(8,8)`   |
-| `A(17,8)` | 980,179,200 |                |               |  73 |  72 |        |  2,520 |     | `?,(9,8)`   |
+| `A(17,8)` | 980,179,200 | 35,286,451,200 | 6,975,757,441 |  73 |  72 |  2,520 |  3,088 | 568 | `7,(8,9)`   |
 
 ## New result: `A(16,8)`
 
@@ -152,6 +152,30 @@ HARD COUNTEREXAMPLE: RestrictedLowerBound
 real    3m59.012s
 user    3m55.815s
 sys     0m2.316s
+
+
+$ time ./bin/validate_extra_cut 17 8
+Building A(17,8)...
+Total valid vertices: 980179200
+R = 73
+Candidate g = 72
+|S| = 73
+Subset S connectivity verified.
+|N(S)| = 2520
+Validating 72-extra cut properties...
+component sizes after deletion:
+  73
+  980176607
+valid 72-extra cut: yes
+therefore kappa_72(A(17,8)) <= 2520
+Hamming baseline: 3088; Star boundary: 2520
+Embedding gate: d = 7, k = 8, n-k = 9 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+
+real    7m52.232s
+user    7m45.927s
+sys     0m4.228s
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives
@@ -162,6 +186,14 @@ kappa_64(A(16,8)) <= 2016
 
 and refutes the embedding-gated Hamming lower-bound hypothesis at
 `(R,n,k) = (65,16,8)`. This isn't necessarily the lowest possible bound.
+
+For `A(17,8)`, the comparison gap is `3088 - 2520 = 568`, giving
+
+```text
+kappa_72(A(17,8)) <= 2520
+```
+
+at `(R,n,k) = (73,17,8)`.
 
 ## Fixed-`k` pattern
 
