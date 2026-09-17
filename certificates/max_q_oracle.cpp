@@ -1,6 +1,7 @@
 // Exhaustive oracle: max Q_m(S) = m*k*|S| - |ext(S)| over origin-pinned
 // R-subsets of A(n,k).  Vertex-transitivity makes the pin exact.
 // Usage: max_q_oracle n k R    (prints one line: n k m R maxQ G slack witness)
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>

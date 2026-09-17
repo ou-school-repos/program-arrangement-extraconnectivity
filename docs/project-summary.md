@@ -21,10 +21,11 @@ super-exponential exhaustive search for the computational side of the project.
   from Harper. The Hamming-ball optimality story is computationally strong and
   partially formalized, with the remaining universal/collision bounds isolated
   as explicit hypotheses.
-- **The OEIS A000788 Sequence:** The maximum number of internal edges $E(R)$
-  exactly matches the cumulative popcount sequence (OEIS A000788). At powers of
-  two ($R=2^d$), this yields the perfect hypercube closed-form edge count
-  $E(2^d) = d \cdot 2^{d-1}$.
+- **The OEIS A000788 Sequence:** The maximum arrangement defect $E(R)$ exactly
+  matches the cumulative popcount sequence (OEIS A000788). It is not a bound on
+  internal edge count, because arrangement lines can contain triangles. At
+  powers of two ($R=2^d$), it yields the perfect hypercube closed-form defect
+  count $E(2^d) = d \cdot 2^{d-1}$.
 - **Neighbor-Set Closed-Form Expression:** The predicted extraconnectivity
   function $\kappa_R$ is $$ \kappa*R = (R \cdot k - \text{A000788}(R))(n-k) -
   C(R) $$ where $C(R) = (R-1) + \sum*{x=1}^{R-1} L(x) -

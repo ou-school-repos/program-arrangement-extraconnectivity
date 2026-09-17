@@ -1812,8 +1812,9 @@ def sandwich_upper_bound_conjecture (R n k : ℕ) : Prop :=
 
   CONJECTURE 3: The Hypercube Fracture Gap.
 
-  For any connected subgraph of size R=2^d in A(n,k), the maximum internal edges
-  for a non-optimal topology is strictly less than E_opt - (d-2).
+  For any connected subgraph of size R=2^d in a separately specified
+  triangle-free/embedded shape class, the maximum defect for a non-optimal
+  topology is strictly less than E_opt - (d-2).
   Specifically for R=8 (d=3), the gap between optimal (E=12) and the next connected
   topology (E=10) is 2, making E=11 mathematically impossible.
 -/

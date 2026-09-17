@@ -20,7 +20,7 @@ This document describes what a complete mechanized proof of each would require.
   with no strong induction, no `CrossDimStable`, and no `CrossRecurrence`, and
   `CrossTop.lean`'s `arrangement_boundary_minimum` /
   `globally_optimal_growth_strategy` already call
-  `arrangement_extraconnectivity_minimum`'s conditional capstone
+  `arrangement_boundary_minimum`'s conditional capstone
   (`arrangement_boundary_minimum_of_cross`) with `hb_cross_collisions_closed`
   discharging its `HBCrossCollisions` hypothesis directly. The conditional
   capstone in `ArrangementExtraconnectivity.lean` is intentionally kept as a
@@ -46,12 +46,13 @@ This document describes what a complete mechanized proof of each would require.
   dimension). `CrossRecurrence` and its driver are archived to
   `docs/archive/CrossRecurrenceDriver.lean` for historical reference only; there
   is nothing left to reconcile.
-- **Formula values verified** via `predict --verify R` (predict.cpp) for
-  `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
-  `arrangement` nauty-based search covers `R ≤ 10`. (This verifies the
-  Hamming-ball formula's internal arithmetic, i.e. `HBCrossCollisions`-shaped
-  values — not the separate, now-refuted `UniversalLowerBound` universal
-  quantifier below.)
+- **Hamming-ball formula values** were cross-checked via `predict --verify R`
+  for `R ≤ 160`; this evaluates the explicit witness, not the universal lower
+  bound. The finite certificate/oracle bundle covers only its documented cells.
+  Exhaustive `arrangement` nauty-based search covers `R ≤ 10`. (These checks
+  verify the Hamming-ball formula's internal arithmetic, i.e.
+  `HBCrossCollisions`-shaped values — not the separate, now-refuted
+  `UniversalLowerBound` universal quantifier below.)
 - **`UniversalLowerBound` is refuted as an unrestricted statement.** The
   full-Star set in `A(10,8)` (R=17) has external boundary 168 against a required
   169 — see the definition's docstring in `ArrangementExtraconnectivity.lean`
@@ -123,8 +124,9 @@ family of (r-1)-element subsets contained in at least one member).
 ~200-300 lines for:
 
 - Colex ordering on `Finset (Fin d → Bool)`
-- Connection between shadow size and 4-cycle count, proven correctly (the
-  archived attempt's version of this connection was refuted)
+- Connection between hypercube shadow size and square count, as a possible
+  future route; it is not an identity for arrangement-graph external
+  multiplicity excess.
 
 ## Step 2: Hamming Ball Maximizes Squares
 
@@ -193,7 +195,7 @@ route — but the driver itself and `CrossRecurrence` are not the path forward.
 Nothing. The direct `CrossTop.lean` route is already wired into the public,
 unconditional capstone (`arrangement_boundary_minimum`,
 `globally_optimal_growth_strategy`), which calls
-`arrangement_extraconnectivity_minimum`'s conditional capstone with
+`arrangement_boundary_minimum`'s conditional capstone with
 `hb_cross_collisions_closed` discharging `HBCrossCollisions` directly. The
 recurrence driver and its scaffold obligations are archived and superseded, not
 pending. `UniversalLowerBound` remains the separate, still-open

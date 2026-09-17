@@ -2,13 +2,14 @@
 # Soundness regression: F_{m,k}(R) from fdp_certificate must be >= exhaustive max Q.
 set -euo pipefail
 fail=0
+BIN_DIR=${CERT_BIN_DIR:-.}
 check() { # n k maxR
 	local n=$1 k=$2 maxr=$3 m=$(($1 - $2))
 	local table
-	table=$(./fdp_certificate "$m" "$k" "$maxr" --detail | grep "^  k=$k ")
+	table=$("$BIN_DIR/fdp_certificate" "$m" "$k" "$maxr" --detail | grep "^  k=$k ")
 	for R in $(seq 1 "$maxr"); do
 		local line F q
-		line=$(./max_q_oracle "$n" "$k" "$R" 2>/dev/null) || continue
+		line=$("$BIN_DIR/max_q_oracle" "$n" "$k" "$R" 2>/dev/null) || continue
 		q=$(sed -E 's/.*maxQ=(-?[0-9]+).*/\1/' <<<"$line")
 		F=$(grep -E " R=$R F=" <<<"$table" | sed -E 's/.*F=(-?[0-9]+).*/\1/' || true)
 		if [[ -z "$F" ]]; then

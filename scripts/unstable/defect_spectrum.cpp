@@ -61,7 +61,7 @@ void rec(int nx) {
         ch.pop_back();
     }
 }
-int main(int c, char **a) {
+int main(int, char **a) {
     n = atoi(a[1]);
     k = atoi(a[2]);
     R = atoi(a[3]);

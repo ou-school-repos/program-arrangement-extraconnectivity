@@ -1254,7 +1254,7 @@ theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube
     intro d hk hnk hd
     exact hb_cross_collisions_closed R hR1 d hd hk hnk
 
-/-- The unconditional globally optimal growth-strategy corollary. -/
+/-- Conditional boundary composition; the lower-bound hypothesis is explicit. -/
 theorem globally_optimal_growth_strategy
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : RestrictedLowerBound R n k) :
