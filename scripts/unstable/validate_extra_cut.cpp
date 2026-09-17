@@ -23,32 +23,33 @@ struct ArrangementGraph {
     std::vector<std::uint8_t>
         status; // 255 invalid, 0 surviving, 1 S, 2 N(S), 3 visited
     std::size_t valid_count = 0;
-    std::vector<int> place;
+    std::vector<std::uint64_t> place;
 
     ArrangementGraph(int n_value, int k_value) : n(n_value), k(k_value) {
-        int capacity = 1;
+        std::uint64_t capacity = 1;
         for (int i = 0; i < k; ++i)
-            capacity *= n;
+            capacity *= static_cast<std::uint64_t>(n);
         status.assign(capacity, 255);
         place.assign(k, 1);
         for (int position = k - 2; position >= 0; --position)
-            place[position] = place[position + 1] * n;
+            place[position] *= static_cast<std::uint64_t>(n);
 
         std::vector<int> prefix;
         std::vector<bool> used(n, false);
         generate_valid(prefix, used);
     }
 
-    int encode(const std::vector<int> &vertex) const {
-        return std::accumulate(vertex.begin(), vertex.end(), 0,
-                               [this](const int code, const int symbol) {
-                                   return code * n + symbol;
-                               });
+    std::uint64_t encode(const std::vector<int> &vertex) const {
+        return std::accumulate(
+            vertex.begin(), vertex.end(), std::uint64_t{0},
+            [this](const std::uint64_t code, const int symbol) {
+                return code * static_cast<std::uint64_t>(n) + symbol;
+            });
     }
 
     void generate_valid(std::vector<int> &prefix, std::vector<bool> &used) {
         if (static_cast<int>(prefix.size()) == k) {
-            const int code = encode(prefix);
+            const std::uint64_t code = encode(prefix);
             status[code] = 0;
             ++valid_count;
             return;
@@ -65,7 +66,8 @@ struct ArrangementGraph {
     }
 
     template <typename Function>
-    void enumerate_valid(int depth, int code, std::vector<unsigned char> &used,
+    void enumerate_valid(int depth, std::uint64_t code,
+                         std::vector<unsigned char> &used,
                          Function &function) const {
         if (depth == k) {
             function(code);
@@ -88,14 +90,14 @@ struct ArrangementGraph {
     }
 
     template <typename Function>
-    void for_each_neighbor(int code, Function function) const {
+    void for_each_neighbor(std::uint64_t code, Function function) const {
         std::array<unsigned char, 256> used{};
         for (int position = 0; position < k; ++position) {
-            const int symbol = (code / place[position]) % n;
+            const int symbol = static_cast<int>((code / place[position]) % n);
             used[symbol] = 1;
         }
         for (int position = 0; position < k; ++position) {
-            const int current = (code / place[position]) % n;
+            const int current = static_cast<int>((code / place[position]) % n);
             for (int symbol = 0; symbol < n; ++symbol) {
                 if (used[symbol])
                     continue;
@@ -105,20 +107,21 @@ struct ArrangementGraph {
     }
 };
 
-bool connected(const ArrangementGraph &graph, const std::vector<int> &subset) {
+bool connected(const ArrangementGraph &graph,
+               const std::vector<std::uint64_t> &subset) {
     if (subset.empty())
         return true;
 
     std::vector<bool> visited(subset.size(), false);
-    std::queue<int> pending;
+    std::queue<std::uint64_t> pending;
     pending.push(subset[0]);
     visited[0] = true;
     int reached = 1;
 
     while (!pending.empty()) {
-        const int code = pending.front();
+        const std::uint64_t code = pending.front();
         pending.pop();
-        graph.for_each_neighbor(code, [&](const int neighbor) {
+        graph.for_each_neighbor(code, [&](const std::uint64_t neighbor) {
             if (graph.status[neighbor] == 1) {
                 for (size_t candidate = 0; candidate < subset.size();
                      ++candidate) {
@@ -184,8 +187,9 @@ void print_json_array(std::ostream &out, const std::vector<int> &values) {
 }
 
 void dump_json(std::ostream &out, const ArrangementGraph &graph,
-               const std::vector<int> &center, const std::vector<int> &star,
-               const std::vector<int> &boundary_codes,
+               const std::vector<int> &center,
+               const std::vector<std::uint64_t> &star,
+               const std::vector<std::uint64_t> &boundary_codes,
                const std::vector<int> &component_sizes, int g, bool valid,
                int d, bool embedding_gate, long long hamming_boundary,
                const std::string &classification) {
@@ -375,13 +379,14 @@ int main(int argc, char **argv) {
 
     std::vector<int> center(k);
     std::iota(center.begin(), center.end(), 0);
-    const int center_code = graph.encode(center);
-    std::vector<int> star{center_code};
+    const std::uint64_t center_code = graph.encode(center);
+    std::vector<std::uint64_t> star{center_code};
     graph.status[center_code] = 1;
     for (int position = 0; position < k; ++position) {
         for (int symbol = k; symbol < n; ++symbol) {
-            const int leaf = center_code + (symbol - center[position]) *
-                                               graph.place[position];
+            const std::uint64_t leaf =
+                center_code +
+                (symbol - center[position]) * graph.place[position];
             star.push_back(leaf);
             graph.status[leaf] = 1;
         }
@@ -400,9 +405,9 @@ int main(int argc, char **argv) {
         std::cout << "Subset S connectivity verified.\n";
 
     int boundary_count = 0;
-    std::vector<int> boundary_codes;
-    for (const int vertex : star) {
-        graph.for_each_neighbor(vertex, [&](const int neighbor) {
+    std::vector<std::uint64_t> boundary_codes;
+    for (const std::uint64_t vertex : star) {
+        graph.for_each_neighbor(vertex, [&](const std::uint64_t neighbor) {
             if (graph.status[neighbor] != 0)
                 return;
             graph.status[neighbor] = 2;
@@ -427,19 +432,19 @@ int main(int argc, char **argv) {
     if (show_progress)
         std::cout << "Validating " << g << "-extra cut properties...\n";
     std::vector<int> component_sizes;
-    graph.for_each_valid_code([&](const int start) {
+    graph.for_each_valid_code([&](const std::uint64_t start) {
         if (graph.status[start] != 0 && graph.status[start] != 1)
             return;
 
         int size = 0;
-        std::queue<int> pending;
+        std::queue<std::uint64_t> pending;
         pending.push(start);
         graph.status[start] = 3;
         while (!pending.empty()) {
-            const int current = pending.front();
+            const std::uint64_t current = pending.front();
             pending.pop();
             ++size;
-            graph.for_each_neighbor(current, [&](const int neighbor) {
+            graph.for_each_neighbor(current, [&](const std::uint64_t neighbor) {
                 if (graph.status[neighbor] != 0 && graph.status[neighbor] != 1)
                     return;
                 graph.status[neighbor] = 3;
