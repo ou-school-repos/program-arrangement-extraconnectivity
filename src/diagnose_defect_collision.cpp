@@ -71,13 +71,21 @@ struct PairBest {
     std::vector<int> subset;
     int first = -1;
     int second = -1;
+    bool adjacent_tie = false;
+    bool nonadjacent_tie = false;
 
-    void update(Int candidate, const std::vector<int> &chosen, int u, int v) {
+    void update(Int candidate, const std::vector<int> &chosen, int u, int v,
+                bool adjacent) {
         if (candidate < value) {
             value = candidate;
             subset = chosen;
             first = u;
             second = v;
+            adjacent_tie = adjacent;
+            nonadjacent_tie = !adjacent;
+        } else if (candidate == value) {
+            adjacent_tie = adjacent_tie || adjacent;
+            nonadjacent_tie = nonadjacent_tie || !adjacent;
         }
     }
 };
@@ -219,8 +227,13 @@ struct Search {
                 }
                 add(chosen[i], false);
             }
+            int equal_coordinates = 0;
+            for (int coordinate = 0; coordinate < graph.k; ++coordinate)
+                equal_coordinates += graph.vertices[best_first][coordinate] ==
+                                     graph.vertices[best_second][coordinate];
             pair_peeling_margin.update(best_pair_margin, chosen, best_first,
-                                       best_second);
+                                       best_second,
+                                       equal_coordinates == graph.k - 1);
         }
 
         if (!reported_counterexample &&
@@ -268,18 +281,14 @@ void print_result(const char *name, const Best &best) {
     std::cout << '\n';
 }
 
-void print_pair_result(const PairBest &best, const Instance &graph) {
+void print_pair_result(const PairBest &best) {
     std::cout << "min_pair_peeling_margin=" << best.value << " witness=";
     for (int vertex : best.subset)
         std::cout << ' ' << vertex;
-    int equal_coordinates = 0;
-    if (best.first >= 0 && best.second >= 0) {
-        for (int coordinate = 0; coordinate < graph.k; ++coordinate)
-            equal_coordinates += graph.vertices[best.first][coordinate] ==
-                                 graph.vertices[best.second][coordinate];
-    }
-    std::cout << " remove=" << best.first << ',' << best.second << " adjacent="
-              << (equal_coordinates == graph.k - 1 ? "yes" : "no") << '\n';
+    std::cout << " remove=" << best.first << ',' << best.second
+              << " adjacent=" << (best.adjacent_tie ? "yes" : "no")
+              << " nonadjacent-tie=" << (best.nonadjacent_tie ? "yes" : "no")
+              << '\n';
 }
 
 } // namespace
@@ -325,7 +334,7 @@ int main(int argc, char **argv) {
     print_result("min_collision_margin", search.collision_slack);
     print_result("min_boundary", search.boundary_best);
     print_result("min_peeling_margin", search.peeling_margin);
-    print_pair_result(search.pair_peeling_margin, graph);
+    print_pair_result(search.pair_peeling_margin);
     std::cout << "defect_lemma_on_scan="
               << (search.defect_slack.value >= 0 ? "yes" : "no") << '\n';
     std::cout << "collision_lemma_on_scan="
