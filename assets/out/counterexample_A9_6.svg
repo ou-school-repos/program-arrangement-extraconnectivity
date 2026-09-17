@@ -15,7 +15,8 @@
     <rect x="55" y="265" width="560" height="490" rx="8" fill="none" stroke="#7a2020" stroke-width="2" stroke-dasharray="2 7"/>
     <text x="430" y="280" font-size="13" fill="#7a2020">A(9,6) graph schematic</text>
     <text x="72" y="316" font-size="16">center: (0,1,2,3,4,5)</text>
-    <text x="72" y="341" font-size="16">for each coordinate i: replace i by one of 6, 7, 8</text>
+    <text x="72" y="341" font-size="15">For i∈{0,…,5}: Bᵢ={c}∪{c[i←s] : s∈{6,7,8}}</text>
+    <text x="72" y="358" font-size="14">Each Bᵢ≅K₄, and S₆=⋃ᵢ Bᵢ (all six branches share c).</text>
     <g stroke="black" stroke-width="2" fill="white">
       <line x1="270" y1="450" x2="270" y2="385"/><line x1="270" y1="450" x2="365" y2="425"/><line x1="270" y1="450" x2="365" y2="515"/>
       <line x1="270" y1="450" x2="270" y2="555"/><line x1="270" y1="450" x2="175" y2="515"/><line x1="270" y1="450" x2="175" y2="425"/>
@@ -25,9 +26,9 @@
       <circle cx="270" cy="450" r="30" fill="black"/>
     </g>
     <text x="270" y="450" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="white">c</text>
-    <text x="256" y="390" font-size="16">K₄</text><text x="351" y="430" font-size="16">K₄</text>
-    <text x="351" y="520" font-size="16">K₄</text><text x="256" y="560" font-size="16">K₄</text>
-    <text x="161" y="520" font-size="16">K₄</text><text x="161" y="430" font-size="16">K₄</text>
+    <text x="253" y="390" font-size="13">i=0: K₄</text><text x="348" y="430" font-size="13">i=1: K₄</text>
+    <text x="348" y="520" font-size="13">i=2: K₄</text><text x="253" y="560" font-size="13">i=3: K₄</text>
+    <text x="158" y="520" font-size="13">i=4: K₄</text><text x="158" y="430" font-size="13">i=5: K₄</text>
     <text x="430" y="365" font-size="13">Exact induced graph:</text>
     <text x="430" y="385" font-size="13">six K₄ cliques sharing c</text>
     <text x="74" y="610" font-size="18">D = jm = 18  (root/fiber defect)</text>
