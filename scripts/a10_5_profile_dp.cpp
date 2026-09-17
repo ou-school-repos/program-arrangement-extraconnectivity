@@ -345,6 +345,7 @@ struct SearchStats {
     std::uint64_t nodes = 0;
     std::uint64_t bound_prunes = 0;
     std::uint64_t cache_hits = 0;
+    std::vector<std::uint64_t> nodes_by_depth;
 };
 
 struct ProgressReporter {
@@ -398,6 +399,7 @@ void search(const Instance &instance, ProfileState &state,
         state.add(vertex);
         chosen.push_back(vertex);
         ++stats.nodes;
+        ++stats.nodes_by_depth[state.selected_count];
         if (progress != nullptr)
             progress->record(state.selected_count);
         search(instance, state, chosen, target, best, seen, stats, stabilizer,
@@ -450,7 +452,9 @@ void search_parallel(const Instance &instance, const int target, int &best,
         SearchStats local_stats;
         std::unordered_set<std::vector<int>, VectorHash> local_seen;
         int local_best = INT_MAX;
+        local_stats.nodes_by_depth.assign(target + 1, 0);
         local_stats.nodes = 1;
+        ++local_stats.nodes_by_depth[2];
         if (progress != nullptr)
             progress->record(2);
         search(instance, state, chosen, target, local_best, local_seen,
@@ -463,6 +467,9 @@ void search_parallel(const Instance &instance, const int target, int &best,
             stats.nodes += local_stats.nodes;
             stats.bound_prunes += local_stats.bound_prunes;
             stats.cache_hits += local_stats.cache_hits;
+            for (int depth = 0; depth <= target; ++depth)
+                stats.nodes_by_depth[depth] +=
+                    local_stats.nodes_by_depth[depth];
             seen.insert(local_seen.begin(), local_seen.end());
         }
     }
@@ -512,7 +519,9 @@ int main(int argc, char **argv) {
               << (thread_count > 1 ? "origin-pinned" : "full") << ")\n";
     std::unordered_set<std::vector<int>, VectorHash> seen;
     SearchStats stats;
+    stats.nodes_by_depth.assign(target + 1, 0);
     int best = INT_MAX;
+    const auto search_started = std::chrono::steady_clock::now();
     if (thread_count == 1) {
         ProfileState state(instance);
         std::vector<int> chosen;
@@ -522,6 +531,10 @@ int main(int argc, char **argv) {
         search_parallel(instance, target, best, seen, stats, stabilizer,
                         thread_count, &progress);
     }
+    const double elapsed_seconds =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                      search_started)
+            .count();
     const long double raw_nodes = expected_nodes.convert_to<long double>();
     const long double coverage = 100.0L * stats.nodes / raw_nodes;
     const long double reduction = 100.0L * (1.0L - stats.nodes / raw_nodes);
@@ -534,5 +547,20 @@ int main(int argc, char **argv) {
               << '\n'
               << "raw ordered-transition coverage=  " << coverage << "%\n"
               << "raw ordered-transition reduction=" << reduction << "%\n";
+    if (target >= 2 && stats.nodes_by_depth[target - 1] != 0 &&
+        stats.nodes_by_depth[target] != 0 && stats.nodes != 0) {
+        const long double growth =
+            static_cast<long double>(stats.nodes_by_depth[target]) /
+            stats.nodes_by_depth[target - 1];
+        const long double predicted_next =
+            stats.nodes_by_depth[target] * growth;
+        const long double predicted_total = stats.nodes + predicted_next;
+        const long double rate = stats.nodes / elapsed_seconds;
+        const long double predicted_seconds =
+            elapsed_seconds + predicted_next / rate;
+        std::cout << "heuristic R=" << target + 1
+                  << " nodes=" << predicted_total << " growth=" << growth
+                  << " estimated-time=" << predicted_seconds << "s\n";
+    }
     return 0;
 }
