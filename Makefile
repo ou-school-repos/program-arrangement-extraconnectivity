@@ -70,6 +70,8 @@ SRC_WINDOW = scripts/profile_dp_window.cpp
 BIN_WINDOW = profile_dp_window
 SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
 BIN_ANNEAL = simulated_annealing_hunt
+SRC_AUDIT_SURROGATE = src/audit_surrogate.cpp
+BIN_AUDIT_SURROGATE = audit_surrogate
 
 # Every top-level executable produced by this Makefile.  Keep this list
 # explicit: several source names intentionally map to different binary names
@@ -79,7 +81,7 @@ ALL_BINS = $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) \
 	$(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE) $(BIN_A10_RECON) $(BIN_A10_HUNT) \
 	$(BIN_A10_BOOST) $(BIN_A10_SMT) $(BIN_ROOT_STATE) $(BIN_PROFILE_DP) \
 	$(BIN_EMPIRICAL_GAMMA) $(BIN_TRANSFER) $(BIN_FIBER) $(BIN_WINDOW) \
-	$(BIN_ANNEAL)
+	$(BIN_ANNEAL) $(BIN_AUDIT_SURROGATE)
 LEGACY_PROFILE_BINS = a10_5_profile_dp transfer_dp_prototype fiber_ordering transfer_dp_window
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
@@ -210,6 +212,11 @@ $(BIN_WINDOW): $(SRC_WINDOW) scripts/arrangement_core.hpp
 	@$(call print_success,Build complete.)
 
 $(BIN_ANNEAL): $(SRC_ANNEAL)
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_AUDIT_SURROGATE): $(SRC_AUDIT_SURROGATE)
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
