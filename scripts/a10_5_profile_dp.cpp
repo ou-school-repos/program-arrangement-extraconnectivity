@@ -434,6 +434,12 @@ struct SearchStats {
     std::uint64_t bound_prunes = 0;
     std::uint64_t cache_hits = 0;
     std::vector<std::uint64_t> nodes_by_depth;
+    std::vector<std::uint64_t> bound_prunes_by_depth;
+    std::uint64_t bucket_misses = 0;
+    std::uint64_t bucket_iso_matches = 0;
+    std::uint64_t bucket_iso_misses = 0;
+    double canonical_seconds = 0.0;
+    double isomorphism_seconds = 0.0;
 };
 
 struct ProgressReporter {
@@ -471,21 +477,40 @@ void search(
     ProgressReporter *progress) {
     if (state.optimistic_bound(target) >= best) {
         ++stats.bound_prunes;
+        ++stats.bound_prunes_by_depth[state.selected_count];
         return;
     }
     const ProfileState::Invariant signature = state.invariant();
     auto bucket_it = seen.find(signature);
     if (bucket_it != seen.end()) {
+        const auto iso_started = std::chrono::steady_clock::now();
         if (std::any_of(bucket_it->second.begin(), bucket_it->second.end(),
                         [&](const auto &key) {
                             return is_isomorphic(chosen, key, instance,
                                                  stabilizer);
                         })) {
+            stats.isomorphism_seconds +=
+                std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                              iso_started)
+                    .count();
+            ++stats.bucket_iso_matches;
             ++stats.cache_hits;
             return;
         }
+        stats.isomorphism_seconds +=
+            std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                          iso_started)
+                .count();
+        ++stats.bucket_iso_misses;
+    } else {
+        ++stats.bucket_misses;
     }
+    const auto canonical_started = std::chrono::steady_clock::now();
     const std::vector<int> key = canonical_key(chosen, instance, stabilizer);
+    stats.canonical_seconds +=
+        std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                      canonical_started)
+            .count();
     seen[signature].push_back(key);
     if (state.selected_count == target) {
         best = std::min(best, state.boundary_size);
@@ -555,6 +580,7 @@ void search_parallel(
             local_seen;
         int local_best = INT_MAX;
         local_stats.nodes_by_depth.assign(target + 1, 0);
+        local_stats.bound_prunes_by_depth.assign(target + 1, 0);
         local_stats.nodes = 1;
         ++local_stats.nodes_by_depth[2];
         if (progress != nullptr)
@@ -569,9 +595,17 @@ void search_parallel(
             stats.nodes += local_stats.nodes;
             stats.bound_prunes += local_stats.bound_prunes;
             stats.cache_hits += local_stats.cache_hits;
+            stats.bucket_misses += local_stats.bucket_misses;
+            stats.bucket_iso_matches += local_stats.bucket_iso_matches;
+            stats.bucket_iso_misses += local_stats.bucket_iso_misses;
+            stats.canonical_seconds += local_stats.canonical_seconds;
+            stats.isomorphism_seconds += local_stats.isomorphism_seconds;
             for (int depth = 0; depth <= target; ++depth)
                 stats.nodes_by_depth[depth] +=
                     local_stats.nodes_by_depth[depth];
+            for (int depth = 0; depth <= target; ++depth)
+                stats.bound_prunes_by_depth[depth] +=
+                    local_stats.bound_prunes_by_depth[depth];
             for (const auto &[signature, keys] : local_seen) {
                 auto &global_keys = seen[signature];
                 std::copy_if(keys.begin(), keys.end(),
@@ -635,6 +669,7 @@ int main(int argc, char **argv) {
         seen;
     SearchStats stats;
     stats.nodes_by_depth.assign(target + 1, 0);
+    stats.bound_prunes_by_depth.assign(target + 1, 0);
     int best = INT_MAX;
     const auto search_started = std::chrono::steady_clock::now();
     if (thread_count == 1) {
@@ -665,6 +700,15 @@ int main(int argc, char **argv) {
     std::cout << state_count << '\n'
               << "raw ordered-transition coverage=  " << coverage << "%\n"
               << "raw ordered-transition reduction=" << reduction << "%\n";
+    std::cout << "bucket misses=" << stats.bucket_misses
+              << " iso-matches=" << stats.bucket_iso_matches
+              << " iso-misses=" << stats.bucket_iso_misses << '\n'
+              << "canonical-time=" << stats.canonical_seconds
+              << "s isomorphism-time=" << stats.isomorphism_seconds << "s\n"
+              << "bound-prunes-by-depth:";
+    for (int depth = 0; depth <= target; ++depth)
+        std::cout << " " << depth << "=" << stats.bound_prunes_by_depth[depth];
+    std::cout << '\n';
     if (target >= 2 && stats.nodes_by_depth[target - 1] != 0 &&
         stats.nodes_by_depth[target] != 0 && stats.nodes != 0) {
         const long double growth =
