@@ -12,8 +12,6 @@ LDFLAGS  =
 # Machine-local configuration (such as an /opt OR-Tools installation) is
 # supplied by the caller's environment (for example, through direnv/.envrc).
 
-SRC_OPT   = src/arrangement.cpp
-BIN_OPT   = arrangement
 R         ?= 8
 I         ?= 2
 K         ?= 127
@@ -22,81 +20,33 @@ DOCS_PDF  = $(DOCS_SRC:.md=.pdf)
 BUNDLE_OUT = bundle.zip
 SITE_OUT   = site.zip
 
-SRC_PRED  = src/predict.cpp
-BIN_PRED  = predict
+# All ordinary standalone C/C++ programs are discovered automatically and
+# written to bin/.  Adding a new source file therefore needs no Makefile edit.
+TOOL_SOURCES = $(wildcard src/*.c src/*.cc src/*.cpp scripts/*.c scripts/*.cc scripts/*.cpp scripts/unstable/*.c scripts/unstable/*.cc scripts/unstable/*.cpp)
+TOOL_SOURCES := $(filter-out src/arrangement.cpp \
+	src/search_ghosts.cpp src/search_triples.cpp src/search_single.cpp \
+	src/profile_telescope_milp.cpp scripts/a10_5_hunt.cpp \
+	scripts/a10_5_boost.cpp scripts/a10_5_smt_oracle.cpp,$(TOOL_SOURCES))
+TOOL_BINS = $(addprefix bin/,$(basename $(notdir $(TOOL_SOURCES))))
 
-SRC_UNIVERSAL = src/universal_lower_bound.cpp
-BIN_UNIVERSAL = universal_check
+# These names are retained as lightweight aliases for scripts and muscle
+# memory.  The actual files live under bin/.
+BIN_OPT = bin/arrangement
+BIN_PRED = bin/predict
+BIN_UNIVERSAL = bin/universal_lower_bound
 
-SRC_SLACK = src/check_amortized_slack.cpp
-BIN_SLACK = check_amortized_slack
+# Optional dependency: install OR-Tools/Z3 separately before using this group.
+OPTIONAL_SOURCES = src/search_ghosts.cpp src/search_triples.cpp \
+	src/search_single.cpp src/profile_telescope_milp.cpp \
+	scripts/a10_5_hunt.cpp scripts/a10_5_boost.cpp scripts/a10_5_smt_oracle.cpp
+OPTIONAL_BINS = $(addprefix bin/,$(basename $(notdir $(OPTIONAL_SOURCES))))
 
-SRC_UNIQUENESS = src/check_uniqueness.cpp
-BIN_UNIQUENESS = check_uniqueness
-
-SRC_SWEEP_DEFICIT = src/sweep_deficit.cpp
-BIN_SWEEP_DEFICIT = sweep_deficit
-
-# Optional dependency: this target is deliberately not part of `make build`.
-# Install OR-Tools separately, then override these if its package uses
-# non-standard include/library paths.
-SRC_GHOSTS = src/search_ghosts.cpp
-BIN_GHOSTS = search_ghosts
-SRC_TRIPLES = src/search_triples.cpp
-BIN_TRIPLES = search_triples
-SRC_SINGLE = src/search_single.cpp
-BIN_SINGLE = search_single
-SRC_PROFILE_TELESCOPE = src/profile_telescope_milp.cpp
-BIN_PROFILE_TELESCOPE = profile_telescope_milp
-SRC_A10_RECON = scripts/a10_5_recon.cpp
-BIN_A10_RECON = a10_5_recon
-SRC_A10_HUNT = scripts/a10_5_hunt.cpp
-BIN_A10_HUNT = a10_5_hunt
-SRC_A10_BOOST = scripts/a10_5_boost.cpp
-BIN_A10_BOOST = a10_5_boost
-SRC_A10_SMT = scripts/a10_5_smt_oracle.cpp
-BIN_A10_SMT = a10_5_smt_oracle
-SRC_ROOT_STATE = scripts/root_state_validator.cpp
-BIN_ROOT_STATE = root_state_validator
-SRC_PROFILE_DP = scripts/profile_dp_subset.cpp
-BIN_PROFILE_DP = profile_dp_subset
-SRC_EMPIRICAL_GAMMA = scripts/empirical_gamma_bound.cpp
-BIN_EMPIRICAL_GAMMA = empirical_gamma_bound
-SRC_TRANSFER = scripts/profile_dp_slice.cpp
-BIN_TRANSFER = profile_dp_slice
-SRC_FIBER = scripts/profile_dp_order.cpp
-BIN_FIBER = profile_dp_order
-SRC_WINDOW = scripts/profile_dp_window.cpp
-BIN_WINDOW = profile_dp_window
-SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
-BIN_ANNEAL = simulated_annealing_hunt
-SRC_AUDIT_SURROGATE = src/audit_surrogate.cpp
-BIN_AUDIT_SURROGATE = audit_surrogate
-SRC_DIAGNOSE_DEFECT = src/diagnose_defect_collision.cpp
-BIN_DIAGNOSE_DEFECT = diagnose_defect_collision
-SRC_DIAGNOSE_STAR = src/diagnose_star_clusters.cpp
-BIN_DIAGNOSE_STAR = diagnose_star_clusters
-SRC_AUDIT_ORBITS = scripts/audit_orbits.cpp
-BIN_AUDIT_ORBITS = audit_orbits
-SRC_FDP_UNSTABLE = scripts/unstable/fdp.cpp
-BIN_FDP_UNSTABLE = fdp_unstable
-
-# Every top-level executable produced by this Makefile.  Keep this list
-# explicit: several source names intentionally map to different binary names
-# and some targets require optional external dependencies.
-ALL_BINS = $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) \
-	$(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) \
-	$(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE) $(BIN_A10_RECON) $(BIN_A10_HUNT) \
-	$(BIN_A10_BOOST) $(BIN_A10_SMT) $(BIN_ROOT_STATE) $(BIN_PROFILE_DP) \
-	$(BIN_EMPIRICAL_GAMMA) $(BIN_TRANSFER) $(BIN_FIBER) $(BIN_WINDOW) \
-	$(BIN_ANNEAL) $(BIN_AUDIT_SURROGATE) $(BIN_DIAGNOSE_DEFECT) \
-	$(BIN_DIAGNOSE_STAR) $(BIN_AUDIT_ORBITS) $(BIN_FDP_UNSTABLE)
+ALL_BINS = $(TOOL_BINS) $(OPTIONAL_BINS) $(BIN_OPT)
 LEGACY_PROFILE_BINS = a10_5_profile_dp transfer_dp_prototype fiber_ordering transfer_dp_window
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
 
-# SRCS      = $(SRC_OPT) $(SRC_PRED) $(SRC_UNIVERSAL) $(SRC_SLACK) $(SRC_UNIQUENESS) $(SRC_SWEEP_DEFICIT)
 SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
 # Build modes (set once, below in Build section)
