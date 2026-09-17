@@ -17,18 +17,19 @@
     <text x="72" y="316" font-size="16">center: (0,1,2,3,4,5)</text>
     <text x="72" y="341" font-size="16">for each coordinate i: replace i by one of 6,7,8,9,10</text>
     <g stroke="black" stroke-width="2" fill="white">
-      <line x1="270" y1="430" x2="425" y2="365"/><line x1="270" y1="430" x2="425" y2="387"/><line x1="270" y1="430" x2="425" y2="409"/>
-      <line x1="270" y1="430" x2="425" y2="431"/><line x1="270" y1="430" x2="425" y2="453"/><line x1="270" y1="430" x2="425" y2="475"/>
-      <line x1="270" y1="430" x2="425" y2="497"/><line x1="270" y1="430" x2="425" y2="519"/><line x1="270" y1="430" x2="425" y2="541"/>
+      <line x1="270" y1="430" x2="270" y2="350"/><line x1="270" y1="430" x2="365" y2="390"/><line x1="270" y1="430" x2="365" y2="480"/>
+      <line x1="270" y1="430" x2="270" y2="550"/><line x1="270" y1="430" x2="175" y2="480"/><line x1="270" y1="430" x2="175" y2="390"/>
+      <rect x="225" y="330" width="90" height="38" rx="19"/><rect x="320" y="370" width="90" height="38" rx="19"/>
+      <rect x="320" y="460" width="90" height="38" rx="19"/><rect x="225" y="530" width="90" height="38" rx="19"/>
+      <rect x="130" y="460" width="90" height="38" rx="19"/><rect x="130" y="370" width="90" height="38" rx="19"/>
       <circle cx="270" cy="430" r="30" fill="black"/>
-      <circle cx="425" cy="365" r="13"/><circle cx="425" cy="387" r="13"/><circle cx="425" cy="409" r="13"/>
-      <circle cx="425" cy="431" r="13"/><circle cx="425" cy="453" r="13"/><circle cx="425" cy="475" r="13"/>
-      <circle cx="425" cy="497" r="13"/><circle cx="425" cy="519" r="13"/><circle cx="425" cy="541" r="13"/>
     </g>
     <text x="252" y="436" font-size="14" fill="white">c</text>
-    <text x="445" y="371" font-size="15">i = 0,1: 6,7,8,9,10</text>
-    <text x="445" y="415" font-size="15">i = 2,3: 6,7,8,9,10</text>
-    <text x="445" y="459" font-size="15">i = 4,5: 6,7,8,9,10</text>
+    <text x="256" y="355" font-size="16">K₆</text><text x="351" y="395" font-size="16">K₆</text>
+    <text x="351" y="485" font-size="16">K₆</text><text x="256" y="555" font-size="16">K₆</text>
+    <text x="161" y="485" font-size="16">K₆</text><text x="161" y="395" font-size="16">K₆</text>
+    <text x="72" y="370" font-size="13">Exact induced graph:</text>
+    <text x="72" y="390" font-size="13">six K₆ cliques sharing c</text>
     <text x="74" y="585" font-size="18">D = jm = 30  (root/fiber defect)</text>
     <text x="74" y="615" font-size="18">X = m(m−1) C(j,2) = 5·4·15 = 300  (external excess)</text>
     <text x="74" y="645" font-size="18">Q = X + (m+1)D = 300 + 6·30 = 480</text>
