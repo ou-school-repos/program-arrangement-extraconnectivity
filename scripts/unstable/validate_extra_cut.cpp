@@ -175,7 +175,8 @@ void print_graph6(std::ostream &out,
 void dump_certificate(const std::string &path, const ArrangementGraph &graph,
                       const std::vector<std::vector<int>> &star,
                       const std::vector<int> &boundary_codes,
-                      const std::vector<int> &component_sizes, int g) {
+                      const std::vector<int> &component_sizes, int g,
+                      bool valid) {
     std::ofstream out(path);
     if (!out) {
         std::cerr << "Error: cannot open dump file '" << path << "'.\n";
@@ -267,6 +268,26 @@ void dump_certificate(const std::string &path, const ArrangementGraph &graph,
     print_graph6(out, cut_vertices, false);
     out << "CUT_COMPLEMENT_GRAPH6\n";
     print_graph6(out, cut_vertices, true);
+
+    out << "\n# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    out << "# BEGIN STDOUT ~~\n";
+    out << "Building A(" << graph.n << ',' << graph.k << ")...\n";
+    out << "Total valid vertices: " << graph.valid_vertices.size() << "\n\n";
+    out << "Candidate g = " << g << "\n";
+    out << "|S| = " << star.size() << "\n";
+    out << "Subset S connectivity verified.\n";
+    out << "|N(S)| = " << boundary_codes.size() << "\n";
+    out << "Validating " << g << "-extra cut properties...\n";
+    out << "component sizes after deletion:\n";
+    for (const int size : component_sizes)
+        out << "  " << size << '\n';
+    out << "valid " << g << "-extra cut: " << (valid ? "yes" : "no") << '\n';
+    if (valid) {
+        out << "therefore kappa_" << g << "(A(" << graph.n << ',' << graph.k
+            << ")) <= " << boundary_codes.size() << '\n';
+    }
+    out << "# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    out << "# END STDOUT ~~\n";
 }
 
 int main(int argc, char **argv) {
@@ -391,13 +412,13 @@ int main(int argc, char **argv) {
     if (!valid) {
         if (!dump_path.empty())
             dump_certificate(dump_path, graph, star, boundary_codes,
-                             component_sizes, g);
+                             component_sizes, g, false);
         std::cout << "valid " << g << "-extra cut: no\n";
         return 0;
     }
     if (!dump_path.empty())
         dump_certificate(dump_path, graph, star, boundary_codes,
-                         component_sizes, g);
+                         component_sizes, g, true);
     std::cout << "valid " << g << "-extra cut: yes\n";
     std::cout << "therefore kappa_" << g << "(A(" << n << ',' << k
               << ")) <= " << boundary_count << "\n";
