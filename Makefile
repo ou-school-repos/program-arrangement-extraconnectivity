@@ -117,31 +117,53 @@ endef
 # Header dependencies for arrangement
 ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
-.PHONY: build
-build: $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE)	##H @Build Compile all binaries
-
 CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
 
-.PHONY: certificates certificates-check fracture-arithmetic-check tools
+.PHONY: build tools optional-tools certificates certificates-check fracture-arithmetic-check
 
-# Standalone tools that do not require optional solver libraries.  Sources
-# using OR-Tools, Z3, or the MILP backend remain on their specialized targets
-# below, where the required include and link flags are available.
-AUTO_TOOL_SOURCES = $(wildcard src/*.c src/*.cc src/*.cpp scripts/*.c scripts/*.cc scripts/*.cpp scripts/unstable/*.c scripts/unstable/*.cc scripts/unstable/*.cpp)
-AUTO_TOOL_EXCLUDED = $(SRC_OPT) $(SRC_GHOSTS) $(SRC_TRIPLES) $(SRC_SINGLE) $(SRC_PROFILE_TELESCOPE) $(SRC_A10_HUNT) $(SRC_A10_BOOST) $(SRC_A10_SMT)
-AUTO_TOOL_SOURCES := $(filter-out $(AUTO_TOOL_EXCLUDED),$(AUTO_TOOL_SOURCES))
-AUTO_TOOL_BINS = $(addprefix bin/,$(notdir $(AUTO_TOOL_SOURCES:.c=)))
-AUTO_TOOL_BINS := $(AUTO_TOOL_BINS:.cc=)
-AUTO_TOOL_BINS := $(AUTO_TOOL_BINS:.cpp=)
+# `tools` is the one extensible build target: every ordinary standalone
+# source becomes bin/<basename>.  The generated aliases below keep
+# `make <tool>` and Make's tab completion convenient without another rule per
+# source file.
+tools: $(TOOL_BINS) ##H @Build Build all standalone C/C++ tools into bin/
 
-tools: $(AUTO_TOOL_BINS) ##H @Build Compile standalone C/C++ tools into bin/
-
-define AUTO_TOOL_template
+define TOOL_template
 bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) -o $$@ $$<
+
+$(notdir $(basename $(1))): bin/$(notdir $(basename $(1)))
 endef
-$(foreach source,$(AUTO_TOOL_SOURCES),$(eval $(call AUTO_TOOL_template,$(source))))
+$(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
+
+# The nauty executable and the optional solver programs use non-default link
+# flags, so they remain explicit, but are grouped rather than mixed into the
+# ordinary tool list.
+arrangement: $(BIN_OPT) ##H @Build Build the nauty arrangement search
+predict: bin/predict ##H @Build Build the predictor
+universal_check: bin/universal_lower_bound ##H @Dev Alias for universal_lower_bound
+
+bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)
+	@mkdir -p bin
+	$(CXX) $(CXXFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $@ $< $(NAUTY_LIBS)
+
+optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
+
+define OPTIONAL_template
+bin/$(notdir $(basename $(1))): $(1)
+	@mkdir -p bin
+	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $$@ $$< $(ORTOOLS_LIBS)
+
+$(notdir $(basename $(1))): bin/$(notdir $(basename $(1)))
+endef
+$(foreach source,$(filter-out scripts/a10_5_smt_oracle.cpp,$(OPTIONAL_SOURCES)),$(eval $(call OPTIONAL_template,$(source))))
+
+bin/a10_5_smt_oracle: scripts/a10_5_smt_oracle.cpp
+	@mkdir -p bin
+	$(CXX) $(CXXFLAGS) $$(shell pkg-config --cflags z3) -o $@ $< $$(shell pkg-config --libs z3)
+a10_5_smt_oracle: bin/a10_5_smt_oracle
+
+build: arrangement tools ##H @Build Build the core search and all standalone tools
 
 certificates:	##H @Build Compile the finite certificate/oracle tools
 	@mkdir -p $(CERTIFICATE_BUILD)
@@ -156,135 +178,6 @@ certificates-check: certificates	##H @Test Run the finite certificate/oracle reg
 fracture-arithmetic-check:	##H @Test Check the finite fracture arithmetic regression
 	$(CXX) -O2 -std=c++17 -Wall -Wextra scripts/unstable/fracture_arith_check.cpp -o /tmp/fracture_arith_check
 	/tmp/fracture_arith_check 12
-
-$(BIN_A10_RECON): $(SRC_A10_RECON)
-	@$(call print_info,Building $@)
-	$(CXX) -O3 -std=c++17 -Wall -Wextra -Wpedantic -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_A10_HUNT): $(SRC_A10_HUNT)
-	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) -DOR_PROTO_DLL= -fwrapv $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
-	@$(call print_success,Build complete.)
-
-$(BIN_A10_BOOST): $(SRC_A10_BOOST)
-	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) -DOR_PROTO_DLL= -fwrapv $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
-	@$(call print_success,Build complete.)
-
-$(BIN_A10_SMT): $(SRC_A10_SMT)
-	@$(call print_info,Building $@ with Z3)
-	$(CXX) $(CXXFLAGS) $(shell pkg-config --cflags z3) -o $@ $< $(shell pkg-config --libs z3)
-	@$(call print_success,Build complete.)
-
-$(BIN_ROOT_STATE): $(SRC_ROOT_STATE)
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_PROFILE_DP): $(SRC_PROFILE_DP) scripts/arrangement_core.hpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_EMPIRICAL_GAMMA): $(SRC_EMPIRICAL_GAMMA) scripts/arrangement_core.hpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_TRANSFER): $(SRC_TRANSFER) scripts/arrangement_core.hpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_FIBER): $(SRC_FIBER) scripts/arrangement_core.hpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_WINDOW): $(SRC_WINDOW) scripts/arrangement_core.hpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_ANNEAL): $(SRC_ANNEAL)
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_AUDIT_SURROGATE): $(SRC_AUDIT_SURROGATE)
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_DIAGNOSE_DEFECT): $(SRC_DIAGNOSE_DEFECT) scripts/arrangement_core.hpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_DIAGNOSE_STAR): $(SRC_DIAGNOSE_STAR) scripts/arrangement_core.hpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_AUDIT_ORBITS): $(SRC_AUDIT_ORBITS)
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_FDP_UNSTABLE): $(SRC_FDP_UNSTABLE)
-	@$(call print_info,Building exploratory $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_OPT): EXTRA_CFLAGS = $(NAUTY_CFLAGS)
-$(BIN_OPT): EXTRA_LIBS   = $(NAUTY_LIBS)
-$(BIN_OPT): $(ARRANGEMENT_HDRS)
-
-$(BIN_OPT) $(BIN_PRED): %: src/%.cpp
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) $(EXTRA_CFLAGS) $(LDFLAGS) -o $@ $< $(EXTRA_LIBS)
-	@$(call print_success,Build complete.)
-
-$(BIN_UNIVERSAL): $(SRC_UNIVERSAL)	##H @Dev Build the all-subsets UniversalLowerBound checker
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_SLACK): $(SRC_SLACK)	##H @Dev Build the amortized-slack critical-case checker (Prop 5.3)
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_UNIQUENESS): $(SRC_UNIQUENESS)	##H @Dev Build the tight-fiber Hamming-ball-uniqueness checker
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_SWEEP_DEFICIT): $(SRC_SWEEP_DEFICIT)	##H @Dev Build the multi-cell worst-margin deficit sweep (Prop 5.3)
-	@$(call print_info,Building $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
-	@$(call print_success,Build complete.)
-
-$(BIN_GHOSTS): $(SRC_GHOSTS)	##H @Dev Build the optional OR-Tools CP-SAT ghost maximizer
-	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
-	@$(call print_success,Build complete.)
-
-$(BIN_TRIPLES): $(SRC_TRIPLES)	##H @Dev Build the optional OR-Tools CP-SAT tripartite interface adversary
-	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
-	@$(call print_success,Build complete.)
-
-$(BIN_SINGLE): $(SRC_SINGLE)	##H @Dev Build the optional OR-Tools CP-SAT one-fiber defect/collision adversary
-	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
-	@$(call print_success,Build complete.)
-
-$(BIN_PROFILE_TELESCOPE): $(SRC_PROFILE_TELESCOPE)	##H @Dev Build the bounded CP-SAT profile-telescope feasibility probe
-	@$(call print_info,Building $@ with OR-Tools)
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $@ $< $(ORTOOLS_LIBS)
-	@$(call print_success,Build complete.)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Run
