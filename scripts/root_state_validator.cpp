@@ -441,6 +441,111 @@ void raw_dfs(const Instance &instance, State &state, std::vector<int> &subset,
     }
 }
 
+std::vector<std::vector<int>> origin_stabilizer(const Instance &instance) {
+    std::vector<std::vector<int>> permutations;
+    std::vector<int> coordinate_permutation(instance.k);
+    std::iota(coordinate_permutation.begin(), coordinate_permutation.end(), 0);
+
+    do {
+        std::vector<int> free_symbols(instance.n - instance.k);
+        std::iota(free_symbols.begin(), free_symbols.end(), instance.k);
+        do {
+            std::vector<int> symbol_permutation(instance.n);
+            for (int position = 0; position < instance.k; ++position)
+                symbol_permutation[coordinate_permutation[position]] = position;
+            for (int index = 0; index < instance.n - instance.k; ++index)
+                symbol_permutation[instance.k + index] = free_symbols[index];
+
+            std::vector<int> permutation(instance.vertices.size());
+            for (std::size_t vertex_id = 0;
+                 vertex_id < instance.vertices.size(); ++vertex_id) {
+                std::vector<int> image(instance.k);
+                for (int position = 0; position < instance.k; ++position)
+                    image[position] = symbol_permutation
+                        [instance.vertices[vertex_id]
+                                          [coordinate_permutation[position]]];
+                permutation[vertex_id] =
+                    instance.index.at(instance.encode(image));
+            }
+            permutations.push_back(std::move(permutation));
+        } while (
+            std::next_permutation(free_symbols.begin(), free_symbols.end()));
+    } while (std::next_permutation(coordinate_permutation.begin(),
+                                   coordinate_permutation.end()));
+    return permutations;
+}
+
+struct OrbitProgress {
+    SearchProgress progress;
+    std::uint64_t skipped = 0;
+};
+
+void orbit_dfs(const Instance &instance, State &state, std::vector<int> &subset,
+               int target_size, int &best_boundary,
+               std::uint64_t &nodes_visited,
+               const std::vector<std::vector<int>> &stabilizer,
+               OrbitProgress &progress) {
+    if (state.selected_count == target_size) {
+        best_boundary = std::min(best_boundary, state.boundary_size);
+        return;
+    }
+    if (state.optimistic_bound(target_size) >= best_boundary)
+        return;
+
+    const int start = subset.empty() ? 0 : subset.back() + 1;
+    for (int vertex = start;
+         vertex < static_cast<int>(instance.vertices.size()); ++vertex) {
+        bool orbit_representative = true;
+        orbit_representative =
+            !std::any_of(stabilizer.begin(), stabilizer.end(),
+                         [vertex](const auto &permutation) {
+                             return permutation[vertex] < vertex;
+                         });
+        if (!orbit_representative) {
+            ++progress.skipped;
+            continue;
+        }
+
+        std::vector<std::vector<int>> next_stabilizer;
+        std::copy_if(stabilizer.begin(), stabilizer.end(),
+                     std::back_inserter(next_stabilizer),
+                     [vertex](const auto &permutation) {
+                         return permutation[vertex] == vertex;
+                     });
+
+        state.add(vertex);
+        subset.push_back(vertex);
+        ++nodes_visited;
+        progress.progress.report(nodes_visited, state.selected_count,
+                                 best_boundary);
+        orbit_dfs(instance, state, subset, target_size, best_boundary,
+                  nodes_visited, next_stabilizer, progress);
+        subset.pop_back();
+        state.remove(vertex);
+    }
+}
+
+void compare_orbit_pruning(const Instance &instance, int target_size) {
+    std::cout << "--- Orbit test A(" << instance.n << ',' << instance.k
+              << ") R=" << target_size << " ---\n";
+    std::vector<int> origin(instance.k);
+    std::iota(origin.begin(), origin.end(), 0);
+    const int origin_id = instance.index.at(instance.encode(origin));
+    const auto stabilizer = origin_stabilizer(instance);
+
+    State state(instance);
+    state.add(origin_id);
+    std::vector<int> subset{origin_id};
+    int best_boundary = INT_MAX;
+    std::uint64_t nodes = 0;
+    OrbitProgress progress;
+    orbit_dfs(instance, state, subset, target_size, best_boundary, nodes,
+              stabilizer, progress);
+    std::cout << "Orbit-pruned: best=" << best_boundary << " nodes=" << nodes
+              << " orbit-skipped=" << progress.skipped
+              << " stabilizer=" << stabilizer.size() << '\n';
+}
+
 void compare_dfs_pruning(const Instance &instance, int target_size) {
     std::cout << "--- Testing A(" << instance.n << ',' << instance.k
               << ") R=" << target_size << " ---\n";
@@ -525,9 +630,25 @@ void canonicalization_test() {
 int main(int argc, char **argv) {
     if (argc > 1 && std::string(argv[1]) == "--pre")
         return precompute_ranges(argc, argv);
+    if (argc == 5 && std::string(argv[1]) == "--orbit") {
+        try {
+            const int n = std::stoi(argv[2]);
+            const int k = std::stoi(argv[3]);
+            const int target_size = std::stoi(argv[4]);
+            const Instance instance(n, k);
+            if (n < 1 || k < 1 || k > n || target_size < 1 ||
+                target_size > static_cast<int>(instance.vertices.size()))
+                throw std::invalid_argument("invalid instance");
+            compare_orbit_pruning(instance, target_size);
+            return 0;
+        } catch (const std::exception &) {
+            // Fall through to usage.
+        }
+    }
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
         std::cout << "usage: " << argv[0] << " [n] [k] [target-size]\n"
+                  << "       " << argv[0] << " --orbit [n] [k] [target-size]\n"
                   << "       " << argv[0]
                   << " (runs the built-in A(4,2) and A(5,3) tests)\n";
         return 0;
@@ -548,6 +669,7 @@ int main(int argc, char **argv) {
     }
     if (argc > 1) {
         std::cerr << "usage: " << argv[0] << " [n] [k] [target-size]\n"
+                  << "       " << argv[0] << " --orbit [n] [k] [target-size]\n"
                   << "       " << argv[0]
                   << " (runs the built-in A(4,2) and A(5,3) tests)\n";
         return 2;
