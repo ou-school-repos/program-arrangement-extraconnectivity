@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
 #include <climits>
 #include <cstdint>
@@ -20,6 +21,30 @@
 #endif
 
 namespace {
+
+using boost::multiprecision::cpp_int;
+
+cpp_int binomial(const int n, const int k) {
+    if (k < 0 || k > n)
+        return 0;
+    const int reduced_k = std::min(k, n - k);
+    cpp_int result = 1;
+    for (int i = 1; i <= reduced_k; ++i) {
+        result *= n - reduced_k + i;
+        result /= i;
+    }
+    return result;
+}
+
+cpp_int raw_tree_nodes(const int vertices, const int target,
+                       const bool pinned_origin) {
+    cpp_int total = 0;
+    for (int depth = 1; depth <= target; ++depth) {
+        total += pinned_origin ? binomial(vertices - 1, depth - 1)
+                               : binomial(vertices, depth);
+    }
+    return total;
+}
 
 struct Instance {
     int n;
@@ -327,6 +352,7 @@ struct SearchStats {
 struct ProgressReporter {
     std::atomic<std::uint64_t> nodes{0};
     std::uint64_t interval = 1'000'000;
+    long double expected_nodes = 0.0L;
     std::chrono::steady_clock::time_point started =
         std::chrono::steady_clock::now();
 
@@ -338,11 +364,14 @@ struct ProgressReporter {
                                    std::chrono::steady_clock::now() - started)
                                    .count();
         const double rate = seconds > 0.0 ? count / seconds : 0.0;
+        const long double percent =
+            expected_nodes > 0.0L ? 100.0L * count / expected_nodes : 0.0L;
 #ifdef _OPENMP
 #pragma omp critical(profile_dp_progress)
 #endif
         std::cerr << "progress nodes=" << count << " depth=" << depth
-                  << " rate=" << rate << "/s\n";
+                  << " rate=" << rate
+                  << "/s percent=" << static_cast<double>(percent) << "\n";
     }
 };
 
@@ -477,6 +506,11 @@ int main(int argc, char **argv) {
     const auto stabilizer = origin_stabilizer(instance);
     ProgressReporter progress;
     progress.interval = progress_interval;
+    const cpp_int expected_nodes = raw_tree_nodes(
+        static_cast<int>(instance.vertices.size()), target, thread_count > 1);
+    progress.expected_nodes = expected_nodes.convert_to<long double>();
+    std::cout << "raw baseline nodes=" << expected_nodes << " ("
+              << (thread_count > 1 ? "origin-pinned" : "full") << ")\n";
     std::unordered_set<std::vector<int>, VectorHash> seen;
     SearchStats stats;
     int best = INT_MAX;
