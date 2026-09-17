@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -39,7 +41,26 @@ void enumerate_vertices(int position, Vertex &vertex,
 }
 
 int main(int argc, char **argv) {
-    const int timeout_seconds = argc > 1 ? std::stoi(argv[1]) : 600;
+    if (argc > 1 &&
+        (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
+        std::cout << "usage: " << argv[0]
+                  << " [timeout-seconds] [partial-state-file]\n";
+        return 0;
+    }
+
+    int timeout_seconds = 600;
+    try {
+        if (argc > 1)
+            timeout_seconds = std::stoi(argv[1]);
+    } catch (const std::exception &) {
+        std::cerr << "usage: " << argv[0]
+                  << " [timeout-seconds] [partial-state-file]\n";
+        return 2;
+    }
+    if (timeout_seconds <= 0) {
+        std::cerr << "timeout must be positive\n";
+        return 2;
+    }
     const std::string partial_path = argc > 2 ? argv[2] : "";
 
     std::vector<Vertex> vertices;
@@ -83,6 +104,7 @@ int main(int argc, char **argv) {
     solver.add(boundary_size <= kCeiling);
 
     int line_count = 0;
+    std::vector<z3::expr> active_lines;
     for (int position = 0; position < kDimension; ++position) {
         std::unordered_map<int, std::vector<int>> lines;
         for (int id = 0; id < static_cast<int>(vertices.size()); ++id) {
@@ -97,6 +119,7 @@ int main(int argc, char **argv) {
             (void)root;
             const z3::expr active = context.bool_const(
                 ("a_" + std::to_string(line_count++)).c_str());
+            active_lines.push_back(active);
             z3::expr occupied = context.bool_val(false);
             z3::expr selected_on_line = context.int_val(0);
             for (const int id : members) {
@@ -112,6 +135,22 @@ int main(int argc, char **argv) {
                                context.int_val(0)) <= selected_on_line);
         }
     }
+    std::vector<Z3_ast> aggregate_args;
+    std::vector<int> aggregate_coefficients;
+    aggregate_args.reserve(active_lines.size() + boundary.size());
+    aggregate_coefficients.reserve(active_lines.size() + boundary.size());
+    for (const z3::expr &active : active_lines) {
+        aggregate_args.push_back(active);
+        aggregate_coefficients.push_back(6);
+    }
+    for (const z3::expr &external : boundary) {
+        aggregate_args.push_back(external);
+        aggregate_coefficients.push_back(-5);
+    }
+    solver.add(z3::expr(
+        context,
+        Z3_mk_pble(context, static_cast<unsigned>(aggregate_args.size()),
+                   aggregate_args.data(), aggregate_coefficients.data(), 130)));
     std::cout << "A(10,5): vertices=" << vertices.size()
               << " coordinate_lines=" << line_count << '\n';
 
@@ -142,13 +181,38 @@ int main(int argc, char **argv) {
         return result == z3::unknown ? 1 : 0;
 
     const z3::model model = solver.get_model();
-    int actual_boundary = 0;
+    std::vector<bool> selected_flags(vertices.size(), false);
     std::vector<int> witness;
     for (int id = 0; id < static_cast<int>(vertices.size()); ++id) {
-        if (model.eval(selected[id]).is_true())
+        selected_flags[id] = model.eval(selected[id]).is_true();
+        if (selected_flags[id])
             witness.push_back(encode(vertices[id]));
-        if (model.eval(boundary[id]).is_true())
-            ++actual_boundary;
+    }
+    std::vector<bool> external_flags(vertices.size(), false);
+    int line_index = 0;
+    for (int position = 0; position < kDimension; ++position) {
+        std::unordered_map<int, std::vector<int>> lines;
+        for (int id = 0; id < static_cast<int>(vertices.size()); ++id) {
+            int root = 0;
+            for (int coordinate = 0; coordinate < kDimension; ++coordinate)
+                if (coordinate != position)
+                    root = 10 * root + vertices[id][coordinate];
+            lines[root].push_back(id);
+        }
+        for (const auto &[root, members] : lines) {
+            (void)root;
+            if (!model.eval(active_lines[line_index++]).is_true())
+                continue;
+            for (const int id : members)
+                if (!selected_flags[id])
+                    external_flags[id] = true;
+        }
+    }
+    const int actual_boundary = static_cast<int>(
+        std::count(external_flags.begin(), external_flags.end(), true));
+    if (actual_boundary > kCeiling || witness.size() != kVolume) {
+        std::cerr << "independent witness verification failed\n";
+        return 2;
     }
     std::cout << "model boundary upper certificate=" << actual_boundary << '\n';
     std::cout << "selected vertices:";
