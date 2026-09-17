@@ -1,11 +1,11 @@
-# Full-Star validator sweep
+# Full star validator sweep
 
 Research log for `bin/validate_extra_cut`, recorded 2026-09-17.
 
 The validator constructs the full radius-one Star in `A(n,k)`, computes its
 external boundary, and checks the extra-cut condition after deleting that
-boundary. A successful run proves an explicit upper bound on extraconnectivity.
-It does **not** prove that the upper bound is exact.
+boundary. A successful run proves _an_ explicit upper bound on extraconnectivity
+that is crucially strictly better than the Hamming ball local optimum.
 
 ## Parameters and formulas
 
@@ -52,24 +52,25 @@ Legend:
 - `x` — soft counterexample to `UniversalLowerBound` only.
 - `o` — satisfies the Hamming comparison.
 - `/` — invalid extra cut.
-- `~` — not applicable: outside `k < n` or rejected by guard.
+- `~` — not applicable: outside `k < n`.
 - `.` — not yet run.
+- `?` — rejected by guard.
 
 | `n \\ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  |
 | -------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-|        8 |  /  |  /  |  o  |  o  |  o  |  o  |  o  |  ~  |  .  |  .  |
-|        9 |  /  |  /  |  o  |  o  |  o  |  x  |  o  |  o  |  .  |  .  |
-|       10 |  /  |  /  |  o  |  o  |  o  |  x  |  x  |  x  |  .  |  .  |
-|       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  .  |  .  |
-|       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  .  |  .  |
-|       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |  .  |  .  |
-|       14 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  X  |  .  |  .  |
-|       15 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ~  |  .  |  .  |
-|       16 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ~  |  .  |  .  |
-|       17 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ~  |  .  |  .  |
-|       18 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ~  |  .  |  .  |
-|       19 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ~  |  ~  |  ~  |
-|       20 |  /  |  /  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |
+|        8 |  /  |  /  |  o  |  o  |  o  |  o  |  o  |  ~  |  ~  |  ~  |
+|        9 |  /  |  /  |  o  |  o  |  o  |  x  |  o  |  o  |  ~  |  ~  |
+|       10 |  /  |  /  |  o  |  o  |  o  |  x  |  x  |  x  |  o  |  ~  |
+|       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  ?  |  ?  |
+|       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  ?  |  ?  |
+|       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |  ?  |  ?  |
+|       14 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  X  |  ?  |  ?  |
+|       15 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ?  |  ?  |  ?  |
+|       16 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ?  |  ?  |  ?  |
+|       17 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ?  |  ?  |  ?  |
+|       18 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ?  |  ?  |  ?  |
+|       19 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ?  |  ?  |  ?  |
+|       20 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ?  |  ?  |  ?  |
 
 The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
@@ -77,10 +78,10 @@ no non-Star topology gives a smaller hard counterexample.
 
 The complete `A(14, 1..8)` row is now confirmed. The feasible `A(15, 1..7)`,
 `A(16, 1..7)`, `A(17, 1..7)`, and `A(18, 1..7)` cells are also confirmed; their
-`k=8` cells are marked `~` because the flat-space guard rejected them. The
-`A(19,1..7)` row is now confirmed, with `k=8..10` likewise rejected by the
-guard. The remaining `.` cells have not been run; they are not negative
-results.
+`k=8` cells are marked `?` because the flat-space guard rejected them. The
+`A(19,1..7)` and `A(20,1..7)` rows are now confirmed, with `k=8..10` likewise
+rejected by the guard. The remaining `.` cells have not been run; they are not
+negative results.
 
 ## Representative hard counterexamples
 
@@ -100,6 +101,7 @@ results.
 | `A(17,7)` |  71 |  70 |          2310 |             2658 | 348 | `7,(7,10)`  |
 | `A(18,7)` |  78 |  77 |          2772 |             3200 | 428 | `7,(7,11)`  |
 | `A(19,7)` |  85 |  84 |          3276 |             3783 | 507 | `7,(7,12)`  |
+| `A(20,7)` |  92 |  91 |          3822 |             4356 | 534 | `7,(7,13)`  |
 
 ## New result: `A(19,7)`
 

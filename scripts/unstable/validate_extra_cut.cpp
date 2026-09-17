@@ -10,6 +10,7 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <queue>
 #include <string>
@@ -130,6 +131,20 @@ bool connected(const ArrangementGraph &graph, const std::vector<int> &subset) {
         });
     }
     return reached == static_cast<int>(subset.size());
+}
+
+std::uint64_t flat_code_space(int n, int k, bool &overflow) {
+    overflow = false;
+    std::uint64_t capacity = 1;
+    for (int i = 0; i < k; ++i) {
+        if (n > 0 && capacity > std::numeric_limits<std::uint64_t>::max() /
+                                    static_cast<std::uint64_t>(n)) {
+            overflow = true;
+            return std::numeric_limits<std::uint64_t>::max();
+        }
+        capacity *= static_cast<std::uint64_t>(n);
+    }
+    return capacity;
 }
 
 long long defect_sum(int r) {
@@ -277,6 +292,16 @@ int main(int argc, char **argv) {
         ++positional;
     }
     if (n <= k || k < 1) {
+        if (!json_output) {
+            std::cout << "Building A(" << n << ',' << k << ")...\n";
+            bool overflow = false;
+            const std::uint64_t capacity = flat_code_space(n, k, overflow);
+            std::cout << "Would require flat code space: " << n << '^' << k
+                      << " = ";
+            if (overflow)
+                std::cout << ">=";
+            std::cout << capacity << " slots\n";
+        }
         std::cerr << "Error: require n > k >= 1.\n";
         return 1;
     }
