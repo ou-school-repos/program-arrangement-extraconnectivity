@@ -12,6 +12,8 @@
     <text x="78" y="238" font-size="15">The unrestricted Star is a counterexample; this row is outside the hypercube-embedding gate.</text>
 
     <text x="72" y="287" font-size="21" font-weight="bold">Full Star S₆</text>
+    <rect x="55" y="265" width="560" height="470" rx="8" fill="none" stroke="#7a2020" stroke-width="2" stroke-dasharray="2 7"/>
+    <text x="430" y="280" font-size="13" fill="#7a2020">A(9,6) graph schematic</text>
     <text x="72" y="316" font-size="16">center: (0,1,2,3,4,5)</text>
     <text x="72" y="341" font-size="16">for each coordinate i: replace i by 6, 7, or 8</text>
     <g stroke="black" stroke-width="2" fill="white">
