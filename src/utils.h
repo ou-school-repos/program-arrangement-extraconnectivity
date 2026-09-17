@@ -85,8 +85,11 @@ inline int count_internal_edges(const uint64_t *verts, int n) {
 ///   n:     total number of symbols in the alphabet (graph parameter)
 ///   k:     sequence length (graph parameter, derived from encoding)
 ///   R:     number of vertices in verts[]
-inline int64_t count_external_neighbors(const uint64_t *verts, int n,
-                                        int r_val) {
+/// Legacy placeholder retained for callers that still include this header.
+/// The XOR-based implementation was never completed; keep the warning local
+/// until the helper is either implemented or removed with its callers.
+[[maybe_unused]] inline int64_t count_external_neighbors(const uint64_t *verts,
+                                                         int n, int r_val) {
     (void)verts;
     (void)n;
     (void)r_val;

@@ -381,14 +381,6 @@ struct ProfileState {
         std::sort(result.root_signature.begin(), result.root_signature.end());
         return result;
     }
-
-    std::vector<std::uint64_t> exact_key() const {
-        std::vector<std::uint64_t> key = selected;
-        for (const auto &roots : active_roots)
-            key.insert(key.end(), roots.begin(), roots.end());
-        key.insert(key.end(), boundary.begin(), boundary.end());
-        return key;
-    }
 };
 
 struct InvariantHash {

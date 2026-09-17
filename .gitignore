@@ -30,6 +30,7 @@ search_single
 /empirical_*
 /transfer_dp_*
 /fiber_ordering
+/fdp_*
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class

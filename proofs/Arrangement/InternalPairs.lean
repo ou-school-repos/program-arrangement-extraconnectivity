@@ -20,25 +20,29 @@ variable {n k : ℕ}
 
 /-- Sum of internal vertex-pairs lying in a common coordinate root. -/
 def fiber_pair_count (V : Finset (ArrVertex n k)) : ℕ :=
-  ∑ p : Fin k, (∑ r in V.image (fun v => drop_pos v p),
-    Nat.choose ((V.filter (fun v => drop_pos v p = r)).card) 2)
+  (Finset.univ : Finset (Fin k)).sum (fun p =>
+    (V.image (fun v => drop_pos v p)).sum (fun r =>
+      Nat.choose ((V.filter (fun v => drop_pos v p = r)).card) 2))
 
 private def v01 : ArrVertex 4 2 :=
   ⟨fun i => Fin.cases 0 (fun _ => 1) i, by decide⟩
 
-private def v02 : ArrVertex 4 2 :=
-  ⟨fun i => Fin.cases 0 (fun _ => 2) i, by decide⟩
+private def v21 : ArrVertex 4 2 :=
+  ⟨fun i => Fin.cases 2 (fun _ => 1) i, by decide⟩
 
-private def adjacent_pair : Finset (ArrVertex 4 2) := {v01, v02}
+private def v31 : ArrVertex 4 2 :=
+  ⟨fun i => Fin.cases 3 (fun _ => 1) i, by decide⟩
 
-/-- The pair shares exactly one coordinate root. -/
-example : fiber_pair_count adjacent_pair = 1 := by
+private def star_triple : Finset (ArrVertex 4 2) := {v01, v21, v31}
+
+/-- The three vertices share one root with occupancy three, so K is 3. -/
+example : fiber_pair_count star_triple = 3 := by
   native_decide
 
-/-- Its external collision excess plus defect is `m = 2`, not `1`. -/
+/-- Here X + D is 2, so it is not the internal pair count K. -/
 example :
-    cross_collisions adjacent_pair +
-        (adjacent_pair.card * 2 - sum_unique_roots adjacent_pair) = 2 := by
+    cross_collisions star_triple +
+        (star_triple.card * 2 - sum_unique_roots star_triple) = 2 := by
   native_decide
 
 end Arrangement
