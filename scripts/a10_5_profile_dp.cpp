@@ -8,6 +8,7 @@
 #include <chrono>
 #include <climits>
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <stdexcept>
@@ -344,14 +345,40 @@ struct SearchStats {
     std::uint64_t nodes = 0;
     std::uint64_t bound_prunes = 0;
     std::uint64_t cache_hits = 0;
+    double skipped_work = 0.0;
+    double reported_skipped_work = 0.0;
 };
 
 struct ProgressReporter {
     std::atomic<std::uint64_t> nodes{0};
-    std::uint64_t interval = 1'000'000;
+    std::atomic<double> skipped_work{0.0};
+    std::uint64_t interval = 10'000'000;
     long double expected_nodes = 0.0L;
+    std::vector<double> subtree_nodes;
     std::chrono::steady_clock::time_point started =
         std::chrono::steady_clock::now();
+
+    void add_skipped(const double amount) {
+        double current = skipped_work.load(std::memory_order_relaxed);
+        while (!skipped_work.compare_exchange_weak(current, current + amount,
+                                                   std::memory_order_relaxed,
+                                                   std::memory_order_relaxed)) {
+        }
+    }
+
+    void set_subtree_nodes(const int vertices, const int target) {
+        subtree_nodes.assign(target + 1, 1.0);
+        for (int depth = target - 1; depth >= 0; --depth) {
+            double paths = 1.0;
+            double total = 1.0;
+            for (int completion_depth = 1; completion_depth <= target - depth;
+                 ++completion_depth) {
+                paths *= vertices - depth - completion_depth + 1;
+                total += paths;
+            }
+            subtree_nodes[depth] = total;
+        }
+    }
 
     void record(const int depth) {
         const std::uint64_t count = nodes.fetch_add(1) + 1;
@@ -361,14 +388,18 @@ struct ProgressReporter {
                                    std::chrono::steady_clock::now() - started)
                                    .count();
         const double rate = seconds > 0.0 ? count / seconds : 0.0;
+        const long double covered =
+            static_cast<long double>(count) +
+            skipped_work.load(std::memory_order_relaxed);
         const long double percent =
-            expected_nodes > 0.0L ? 100.0L * count / expected_nodes : 0.0L;
+            expected_nodes > 0.0L ? 100.0L * covered / expected_nodes : 0.0L;
 #ifdef _OPENMP
 #pragma omp critical(profile_dp_progress)
 #endif
         std::cerr << "progress nodes=" << count << " depth=" << depth
                   << " rate=" << rate
-                  << "/s percent=" << static_cast<double>(percent) << "\n";
+                  << "/s percent=" << static_cast<double>(percent)
+                  << " covered=" << static_cast<double>(covered) << "\n";
     }
 };
 
@@ -379,11 +410,19 @@ void search(const Instance &instance, ProfileState &state,
             ProgressReporter *progress) {
     if (state.optimistic_bound(target) >= best) {
         ++stats.bound_prunes;
+        if (progress != nullptr &&
+            (stats.bound_prunes + stats.cache_hits) % 1024 == 0)
+            stats.skipped_work +=
+                1024.0 * (progress->subtree_nodes[state.selected_count] - 1.0);
         return;
     }
     const std::vector<int> key = canonical_key(chosen, instance, stabilizer);
     if (!seen.insert(key).second) {
         ++stats.cache_hits;
+        if (progress != nullptr &&
+            (stats.bound_prunes + stats.cache_hits) % 1024 == 0)
+            stats.skipped_work +=
+                1024.0 * (progress->subtree_nodes[state.selected_count] - 1.0);
         return;
     }
     if (state.selected_count == target) {
@@ -399,6 +438,11 @@ void search(const Instance &instance, ProfileState &state,
         ++stats.nodes;
         if (progress != nullptr)
             progress->record(state.selected_count);
+        if (progress != nullptr && stats.nodes % 100'000 == 0) {
+            progress->add_skipped(stats.skipped_work -
+                                  stats.reported_skipped_work);
+            stats.reported_skipped_work = stats.skipped_work;
+        }
         search(instance, state, chosen, target, best, seen, stats, stabilizer,
                progress);
         chosen.pop_back();
@@ -408,7 +452,7 @@ void search(const Instance &instance, ProfileState &state,
 
 int available_threads() {
 #ifdef _OPENMP
-    return omp_get_max_threads();
+    return omp_get_num_procs();
 #else
     return 1;
 #endif
@@ -450,8 +494,13 @@ void search_parallel(const Instance &instance, const int target, int &best,
         std::unordered_set<std::vector<int>, VectorHash> local_seen;
         int local_best = INT_MAX;
         local_stats.nodes = 1;
+        if (progress != nullptr)
+            progress->record(2);
         search(instance, state, chosen, target, local_best, local_seen,
                local_stats, stabilizer, progress);
+        if (progress != nullptr)
+            progress->add_skipped(local_stats.skipped_work -
+                                  local_stats.reported_skipped_work);
 
 #ifdef _OPENMP
 #pragma omp critical(profile_dp_merge)
@@ -479,7 +528,7 @@ int main(int argc, char **argv) {
     const int k = argc > 2 ? std::stoi(argv[2]) : 2;
     const int target = argc > 3 ? std::stoi(argv[3]) : 5;
     int thread_count = available_threads();
-    std::uint64_t progress_interval = 1'000'000;
+    std::uint64_t progress_interval = 10'000'000;
     for (int argument = 4; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--threads=", 0) == 0)
@@ -506,6 +555,8 @@ int main(int argc, char **argv) {
     const cpp_int expected_nodes = raw_tree_nodes(
         static_cast<int>(instance.vertices.size()), target, thread_count > 1);
     progress.expected_nodes = expected_nodes.convert_to<long double>();
+    progress.set_subtree_nodes(static_cast<int>(instance.vertices.size()),
+                               target);
     std::cout << "raw ordered-transition nodes=" << expected_nodes << " ("
               << (thread_count > 1 ? "origin-pinned" : "full") << ")\n";
     std::unordered_set<std::vector<int>, VectorHash> seen;
@@ -520,15 +571,17 @@ int main(int argc, char **argv) {
         search_parallel(instance, target, best, seen, stats, stabilizer,
                         thread_count, &progress);
     }
+    const long double raw_nodes = expected_nodes.convert_to<long double>();
+    const long double coverage = 100.0L * stats.nodes / raw_nodes;
+    const long double reduction = 100.0L * (1.0L - stats.nodes / raw_nodes);
+    std::cout << '\n' << std::fixed << std::setprecision(12);
     std::cout << "A(" << n << ',' << k << ") R=" << target << " best=" << best
               << " nodes=" << stats.nodes
               << " bound-prunes=" << stats.bound_prunes
               << " exact-cache-hits=" << stats.cache_hits
               << " threads=" << thread_count << " states=" << seen.size()
               << '\n'
-              << "raw ordered-transition coverage="
-              << static_cast<double>(100.0L * stats.nodes /
-                                     expected_nodes.convert_to<long double>())
-              << "%\n";
+              << "raw ordered-transition coverage=  " << coverage << "%\n"
+              << "raw ordered-transition reduction=" << reduction << "%\n";
     return 0;
 }
