@@ -64,6 +64,10 @@ Legend:
 
 | `n \ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  |
 | ------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|       4 | \\  | \\  |  /  | \\  | \\  | \\  | \\  | \\  | \\  | \\  |
+|       5 | \\  | \\  |  /  |  /  | \\  | \\  | \\  | \\  | \\  | \\  |
+|       6 | \\  | \\  |  /  |  /  |  /  | \\  | \\  | \\  | \\  | \\  |
+|       7 | \\  | \\  |  /  |  /  |  /  |  /  | \\  | \\  | \\  | \\  |
 |       8 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ∘  |  ∘  | \\  | \\  | \\  |
 |       9 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ∘  |  ∘  | \\  | \\  |
 |      10 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  |
@@ -77,18 +81,20 @@ Legend:
 |      18 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
 |      19 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
 |      20 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |
-|      21 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      22 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      23 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      24 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      25 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      26 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      27 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      21 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ⊞  |  /  |  /  |  /  |  /  |
+|      22 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
+|      23 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
+|      24 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
+|      25 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
+|      26 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
+|      27 | \\  | \\  |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |
 |      28 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      29 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      30 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      31 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      32 |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+
+`time for i in $(seq 21 26); do for j in $(seq 1 6); do ./bin/validate_extra_cut $i $j; done done`
 
 The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
@@ -188,6 +194,30 @@ HARD COUNTEREXAMPLE: RestrictedLowerBound
 real    7m52.232s
 user    7m45.927s
 sys     0m4.228s
+
+
+$ time ./bin/validate_extra_cut 18 8
+Building A(18,8)...
+Total valid vertices: 1764322560
+R = 81
+Candidate g = 80
+|S| = 81
+Subset S connectivity verified.
+|N(S)| = 3080
+Validating 80-extra cut properties...
+component sizes after deletion:
+  81
+  1764319399
+valid 80-extra cut: yes
+therefore kappa_80(A(18,8)) <= 3080
+Hamming baseline: 3782; Star boundary: 3080
+Embedding gate: d = 7, k = 8, n-k = 10 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+
+real    14m17.189s
+user    14m5.706s
+sys     0m7.730s
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives
