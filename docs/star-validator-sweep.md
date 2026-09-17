@@ -59,8 +59,8 @@ Legend:
 |       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
 |       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
 |       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |
-|       14 |  .  |  .  |  .  |  .  |  .  |  X  |  X  |  .  |
-|       15 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
+|       14 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  X  |
+|       15 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ~  |
 |       16 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
 |       17 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
 |       18 |  .  |  .  |  .  |  .  |  .  |  x  |  X  |  .  |
@@ -70,8 +70,10 @@ The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
 no non-Star topology gives a smaller hard counterexample.
 
-The additional confirmed cells are `A(14,6)`, `A(14,7)`, `A(15,7)`, `A(16,7)`,
-`A(17,7)`, `A(18,6)`, `A(18,7)`, and `A(19,7)`. The `.` cells have not been run;
+The complete `A(14,1--8)` row is now confirmed. The feasible `A(15,1--7)` cells
+are also confirmed; `A(15,8)` is marked `~` because the flat-space guard
+rejected it. Other additional confirmed cells are `A(16,7)`, `A(17,7)`,
+`A(18,6)`, `A(18,7)`, and `A(19,7)`. The remaining `.` cells have not been run;
 they are not negative results.
 
 ## Representative hard counterexamples

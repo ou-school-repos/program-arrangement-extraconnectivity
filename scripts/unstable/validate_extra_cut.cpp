@@ -320,6 +320,7 @@ int main(int argc, char **argv) {
                       << ", Hamming baseline = " << hamming_boundary << '\n'
                       << "Deep check: skipped\n"
                       << arithmetic_classification << '\n';
+            std::cout << '\n';
         }
         return 0;
     }
@@ -359,7 +360,7 @@ int main(int argc, char **argv) {
     }
 
     if (show_progress) {
-        std::cout << "\nCandidate g = " << g << "\n";
+        std::cout << "Candidate g = " << g << "\n";
         std::cout << "|S| = " << star.size() << "\n";
     }
     if (!connected(graph, star)) {
@@ -441,6 +442,7 @@ int main(int argc, char **argv) {
         } else {
             std::cout << "valid " << g << "-extra cut: no\n";
             std::cout << classification << "\n";
+            std::cout << '\n';
         }
         return 0;
     }
@@ -460,6 +462,7 @@ int main(int argc, char **argv) {
                       << (embedding_gate ? "open" : "closed") << ")\n";
         }
         std::cout << classification << "\n";
+        std::cout << '\n';
     }
     return 0;
 }
