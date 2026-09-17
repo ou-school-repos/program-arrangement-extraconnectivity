@@ -2031,11 +2031,11 @@ tight `A(5,3)`, `2+2+3` maximizer is
 A = {012,013},  B = {042,043},  C = {021,023,041},  J=4.
 ```
 
-The contributors `013`, `023`, and `043` form one three-colour root clique
+The contributors `013`, `023`, and `043` form one three-color root clique
 (delete coordinate 1, root `03`) and account for three units. But `042` is a
 fourth, coordinate-tangled category flipper: it is adjacent to `012` in `A` by
 changing coordinate 1 and to `041` in `C` by changing coordinate 2. It belongs
-to no single three-colour root clique. Hence a root-local upper bound would need
+to no single three-color root clique. Hence a root-local upper bound would need
 a canonical ownership rule plus explicitly bounded multi-root corner gadgets;
 summing only root-clique contributions would miss valid interface mass.
 

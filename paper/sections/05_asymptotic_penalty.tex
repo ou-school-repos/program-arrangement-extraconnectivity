@@ -6,16 +6,19 @@ with the independently proved evaluation~\ref{prop:hb-eval}, the Main Theorem
 limit. The following proposed sparse-limit comparison is refuted:
 
 \begin{remark}[The proposed sparse-limit bound is false]
-The external boundary of any optimal connected $R$-vertex subgraph $V'$ in
+The proposed statement that every connected $R$-vertex subgraph $V'$ in
 $A(n,k)$ is bounded above by the Star Graph $K_{1, R-1}$, yielding a total
 correction $(X+D) = \binom{R}{2}$:
 	\begin{equation}\label{eq:sparse-limit}
 		\left| \extbd(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
 	\end{equation}
 The four-vertex path in $A(6,3)$ has external boundary $22$, while the
-right-hand side of \eqref{eq:sparse-limit} is $21$. Thus this displayed
-inequality is retained only as a record of the abandoned heuristic and is not
-used in any subsequent argument.
+right-hand side of \eqref{eq:sparse-limit} is $21$, so the universal connected
+version is false. A separate statement restricted to genuinely optimal
+connected subgraphs is not refuted by this example, but is not proved here;
+when a pairwise-distinct-symbol Star embeds, it gives the displayed value.
+The inequality is retained only as a record of the abandoned heuristic and is
+not used subsequently.
 \end{remark}
 
 \begin{figure}[H]

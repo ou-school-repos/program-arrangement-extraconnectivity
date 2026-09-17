@@ -58,13 +58,14 @@ and collision-adjusted bridge should stay marked as abandoned until repaired.
 
 Although the Star Graph can achieve higher collision savings, it requires a
 larger $n-k$ dimension factor. The penalty for missing 5 defect links is:
-$$\Delta D \cdot (n-k) = 5 \cdot 7 = 35$$ This linear dimensional penalty of 35
+$$\Delta D \cdot (n-k) = 5 \cdot 8 = 40$$ This linear dimensional penalty of 40
 easily outpaces the 16 additional cross-collisions ($28 - 12 = 16$). As
 $n-k \to \infty$, the dimensional penalty completely crushes any non-standard
 collision savings.
 
-Therefore, the true universal bound must be stated as the final boundary
-inequality directly.
+Therefore, any replacement must state and prove a genuinely restricted boundary
+inequality directly; the unrestricted final boundary inequality is already
+refuted by the Star examples.
 
 Together, these two hypothesis interfaces form the "sandwich" that pins the
 isoperimetric profile to a single value:
@@ -167,10 +168,10 @@ Tug-of-War scaling, they serve structurally different roles in the proof:
 2. **`hamming_ball_eval`** is an ∃-statement about a specific V\*. It flows into
    `exists_optimal_embedding`.
 
-The public capstone theorem takes `h_lower : ∀ R n k, UniversalLowerBound R n k`
-and supplies the Hamming-ball evaluation internally. Its internal `..._of_cross`
-composition lemma remains available when a caller already has a fixed-size
-collision evaluation.
+The public capstone theorem takes a fixed per-instance
+`h_lower : RestrictedLowerBound R n k` and supplies the Hamming-ball evaluation
+internally. Its internal `..._of_cross` composition lemma remains available when
+a caller already has a fixed-size collision evaluation.
 
 Merging them into a single hypothesis would obscure the proof architecture and
 lose the clean separation between the universal bound and the constructive

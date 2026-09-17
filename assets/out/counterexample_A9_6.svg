@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="white"/>
+  <g fill="black" font-family="DejaVu Sans, Arial, sans-serif">
+    <text x="60" y="58" font-size="30" font-weight="bold">Counterexample 1: A(9,6), R = 19</text>
+    <text x="60" y="92" font-size="18">Full radius-one Star beats the Hamming-ball boundary</text>
+
+    <rect x="55" y="120" width="1090" height="125" fill="none" stroke="black" stroke-width="2"/>
+    <text x="78" y="153" font-size="20" font-weight="bold">Parameters</text>
+    <text x="78" y="184" font-size="18">n = 9,  k = 6,  m = n − k = 3,  R = 1 + 6m = 19</text>
+    <text x="78" y="215" font-size="18">d = bit_length(R − 1) = bit_length(18) = 5;  d ≤ k and k + d = 11 &gt; n</text>
+    <text x="78" y="238" font-size="15">The unrestricted Star is a counterexample; this row is outside the hypercube-embedding gate.</text>
+
+    <text x="72" y="287" font-size="21" font-weight="bold">Full Star S₆</text>
+    <text x="72" y="316" font-size="16">center: (0,1,2,3,4,5)</text>
+    <text x="72" y="341" font-size="16">for each coordinate i: replace i by 6, 7, or 8</text>
+    <g stroke="black" stroke-width="2" fill="white">
+      <line x1="270" y1="430" x2="425" y2="380"/><line x1="270" y1="430" x2="425" y2="410"/><line x1="270" y1="430" x2="425" y2="440"/>
+      <line x1="270" y1="430" x2="425" y2="470"/><line x1="270" y1="430" x2="425" y2="500"/><line x1="270" y1="430" x2="425" y2="530"/>
+      <circle cx="270" cy="430" r="30" fill="black"/>
+      <circle cx="425" cy="380" r="14"/><circle cx="425" cy="410" r="14"/><circle cx="425" cy="440" r="14"/>
+      <circle cx="425" cy="470" r="14"/><circle cx="425" cy="500" r="14"/><circle cx="425" cy="530" r="14"/>
+    </g>
+    <text x="252" y="436" font-size="14" fill="white">c</text>
+    <text x="445" y="386" font-size="15">i = 0: 6,7,8</text>
+    <text x="445" y="416" font-size="15">i = 1: 6,7,8</text>
+    <text x="445" y="446" font-size="15">i = 2: 6,7,8</text>
+    <text x="445" y="476" font-size="15">i = 3: 6,7,8</text>
+    <text x="445" y="506" font-size="15">i = 4: 6,7,8</text>
+    <text x="445" y="536" font-size="15">i = 5: 6,7,8</text>
+    <text x="74" y="585" font-size="18">D = jm = 18  (root/fiber defect)</text>
+    <text x="74" y="615" font-size="18">X = m(m−1) C(j,2) = 3·2·15 = 90  (external excess)</text>
+    <text x="74" y="645" font-size="18">Q = X + (m+1)D = 90 + 4·18 = 162</text>
+    <text x="74" y="680" font-size="14">Cross-branch check: leaves (i←s) and (i′←s′), i≠i′,</text>
+    <text x="74" y="701" font-size="14">share k−2 = 4 fixed coordinates; the resulting common</text>
+    <text x="74" y="722" font-size="14">external neighbors contribute to X (not to internal edge count).</text>
+
+    <rect x="650" y="285" width="450" height="420" fill="none" stroke="black" stroke-width="2"/>
+    <text x="680" y="322" font-size="21" font-weight="bold">Boundary comparison</text>
+    <line x1="680" y1="340" x2="1070" y2="340" stroke="black"/>
+    <text x="680" y="378" font-size="18">degree · R = kmR = 6·3·19 = 342</text>
+    <text x="680" y="420" font-size="19" font-weight="bold">Hamming ball: 342 − G = 186</text>
+    <text x="680" y="462" font-size="19" font-weight="bold">Full Star:     342 − Q = 180</text>
+    <line x1="680" y1="485" x2="1070" y2="485" stroke="black"/>
+    <text x="680" y="528" font-size="24" font-weight="bold">180 &lt; 186</text>
+    <text x="680" y="560" font-size="18">Star wins by 6 boundary vertices.</text>
+    <text x="680" y="592" font-size="16">G = C(19) + 3E(19) = 45 + 111 = 156</text>
+    <line x1="680" y1="610" x2="1070" y2="610" stroke="black"/>
+    <text x="680" y="636" font-size="14" font-weight="bold">Metric key</text>
+    <text x="680" y="658" font-size="13">j = 6 active coordinate branches; m = n−k</text>
+    <text x="680" y="679" font-size="13">D = Rk − U: root/fiber defect; X = external multiplicity excess</text>
+    <text x="680" y="700" font-size="13">Q = kmR − |∂S| = 2|E(S)| + X;  G = C(R) + mE(R)</text>
+    <text x="680" y="721" font-size="13">E(R)=Σ_{i&lt;R} popcount(i);  C(R)=(R−1)+Σ bit_length(i)−E(R)</text>
+  </g>
+</svg>

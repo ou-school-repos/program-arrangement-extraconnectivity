@@ -40,6 +40,9 @@ search_single
 build/
 cmake-build-*/
 assets/out/
+!assets/out/
+!assets/out/counterexample_A9_6.svg
+!assets/out/counterexample_A11_6.svg
 
 # ── CMake ────────────────────────────────────────────────────
 CMakeCache.txt

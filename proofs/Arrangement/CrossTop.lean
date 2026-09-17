@@ -225,11 +225,11 @@ end BitToolbox
 
 section CubeCounting
 
-/-- Number of `Q_D`-neighbours of `j` lying in the initial segment `{0,…,m-1}`. -/
+/-- Number of `Q_D`-neighbors of `j` lying in the initial segment `{0,…,m-1}`. -/
 def ball_deg (m D j : ℕ) : ℕ :=
   ((range D).filter (fun p => j ^^^ 2 ^ p < m)).card
 
-/-- The vertex `m` has exactly `popcount m` neighbours below itself. -/
+/-- The vertex `m` has exactly `popcount m` neighbors below itself. -/
 lemma ball_deg_self {m D : ℕ} (hm : m < 2 ^ D) :
     ball_deg m D m = popcount m := by
   unfold ball_deg
