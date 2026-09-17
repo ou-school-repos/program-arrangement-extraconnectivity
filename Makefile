@@ -58,6 +58,8 @@ SRC_A10_SMT = scripts/a10_5_smt_oracle.cpp
 BIN_A10_SMT = a10_5_smt_oracle
 SRC_ROOT_STATE = scripts/root_state_validator.cpp
 BIN_ROOT_STATE = root_state_validator
+SRC_PROFILE_DP = scripts/a10_5_profile_dp.cpp
+BIN_PROFILE_DP = a10_5_profile_dp
 SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
 BIN_ANNEAL = simulated_annealing_hunt
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
@@ -159,6 +161,11 @@ $(BIN_A10_SMT): $(SRC_A10_SMT)
 	@$(call print_success,Build complete.)
 
 $(BIN_ROOT_STATE): $(SRC_ROOT_STATE)
+	@$(call print_info,Building $@)
+	$(CXX) $(CXXFLAGS) -o $@ $<
+	@$(call print_success,Build complete.)
+
+$(BIN_PROFILE_DP): $(SRC_PROFILE_DP)
 	@$(call print_info,Building $@)
 	$(CXX) $(CXXFLAGS) -o $@ $<
 	@$(call print_success,Build complete.)
