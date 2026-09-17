@@ -22,8 +22,8 @@
 // --verify / --verify-range, served by a right-sized K=260 tier rather than
 // the old oversized K=512 one.
 //
-// Usage: ./predict [R]       Single R prediction
-//        ./predict --csv N   CSV output for R=2..N
+// Usage: bin/predict [R]       Single R prediction
+//        bin/predict --csv N   CSV output for R=2..N
 //
 // Vertex representation: inline std::array<SymT, K> with lexicographical
 // ordering. SymT = uint8_t when R ≤ 127, uint16_t for R ≥ 128. Vertex storage
@@ -558,12 +558,14 @@ int main(int argc, const char *argv[]) {
     if (positional.empty() && !range_mode && !csv_mode) {
         std::cerr
             << "Usage:\n"
-            << "  ./predict <R>                     Analytical formula\n"
-            << "  ./predict --audit <R>             Bounds audit report\n"
-            << "  ./predict --verify <R>             Brute-force cross-check\n"
-            << "  ./predict --verify-range [s] <e>   Sweep R=s..e\n"
-            << "  ./predict --csv <N>                CSV table for R=2..N\n"
-            << "  ./predict --csv --verify-range <N> Verified CSV for R=2..N\n";
+            << "  bin/predict <R>                     Analytical formula\n"
+            << "  bin/predict --audit <R>             Bounds audit report\n"
+            << "  bin/predict --verify <R>             Brute-force "
+               "cross-check\n"
+            << "  bin/predict --verify-range [s] <e>   Sweep R=s..e\n"
+            << "  bin/predict --csv <N>                CSV table for R=2..N\n"
+            << "  bin/predict --csv --verify-range <N> Verified CSV for "
+               "R=2..N\n";
         return 1;
     }
 

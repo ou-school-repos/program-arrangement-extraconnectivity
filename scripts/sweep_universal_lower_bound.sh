@@ -7,7 +7,7 @@
 set -uo pipefail
 
 PY=scripts/check_universal_lower_bound.py
-CC=./universal_check
+CC=bin/universal_lower_bound
 PY_MAX_SUBSETS=${PY_MAX_SUBSETS:-1000000}
 MAX_SUBSETS=${MAX_SUBSETS:-250000000}
 

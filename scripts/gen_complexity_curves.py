@@ -22,7 +22,7 @@ search_T = np.array(
 # R=6..10: actual wall clock from README.md brute-force logs.
 # R>=11 never completed (intractable).
 
-# ── Predictor times: ./predict --verify, 100 iters, overhead sub'd ─
+# ── Predictor times: bin/predict --verify, 100 iters, overhead sub'd ─
 pred_R = np.array([4, 6, 8, 10, 12, 16, 20, 25, 30, 35, 40])
 pred_T = np.array(
     [0.099, 0.240, 0.205, 0.581, 1.194, 2.739, 5.349, 9.035, 15.66, 24.80, 39.80]

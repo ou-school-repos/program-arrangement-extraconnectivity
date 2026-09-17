@@ -99,8 +99,8 @@ All targets are in the top-level `Makefile`. Run `make help` for the full list.
 ### Core Targets
 
 ```bash
-make build/opt          # Compile optimized search engine (-O2, links nauty)
-make run/opt R=9        # Build and run for R=9
+make bin/arrangement    # Compile optimized search engine (links nauty)
+make run R=9            # Build and run for R=9
 make benchmark          # Run R=2..8 with timing
 make test               # Verify original output matches expected
 make test/opt           # Cross-validate optimized vs original
@@ -111,8 +111,8 @@ make test/opt           # Cross-validate optimized vs original
 ```bash
 make lean/cache         # Download pre-built Mathlib cache (run first)
 make lean               # Build and verify Lean proofs
-make lean/docs/setup    # Fetch doc-gen4 dependency (one-time)
-make lean/docs          # Generate HTML documentation
+make _lean/docs/setup   # Fetch doc-gen4 dependency (one-time)
+make _lean/docs         # Generate HTML documentation
 ```
 
 ### Documentation & Packaging

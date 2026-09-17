@@ -42,7 +42,6 @@ OPTIONAL_SOURCES = src/search_ghosts.cpp src/search_triples.cpp \
 OPTIONAL_BINS = $(addprefix bin/,$(basename $(notdir $(OPTIONAL_SOURCES))))
 
 ALL_BINS = $(TOOL_BINS) $(OPTIONAL_BINS) $(BIN_OPT)
-LEGACY_PROFILE_BINS = a10_5_profile_dp transfer_dp_prototype fiber_ordering transfer_dp_window
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
@@ -59,9 +58,6 @@ NAUTY_LIBS   = -lnauty
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.PHONY: all
-all: format build lean docs lint bundle	##H @Build Run all targets
-
 .PHONY: _help help
 help: _help
 _help:
@@ -128,7 +124,7 @@ CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
 tools: $(TOOL_BINS) ##H @Build Build all standalone C/C++ tools into bin/
 
 define TOOL_template
-bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)	##H @Tool Build $(notdir $(basename $(1))) into bin/
+bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) -o $$@ $$<
 endef
@@ -144,7 +140,7 @@ bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)	##H @Tool Build arrange
 optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
 
 define OPTIONAL_template
-bin/$(notdir $(basename $(1))): $(1)	##H @Optional Build $(notdir $(basename $(1))) into bin/
+bin/$(notdir $(basename $(1))): $(1)
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $$@ $$< $(ORTOOLS_LIBS)
 endef
@@ -309,10 +305,8 @@ lean:	##H @Build Build Lean 4 proofs (proofs/)
 	cd proofs && lake env lean Arrangement/ProofAudit.lean
 	@$(call print_success,Lean proofs verified.)
 
-.PHONY: cache lean/cache _lean/cache
-cache: lean/cache
-lean/cache: _lean/cache
-_lean/cache:	##H @Build Download pre-built Mathlib cache
+.PHONY: lean/cache
+lean/cache:	##H @Build Download pre-built Mathlib cache
 	@$(call print_info,Fetching Mathlib cache)
 	cd proofs && lake exe cache get
 	@$(call print_success,Mathlib cache downloaded.)
@@ -339,7 +333,7 @@ _lean/docs/clean:	##H @Build Clean project doc cache (fast targeted rebuild)
 	       proofs/docbuild/.lake/build/api-docs.db
 	find proofs/docbuild/.lake/build -path '*Arrangement*' -delete 2>/dev/null || true
 	find proofs/docbuild/.lake/build -path '*Proofs*' -delete 2>/dev/null || true
-	@$(call print_success,Project doc cache cleared. Run make lean/docs to rebuild.)
+	@$(call print_success,Project doc cache cleared. Run make _lean/docs to rebuild.)
 
 .PHONY: render
 render: ##H Render all visual assets (.dot to .png)
@@ -395,16 +389,8 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(ALL_BINS) $(LEGACY_PROFILE_BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(ALL_BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
-
-# .PHONY: list-unknown-binaries
-# list-unknown-binaries:	##H @General List executable top-level files not managed by Make
-# 	@find . -maxdepth 1 -type f -executable -printf '%f\n' | \
-# 		sort | while read -r file; do \
-# 			case " $(ALL_BINS) " in *" $$file "*) ;; \
-# 			*) echo "$$file" ;; esac; \
-# 		done
 
 .PHONY: vars
 vars:	##H @General Debug: Print project variables
