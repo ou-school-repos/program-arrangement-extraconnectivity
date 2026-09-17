@@ -42,6 +42,10 @@ The embedding gate is open exactly when `d <= k` and `d <= n-k`.
 
 ## Sweep map
 
+Each `(n,k)` cell tests the full radius-one Star at `R = 1 + k(n-k)`, with
+`g = R - 1`. This is one selected volume per graph parameter pair, not a sweep
+over arbitrary `R` values.
+
 Legend:
 
 - `X` — hard counterexample to `RestrictedLowerBound`.
@@ -51,41 +55,51 @@ Legend:
 - `~` — not applicable: outside `k < n` or rejected by guard.
 - `.` — not yet run.
 
-| `n \\ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
-| -------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-|        8 |  /  |  /  |  o  |  o  |  o  |  o  |  o  |  ~  |
-|        9 |  /  |  /  |  o  |  o  |  o  |  x  |  o  |  o  |
-|       10 |  /  |  /  |  o  |  o  |  o  |  x  |  x  |  x  |
-|       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
-|       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |
-|       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |
-|       14 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  X  |
-|       15 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ~  |
-|       16 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
-|       17 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
-|       18 |  .  |  .  |  .  |  .  |  .  |  x  |  X  |  .  |
-|       19 |  .  |  .  |  .  |  .  |  .  |  .  |  X  |  .  |
+| `n \\ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  |
+| -------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|        8 |  /  |  /  |  o  |  o  |  o  |  o  |  o  |  ~  |  .  |  .  |
+|        9 |  /  |  /  |  o  |  o  |  o  |  x  |  o  |  o  |  .  |  .  |
+|       10 |  /  |  /  |  o  |  o  |  o  |  x  |  x  |  x  |  .  |  .  |
+|       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  .  |  .  |
+|       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  .  |  .  |
+|       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |  .  |  .  |
+|       14 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  X  |  .  |  .  |
+|       15 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ~  |  .  |  .  |
+|       16 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ~  |  .  |  .  |
+|       17 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ~  |  .  |  .  |
+|       18 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ~  |  .  |  .  |
+|       19 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ~  |  ~  |  ~  |
+|       20 |  /  |  /  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |
 
 The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
 no non-Star topology gives a smaller hard counterexample.
 
-The complete `A(14,1--8)` row is now confirmed. The feasible `A(15,1--7)` cells
-are also confirmed; `A(15,8)` is marked `~` because the flat-space guard
-rejected it. Other additional confirmed cells are `A(16,7)`, `A(17,7)`,
-`A(18,6)`, `A(18,7)`, and `A(19,7)`. The remaining `.` cells have not been run;
-they are not negative results.
+The complete `A(14, 1..8)` row is now confirmed. The feasible `A(15, 1..7)`,
+`A(16, 1..7)`, `A(17, 1..7)`, and `A(18, 1..7)` cells are also confirmed; their
+`k=8` cells are marked `~` because the flat-space guard rejected them. The
+`A(19,1..7)` row is now confirmed, with `k=8..10` likewise rejected by the
+guard. The remaining `.` cells have not been run; they are not negative
+results.
 
 ## Representative hard counterexamples
 
-| graph     | `R` | `g` | Star boundary | Hamming baseline | gate |
-| --------- | --: | --: | ------------: | ---------------: | :--: |
-| `A(11,6)` |  31 |  30 |           450 |              476 | open |
-| `A(12,6)` |  37 |  36 |           630 |              687 | open |
-| `A(13,6)` |  43 |  42 |           840 |              921 | open |
-| `A(13,7)` |  43 |  42 |           882 |             1029 | open |
-| `A(17,7)` |  71 |  70 |          2310 |             2658 | open |
-| `A(19,7)` |  85 |  84 |          3276 |             3783 | open |
+| graph     | `R` | `g` | Star boundary | Hamming baseline | `Δ` | `d,(k,n-k)` |
+| --------- | --: | --: | ------------: | ---------------: | --: | :---------- |
+| `A(11,6)` |  31 |  30 |           450 |              476 |  26 | `5,(6,5)`   |
+| `A(12,6)` |  37 |  36 |           630 |              687 |  57 | `6,(6,6)`   |
+| `A(13,6)` |  43 |  42 |           840 |              921 |  81 | `6,(6,7)`   |
+| `A(13,7)` |  43 |  42 |           882 |             1029 | 147 | `6,(7,6)`   |
+| `A(14,6)` |  49 |  48 |          1080 |             1163 |  83 | `6,(6,8)`   |
+| `A(14,7)` |  50 |  49 |          1176 |             1366 | 190 | `6,(7,7)`   |
+| `A(14,8)` |  49 |  48 |          1176 |             1423 | 247 | `6,(8,6)`   |
+| `A(15,6)` |  55 |  54 |          1350 |             1441 |  91 | `6,(6,9)`   |
+| `A(15,7)` |  57 |  56 |          1512 |             1744 | 232 | `6,(7,8)`   |
+| `A(16,6)` |  61 |  60 |          1650 |             1713 |  63 | `6,(6,10)`  |
+| `A(16,7)` |  64 |  63 |          1890 |             2112 | 222 | `6,(7,9)`   |
+| `A(17,7)` |  71 |  70 |          2310 |             2658 | 348 | `7,(7,10)`  |
+| `A(18,7)` |  78 |  77 |          2772 |             3200 | 428 | `7,(7,11)`  |
+| `A(19,7)` |  85 |  84 |          3276 |             3783 | 507 | `7,(7,12)`  |
 
 ## New result: `A(19,7)`
 

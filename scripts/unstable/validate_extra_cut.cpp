@@ -360,6 +360,7 @@ int main(int argc, char **argv) {
     }
 
     if (show_progress) {
+        std::cout << "R = " << volume << "\n";
         std::cout << "Candidate g = " << g << "\n";
         std::cout << "|S| = " << star.size() << "\n";
     }
