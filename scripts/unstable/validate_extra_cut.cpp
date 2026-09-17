@@ -2,12 +2,10 @@
 //
 // This proves only an upper bound: if the post-deletion component test passes,
 // it establishes kappa_g(A(n,k)) <= |N(S)|. It does not prove optimality.
-// Usage: validate_extra_cut [n k] [--dump PATH]
-// A .json dump is strict JSON; other suffixes produce a fixed-width text
-// certificate suitable for appendices and diff-based checks.
+// Usage: validate_extra_cut [n k] [--json]
+// Default output is a concise human-readable report; --json emits strict JSON.
 
 #include <algorithm>
-#include <fstream>
 #include <iostream>
 #include <numeric>
 #include <queue>
@@ -110,16 +108,6 @@ bool connected(const ArrangementGraph &graph,
     return reached == static_cast<int>(subset.size());
 }
 
-void print_vertex(std::ostream &out, const std::vector<int> &vertex) {
-    out << '(';
-    for (size_t i = 0; i < vertex.size(); ++i) {
-        if (i != 0)
-            out << ',';
-        out << vertex[i];
-    }
-    out << ')';
-}
-
 void print_json_array(std::ostream &out, const std::vector<int> &values) {
     out << '[';
     for (size_t i = 0; i < values.size(); ++i) {
@@ -128,142 +116,6 @@ void print_json_array(std::ostream &out, const std::vector<int> &values) {
         out << values[i];
     }
     out << ']';
-}
-
-class TeeBuffer : public std::streambuf {
-  public:
-    TeeBuffer(std::streambuf *first, std::streambuf *second)
-        : first_(first), second_(second) {}
-
-  protected:
-    int_type overflow(const int_type character) override {
-        if (traits_type::eq_int_type(character, traits_type::eof()))
-            return traits_type::not_eof(character);
-        if (traits_type::eq_int_type(first_->sputc(character),
-                                     traits_type::eof()) ||
-            traits_type::eq_int_type(second_->sputc(character),
-                                     traits_type::eof()))
-            return traits_type::eof();
-        return character;
-    }
-
-    int sync() override {
-        return first_->pubsync() == 0 && second_->pubsync() == 0 ? 0 : -1;
-    }
-
-  private:
-    std::streambuf *first_;
-    std::streambuf *second_;
-};
-
-class OutputMirror {
-  public:
-    explicit OutputMirror(const std::string &path)
-        : original_(std::cout.rdbuf()), file_(), tee_(nullptr, nullptr),
-          active_(!path.empty()) {
-        if (!active_)
-            return;
-        file_.open(path);
-        if (!file_)
-            return;
-        tee_ = TeeBuffer(original_, file_.rdbuf());
-        std::cout.rdbuf(&tee_);
-    }
-
-    ~OutputMirror() {
-        if (active_ && file_.is_open())
-            std::cout.rdbuf(original_);
-    }
-
-    bool good() const { return !active_ || file_.good(); }
-
-  private:
-    std::streambuf *original_;
-    std::ofstream file_;
-    TeeBuffer tee_;
-    bool active_;
-};
-
-void dump_text(std::ostream &out, const ArrangementGraph &graph,
-               const std::vector<std::vector<int>> &star,
-               const std::vector<int> &boundary_codes,
-               const std::vector<int> &component_sizes, int g, bool valid) {
-    const int m = graph.n - graph.k;
-    const int degree = graph.k * m;
-    const int family_a = graph.k * (graph.k - 1) * m;
-    const int family_b = graph.k * (graph.k - 1) / 2 * m * (m - 1);
-    const int internal_edges = graph.k * (m + 1) * m / 2;
-
-    out << "FULL RADIUS-ONE STAR CUT CERTIFICATE\n"
-           "====================================\n\n"
-           "RUN SUMMARY\n"
-           "-----------\n"
-        << "Building A(" << graph.n << ',' << graph.k << ")...\n"
-        << "Total valid vertices: " << graph.valid_vertices.size() << "\n\n"
-        << "Candidate g = " << g << "\n"
-        << "|S| = " << star.size()
-        << "\n"
-           "Subset S connectivity verified.\n"
-        << "|N(S)| = " << boundary_codes.size() << "\n"
-        << "Validating " << g
-        << "-extra cut properties...\n"
-           "component sizes after deletion:\n";
-    for (const int size : component_sizes)
-        out << "  " << size << '\n';
-    out << "valid " << g << "-extra cut: " << (valid ? "yes" : "no") << "\n";
-    if (valid)
-        out << "therefore kappa_" << g << "(A(" << graph.n << ',' << graph.k
-            << ")) <= " << boundary_codes.size() << "\n";
-    out << "\nPARAMETERS\n----------\n";
-    out << "Graph             : A(" << graph.n << "," << graph.k << ")\n";
-    out << "Total vertices    : " << graph.valid_vertices.size() << "\n";
-    out << "Regular degree    : " << degree << "\n";
-    out << "Candidate g       : " << g << "\n";
-    out << "Subset |S|        : " << star.size() << "\n";
-    out << "Boundary |N(S)|   : " << boundary_codes.size() << "\n";
-    out << "Star connectivity : verified\n";
-    out << "Component sizes   :";
-    for (const int size : component_sizes)
-        out << ' ' << size;
-    out << "\nValid extra cut   : " << (valid ? "yes" : "no") << "\n";
-    if (valid)
-        out << "Upper bound       : kappa_" << g << "(A(" << graph.n << ','
-            << graph.k << ")) <= " << boundary_codes.size() << "\n";
-    out << "\nCENTER AND SPARE SYMBOLS\n------------------------\n"
-           "Center            : ";
-    print_vertex(out, star.front());
-    out << "\nSpare symbols     : {" << graph.k << ",...," << graph.n - 1
-        << "}\n\n";
-    out << "STAR\n----\n"
-           "Rule              : one coordinate replaced by one spare symbol\n"
-           "Leaves            : "
-        << graph.k * m
-        << "\n"
-           "Internal edges    : "
-        << internal_edges
-        << "\n"
-           "Degree sequence   : center "
-        << graph.k * m << "; leaves " << m << " repeated " << graph.k * m
-        << " times\n"
-           "Adjacency         : center-to-all leaves; each branch is a clique\n"
-           "                    together with the center\n\n"
-           "CUT N(S)\n--------\n"
-           "Family A          : c[i <- s, j <- i], i != j\n"
-           "  multiplicity    : 1\n"
-           "  count           : "
-        << family_a
-        << "\n"
-           "Family B          : c[i <- s, j <- t], i < j, s != t\n"
-           "  multiplicity    : 2\n"
-           "  count           : "
-        << family_b
-        << "\n"
-           "Cut size          : "
-        << family_a << " + " << family_b << " = " << family_a + family_b
-        << " (enumerated " << boundary_codes.size()
-        << ")\n"
-           "Cut incidence     : family A contributes one; family B contributes "
-           "two\n";
 }
 
 void dump_json(std::ostream &out, const ArrangementGraph &graph,
@@ -288,12 +140,13 @@ void dump_json(std::ostream &out, const ArrangementGraph &graph,
             out << ',';
         out << symbol;
     }
-    out << "],\n  \"star\": {\"size\": " << star.size()
-        << ", \"rule\": \"one coordinate replaced by one spare symbol\","
-        << " \"internal_edges\": " << graph.k * (m + 1) * m / 2
-        << ", \"degree_sequence\": {\"center\": " << degree
+    out << "],\n  \"star\": {\n"
+        << "    \"size\": " << star.size()
+        << ", \"rule\": \"one coordinate replaced by one spare symbol\",\n"
+        << "    \"internal_edges\": " << graph.k * (m + 1) * m / 2
+        << ",\n    \"degree_sequence\": {\"center\": " << degree
         << ", \"leaves\": " << m << ", \"leaf_count\": " << graph.k * m
-        << "}},\n";
+        << "}\n  },\n";
     out << "  \"cut\": {\"size\": " << boundary_codes.size()
         << ", \"families\": [\n"
         << "    {\"type\": \"internal_shift\", \"pattern\": "
@@ -314,20 +167,16 @@ void dump_json(std::ostream &out, const ArrangementGraph &graph,
 int main(int argc, char **argv) {
     int n = 11;
     int k = 6;
-    std::string dump_path;
+    bool json_output = false;
     int positional = 0;
     for (int arg = 1; arg < argc; ++arg) {
         const std::string value = argv[arg];
         if (value == "-h" || value == "--help") {
-            std::cout << "Usage: " << argv[0] << " [n k] [--dump PATH]\n";
+            std::cout << "Usage: " << argv[0] << " [n k] [--json]\n";
             return 0;
         }
-        if (value == "--dump") {
-            if (arg + 1 >= argc) {
-                std::cerr << "Error: --dump requires a path.\n";
-                return 1;
-            }
-            dump_path = argv[++arg];
+        if (value == "--json") {
+            json_output = true;
             continue;
         }
         if (value.rfind("--", 0) == 0) {
@@ -339,7 +188,7 @@ int main(int argc, char **argv) {
         else if (positional == 1)
             k = std::stoi(value);
         else {
-            std::cerr << "Usage: " << argv[0] << " [n k] [--dump PATH]\n";
+            std::cerr << "Usage: " << argv[0] << " [n k] [--json]\n";
             return 1;
         }
         ++positional;
@@ -348,15 +197,7 @@ int main(int argc, char **argv) {
         std::cerr << "Error: require n > k >= 1.\n";
         return 1;
     }
-    OutputMirror output_mirror(dump_path);
-    if (!output_mirror.good()) {
-        std::cerr << "Error: cannot open dump file '" << dump_path << "'.\n";
-        return 1;
-    }
-    const bool json_format = dump_path.size() >= 5 &&
-                             dump_path.substr(dump_path.size() - 5) == ".json";
-    const bool certificate_format = !dump_path.empty();
-    const bool show_progress = !certificate_format;
+    const bool show_progress = !json_output;
 
     if (show_progress)
         std::cout << "Building A(" << n << ',' << k << ")...\n";
@@ -449,22 +290,16 @@ int main(int argc, char **argv) {
     }
 
     if (!valid) {
-        if (json_format) {
+        if (json_output) {
             dump_json(std::cout, graph, star, boundary_codes, component_sizes,
-                      g, false);
-        } else if (certificate_format) {
-            dump_text(std::cout, graph, star, boundary_codes, component_sizes,
                       g, false);
         } else {
             std::cout << "valid " << g << "-extra cut: no\n";
         }
         return 0;
     }
-    if (json_format) {
+    if (json_output) {
         dump_json(std::cout, graph, star, boundary_codes, component_sizes, g,
-                  true);
-    } else if (certificate_format) {
-        dump_text(std::cout, graph, star, boundary_codes, component_sizes, g,
                   true);
     } else {
         std::cout << "valid " << g << "-extra cut: yes\n";
