@@ -13,6 +13,10 @@
 #include <unordered_set>
 #include <vector>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace {
 
 struct Instance {
@@ -120,6 +124,25 @@ std::vector<Automorphism> origin_stabilizer(const Instance &instance) {
 std::vector<int> canonical_key(const std::vector<int> &subset,
                                const Instance &instance,
                                const std::vector<Automorphism> &stabilizer) {
+    // Ordered pairs of injective words are classified by their equality
+    // pattern.  After using vertex transitivity to fix the first vertex,
+    // coordinate and symbol permutations can map any pair with the same
+    // number of matching coordinates to one another.  This avoids scanning
+    // the full stabilizer for the R=2 stress test.
+    if (subset.size() == 2) {
+        int matching_coordinates = 0;
+        for (int position = 0; position < instance.k; ++position) {
+            matching_coordinates +=
+                instance.vertices[subset[0]][position] ==
+                        instance.vertices[subset[1]][position]
+                    ? 1
+                    : 0;
+        }
+        return {-2, matching_coordinates};
+    }
+    if (subset.size() == 1)
+        return {-1};
+
     std::vector<int> best;
     bool initialized = false;
     for (const int anchor : subset) {
@@ -329,33 +352,112 @@ void search(const Instance &instance, ProfileState &state,
     }
 }
 
+int available_threads() {
+#ifdef _OPENMP
+    return omp_get_max_threads();
+#else
+    return 1;
+#endif
+}
+
+void search_parallel(const Instance &instance, const int target, int &best,
+                     std::unordered_set<std::vector<int>, VectorHash> &seen,
+                     SearchStats &stats,
+                     const std::vector<Automorphism> &stabilizer,
+                     const int thread_count) {
+    // Vertex transitivity lets us pin one vertex without changing the
+    // optimum, giving independent second-vertex branches to the workers.
+    std::vector<int> origin(instance.k);
+    std::iota(origin.begin(), origin.end(), 0);
+    const int origin_id = instance.index.at(instance.encode(origin));
+
+    if (target == 1) {
+        ProfileState state(instance);
+        state.add(origin_id);
+        std::vector<int> chosen{origin_id};
+        search(instance, state, chosen, target, best, seen, stats, stabilizer);
+        return;
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) num_threads(thread_count)
+#endif
+    for (int second_vertex = 0;
+         second_vertex < static_cast<int>(instance.vertices.size());
+         ++second_vertex) {
+        if (second_vertex == origin_id)
+            continue;
+        ProfileState state(instance);
+        std::vector<int> chosen{origin_id, second_vertex};
+        state.add(origin_id);
+        state.add(second_vertex);
+        SearchStats local_stats;
+        std::unordered_set<std::vector<int>, VectorHash> local_seen;
+        int local_best = INT_MAX;
+        local_stats.nodes = 1;
+        search(instance, state, chosen, target, local_best, local_seen,
+               local_stats, stabilizer);
+
+#ifdef _OPENMP
+#pragma omp critical(profile_dp_merge)
+#endif
+        {
+            best = std::min(best, local_best);
+            stats.nodes += local_stats.nodes;
+            stats.bound_prunes += local_stats.bound_prunes;
+            stats.cache_hits += local_stats.cache_hits;
+            seen.insert(local_seen.begin(), local_seen.end());
+        }
+    }
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
-        std::cout << "usage: " << argv[0] << " [n k target]\n";
+        std::cout << "usage: " << argv[0] << " [n k target] [--threads=N]\n";
         return 0;
     }
     const int n = argc > 1 ? std::stoi(argv[1]) : 4;
     const int k = argc > 2 ? std::stoi(argv[2]) : 2;
     const int target = argc > 3 ? std::stoi(argv[3]) : 5;
+    int thread_count = available_threads();
+    for (int argument = 4; argument < argc; ++argument) {
+        const std::string option(argv[argument]);
+        if (option.rfind("--threads=", 0) == 0)
+            thread_count = std::stoi(option.substr(10));
+        else {
+            std::cerr << "unknown option: " << option << '\n';
+            return 2;
+        }
+    }
+    if (thread_count < 1) {
+        std::cerr << "threads must be positive\n";
+        return 2;
+    }
     const Instance instance(n, k);
     if (target < 1 || target > static_cast<int>(instance.vertices.size())) {
         std::cerr << "invalid target\n";
         return 2;
     }
-    ProfileState state(instance);
-    std::vector<int> chosen;
     const auto stabilizer = origin_stabilizer(instance);
     std::unordered_set<std::vector<int>, VectorHash> seen;
     SearchStats stats;
     int best = INT_MAX;
-    search(instance, state, chosen, target, best, seen, stats, stabilizer);
+    if (thread_count == 1) {
+        ProfileState state(instance);
+        std::vector<int> chosen;
+        search(instance, state, chosen, target, best, seen, stats, stabilizer);
+    } else {
+        search_parallel(instance, target, best, seen, stats, stabilizer,
+                        thread_count);
+    }
     std::cout << "A(" << n << ',' << k << ") R=" << target << " best=" << best
               << " nodes=" << stats.nodes
               << " bound-prunes=" << stats.bound_prunes
               << " exact-cache-hits=" << stats.cache_hits
-              << " states=" << seen.size() << '\n';
+              << " threads=" << thread_count << " states=" << seen.size()
+              << '\n';
     return 0;
 }
