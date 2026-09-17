@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <functional>
 #include <iostream>
 #include <numeric>
@@ -189,6 +190,29 @@ struct State {
     }
 
     int collisions() const { return total_incidences - boundary_size; }
+
+    int optimistic_bound(int target_size) const {
+        const int remaining = target_size - selected_count;
+        if (remaining <= 0)
+            return boundary_size;
+
+        const int bleed_bound = boundary_size - remaining;
+        int incidence_bound_total = 0;
+        int incidence_bound_max = 0;
+        for (const auto &roots : root_count) {
+            const int active = static_cast<int>(
+                std::count_if(roots.begin(), roots.end(),
+                              [](const int count) { return count > 0; }));
+            const int coordinate_bound = std::max(
+                0, active * (instance.n - instance.k + 1) - target_size);
+            incidence_bound_total += coordinate_bound;
+            incidence_bound_max =
+                std::max(incidence_bound_max, coordinate_bound);
+        }
+        const int aggregate_bound =
+            (incidence_bound_total + instance.k - 1) / instance.k;
+        return std::max({bleed_bound, aggregate_bound, incidence_bound_max, 0});
+    }
 };
 
 Metrics from_scratch(const Instance &instance, const State &state) {
@@ -289,6 +313,58 @@ void random_test(const Instance &instance) {
               << "): randomized add/remove checks passed\n";
 }
 
+void raw_dfs(const Instance &instance, State &state, std::vector<int> &subset,
+             int target_size, int &best_boundary, std::uint64_t &nodes_visited,
+             bool use_bound) {
+    if (state.selected_count == target_size) {
+        best_boundary = std::min(best_boundary, state.boundary_size);
+        return;
+    }
+    if (use_bound && state.optimistic_bound(target_size) >= best_boundary)
+        return;
+
+    const int start = subset.empty() ? 0 : subset.back() + 1;
+    for (int vertex = start;
+         vertex < static_cast<int>(instance.vertices.size()); ++vertex) {
+        state.add(vertex);
+        subset.push_back(vertex);
+        ++nodes_visited;
+        raw_dfs(instance, state, subset, target_size, best_boundary,
+                nodes_visited, use_bound);
+        subset.pop_back();
+        state.remove(vertex);
+    }
+}
+
+void compare_dfs_pruning(const Instance &instance, int target_size) {
+    std::cout << "--- Testing A(" << instance.n << ',' << instance.k
+              << ") R=" << target_size << " ---\n";
+    int best_unpruned = INT_MAX;
+    std::uint64_t nodes_unpruned = 0;
+    State unpruned_state(instance);
+    std::vector<int> unpruned_subset;
+    raw_dfs(instance, unpruned_state, unpruned_subset, target_size,
+            best_unpruned, nodes_unpruned, false);
+
+    int best_pruned = INT_MAX;
+    std::uint64_t nodes_pruned = 0;
+    State pruned_state(instance);
+    std::vector<int> pruned_subset;
+    raw_dfs(instance, pruned_state, pruned_subset, target_size, best_pruned,
+            nodes_pruned, true);
+
+    assert(best_unpruned == best_pruned);
+    const double reduction =
+        100.0 * (1.0 - static_cast<double>(nodes_pruned) /
+                           static_cast<double>(
+                               std::max<std::uint64_t>(1, nodes_unpruned)));
+    std::cout << "Unpruned: best=" << best_unpruned
+              << " nodes=" << nodes_unpruned << '\n'
+              << "Pruned:   best=" << best_pruned << " nodes=" << nodes_pruned
+              << '\n'
+              << "Node reduction: " << reduction << "%\n";
+}
+
 State state_from_subset(const Instance &instance,
                         const std::vector<int> &subset) {
     State state(instance);
@@ -354,5 +430,8 @@ int main(int argc, char **argv) {
     exhaustive_small_test();
     random_test(Instance(5, 3));
     canonicalization_test();
+    const Instance comparison_instance(5, 3);
+    compare_dfs_pruning(comparison_instance, 4);
+    compare_dfs_pruning(comparison_instance, 5);
     return 0;
 }
