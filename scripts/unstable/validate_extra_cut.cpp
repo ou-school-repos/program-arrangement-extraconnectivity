@@ -229,6 +229,17 @@ int main(int argc, char **argv) {
         std::cerr << "Error: require n > k >= 1.\n";
         return 1;
     }
+    constexpr std::size_t max_code_space = 1'000'000'000;
+    std::size_t code_space = 1;
+    for (int position = 0; position < k; ++position) {
+        if (code_space > max_code_space / static_cast<std::size_t>(n)) {
+            std::cerr << "Error: A(" << n << ',' << k
+                      << ") needs too much flat code space (n^k exceeds "
+                      << max_code_space << ").\n";
+            return 1;
+        }
+        code_space *= static_cast<std::size_t>(n);
+    }
     const bool show_progress = !json_output;
 
     if (show_progress)
