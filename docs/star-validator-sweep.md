@@ -9,32 +9,33 @@ that is crucially strictly better than the Hamming ball local optimum.
 
 ## Parameters and formulas
 
-```text
-m = n - k
-|V(A(n,k))| = nP_k = n!/(n-k)!
-deg(A(n,k)) = k*m
-|E(A(n,k))| = |V(A(n,k))|*k*m/2
-R = |S| = 1 + k*m
-g = R - 1 = k*m
-d = bit_length(R - 1)
-```
+$$
+\begin{aligned}
+m &= n-k,\\
+\lvert V(A(n,k))\rvert
+  &= nP_k
+   = \frac{n!}{(n-k)!},\\
+\deg(A(n,k)) &= km,\\
+\lvert E(A(n,k))\rvert
+  &= \frac{\lvert V(A(n,k))\rvert\,km}{2},\\
+R &= \lvert S\rvert = 1+km,\\
+g &= R-1=km,\\
+d &= \operatorname{BitLength}(R-1).
+\end{aligned}
+$$
 
 For the full Star:
 
-```text
-|N(S)| = k(k - 1)m(m + 1) / 2
-```
+$|N(S)| = k(k - 1)m(m + 1) / 2$
 
 The Hamming comparison is
 
-```text
-H(n,k,R) = (R*k - E(R))*(n-k) - C(R)
-```
+$H(n,k,R) = (R*k - E(R)) * (n-k) - C(R)$
 
 Here `E(R)` and `C(R)` are Hamming-collision correction terms; `E(R)` is not the
 graph edge count `|E(A(n,k))|` above.
 
-The embedding gate is open exactly when `d <= k` and `d <= n-k`.
+The embedding gate is open exactly when $d <= k$ and $d <= n-k$.
 
 ## Classification
 
