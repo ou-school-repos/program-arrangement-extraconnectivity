@@ -1,5 +1,5 @@
 // Exact unified-envelope transfer prototype.
-// Usage: ./transfer_dp_window [n] [k] [max_R] [max_states]
+// Usage: ./transfer_dp_window [n] [k] [max_R] [max_states] [--no-canonical]
 // max_states is optional; omitted or zero means unlimited.
 
 #include "arrangement_core.hpp"
@@ -212,21 +212,49 @@ int main(int argc, char **argv) {
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
         std::cout << "usage: " << argv[0]
-                  << " [n] [k] [max_R] [max_states]\n"
+                  << " [n] [k] [max_R] [max_states] [--no-canonical]\n"
                      "max_states is optional; zero means unlimited.\n";
         return 0;
     }
-    const int n = argc > 1 ? std::stoi(argv[1]) : 5;
-    const int k = argc > 2 ? std::stoi(argv[2]) : 3;
+    int n = 5;
+    int k = 3;
+    int max_volume_arg = -1;
+    std::size_t max_states = 0;
+    bool use_canonicalization = true;
+    int positional = 0;
+    for (int i = 1; i < argc; ++i) {
+        const std::string argument = argv[i];
+        if (argument == "--no-canonical") {
+            use_canonicalization = false;
+        } else if (argument.rfind("--", 0) == 0) {
+            std::cerr << "unknown option: " << argument << '\n';
+            return 2;
+        } else if (positional == 0) {
+            n = std::stoi(argument);
+            ++positional;
+        } else if (positional == 1) {
+            k = std::stoi(argument);
+            ++positional;
+        } else if (positional == 2) {
+            max_volume_arg = std::stoi(argument);
+            ++positional;
+        } else if (positional == 3) {
+            max_states = std::stoull(argument);
+            ++positional;
+        } else {
+            std::cerr << "too many positional arguments\n";
+            return 2;
+        }
+    }
     const Instance instance(n, k);
-    const int max_volume = argc > 3
-                               ? std::stoi(argv[3])
+    const int max_volume = max_volume_arg >= 0
+                               ? max_volume_arg
                                : static_cast<int>(instance.vertices.size());
-    const std::size_t max_states = argc > 4 ? std::stoull(argv[4]) : 0;
 
     std::vector<std::vector<int>> fibers;
     const auto order = greedy_fiber_order(instance, fibers);
-    const auto full_group = full_automorphisms(instance);
+    const auto full_group = use_canonicalization ? full_automorphisms(instance)
+                                                 : std::vector<Automorphism>{};
     std::vector<std::unordered_map<WindowState, int, StateHash>> current(
         max_volume + 1);
     current[0][WindowState{}] = 0;
@@ -239,8 +267,11 @@ int main(int argc, char **argv) {
 
     for (std::size_t step = 0; step < order.size(); ++step) {
         const auto &fiber = fibers[order[step]];
-        const auto context_group = context_automorphisms(
-            instance, fibers, order, step + 1, full_group);
+        const auto context_group =
+            use_canonicalization
+                ? context_automorphisms(instance, fibers, order, step + 1,
+                                        full_group)
+                : std::vector<Automorphism>{};
         std::vector<std::unordered_map<WindowState, int, StateHash>> next(
             max_volume + 1);
         std::size_t transitions = 0;
