@@ -80,10 +80,12 @@ int main(int argc, char **argv) {
             return 2;
         }
     }
-    if (timeout_seconds <= 0) {
-        std::cerr << "timeout must be positive\n";
+    if (timeout_seconds < 0) {
+        std::cerr << "timeout must be nonnegative\n";
         return 2;
     }
+    if (timeout_seconds == 0)
+        std::cout << "timeout: unlimited\n";
 
     std::vector<Vertex> vertices;
     Vertex vertex{};
