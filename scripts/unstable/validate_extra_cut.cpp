@@ -118,17 +118,64 @@ void print_vertex(std::ostream &out, const std::vector<int> &vertex) {
     out << ')';
 }
 
-void dump_certificate(const std::string &path, const ArrangementGraph &graph,
-                      const std::vector<std::vector<int>> &star,
-                      const std::vector<int> &boundary_codes,
-                      const std::vector<int> &component_sizes, int g,
-                      bool valid) {
-    std::ofstream out(path);
-    if (!out) {
-        std::cerr << "Error: cannot open dump file '" << path << "'.\n";
-        return;
+class TeeBuffer : public std::streambuf {
+  public:
+    TeeBuffer(std::streambuf *first, std::streambuf *second)
+        : first_(first), second_(second) {}
+
+  protected:
+    int_type overflow(const int_type character) override {
+        if (traits_type::eq_int_type(character, traits_type::eof()))
+            return traits_type::not_eof(character);
+        if (traits_type::eq_int_type(first_->sputc(character),
+                                     traits_type::eof()) ||
+            traits_type::eq_int_type(second_->sputc(character),
+                                     traits_type::eof()))
+            return traits_type::eof();
+        return character;
     }
 
+    int sync() override {
+        return first_->pubsync() == 0 && second_->pubsync() == 0 ? 0 : -1;
+    }
+
+  private:
+    std::streambuf *first_;
+    std::streambuf *second_;
+};
+
+class OutputMirror {
+  public:
+    explicit OutputMirror(const std::string &path)
+        : original_(std::cout.rdbuf()), file_(), tee_(nullptr, nullptr),
+          active_(!path.empty()) {
+        if (!active_)
+            return;
+        file_.open(path);
+        if (!file_)
+            return;
+        tee_ = TeeBuffer(original_, file_.rdbuf());
+        std::cout.rdbuf(&tee_);
+    }
+
+    ~OutputMirror() {
+        if (active_ && file_.is_open())
+            std::cout.rdbuf(original_);
+    }
+
+    bool good() const { return !active_ || file_.good(); }
+
+  private:
+    std::streambuf *original_;
+    std::ofstream file_;
+    TeeBuffer tee_;
+    bool active_;
+};
+
+void dump_certificate(std::ostream &out, const ArrangementGraph &graph,
+                      const std::vector<std::vector<int>> &star,
+                      const std::vector<int> &boundary_codes,
+                      const std::vector<int> &component_sizes, int g) {
     const int m = graph.n - graph.k;
     const int degree = graph.k * m;
     const int family_a = graph.k * (graph.k - 1) * m;
@@ -169,26 +216,6 @@ void dump_certificate(const std::string &path, const ArrangementGraph &graph,
         << "=" << (graph.k - 1) * m << "\n";
     out << "CUT_MULTIPLICITY_SEQUENCE 1^" << family_a << " 2^" << family_b
         << "\n";
-
-    out << "\n# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    out << "# BEGIN STDOUT ~~\n";
-    out << "Building A(" << graph.n << ',' << graph.k << ")...\n";
-    out << "Total valid vertices: " << graph.valid_vertices.size() << "\n\n";
-    out << "Candidate g = " << g << "\n";
-    out << "|S| = " << star.size() << "\n";
-    out << "Subset S connectivity verified.\n";
-    out << "|N(S)| = " << boundary_codes.size() << "\n";
-    out << "Validating " << g << "-extra cut properties...\n";
-    out << "component sizes after deletion:\n";
-    for (const int size : component_sizes)
-        out << "  " << size << '\n';
-    out << "valid " << g << "-extra cut: " << (valid ? "yes" : "no") << '\n';
-    if (valid) {
-        out << "therefore kappa_" << g << "(A(" << graph.n << ',' << graph.k
-            << ")) <= " << boundary_codes.size() << '\n';
-    }
-    out << "# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    out << "# END STDOUT ~~\n";
 }
 
 int main(int argc, char **argv) {
@@ -226,6 +253,11 @@ int main(int argc, char **argv) {
     }
     if (n <= k || k < 1) {
         std::cerr << "Error: require n > k >= 1.\n";
+        return 1;
+    }
+    OutputMirror output_mirror(dump_path);
+    if (!output_mirror.good()) {
+        std::cerr << "Error: cannot open dump file '" << dump_path << "'.\n";
         return 1;
     }
 
@@ -311,17 +343,17 @@ int main(int argc, char **argv) {
     }
 
     if (!valid) {
-        if (!dump_path.empty())
-            dump_certificate(dump_path, graph, star, boundary_codes,
-                             component_sizes, g, false);
         std::cout << "valid " << g << "-extra cut: no\n";
+        if (!dump_path.empty())
+            dump_certificate(std::cout, graph, star, boundary_codes,
+                             component_sizes, g);
         return 0;
     }
-    if (!dump_path.empty())
-        dump_certificate(dump_path, graph, star, boundary_codes,
-                         component_sizes, g, true);
     std::cout << "valid " << g << "-extra cut: yes\n";
     std::cout << "therefore kappa_" << g << "(A(" << n << ',' << k
               << ")) <= " << boundary_count << "\n";
+    if (!dump_path.empty())
+        dump_certificate(std::cout, graph, star, boundary_codes,
+                         component_sizes, g);
     return 0;
 }
