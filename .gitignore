@@ -27,6 +27,7 @@ profile_telescope_milp
 /root_state_validator
 /empirical_*
 /transfer_dp_*
+/fiber_ordering
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
