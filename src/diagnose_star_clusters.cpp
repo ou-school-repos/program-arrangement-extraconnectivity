@@ -133,15 +133,20 @@ PairResult pair_margin(const Subset &subset, int n, int k) {
             result = {margin, i, j};
     };
 
-    // The Star automorphism group has only three pair orbits: center-leaf,
-    // same-branch leaves, and leaves from different branches.  One
-    // representative of each orbit is therefore an exact exhaustive test.
+    // The Star automorphism group has four pair orbits: center-leaf,
+    // same-branch leaves, and leaves from different branches with either the
+    // same or different unused symbols. One representative of each orbit is
+    // therefore an exact exhaustive test.
     const int leaves_per_branch = n - k;
     consider(0, 1); // center and a leaf
     if (leaves_per_branch >= 2)
         consider(1, 2); // two leaves in one branch
-    if (r > 1 + leaves_per_branch)
-        consider(1, 1 + leaves_per_branch); // leaves in different branches
+    if (r > 1 + leaves_per_branch) {
+        consider(1, 1 + leaves_per_branch); // different branches, same symbol
+        if (leaves_per_branch >= 2)
+            consider(1, 2 + leaves_per_branch);
+        // different branches, different symbols
+    }
     return result;
 }
 
