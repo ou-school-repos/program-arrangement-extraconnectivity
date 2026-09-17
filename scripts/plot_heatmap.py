@@ -7,29 +7,28 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
 
 LABELS = {
-    "/": 0,
-    "o": 1,
-    "x": 2,
-    "X": 3,
-    "~": 4,
-    "?": 5,
-    ".": 6,
+    "—": 0,
+    "✓": 1,
+    "□": 2,
+    "■": 3,
+    "/": 4,
+    "…": 5,
 }
 
 ROWS = {
-    8: ["/", "/", "o", "o", "o", "o", "o", "~", "~", "~"],
-    9: ["/", "/", "o", "o", "o", "x", "o", "o", "~", "~"],
-    10: ["/", "/", "o", "o", "o", "x", "x", "x", "o", "~"],
-    11: ["/", "/", "o", "o", "o", "X", "x", "x", "x", "?"],
-    12: ["/", "/", "o", "o", "o", "X", "x", "x", "?", "?"],
-    13: ["/", "/", "o", "o", "o", "X", "X", "x", "?", "?"],
-    14: ["/", "/", "o", "o", "o", "X", "X", "X", "?", "?"],
-    15: ["/", "/", "o", "o", "o", "X", "X", "X", "?", "?"],
-    16: ["/", "/", "o", "o", "o", "X", "X", "?", "?", "?"],
-    17: ["/", "/", "o", "o", "o", "x", "X", "?", "?", "?"],
-    18: ["/", "/", "o", "o", "o", "x", "X", "?", "?", "?"],
-    19: ["/", "/", "o", "o", "o", "x", "X", "?", "?", "?"],
-    20: ["/", "/", "o", "o", "o", "x", "X", "?", "?", "?"],
+    8: ["—", "—", "✓", "✓", "✓", "✓", "✓", "—", "—", "—"],
+    9: ["—", "—", "✓", "✓", "✓", "□", "✓", "✓", "—", "—"],
+    10: ["—", "—", "✓", "✓", "✓", "□", "□", "□", "✓", "—"],
+    11: ["—", "—", "✓", "✓", "✓", "■", "□", "□", "□", "/"],
+    12: ["—", "—", "✓", "✓", "✓", "■", "□", "□", "/", "/"],
+    13: ["—", "—", "✓", "✓", "✓", "■", "■", "□", "/", "/"],
+    14: ["—", "—", "✓", "✓", "✓", "■", "■", "■", "/", "/"],
+    15: ["—", "—", "✓", "✓", "✓", "■", "■", "■", "/", "/"],
+    16: ["—", "—", "✓", "✓", "✓", "■", "■", "/", "/", "/"],
+    17: ["—", "—", "✓", "✓", "✓", "□", "■", "/", "/", "/"],
+    18: ["—", "—", "✓", "✓", "✓", "□", "■", "/", "/", "/"],
+    19: ["—", "—", "✓", "✓", "✓", "□", "■", "/", "/", "/"],
+    20: ["—", "—", "✓", "✓", "✓", "□", "■", "/", "/", "/"],
 }
 
 
@@ -39,16 +38,15 @@ def main() -> None:
     values = [[LABELS[label] for label in row] for row in labels]
     cmap = ListedColormap(
         [
-            "#cccccc",  # invalid
+            "#cccccc",  # invalid or outside domain
             "#4c72b0",  # Hamming-safe
             "#dd8452",  # soft
             "#c44e52",  # hard
-            "#f2f2f2",  # irrelevant
             "#d9d9d9",  # guard rejected
             "#ffffff",  # not run
         ]
     )
-    norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5], cmap.N)
+    norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5], cmap.N)
 
     figure, axis = plt.subplots(figsize=(8, 5))
     image = axis.imshow(values, cmap=cmap, norm=norm, aspect="auto")
@@ -66,13 +64,12 @@ def main() -> None:
     handles = [
         plt.Rectangle((0, 0), 1, 1, color=color, label=label)
         for color, label in [
-            ("#cccccc", "/: invalid extra cut"),
-            ("#4c72b0", "o: satisfies Hamming comparison"),
-            ("#dd8452", "x: soft counterexample"),
-            ("#c44e52", "X: hard counterexample"),
-            ("#f2f2f2", "~: outside k < n"),
-            ("#d9d9d9", "?: rejected by guard"),
-            ("#ffffff", ".: not yet run"),
+            ("#cccccc", "—: invalid or outside k < n"),
+            ("#4c72b0", "✓: satisfies Hamming comparison"),
+            ("#dd8452", "□: soft counterexample"),
+            ("#c44e52", "■: hard counterexample"),
+            ("#d9d9d9", "/: rejected by guard"),
+            ("#ffffff", "…: not yet run"),
         ]
     ]
     axis.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.02, 1))
