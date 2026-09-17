@@ -112,11 +112,10 @@ External-Boundary Dominance for Arrangement Graphs $A(n,k)$:}\\[0.5em]
 \begin{abstract}
 The vertex isoperimetric problem on the arrangement graph $A(n,k)$ seeks
 $R$-element subsets minimizing the cardinality $|\extbd(S)|$ of the external
-vertex boundary.  For small alphabets ($m = n-k < 5$) hierarchical,
-prefix-ordered star subgraphs are the presumed minimizers; as the number of
-available symbols grows, however, the requirement that vertices use distinct
-symbols imposes an escalating combinatorial penalty on such single-coordinate
-constructions.  We exhibit an exact discrete crossover at $A(10,5)$ and
+vertex boundary.  The canonical Star is an obstruction family whose comparison
+with the Hamming ball is governed by $m=n-k$ and its branch count $j$, rather
+than by a one-way alphabet-size transition.  We exhibit an exact discrete
+crossover at $A(10,5)$ and
 $R = 26$: the canonical star graph has boundary $|\extbd(S_{\mathrm{star}})| =
 \StarBoundary{}$, while a binary hypercube slice embedded in the same graph
 attains $|\extbd(\mathcal{C})| = \SliceBoundary{}$, strictly outperforming the
@@ -127,10 +126,10 @@ variation across every coordinate.  Encoding the exact search as a Boolean
 constraint program over the $|V| = 30{,}240$ vertices of $A(10,5)$, we further
 certify $|\extbd(S)| \ge \CertFloor{}$ for every volume-$26$ subset, so the
 true optimum is bracketed as
-$\CertFloor{} \le |\extbd(S)| \le \SliceBoundary{}$ --- the smallest explicit
-counterexample to star optimality known in arrangement graphs, and a concrete
-measure of the gap that any generalized boundary-minimizing construction must
-close.
+$\CertFloor{} \le |\extbd(S)| \le \SliceBoundary{}$.  This is a finite
+computational bracket, not a universal optimality theorem; the Star loses to
+the Hamming-ball value for some small branch counts and can beat it after the
+explicit $(m,j)$ shoreline is crossed.
 \end{abstract}
 \input{sections/00_introduction}
 

@@ -55,14 +55,20 @@ $V'$:
 	Its cardinality $|\extbd(V')|$ is the quantity we seek to minimize.
 \end{definition}
 
-\begin{definition}[Canonical Star]\label{def:star}
-Fix an ordering of the $n$ symbols and a coordinate $p$, and anchor that
-coordinate to the smallest symbol.  The \emph{canonical Star} $S_R$ of size $R$
-is the set of the first $R$ injective tuples in lexicographic order over the
-remaining $k-1$ coordinates, the other coordinates being filled from the
-remaining $n-1$ symbols.  Saturating one root at a time, the construction
-maximizes the density of a single coordinate fiber but confines every internal
-adjacency to that one line.
+\begin{definition}[Full Star spine]\label{def:star}
+Fix a centre $c$ and let $J$ be a set of $j$ active coordinates.  For each
+$p\in J$, replace $c_p$ by each of the $m=n-k$ symbols unused by $c$,
+leaving all other coordinates unchanged.  The resulting full Star is
+\[
+ S_j(c)=\{c\}\cup\{c[p\leftarrow s]:p\in J, s\notin c\},
+ \qquad |S_j(c)|=1+jm.
+\]
+Its closed-form defect and external multiplicity excess are
+\[
+D(S_j)=jm,\qquad X(S_j)=m(m-1)\binom{j}{2}.
+\]
+The ``canonical Star'' used in finite traces is an ordering-dependent prefix
+of this spine; it is not a definition of the full Star for arbitrary volume.
 \end{definition}
 
 \begin{definition}[Binary Hypercube Slice]\label{def:slice}
