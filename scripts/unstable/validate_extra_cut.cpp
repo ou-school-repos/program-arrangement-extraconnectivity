@@ -6,6 +6,8 @@
 // Default output is a concise human-readable report; --json emits strict JSON.
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 #include <iostream>
 #include <numeric>
 #include <queue>
@@ -15,16 +17,19 @@
 struct ArrangementGraph {
     int n;
     int k;
-    std::vector<int> status; // -1 invalid, 0 surviving, 1 S, 2 N(S), 3 visited
-    std::vector<std::vector<int>> valid_vertices;
-    std::vector<int> flat_index;
+    std::vector<std::uint8_t>
+        status; // 255 invalid, 0 surviving, 1 S, 2 N(S), 3 visited
+    std::vector<int> valid_codes;
+    std::vector<int> place;
 
     ArrangementGraph(int n_value, int k_value) : n(n_value), k(k_value) {
         int capacity = 1;
         for (int i = 0; i < k; ++i)
             capacity *= n;
-        status.assign(capacity, -1);
-        flat_index.assign(capacity, -1);
+        status.assign(capacity, 255);
+        place.assign(k, 1);
+        for (int position = k - 2; position >= 0; --position)
+            place[position] = place[position + 1] * n;
 
         std::vector<int> prefix;
         std::vector<bool> used(n, false);
@@ -42,8 +47,7 @@ struct ArrangementGraph {
         if (static_cast<int>(prefix.size()) == k) {
             const int code = encode(prefix);
             status[code] = 0;
-            flat_index[code] = static_cast<int>(valid_vertices.size());
-            valid_vertices.push_back(prefix);
+            valid_codes.push_back(code);
             return;
         }
         for (int symbol = 0; symbol < n; ++symbol) {
@@ -57,53 +61,49 @@ struct ArrangementGraph {
         }
     }
 
-    std::vector<int> encoded_neighbors(const std::vector<int> &vertex) const {
-        std::vector<int> result;
-        std::vector<bool> used(n, false);
-        for (const int symbol : vertex)
-            used[symbol] = true;
-
-        result.reserve(k * (n - k));
+    template <typename Function>
+    void for_each_neighbor(int code, Function function) const {
+        std::array<unsigned char, 256> used{};
         for (int position = 0; position < k; ++position) {
+            const int symbol = (code / place[position]) % n;
+            used[symbol] = 1;
+        }
+        for (int position = 0; position < k; ++position) {
+            const int current = (code / place[position]) % n;
             for (int symbol = 0; symbol < n; ++symbol) {
                 if (used[symbol])
                     continue;
-                std::vector<int> neighbor = vertex;
-                neighbor[position] = symbol;
-                result.push_back(encode(neighbor));
+                function(code + (symbol - current) * place[position]);
             }
         }
-        return result;
     }
 };
 
-bool connected(const ArrangementGraph &graph,
-               const std::vector<std::vector<int>> &subset) {
+bool connected(const ArrangementGraph &graph, const std::vector<int> &subset) {
     if (subset.empty())
         return true;
 
     std::vector<bool> visited(subset.size(), false);
     std::queue<int> pending;
-    pending.push(0);
+    pending.push(subset[0]);
     visited[0] = true;
     int reached = 1;
 
     while (!pending.empty()) {
-        const int index = pending.front();
+        const int code = pending.front();
         pending.pop();
-        const std::vector<int> neighbors =
-            graph.encoded_neighbors(subset[index]);
-        for (size_t candidate = 0; candidate < subset.size(); ++candidate) {
-            if (visited[candidate])
-                continue;
-            const int code = graph.encode(subset[candidate]);
-            if (std::find(neighbors.begin(), neighbors.end(), code) ==
-                neighbors.end())
-                continue;
-            visited[candidate] = true;
-            pending.push(static_cast<int>(candidate));
-            ++reached;
-        }
+        graph.for_each_neighbor(code, [&](const int neighbor) {
+            if (graph.status[neighbor] == 1) {
+                for (size_t candidate = 0; candidate < subset.size();
+                     ++candidate) {
+                    if (!visited[candidate] && subset[candidate] == neighbor) {
+                        visited[candidate] = true;
+                        pending.push(neighbor);
+                        ++reached;
+                    }
+                }
+            }
+        });
     }
     return reached == static_cast<int>(subset.size());
 }
@@ -144,7 +144,7 @@ void print_json_array(std::ostream &out, const std::vector<int> &values) {
 }
 
 void dump_json(std::ostream &out, const ArrangementGraph &graph,
-               const std::vector<std::vector<int>> &star,
+               const std::vector<int> &center, const std::vector<int> &star,
                const std::vector<int> &boundary_codes,
                const std::vector<int> &component_sizes, int g, bool valid,
                int d, bool embedding_gate, long long hamming_boundary,
@@ -165,7 +165,7 @@ void dump_json(std::ostream &out, const ArrangementGraph &graph,
         << ", \"hamming_boundary\": " << hamming_boundary
         << ", \"classification\": \"" << classification << "\"},\n";
     out << "  \"center_vertex\": ";
-    print_json_array(out, star.front());
+    print_json_array(out, center);
     out << ",\n  \"spare_symbols\": [";
     for (int symbol = graph.k; symbol < graph.n; ++symbol) {
         if (symbol != graph.k)
@@ -235,19 +235,20 @@ int main(int argc, char **argv) {
         std::cout << "Building A(" << n << ',' << k << ")...\n";
     ArrangementGraph graph(n, k);
     if (show_progress)
-        std::cout << "Total valid vertices: " << graph.valid_vertices.size()
+        std::cout << "Total valid vertices: " << graph.valid_codes.size()
                   << "\n";
 
     std::vector<int> center(k);
     std::iota(center.begin(), center.end(), 0);
-    std::vector<std::vector<int>> star{center};
-    graph.status[graph.encode(center)] = 1;
+    const int center_code = graph.encode(center);
+    std::vector<int> star{center_code};
+    graph.status[center_code] = 1;
     for (int position = 0; position < k; ++position) {
         for (int symbol = k; symbol < n; ++symbol) {
-            std::vector<int> leaf = center;
-            leaf[position] = symbol;
+            const int leaf = center_code + (symbol - center[position]) *
+                                               graph.place[position];
             star.push_back(leaf);
-            graph.status[graph.encode(leaf)] = 1;
+            graph.status[leaf] = 1;
         }
     }
 
@@ -265,14 +266,14 @@ int main(int argc, char **argv) {
 
     int boundary_count = 0;
     std::vector<int> boundary_codes;
-    for (const auto &vertex : star) {
-        for (const int neighbor : graph.encoded_neighbors(vertex)) {
+    for (const int vertex : star) {
+        graph.for_each_neighbor(vertex, [&](const int neighbor) {
             if (graph.status[neighbor] != 0)
-                continue;
+                return;
             graph.status[neighbor] = 2;
             boundary_codes.push_back(neighbor);
             ++boundary_count;
-        }
+        });
     }
     if (show_progress)
         std::cout << "|N(S)| = " << boundary_count << "\n";
@@ -285,8 +286,7 @@ int main(int argc, char **argv) {
     if (show_progress)
         std::cout << "Validating " << g << "-extra cut properties...\n";
     std::vector<int> component_sizes;
-    for (const auto &vertex : graph.valid_vertices) {
-        const int start = graph.encode(vertex);
+    for (const int start : graph.valid_codes) {
         if (graph.status[start] != 0 && graph.status[start] != 1)
             continue;
 
@@ -298,14 +298,12 @@ int main(int argc, char **argv) {
             const int current = pending.front();
             pending.pop();
             ++size;
-            const auto &current_vertex =
-                graph.valid_vertices[graph.flat_index[current]];
-            for (const int neighbor : graph.encoded_neighbors(current_vertex)) {
+            graph.for_each_neighbor(current, [&](const int neighbor) {
                 if (graph.status[neighbor] != 0 && graph.status[neighbor] != 1)
-                    continue;
+                    return;
                 graph.status[neighbor] = 3;
                 pending.push(neighbor);
-            }
+            });
         }
         component_sizes.push_back(size);
     }
@@ -342,9 +340,9 @@ int main(int argc, char **argv) {
 
     if (!valid) {
         if (json_output) {
-            dump_json(std::cout, graph, star, boundary_codes, component_sizes,
-                      g, false, d, embedding_gate, hamming_boundary,
-                      classification);
+            dump_json(std::cout, graph, center, star, boundary_codes,
+                      component_sizes, g, false, d, embedding_gate,
+                      hamming_boundary, classification);
         } else {
             std::cout << "valid " << g << "-extra cut: no\n";
             std::cout << classification << "\n";
@@ -352,13 +350,13 @@ int main(int argc, char **argv) {
         return 0;
     }
     if (json_output) {
-        dump_json(std::cout, graph, star, boundary_codes, component_sizes, g,
-                  true, d, embedding_gate, hamming_boundary, classification);
+        dump_json(std::cout, graph, center, star, boundary_codes,
+                  component_sizes, g, true, d, embedding_gate, hamming_boundary,
+                  classification);
     } else {
         std::cout << "valid " << g << "-extra cut: yes\n";
         std::cout << "therefore kappa_" << g << "(A(" << n << ',' << k
                   << ")) <= " << boundary_count << "\n";
-        std::cout << classification << "\n";
         if (classification.find("COUNTEREXAMPLE") != std::string::npos) {
             std::cout << "Hamming baseline: " << hamming_boundary
                       << "; Star boundary: " << boundary_count << "\n";
@@ -366,6 +364,7 @@ int main(int argc, char **argv) {
                       << ", n-k = " << n - k << " ("
                       << (embedding_gate ? "open" : "closed") << ")\n";
         }
+        std::cout << classification << "\n";
     }
     return 0;
 }
