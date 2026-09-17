@@ -67,13 +67,13 @@ struct Best {
 };
 
 struct PairBest {
-    Int value = std::numeric_limits<Int>::min();
+    Int value = std::numeric_limits<Int>::max();
     std::vector<int> subset;
     int first = -1;
     int second = -1;
 
     void update(Int candidate, const std::vector<int> &chosen, int u, int v) {
-        if (candidate > value) {
+        if (candidate < value) {
             value = candidate;
             subset = chosen;
             first = u;
@@ -200,18 +200,27 @@ struct Search {
             const Int pair_budget = c_constant(target) + m * e_seq(target) -
                                     c_constant(target - 2) -
                                     m * e_seq(target - 2);
+            Int best_pair_margin = std::numeric_limits<Int>::min();
+            int best_first = -1;
+            int best_second = -1;
             for (std::size_t i = 0; i < chosen.size(); ++i) {
                 remove(chosen[i], false);
                 for (std::size_t j = i + 1; j < chosen.size(); ++j) {
                     remove(chosen[j], false);
                     const Int q_after = m * (r - 2) * graph.k - boundary_size;
                     const Int drop = q_before - q_after;
-                    pair_peeling_margin.update(pair_budget - drop, chosen,
-                                               chosen[i], chosen[j]);
+                    const Int margin = pair_budget - drop;
+                    if (margin > best_pair_margin) {
+                        best_pair_margin = margin;
+                        best_first = chosen[i];
+                        best_second = chosen[j];
+                    }
                     add(chosen[j], false);
                 }
                 add(chosen[i], false);
             }
+            pair_peeling_margin.update(best_pair_margin, chosen, best_first,
+                                       best_second);
         }
 
         if (!reported_counterexample &&
@@ -259,11 +268,18 @@ void print_result(const char *name, const Best &best) {
     std::cout << '\n';
 }
 
-void print_pair_result(const PairBest &best) {
+void print_pair_result(const PairBest &best, const Instance &graph) {
     std::cout << "min_pair_peeling_margin=" << best.value << " witness=";
     for (int vertex : best.subset)
         std::cout << ' ' << vertex;
-    std::cout << " remove=" << best.first << ',' << best.second << '\n';
+    int equal_coordinates = 0;
+    if (best.first >= 0 && best.second >= 0) {
+        for (int coordinate = 0; coordinate < graph.k; ++coordinate)
+            equal_coordinates += graph.vertices[best.first][coordinate] ==
+                                 graph.vertices[best.second][coordinate];
+    }
+    std::cout << " remove=" << best.first << ',' << best.second << " adjacent="
+              << (equal_coordinates == graph.k - 1 ? "yes" : "no") << '\n';
 }
 
 } // namespace
@@ -309,7 +325,7 @@ int main(int argc, char **argv) {
     print_result("min_collision_margin", search.collision_slack);
     print_result("min_boundary", search.boundary_best);
     print_result("min_peeling_margin", search.peeling_margin);
-    print_pair_result(search.pair_peeling_margin);
+    print_pair_result(search.pair_peeling_margin, graph);
     std::cout << "defect_lemma_on_scan="
               << (search.defect_slack.value >= 0 ? "yes" : "no") << '\n';
     std::cout << "collision_lemma_on_scan="
