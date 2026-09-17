@@ -207,6 +207,10 @@ test/predict: build	##H @Dev Verify predictor matches search for R=2..$(R)
 	done; \
 	if [ $$fail -eq 1 ]; then exit 1; fi
 
+.PHONY: test/validate_extra_cut
+test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator output with tests/oracle_baseline.json
+	python3 scripts/test_regression.py
+
 .PHONY: csv
 csv: build	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_info,Generating predictions CSV)

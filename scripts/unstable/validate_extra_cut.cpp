@@ -178,8 +178,9 @@ void dump_json(std::ostream &out, const ArrangementGraph &graph,
     const int family_b = graph.k * (graph.k - 1) / 2 * m * (m - 1);
     out << "{\n  \"graph\": {\"n\": " << graph.n << ", \"k\": " << graph.k
         << ", \"m\": " << m << ", \"degree\": " << degree
+        << ", \"valid_vertices\": " << graph.valid_count
         << "},\n  \"cut_properties\": {\"g\": " << g
-        << ", \"target_volume\": " << star.size()
+        << ", \"R\": " << star.size() << ", \"target_volume\": " << star.size()
         << ", \"actual_boundary\": " << boundary_codes.size()
         << ", \"valid\": " << (valid ? "true" : "false") << "},\n"
         << "  \"hamming_comparison\": {\"d\": " << d
