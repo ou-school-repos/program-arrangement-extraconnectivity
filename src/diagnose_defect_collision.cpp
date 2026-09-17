@@ -107,11 +107,19 @@ struct Search {
     Best boundary_best;
     Best peeling_margin;
     PairBest pair_peeling_margin;
+    std::vector<PairBest> agreement_pair_margins;
+    std::vector<Int> local_pair_margins;
+    std::vector<int> local_pair_first;
+    std::vector<int> local_pair_second;
 
     Search(const Instance &instance, int size, Int limit)
         : graph(instance), target(size), node_limit(limit),
           selected(instance.vertices.size(), false), root_count(instance.k),
-          incidence(instance.vertices.size(), 0), chosen{0} {
+          incidence(instance.vertices.size(), 0), chosen{0},
+          agreement_pair_margins(instance.k + 1),
+          local_pair_margins(instance.k + 1),
+          local_pair_first(instance.k + 1, -1),
+          local_pair_second(instance.k + 1, -1) {
         for (int position = 0; position < graph.k; ++position)
             root_count[position].assign(graph.lines[position].size(), 0);
         add(0, false);
@@ -211,6 +219,8 @@ struct Search {
             Int best_pair_margin = std::numeric_limits<Int>::min();
             int best_first = -1;
             int best_second = -1;
+            std::fill(local_pair_margins.begin(), local_pair_margins.end(),
+                      std::numeric_limits<Int>::min());
             for (std::size_t i = 0; i < chosen.size(); ++i) {
                 remove(chosen[i], false);
                 for (std::size_t j = i + 1; j < chosen.size(); ++j) {
@@ -218,6 +228,15 @@ struct Search {
                     const Int q_after = m * (r - 2) * graph.k - boundary_size;
                     const Int drop = q_before - q_after;
                     const Int margin = pair_budget - drop;
+                    int agreement = 0;
+                    for (int coordinate = 0; coordinate < graph.k; ++coordinate)
+                        agreement += graph.vertices[chosen[i]][coordinate] ==
+                                     graph.vertices[chosen[j]][coordinate];
+                    if (margin > local_pair_margins[agreement]) {
+                        local_pair_margins[agreement] = margin;
+                        local_pair_first[agreement] = chosen[i];
+                        local_pair_second[agreement] = chosen[j];
+                    }
                     if (margin > best_pair_margin) {
                         best_pair_margin = margin;
                         best_first = chosen[i];
@@ -234,6 +253,15 @@ struct Search {
             pair_peeling_margin.update(best_pair_margin, chosen, best_first,
                                        best_second,
                                        equal_coordinates == graph.k - 1);
+            for (int agreement = 0; agreement <= graph.k; ++agreement) {
+                if (local_pair_margins[agreement] ==
+                    std::numeric_limits<Int>::min())
+                    continue;
+                agreement_pair_margins[agreement].update(
+                    local_pair_margins[agreement], chosen,
+                    local_pair_first[agreement], local_pair_second[agreement],
+                    agreement == graph.k - 1);
+            }
         }
 
         if (!reported_counterexample &&
@@ -291,6 +319,15 @@ void print_pair_result(const PairBest &best) {
               << '\n';
 }
 
+void print_agreement_results(const std::vector<PairBest> &results) {
+    for (std::size_t agreement = 0; agreement < results.size(); ++agreement) {
+        if (results[agreement].value == std::numeric_limits<Int>::max())
+            continue;
+        std::cout << "agreement_c=" << agreement << ' ';
+        print_pair_result(results[agreement]);
+    }
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -335,6 +372,7 @@ int main(int argc, char **argv) {
     print_result("min_boundary", search.boundary_best);
     print_result("min_peeling_margin", search.peeling_margin);
     print_pair_result(search.pair_peeling_margin);
+    print_agreement_results(search.agreement_pair_margins);
     std::cout << "defect_lemma_on_scan="
               << (search.defect_slack.value >= 0 ? "yes" : "no") << '\n';
     std::cout << "collision_lemma_on_scan="
