@@ -1,5 +1,6 @@
 // Exact unified-envelope transfer prototype.
 // Usage: ./transfer_dp_window [n] [k] [max_R] [max_states]
+// max_states is optional; omitted or zero means unlimited.
 
 #include "arrangement_core.hpp"
 
@@ -210,15 +211,19 @@ std::vector<int> greedy_fiber_order(const Instance &instance,
 int main(int argc, char **argv) {
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
-        std::cout << "usage: " << argv[0] << " [n] [k] [max_R] [max_states]\n";
+        std::cout << "usage: " << argv[0]
+                  << " [n] [k] [max_R] [max_states]\n"
+                     "max_states is optional; zero means unlimited.\n";
         return 0;
     }
     const int n = argc > 1 ? std::stoi(argv[1]) : 5;
     const int k = argc > 2 ? std::stoi(argv[2]) : 3;
-    const int max_volume = argc > 3 ? std::stoi(argv[3]) : 6;
-    const std::size_t max_states = argc > 4 ? std::stoull(argv[4]) : 2'000'000;
-
     const Instance instance(n, k);
+    const int max_volume = argc > 3
+                               ? std::stoi(argv[3])
+                               : static_cast<int>(instance.vertices.size());
+    const std::size_t max_states = argc > 4 ? std::stoull(argv[4]) : 0;
+
     std::vector<std::vector<int>> fibers;
     const auto order = greedy_fiber_order(instance, fibers);
     const auto full_group = full_automorphisms(instance);
@@ -228,7 +233,9 @@ int main(int argc, char **argv) {
 
     std::cout << "A(" << n << ',' << k << ") unified-envelope window DP\n"
               << "fibers=" << order.size() << " max_R=" << max_volume
-              << " max_states=" << max_states << "\n";
+              << " max_states="
+              << (max_states == 0 ? "unlimited" : std::to_string(max_states))
+              << "\n";
 
     for (std::size_t step = 0; step < order.size(); ++step) {
         const auto &fiber = fibers[order[step]];
@@ -324,10 +331,11 @@ int main(int argc, char **argv) {
                     const int candidate_volume = candidate.volume;
                     next[candidate_volume].emplace(std::move(candidate),
                                                    finalized);
-                    if (next[candidate_volume].size() > max_states)
+                    if (max_states != 0 &&
+                        next[candidate_volume].size() > max_states)
                         break;
                 }
-                if (next[volume].size() > max_states)
+                if (max_states != 0 && next[volume].size() > max_states)
                     break;
             }
         }
@@ -342,7 +350,7 @@ int main(int argc, char **argv) {
                   << " fiber=" << order[step] << " transitions=" << transitions
                   << " context-group=" << context_group.size()
                   << " states=" << state_count << '\n';
-        if (state_count > max_states) {
+        if (max_states != 0 && state_count > max_states) {
             std::cout << "state-limit-reached\n";
             return 3;
         }
