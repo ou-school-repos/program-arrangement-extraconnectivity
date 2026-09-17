@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -37,6 +38,15 @@ static std::string classification(const FullStarParameters &parameters,
     if (parameters.boundary() < parameters.hamming_boundary())
         return "SOFT COUNTEREXAMPLE: UniversalLowerBound only";
     return "SATISFIES HAMMING OPTIMALITY";
+}
+
+static void report_progress(std::uint64_t discovered,
+                            std::uint64_t total_survivors) {
+    const double percent =
+        total_survivors == 0 ? 100.0 : 100.0 * discovered / total_survivors;
+    std::cerr << "\rBFS progress: " << discovered << " / " << total_survivors
+              << " (" << std::fixed << std::setprecision(1) << percent << "%)"
+              << std::flush;
 }
 
 int main(int argc, char **argv) {
@@ -94,18 +104,25 @@ int main(int argc, char **argv) {
     // The Star remains a component after its external boundary is deleted.
     // Its vertices are already marked, so record it before scanning the
     // unmarked complement.
-    std::vector<int> component_sizes{static_cast<int>(star.size())};
+    const std::uint64_t total_survivors =
+        graph.valid_count - star.size() - boundary.size();
+    std::uint64_t discovered_survivors = 0;
+    constexpr std::uint64_t progress_interval = 1'000'000;
+    std::vector<std::uint64_t> component_sizes{star.size()};
     graph.for_each_valid_code([&](const std::uint64_t start) {
         const std::size_t start_rank = graph.rank_code(start);
         if (visited.test(start_rank))
             return;
-        int size = 0;
+        std::uint64_t size = 0;
         std::vector<std::uint64_t> frontier{start};
         visited.set(start_rank);
         while (!frontier.empty()) {
             std::vector<std::uint64_t> next;
             for (const std::uint64_t current : frontier) {
                 ++size;
+                ++discovered_survivors;
+                if (discovered_survivors % progress_interval == 0)
+                    report_progress(discovered_survivors, total_survivors);
                 graph.for_each_neighbor(
                     current, [&](const std::uint64_t neighbor) {
                         const std::size_t rank = graph.rank_code(neighbor);
@@ -120,12 +137,15 @@ int main(int argc, char **argv) {
         component_sizes.push_back(size);
     });
 
+    report_progress(discovered_survivors, total_survivors);
+    std::cerr << '\n';
+
     std::sort(component_sizes.begin(), component_sizes.end());
     bool valid = component_sizes.size() >= 2;
     std::cout << "component sizes after deletion:\n";
-    for (const int size : component_sizes) {
+    for (const std::uint64_t size : component_sizes) {
         std::cout << "  " << size << '\n';
-        if (size <= parameters.g())
+        if (size <= static_cast<std::uint64_t>(parameters.g()))
             valid = false;
     }
     std::cout << "valid " << parameters.g()
