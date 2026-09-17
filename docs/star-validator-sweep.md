@@ -59,26 +59,26 @@ over arbitrary `R` values.
 Legend:
 
 - `■` — hard counterexample to `RestrictedLowerBound`.
-- `□` — soft counterexample to `UniversalLowerBound` only.
+- `⊞` — soft counterexample to `UniversalLowerBound` only.
 - `o` — satisfies the Hamming comparison.
 - `\\` — invalid extra cut or outside `k < n`.
 - `/` — not yet run or thus far intractable.
 
-| `n \\ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  |
-| -------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-|        8 | \\  | \\  |  o  |  o  |  o  |  o  |  o  | \\  | \\  | \\  |
-|        9 | \\  | \\  |  o  |  o  |  o  |  □  |  o  |  o  | \\  | \\  |
-|       10 | \\  | \\  |  o  |  o  |  o  |  □  |  □  |  □  |  o  | \\  |
-|       11 | \\  | \\  |  o  |  o  |  o  |  ■  |  □  |  □  |  □  |  /  |
-|       12 | \\  | \\  |  o  |  o  |  o  |  ■  |  □  |  □  |  /  |  /  |
-|       13 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  □  |  /  |  /  |
-|       14 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  ■  |  /  |  /  |
-|       15 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  ■  |  /  |  /  |
-|       16 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  /  |  /  |  /  |
-|       17 | \\  | \\  |  o  |  o  |  o  |  □  |  ■  |  /  |  /  |  /  |
-|       18 | \\  | \\  |  o  |  o  |  o  |  □  |  ■  |  /  |  /  |  /  |
-|       19 | \\  | \\  |  o  |  o  |  o  |  □  |  ■  |  /  |  /  |  /  |
-|       20 | \\  | \\  |  o  |  o  |  o  |  □  |  ■  |  /  |  /  |  /  |
+| `n \ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  |
+| ------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|       8 | \\  | \\  |  o  |  o  |  o  |  o  |  o  | \\  | \\  | \\  |
+|       9 | \\  | \\  |  o  |  o  |  o  |  ⊞  |  o  |  o  | \\  | \\  |
+|      10 | \\  | \\  |  o  |  o  |  o  |  ⊞  |  ⊞  |  ⊞  |  o  | \\  |
+|      11 | \\  | \\  |  o  |  o  |  o  |  ■  |  ⊞  |  ⊞  |  ⊞  |  /  |
+|      12 | \\  | \\  |  o  |  o  |  o  |  ■  |  ⊞  |  ⊞  |  /  |  /  |
+|      13 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  ⊞  |  /  |  /  |
+|      14 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  ■  |  /  |  /  |
+|      15 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  ■  |  /  |  /  |
+|      16 | \\  | \\  |  o  |  o  |  o  |  ■  |  ■  |  /  |  /  |  /  |
+|      17 | \\  | \\  |  o  |  o  |  o  |  ⊞  |  ■  |  /  |  /  |  /  |
+|      18 | \\  | \\  |  o  |  o  |  o  |  ⊞  |  ■  |  /  |  /  |  /  |
+|      19 | \\  | \\  |  o  |  o  |  o  |  ⊞  |  ■  |  /  |  /  |  /  |
+|      20 | \\  | \\  |  o  |  o  |  o  |  ⊞  |  ■  |  /  |  /  |  /  |
 
 The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
@@ -101,7 +101,7 @@ Sorted by valid-vertex count `\|V\| = nP_k`. The graph edge count is
 `\|E\| = \|V\|*k(n-k)/2`. Here `\|∂S\| = \|N(S)\|` is the measured Star
 boundary, while `∂_H(R)` denotes the Hamming-comparison baseline for volume `R`.
 
-| graph     |     `\|V\|` |        `\|E\|` |         `n^k` | `R` | `g` | `\|∂S\|` | `\∂_H(R)` | `Δ` | `d,(k,n-k)` |
+| graph     |       \|V\| |          \|E\| |         `n^k` | `R` | `g` | `\|∂S\|` | `\∂_H(R)` | `Δ` | `d,(k,n-k)` |
 | --------- | ----------: | -------------: | ------------: | --: | --: | -------: | --------: | --: | :---------- |
 | `A(11,6)` |     332,640 |      4,989,600 |     1,771,561 |  31 |  30 |      450 |       476 |  26 | `5,(6,5)`   |
 | `A(12,6)` |     665,280 |     11,975,040 |     2,985,984 |  37 |  36 |      630 |       687 |  57 | `6,(6,6)`   |
