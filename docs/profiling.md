@@ -32,3 +32,33 @@ savings are ~2.9M × O(9) operations ≈ measurable.
 The bigger win is that `calc_step` itself can be optimized further —
 it's a hot loop scanning all previous vertices and could benefit from
 XOR-based diff detection or SIMD intrinsics for large R.
+
+## Gamma audit cutoff: A(6,3), R=7 (2026-09-17)
+
+Command:
+
+```text
+./empirical_gamma_bound 6 3 7 /tmp/gamma-6-3-r7.csv \
+  --phi=0,9,14,18,20,23,24,25
+```
+
+The run generated all of the following canonical-subset counts:
+
+| R | Canonical subsets |
+|---|------------------:|
+| 2 | 3 |
+| 3 | 48 |
+| 4 | 1,561 |
+| 5 | 39,839 |
+| 6 | 820,149 |
+| 7 | 13,677,666 |
+
+At $R=7$, the exhaustive bipartition phase would require approximately
+$13,677,666\cdot63=861,692,958$ partition checks.  After roughly two hours,
+the run was stopped before producing a final gamma maximum.  This is recorded
+as an incomplete audit: the canonical enumeration completed, but no claim
+about the $R=7$ gamma bound follows from it.
+
+The structural defect/collision diagnostic is now the preferred instrument for
+the proof because it tests the two local inequalities directly and avoids this
+partition explosion.
