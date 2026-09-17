@@ -23,29 +23,6 @@ std::vector<int> representative(const std::vector<int> &subset,
                                 const std::vector<Automorphism> &stabilizer) {
     if (subset.size() == 1)
         return {0};
-    if (subset.size() == 2) {
-        int matching = 0;
-        for (int position = 0; position < instance.k; ++position)
-            matching += instance.vertices[subset[0]][position] ==
-                                instance.vertices[subset[1]][position]
-                            ? 1
-                            : 0;
-        std::vector<int> origin(instance.k);
-        std::iota(origin.begin(), origin.end(), 0);
-        const int origin_id = instance.index.at(instance.encode(origin));
-        for (int vertex = 0;
-             vertex < static_cast<int>(instance.vertices.size()); ++vertex) {
-            int candidate_matching = 0;
-            for (int position = 0; position < instance.k; ++position)
-                candidate_matching +=
-                    instance.vertices[origin_id][position] ==
-                            instance.vertices[vertex][position]
-                        ? 1
-                        : 0;
-            if (candidate_matching == matching)
-                return {origin_id, vertex};
-        }
-    }
     return arrangement::canonical_key(subset, instance, stabilizer);
 }
 

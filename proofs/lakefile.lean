@@ -16,6 +16,7 @@ lean_lib «Proofs» where
     `Arrangement.PredictorComplexity,
     `Arrangement.ArrangementExtraconnectivity,
     `Arrangement.PenaltyExact,
+    `Arrangement.InternalPairs,
     `Arrangement.CrossTop,
     `Arrangement.CapacityBoundExamples,
     `Arrangement.UniversalCounterexample,

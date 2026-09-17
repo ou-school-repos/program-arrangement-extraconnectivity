@@ -60,20 +60,21 @@ This document describes what a complete mechanized proof of each would require.
   `scripts/partial_star_sweep.py`, and `scripts/occupancy_sweep.py`. The active
   capstone hypothesis is now `RestrictedLowerBound`, which gates the boundary
   inequality under the hypercube embedding conditions. For m ≤ 4, the embedding
-  condition R ≤ 2^m restricts R to a range where the Hamming Ball is optimal
-  (see "Safe Parameter Regime" in proof-sketch-weighted-potential.md). Four
-  further candidate proof mechanisms have been closed by finite counterexamples:
-  edge-gradient charging overcounts collision mass, single-vertex hole-filling
-  does not preserve its slack, the tested guarded Pinto-style dual-compression
-  pair has no admissible non-worsening branch on finite witnesses, and the
-  additive convex fiber-size Lyapunov ansatz `Psi_f(V') = sum_s N_s(V') w_s` is
-  dead — refuted by both LP infeasibility and a closed-form 4-cycle argument
-  (the R=1,2 anchors lock w_1=0, w_2=m+1, giving Psi=4(m+1) < 8m=Phi for every
-  4-cycle when m>=2). These closures do not alter any Lean interface; a global
-  structural approach (submodular analysis of C(R)+mE(R) directly, rather than
-  vertex-by-vertex or fiber-by-fiber construction) remains to be formalized, but
-  any such approach must now target a **restricted** form of the inequality, not
-  the unrestricted one, since the latter is false.
+  condition R ≤ 2^m restricts the realizable Hamming-ball construction; it does
+  not by itself prove that the Hamming Ball is optimal (see "Safe Parameter
+  Regime" in proof-sketch-weighted-potential.md). Four further candidate proof
+  mechanisms have been closed by finite counterexamples: edge-gradient charging
+  overcounts collision mass, single-vertex hole-filling does not preserve its
+  slack, the tested guarded Pinto-style dual-compression pair has no admissible
+  non-worsening branch on finite witnesses, and the additive convex fiber-size
+  Lyapunov ansatz `Psi_f(V') = sum_s N_s(V') w_s` is dead — refuted by both LP
+  infeasibility and a closed-form 4-cycle argument (the R=1,2 anchors lock
+  w_1=0, w_2=m+1, giving Psi=4(m+1) < 8m=Phi for every 4-cycle when m>=2). These
+  closures do not alter any Lean interface; a global structural approach
+  (submodular analysis of C(R)+mE(R) directly, rather than vertex-by-vertex or
+  fiber-by-fiber construction) remains to be formalized, but any such approach
+  must now target a **restricted** form of the inequality, not the unrestricted
+  one, since the latter is false.
 
 ## Immediate Lean Work Queue
 
@@ -101,7 +102,7 @@ subgraph induced by V' ∪ N(V').
 
 ## Step 1: Kruskal-Katona Shadow Operators in Lean
 
-### What's needed
+### What's needed (1)
 
 The **Kruskal-Katona theorem** states that among all k-element families of
 r-element sets, the initial segment in colex order minimizes the shadow (the
@@ -116,7 +117,7 @@ family of (r-1)-element subsets contained in at least one member).
   exactly the open problem — see "Current Status" above; a previous attempt at
   this connection was abandoned (archived).
 
-### Estimated effort
+### Estimated effort (1)
 
 ~200-300 lines for:
 
@@ -126,7 +127,7 @@ family of (r-1)-element subsets contained in at least one member).
 
 ## Step 2: Hamming Ball Maximizes Squares
 
-### What's needed
+### What's needed (2)
 
 Prove that among all R-element subsets of the d-dimensional hypercube Q_d, the
 initial segment in binary lexicographic order (the Hamming Ball) maximizes the
@@ -140,7 +141,7 @@ number of 4-cycles.
    Hamming Ball)
 3. Apply KK to conclude the Hamming Ball is optimal
 
-### Estimated effort
+### Estimated effort (2)
 
 ~150-200 lines
 
@@ -205,9 +206,9 @@ Status" above).
 hypothesis of the public, unconditional capstone theorems.
 
 **`RestrictedLowerBound`**: The active capstone hypothesis, gated by the
-hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
-restricts R to a range where the Hamming Ball is optimal (verified
-computationally). The proof for general m remains open.
+hypercube embedding conditions. The embedding condition R ≤ 2^m is only a
+realizability condition, and does not establish the boundary inequality. The
+proof for general m remains open.
 
 ## Uniqueness (Open Problem)
 

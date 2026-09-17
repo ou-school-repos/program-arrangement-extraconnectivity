@@ -457,10 +457,14 @@ explicitly accounts for these child-external, parent-internal vertices.
 parent-minus-child subtraction and checks the displayed formulas for every
 coordinate, including trivial splits:
 
+<!-- markdownlint-disable MD013 -->
+
 | Pool           | Non-singleton sets | Coordinate checks | Mismatches | All-negative sets |
 | -------------- | -----------------: | ----------------: | ---------: | ----------------: |
 | A(4,3), R <= 5 |             55,430 |           166,290 |          0 |                 0 |
 | A(5,2), R <= 6 |             60,439 |           120,878 |          0 |                 0 |
+
+<!-- markdownlint-enable MD013 -->
 
 Reproduce with
 `python3 scripts/verify_split_identities.py --n 4 --k 3 --max-r 5` and the
@@ -504,11 +508,15 @@ children proposed to carry credit. Direct evaluation using `full_star`,
 `cross_collisions`, `defect`, `e_seq`, and `sbl` from
 `scripts/full_star_spine.py` gives:
 
+<!-- markdownlint-disable MD013 -->
+
 | Cell   | Full-Star child |   C |   E |   D |   X | C-E-X | (m+1)(E-D) | P-Phi |
 | ------ | --------------- | --: | --: | --: | --: | ----: | ---------: | ----: |
 | A(7,4) | S_3, R=10       |  19 |  15 |   9 |  18 |   -14 |         24 |    10 |
 | A(8,4) | S_3, R=13       |  27 |  22 |  12 |  36 |   -31 |         50 |    19 |
 | A(8,5) | S_4, R=13       |  27 |  22 |  12 |  36 |   -31 |         40 |     9 |
+
+<!-- markdownlint-enable MD013 -->
 
 Thus this candidate fails nonnegativity. Clamping it to zero also fails to
 provide credit at these children. In particular, the coupled slack of the
@@ -913,7 +921,9 @@ algebra would have taken and for a more decisive reason than the a priori
 staircase-vs-smooth risk. Neither result rules out a more sophisticated version
 of either tool; none has been proposed.
 
-### The open problem, restated as a capacity/pigeonhole aggregation bound (2026-09-13, corrected)
+### Open problem, restated as capacity/pigeonhole aggregation bound
+
+NOTE: _(2026-09-13, corrected)_
 
 **Correction to this section, caught immediately after first writing it:** the
 original version of this section claimed only distance-2 pairs between F_a and
@@ -952,19 +962,19 @@ section's first draft omitted entirely.
 **And the aggregation is not pair-disjoint — the per-pair sum is only an upper
 bound**, not an exact count: distinct (u,v) pairs can generate the **same**
 target w, exactly the k=3 collapse mechanism already established elsewhere in
-this document. So the true shared-boundary count I = eb(F_a)∩eb(F_b) is bounded
-above by (channel 1 total) + (channel 2 pair-sum), with equality failing
+this document. So the true shared-boundary count `I = eb(F_a) ∩ eb(F_b)` is
+bounded above by (channel 1 total) + (channel 2 pair-sum), with equality failing
 whenever two pairs collide on a target — which is precisely the phenomenon the
 capacity bound needs to control, not a side issue.
 
-**The remaining open problem, precisely, and now correctly scoped:** bound |I| =
-|eb(F_a)∩eb(F_b)| from (c_a, c_b, m) alone, where I is the union of **both**
-channels above, adjusted for their mutual overcounting. This is strictly harder
-than "sum a 0–2 count over distance-2 pairs" — that undercounts (by omitting
-channel 1) and overcounts (by ignoring collisions) at the same time. No such
-bound has been derived or attempted. m enters through two distinct mechanisms
-now identified — root-sharing capacity (channel 1, directly linear) and
-cross-pair symbol supply for spreading (channel 2, only via the aggregate
+**The remaining open problem, precisely, and now correctly scoped:** bound
+`|I| = |eb(F_a)∩eb(F_b)|` from (c_a, c_b, m) alone, where I is the union of
+**both** channels above, adjusted for their mutual overcounting. This is
+strictly harder than "sum a 0–2 count over distance-2 pairs" — that undercounts
+(by omitting channel 1) and overcounts (by ignoring collisions) at the same
+time. No such bound has been derived or attempted. m enters through two distinct
+mechanisms now identified — root-sharing capacity (channel 1, directly linear)
+and cross-pair symbol supply for spreading (channel 2, only via the aggregate
 collapse/spread trade-off) — and any correct bound has to account for both plus
 their interaction. This is the trailhead for whoever picks this up next; the
 first attempt at stating it (this section, initial version) undercounted the
@@ -979,7 +989,9 @@ attempt the open aggregation bound itself — it only pins down, at the kernel
 level, the two facts any future attempt at that bound has to remain consistent
 with.
 
-#### A candidate (c_a,c_b,m)-bound on |I|, and why it can't be the missing piece (2026-09-13)
+#### Candidate `(c_a,c_b,m)-bound on |I|`, why it's not the missing piece
+
+NOTE: _added (2026-09-13)_
 
 **Candidate:** `|I| ≤ c_a·c_b·f(m)`, where `f(m) = max(m-1, 2)` for `m≥2` and
 `f(1) = 1`. `f(m)` is exactly `max_I` at `c_a=c_b=1` (single-pair case),
@@ -1023,7 +1035,9 @@ extent that answer can help) but "bound the slack lost by splitting a set into
 two fibers," i.e. amortizing `S` directly rather than continuing to sharpen the
 `|I|` side of the inequality.
 
-### The symmetric/spread counterexample hunt (2026-09-13): vacuity at scale, starvation at the frontier
+### The symmetric/spread, counterexample hunt
+
+NOTE: _(2026-09-13): vacuity at scale, starvation at the frontier_
 
 A proposed adversarial program: beat the universal lower bound with highly
 symmetric "spread" sets (orthogonal arrays, finite-geometry designs) deployed at
@@ -1103,6 +1117,8 @@ alone; the first-pass table below undercounted it whenever F_a, F_b shared a
 direct edge (which the search already allowed — there was never an adjacency
 filter to drop, only a term missing from what was measured).
 
+<!-- markdownlint-disable MD033 -->
+
 <details>
 <summary>Superseded first-pass table (I only, undercounts — kept for the
 record, not to be cited)</summary>
@@ -1129,6 +1145,8 @@ The "margin widens as sizes grow" conclusion drawn from this table does **not**
 survive the correction below and should not be reused.
 
 </details>
+
+<!-- markdownlint-disable MD033 -->
 
 **Corrected table**, extended to 17 cells (`src/check_amortized_slack.cpp`):
 
@@ -1170,6 +1188,8 @@ rather than stopping at 17, and retracted here rather than left standing. Full
 data (25 cells; two still running when this was written and not included:
 (7,3,6,6) is in progress):
 
+<!-- markdownlint-disable MD013 -->
+
 | cell                                                | n−k           | R             | ⌈log₂R⌉              | margin                                       |
 | --------------------------------------------------- | ------------- | ------------- | -------------------- | -------------------------------------------- |
 | (5,3,1,1)..(5,3,1,3), (6,3,1,1),(6,3,2,2),(6,3,1,2) | 2,2,2,2,3,3,3 | 2,4,3,4,2,4,3 | ≤2,≤2,≤2,≤2,≤2,≤2,≤2 | 0 (7 cells)                                  |
@@ -1191,6 +1211,8 @@ data (25 cells; two still running when this was written and not included:
 | (7,3,4,4)                                           | 4             | 8             | 3                    | 0                                            |
 | (7,3,3,3)                                           | 4             | 6             | 3                    | 0                                            |
 | (7,3,5,5)                                           | 4             | 10            | 4                    | **−2** (breaks the rule: `n−k≥⌈log₂R⌉` here) |
+
+<!-- markdownlint-enable MD013 -->
 
 The embeddability rule correctly predicts every `margin=0` cell (`n−k ≥ ⌈log₂R⌉`
 held in all of them) but is not sufficient: it also holds for (6,3,2,3),
@@ -1671,11 +1693,15 @@ here.
 
 **Summary — three distinct deficit mechanisms, not one:**
 
+<!-- markdownlint-disable MD013 -->
+
 | regime                        | what breaks                                                                                 | where the deficit lands                                 |
 | ----------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | m-crush (alphabet starvation) | fibers can't agree on symbols for a shared axis                                             | missing `B`/edges (some become structurally impossible) |
 | k-crush, saturated            | fibers saturate each other, but run out of a coordinate to keep distance-1 targets distinct | `D1` falls short of `ΔE·(m-1)`                          |
 | k-crush, ghost-compensated    | same shortfall, partially re-expressed                                                      | split between `D1` and `T`                              |
+
+<!-- markdownlint-enable MD013 -->
 
 **Scope: this is a mechanistic account of two specific cells, not a general
 deficit formula.** It explains _why_ margin goes negative in each observed case
@@ -2090,11 +2116,15 @@ For `m=1`, the zero-base refinement is `X <= 2*deltaD`; the exact target also
 includes the size-dependent allowance `C(R)-E(R)`. Complete feasible
 defect-deficit frontiers were certified in `A(4,3)` for the selected sizes:
 
+<!-- markdownlint-disable MD013 -->
+
 | `R` | `deltaD` values in order | corresponding maximum `X` values | maximum `X-2*deltaD` |
 | --: | ------------------------ | -------------------------------- | -------------------: |
 |   4 | 1, 2, 3, 4               | 0, 2, 3, 4                       |                   -2 |
 |   5 | 1, 2, 3, 4, 5            | 1, 2, 3, 4, 6                    |                   -1 |
 |   6 | 1, 2, 3, 4, 5, 6, 7      | 0, 1, 2, 4, 5, 6, 9              |                   -2 |
+
+<!-- markdownlint-enable MD013 -->
 
 As a zero-deficit calibration, `A(4,3)`, `R=3`, `deltaD=0` was also optimized
 and returned `X=0` (with `S(F)=1`) at `{012,013,023}`. Thus a positive
@@ -2212,11 +2242,15 @@ arithmetic is trivially exact.
 
 ### Summary Table
 
+<!-- markdownlint-disable MD013 -->
+
 | Probe                                       | Sets  | Fails | Min colliding slack |
 | ------------------------------------------- | ----- | ----- | ------------------- |
 | Exhaustive A(4,3) R≤3 + random + structured | 3,449 | 0     | 1                   |
 | + Swiss cheese (sizes 16/24/32)             | 3,646 | 0     | 1                   |
 | + Core+crumbs (A(5,3), A(6,3))              | 3,796 | 0     | 1                   |
+
+<!-- markdownlint-enable MD013 -->
 
 ### What Remains Open
 
@@ -2314,18 +2348,22 @@ $R_{\text{fail}} = 1 + j_{\text{fail}} \cdot m$, where $j_{\text{fail}}$ drifts
 as $O(\log m)$. However, the hypercube embedding condition requires $R \le 2^m$.
 For $m \le 4$, we have $2^m < R_{\text{fail}}$:
 
+<!-- markdownlint-disable MD013 -->
+
 | $m$ | $2^m$ (embed max) | $R_{\text{fail}}$ | Safe margin | Status                                                     |
 | --- | ----------------- | ----------------- | ----------- | ---------------------------------------------------------- |
 | 2   | 4                 | 17                | +13         | Unconditionally Safe ($A(10,8)$ has $m=2$)                 |
 | 3   | 8                 | 19                | +11         | Unconditionally Safe ($A(6,3), A(7,4), A(9,6)$ have $m=3$) |
-| 4   | 16                | 25                | +9          | Unconditionally Safe ($A(8,4)$ has $m=4$)                  |
-| 5   | 32                | 26                | -6          | Crossover / Open frontier ($R \le 25$ safe)                |
+| 4   | 16                | 25                | +9          | Star-safe only; universal claim remains open               |
+| 5   | 32                | 31                | -1          | Counterexample within the embedding range                  |
 
-Thus for $m \le 4$, ALL embeddable $R$ have the Hamming Ball as the unambiguous
-minimizer. The paper's canonical examples ($A(6,3)$, $A(7,4)$, $A(8,4)$,
-$A(9,6)$, $A(10,8)$) all have $m \le 4$, so the main theorem is unconditionally
-useful for every example in the paper. The general case ($m \ge 5$) remains
-open.
+<!-- markdownlint-enable MD013 -->
+
+The table describes the full-Star obstruction family only. It does not prove
+that all embeddable sets below the Star threshold are safe. In particular,
+$A(11,6)$ with $m=5$ and $R=31 \le 2^5$ is already a counterexample to the
+unqualified embedding-range claim. The general restricted boundary theorem
+therefore remains open even inside the Hamming-embedding regime.
 
 ## Status
 
@@ -2405,14 +2443,15 @@ Consequently,
 \[ Q_m(S_j)=X(S_j)+(m+1)D(S_j) =m(m-1)\binom{j}{2}+jm(m+1). \]
 
 The $k$-dependence disappears after parameterizing the Star by $m=n-k$ and $j$;
-$k$ only converts the branch count into the volume $R$. The formula-only sweep
-recorded in `docs/profiling.md` gives the following first failures:
+$R=1+jm$, while $k$ only constrains the construction through $j\le k$. The
+formula-only sweep recorded in `docs/profiling.md` gives the following first
+failures:
 
 | $m$ | first negative pair margin | first negative boundary slack |
 | --: | -------------------------: | ----------------------------: |
 |   2 |              $j=7$, $R=15$ |                 $j=8$, $R=17$ |
 |   3 |              $j=6$, $R=19$ |                 $j=6$, $R=19$ |
-|   4 |              $j=4$, $R=17$ |                 $j=4$, $R=17$ |
+|   4 |              $j=4$, $R=17$ |                 $j=6$, $R=25$ |
 |   5 |              $j=4$, $R=21$ |                 $j=6$, $R=31$ |
 
 This table is an obstruction map, not a proof that these are universal
@@ -2422,8 +2461,8 @@ shape/range hypothesis or use a potential that accounts for Star collisions.
 
 The asymptotic mechanism is nevertheless clear. Since
 
-$E(R)=R\log_2(R)/2+O(R)$ and the logarithmic sum in $C(R)$ is
-$R\log_2(R)+O(R)$, we have
+$E(R)=R\log_2(R)/2+O(R)$ and the logarithmic sum in $C(R)$ is $R\log_2(R)+O(R)$,
+we have
 
 $G_m(R)=(m+1)R\log_2(R)/2+O_m(R)$,
 

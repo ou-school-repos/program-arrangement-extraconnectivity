@@ -154,22 +154,6 @@ std::vector<Automorphism> origin_stabilizer(const Instance &instance) {
 std::vector<int> canonical_key(const std::vector<int> &subset,
                                const Instance &instance,
                                const std::vector<Automorphism> &stabilizer) {
-    // Ordered pairs of injective words are classified by their equality
-    // pattern.  After using vertex transitivity to fix the first vertex,
-    // coordinate and symbol permutations can map any pair with the same
-    // number of matching coordinates to one another.  This avoids scanning
-    // the full stabilizer for the R=2 stress test.
-    if (subset.size() == 2) {
-        int matching_coordinates = 0;
-        for (int position = 0; position < instance.k; ++position) {
-            matching_coordinates +=
-                instance.vertices[subset[0]][position] ==
-                        instance.vertices[subset[1]][position]
-                    ? 1
-                    : 0;
-        }
-        return {-2, matching_coordinates};
-    }
     if (subset.size() == 1)
         return {-1};
 
@@ -221,16 +205,6 @@ bool is_isomorphic(const std::vector<int> &subset,
                    const std::vector<Automorphism> &stabilizer) {
     if (target.size() == 1 && target[0] == -1)
         return subset.size() == 1;
-    if (target.size() == 2 && target[0] == -2 && subset.size() == 2) {
-        int matching_coordinates = 0;
-        for (int position = 0; position < instance.k; ++position)
-            matching_coordinates +=
-                instance.vertices[subset[0]][position] ==
-                        instance.vertices[subset[1]][position]
-                    ? 1
-                    : 0;
-        return target[1] == matching_coordinates;
-    }
     return std::any_of(subset.begin(), subset.end(), [&](const int anchor) {
         std::vector<int> shift(instance.n);
         std::vector<bool> used(instance.n, false);

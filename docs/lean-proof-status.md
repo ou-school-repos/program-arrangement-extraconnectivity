@@ -7,10 +7,11 @@ Lean 4 and Mathlib.
 
 **Mathematical status update (2026-09-16):** The unrestricted
 UniversalLowerBound hypothesis is false (full Star in A(10,8), R=17, boundary
-168 < 169). The capstone now uses `RestrictedLowerBound`, gated by the
-hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
-restricts R to a range where the Hamming Ball is optimal. The proof for
-general m remains open; see `proof-sketch-weighted-potential.md` for details.
+168 < 169). The capstone now uses `RestrictedLowerBound`, gated by the hypercube
+embedding conditions. The embedding condition is not itself a proof of
+optimality: Star counterexamples exist inside R ≤ 2^m once m ≥ 5. The restricted
+boundary proof remains open; see `proof-sketch-weighted-potential.md` for
+details.
 
 ```bash
 make lean          # Build and verify proofs
@@ -23,6 +24,8 @@ remaining extremal combinatorics hypotheses rather than depending on raw global
 `axiom` declarations.
 
 ## Architecture
+
+<!-- markdownlint-disable MD013 -->
 
 | Section                  | Theorem / Definition                                                 | Status        |
 | ------------------------ | -------------------------------------------------------------------- | ------------- |
@@ -43,6 +46,8 @@ remaining extremal combinatorics hypotheses rather than depending on raw global
 | Lower Bound              | `RestrictedLowerBound` (under embedding conditions)                  | HYPOTHESIS    |
 | Exact Penalty Identity   | `boundary_identity`, `penalty_exact`, `penalty_defect`, `penalty_ge` | PROVEN        |
 | Capstone                 | `arrangement_extraconnectivity_minimum` (composition)                | CONDITIONAL\* |
+
+<!-- markdownlint-enable MD013 -->
 
 \*Conditional on `RestrictedLowerBound` and `HBCrossCollisions` until the direct
 collision proof and remaining supporting scaffold are reconciled and wired into
@@ -91,14 +96,13 @@ The remaining mathematical gaps are isolated as explicit theorem parameters in
   counterexamples to proposed proof mechanisms, not changes to this statement.
   Consequently no Lean theorem or axiom is removed or added:
   `RestrictedLowerBound` remains the active capstone hypothesis, gated by the
-  hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
-  restricts R to a range where the Hamming Ball is optimal (verified
-  computationally). The proof for general m remains open.
-  (`scripts/lyapunov_profile_check.py`) refutes the additive convex potential
-  Ψ_f(V') = Σ_r f(|V' ∩ F_r|) even with Hamming-ball normalization: the
-  embedded-cube equalities alone are algebraically inconsistent for A(5,3) and
-  A(6,3), and A(4,3) admits equality weights that violate the corpus lower bound
-  on an explicit witness.
+  hypercube embedding conditions. Those conditions do not establish the
+  inequality: A(11,6), R=31≤2^5 is already a Star counterexample. The proof
+  remains open. (`scripts/lyapunov_profile_check.py`) refutes the additive
+  convex potential Ψ_f(V') = Σ_r f(|V' ∩ F_r|) even with Hamming-ball
+  normalization: the embedded-cube equalities alone are algebraically
+  inconsistent for A(5,3) and A(6,3), and A(4,3) admits equality weights that
+  violate the corpus lower bound on an explicit witness.
 
 ### 2. Hamming-ball collision evaluation (`HBCrossCollisions`)
 

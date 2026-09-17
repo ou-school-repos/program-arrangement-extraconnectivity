@@ -67,6 +67,24 @@ The structural defect/collision diagnostic is now the preferred instrument for
 the proof because it tests the two local inequalities directly and avoids this
 partition explosion.
 
+### Canonical-orbit audit correction (2026-09-17)
+
+An independent Burnside count found that the previous size-two canonicalization
+shortcut was unsound: coordinate agreement alone does not determine a subset
+orbit. For $A(6,3)$ the correct orbit counts through $R=7$ are:
+
+```text
+./audit_orbits 6 3 7
+A(6,3) Burnside subset-orbit counts:
+[1, 1, 9, 101, 2181, 45362, 852968, 13801074]
+```
+
+The shortcut has been removed from the shared canonicalizer, the subset profile
+implementation, and the gamma representative path. Earlier gamma/profile counts
+produced with that shortcut are withdrawn until regenerated. The direct
+origin-pinned scans in `diagnose_defect_collision` do not use canonical keys and
+are unaffected.
+
 ## Agreement-class audit: A(7,3), R=5 (2026-09-17)
 
 Command:
@@ -141,7 +159,7 @@ the Star's defect, collision, boundary slack, or pair margin.
 | --: | -------------------------: | ----------------------------: |
 |   2 |              $j=7$, $R=15$ |                 $j=8$, $R=17$ |
 |   3 |              $j=6$, $R=19$ |                 $j=6$, $R=19$ |
-|   4 |              $j=4$, $R=17$ |                 $j=4$, $R=17$ |
+|   4 |              $j=4$, $R=17$ |                 $j=6$, $R=25$ |
 |   5 |              $j=4$, $R=21$ |                 $j=6$, $R=31$ |
 
 The balanced slice (m=k) extends this pattern:
@@ -149,13 +167,13 @@ The balanced slice (m=k) extends this pattern:
 | $m=k$ | First negative pair margin | First negative boundary slack |
 | ----: | -------------------------: | ----------------------------: |
 |     6 |              $j=3$, $R=19$ |                 $j=6$, $R=37$ |
-|     8 |              $j=4$, $R=33$ |                 $j=4$, $R=33$ |
+|     8 |              $j=4$, $R=33$ |                 $j=6$, $R=49$ |
 |    10 |              $j=4$, $R=41$ |                 $j=6$, $R=61$ |
 |    12 |              $j=6$, $R=73$ |                 $j=6$, $R=73$ |
 |    15 |              $j=5$, $R=76$ |                 $j=6$, $R=91$ |
 |    20 |              $j=4$, $R=81$ |                $j=7$, $R=141$ |
 
-This is evidence that the Star shoreline can be parameterized by $(m,j)$, with
-$k$ entering only through the volume conversion. It also separates the
-pair-peeling threshold from the final surrogate failure threshold: for $m=2$ and
-$m=5$, pair peeling fails strictly earlier.
+This is evidence that the Star shoreline can be parameterized by $(m,j)$. The
+volume is $R=1+jm$, while $k$ only constrains the construction through $j\le k$.
+It also separates the pair-peeling threshold from the final surrogate failure
+threshold: for $m=2$ and $m=5$, pair peeling fails strictly earlier.
