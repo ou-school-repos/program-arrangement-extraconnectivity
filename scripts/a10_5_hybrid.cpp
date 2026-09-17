@@ -20,11 +20,12 @@ constexpr int kBoundaryCeiling = 297;
 
 using Vertex = std::array<int, kDimension>;
 
+namespace {
+
 int encode(const Vertex &vertex) {
-    return std::accumulate(vertex.begin(), vertex.end(), 0,
-                           [](const int code, const int symbol) {
-                               return 10 * code + symbol;
-                           });
+    return std::accumulate(
+        vertex.begin(), vertex.end(), 0,
+        [](const int code, const int symbol) { return 10 * code + symbol; });
 }
 
 struct Instance {
@@ -37,12 +38,13 @@ struct Instance {
         Vertex vertex{};
         std::array<bool, kAlphabet> used{};
         enumerate(0, vertex, used);
+        std::cout << "geometry: enumerated " << vertices.size() << " vertices\n"
+                  << std::flush;
         flat_index.assign(100000, -1);
         for (int id = 0; id < static_cast<int>(vertices.size()); ++id)
             flat_index[encode(vertices[id])] = id;
 
-        root_id.assign(kDimension,
-                       std::vector<int>(vertices.size(), -1));
+        root_id.assign(kDimension, std::vector<int>(vertices.size(), -1));
         lines.resize(kDimension);
         for (int position = 0; position < kDimension; ++position) {
             std::unordered_map<int, int> roots;
@@ -60,6 +62,9 @@ struct Instance {
                 root_id[position][id] = entry->second;
                 lines[position][entry->second].push_back(id);
             }
+            std::cout << "geometry: coordinate " << position
+                      << " lines=" << lines[position].size() << '\n'
+                      << std::flush;
         }
     }
 
@@ -143,9 +148,9 @@ struct State {
     int active_roots() const {
         int total = 0;
         for (const auto &roots : root_count)
-            total += static_cast<int>(std::count_if(
-                roots.begin(), roots.end(),
-                [](const int count) { return count > 0; }));
+            total += static_cast<int>(
+                std::count_if(roots.begin(), roots.end(),
+                              [](const int count) { return count > 0; }));
         return total;
     }
 
@@ -157,15 +162,14 @@ struct State {
         int incidence_total = 0;
         int incidence_max = 0;
         for (const auto &roots : root_count) {
-            const int active = static_cast<int>(std::count_if(
-                roots.begin(), roots.end(),
-                [](const int count) { return count > 0; }));
+            const int active = static_cast<int>(
+                std::count_if(roots.begin(), roots.end(),
+                              [](const int count) { return count > 0; }));
             const int coordinate_bound = std::max(0, active * 6 - kVolume);
             incidence_total += coordinate_bound;
             incidence_max = std::max(incidence_max, coordinate_bound);
         }
-        const int aggregate = (incidence_total + kDimension - 1) /
-                              kDimension;
+        const int aggregate = (incidence_total + kDimension - 1) / kDimension;
         return std::max({bleed_bound, aggregate, incidence_max, 0});
     }
 };
@@ -178,8 +182,7 @@ struct Automorphism {
         return instance.flat_index[std::accumulate(
             coordinates.begin(), coordinates.end(), 0,
             [this, &instance, vertex](const int code, const int position) {
-                return 10 * code +
-                       symbols[instance.vertices[vertex][position]];
+                return 10 * code + symbols[instance.vertices[vertex][position]];
             })];
     }
 };
@@ -201,7 +204,12 @@ std::vector<Automorphism> origin_stabilizer() {
                 automorphism.symbols[kDimension + index] =
                     static_cast<std::uint8_t>(free_symbols[index]);
             result.push_back(automorphism);
-        } while (std::next_permutation(free_symbols.begin(), free_symbols.end()));
+        } while (
+            std::next_permutation(free_symbols.begin(), free_symbols.end()));
+        if (result.size() % 2880 == 0)
+            std::cout << "stabilizer: generated " << result.size()
+                      << " elements\n"
+                      << std::flush;
     } while (std::next_permutation(coordinates.begin(), coordinates.end()));
     return result;
 }
@@ -213,24 +221,31 @@ class CompletionOracle {
     std::vector<z3::expr> boundary;
     std::vector<z3::expr> active_lines;
 
-public:
+  public:
     CompletionOracle(const Instance &instance, const unsigned timeout_ms)
         : solver(context) {
         z3::params parameters(context);
         parameters.set("timeout", timeout_ms);
         solver.set(parameters);
-        for (int id = 0; id < static_cast<int>(instance.vertices.size()); ++id) {
-            selected.push_back(context.bool_const(
-                ("hybrid_x_" + std::to_string(id)).c_str()));
-            boundary.push_back(context.bool_const(
-                ("hybrid_y_" + std::to_string(id)).c_str()));
+        for (int id = 0; id < static_cast<int>(instance.vertices.size());
+             ++id) {
+            selected.push_back(
+                context.bool_const(("hybrid_x_" + std::to_string(id)).c_str()));
+            boundary.push_back(
+                context.bool_const(("hybrid_y_" + std::to_string(id)).c_str()));
             solver.add(implies(boundary.back(), !selected.back()));
         }
+        std::cout << "oracle: created " << selected.size()
+                  << " selected and boundary variables\n"
+                  << std::flush;
         z3::expr volume = context.int_val(0);
         z3::expr boundary_size = context.int_val(0);
         for (int id = 0; id < static_cast<int>(selected.size()); ++id) {
-            volume += z3::ite(selected[id], 1, 0);
-            boundary_size += z3::ite(boundary[id], 1, 0);
+            volume = volume + z3::ite(selected[id], context.int_val(1),
+                                      context.int_val(0));
+            boundary_size =
+                boundary_size +
+                z3::ite(boundary[id], context.int_val(1), context.int_val(0));
         }
         solver.add(volume == kVolume);
         solver.add(boundary_size <= kBoundaryCeiling);
@@ -238,22 +253,36 @@ public:
         std::vector<Z3_ast> aggregate_args;
         std::vector<int> aggregate_coefficients;
         for (int position = 0; position < kDimension; ++position) {
+            std::cout << "oracle: building coordinate " << position << '\n'
+                      << std::flush;
             for (const auto &line : instance.lines[position]) {
                 const z3::expr active = context.bool_const(
-                    ("hybrid_a_" + std::to_string(active_lines.size())).c_str());
+                    ("hybrid_a_" + std::to_string(active_lines.size()))
+                        .c_str());
                 active_lines.push_back(active);
                 z3::expr occupied = context.bool_val(false);
                 z3::expr selected_on_line = context.int_val(0);
                 for (const int id : line) {
                     occupied = occupied || selected[id];
-                    selected_on_line += z3::ite(selected[id], 1, 0);
+                    selected_on_line = selected_on_line +
+                                       z3::ite(selected[id], context.int_val(1),
+                                               context.int_val(0));
                     solver.add(implies(selected[id], active));
                     solver.add(implies(active && !selected[id], boundary[id]));
                 }
                 solver.add(implies(active, occupied));
-                solver.add(z3::ite(active, 1, 0) <= selected_on_line);
+                solver.add(z3::ite(active, context.int_val(1),
+                                   context.int_val(0)) <= selected_on_line);
+                if (active_lines.size() % 1000 == 0)
+                    std::cout
+                        << "oracle: line constraints=" << active_lines.size()
+                        << '\n'
+                        << std::flush;
             }
         }
+        std::cout << "oracle: adding aggregate cut over " << active_lines.size()
+                  << " lines and " << boundary.size() << " boundary variables\n"
+                  << std::flush;
         for (const z3::expr &active : active_lines) {
             aggregate_args.push_back(active);
             aggregate_coefficients.push_back(6);
@@ -329,8 +358,8 @@ bool search(const Instance &instance, State &state, std::vector<int> &subset,
     }
 
     const int start = subset.back() + 1;
-    for (int vertex = start; vertex < static_cast<int>(instance.vertices.size());
-         ++vertex) {
+    for (int vertex = start;
+         vertex < static_cast<int>(instance.vertices.size()); ++vertex) {
         const bool representative = !std::any_of(
             stabilizer.begin(), stabilizer.end(),
             [&instance, vertex](const Automorphism &automorphism) {
@@ -360,6 +389,8 @@ bool search(const Instance &instance, State &state, std::vector<int> &subset,
     return false;
 }
 
+} // namespace
+
 int main(int argc, char **argv) {
     int crossover_depth = 12;
     unsigned timeout_ms = 5000;
@@ -372,7 +403,7 @@ int main(int argc, char **argv) {
             timeout_ms = static_cast<unsigned>(std::stoul(argument.substr(20)));
         else if (argument.rfind("--max-oracle-calls=", 0) == 0)
             max_calls = std::stoull(argument.substr(19));
-        else if (argument == "--help") {
+        else if (argument == "-h" || argument == "--help") {
             std::cout << "usage: " << argv[0]
                       << " [--crossover-depth=N] [--oracle-timeout-ms=N]"
                          " [--max-oracle-calls=N]\n";
@@ -389,17 +420,31 @@ int main(int argc, char **argv) {
 
     std::cout << "initializing A(10,5)\n";
     const Instance instance;
+    std::cout << "geometry ready: vertices=" << instance.vertices.size()
+              << " lines="
+              << std::accumulate(
+                     instance.lines.begin(), instance.lines.end(), 0U,
+                     [](const unsigned total, const auto &position_lines) {
+                         return total + position_lines.size();
+                     })
+              << '\n'
+              << std::flush;
     const auto stabilizer = origin_stabilizer();
+    std::cout << "stabilizer ready: " << stabilizer.size() << " automorphisms\n"
+              << std::flush;
     State state(instance);
     state.add(0);
     std::vector<int> subset{0};
+    std::cout << "building Z3 model\n" << std::flush;
     CompletionOracle oracle(instance, timeout_ms);
+    std::cout << "Z3 model ready\n" << std::flush;
     Metrics metrics;
     const auto started = std::chrono::steady_clock::now();
     search(instance, state, subset, crossover_depth, timeout_ms, max_calls,
            stabilizer, oracle, metrics);
     const double elapsed = std::chrono::duration<double>(
-        std::chrono::steady_clock::now() - started).count();
+                               std::chrono::steady_clock::now() - started)
+                               .count();
     std::cout << "nodes=" << metrics.nodes
               << " orbit_skipped=" << metrics.orbit_skipped
               << " oracle_calls=" << metrics.oracle_calls

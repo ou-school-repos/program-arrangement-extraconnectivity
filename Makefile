@@ -56,6 +56,8 @@ SRC_A10_BOOST = scripts/a10_5_boost.cpp
 BIN_A10_BOOST = a10_5_boost
 SRC_A10_SMT = scripts/a10_5_smt_oracle.cpp
 BIN_A10_SMT = a10_5_smt_oracle
+SRC_A10_HYBRID = scripts/a10_5_hybrid.cpp
+BIN_A10_HYBRID = a10_5_hybrid
 SRC_ROOT_STATE = scripts/root_state_validator.cpp
 BIN_ROOT_STATE = root_state_validator
 SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
@@ -154,6 +156,11 @@ $(BIN_A10_BOOST): $(SRC_A10_BOOST)
 	@$(call print_success,Build complete.)
 
 $(BIN_A10_SMT): $(SRC_A10_SMT)
+	@$(call print_info,Building $@ with Z3)
+	$(CXX) $(CXXFLAGS) $(shell pkg-config --cflags z3) -o $@ $< $(shell pkg-config --libs z3)
+	@$(call print_success,Build complete.)
+
+$(BIN_A10_HYBRID): $(SRC_A10_HYBRID)
 	@$(call print_info,Building $@ with Z3)
 	$(CXX) $(CXXFLAGS) $(shell pkg-config --cflags z3) -o $@ $< $(shell pkg-config --libs z3)
 	@$(call print_success,Build complete.)
