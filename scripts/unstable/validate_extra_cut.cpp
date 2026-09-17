@@ -118,60 +118,6 @@ void print_vertex(std::ostream &out, const std::vector<int> &vertex) {
     out << ')';
 }
 
-void print_bitset(std::ostream &out, const ArrangementGraph &graph,
-                  const std::vector<unsigned char> &mask) {
-    for (const auto &vertex : graph.valid_vertices)
-        out << (mask[graph.encode(vertex)] != 0 ? '1' : '0');
-    out << '\n';
-}
-
-bool adjacent(const std::vector<int> &left, const std::vector<int> &right) {
-    int differences = 0;
-    for (size_t i = 0; i < left.size(); ++i)
-        differences += left[i] != right[i];
-    return differences == 1;
-}
-
-void print_graph6(std::ostream &out,
-                  const std::vector<std::vector<int>> &vertices,
-                  bool complement) {
-    const size_t count = vertices.size();
-    if (count <= 62) {
-        out << static_cast<char>(count + 63);
-    } else if (count <= 258047) {
-        out << '~' << static_cast<char>((count >> 12 & 63) + 63)
-            << static_cast<char>((count >> 6 & 63) + 63)
-            << static_cast<char>((count & 63) + 63);
-    } else {
-        out << "~" << "~" << static_cast<char>((count >> 30 & 63) + 63)
-            << static_cast<char>((count >> 24 & 63) + 63)
-            << static_cast<char>((count >> 18 & 63) + 63)
-            << static_cast<char>((count >> 12 & 63) + 63)
-            << static_cast<char>((count >> 6 & 63) + 63)
-            << static_cast<char>((count & 63) + 63);
-    }
-
-    int bits = 0;
-    int value = 0;
-    auto emit_bit = [&](const bool bit) {
-        value = (value << 1) | (bit ? 1 : 0);
-        if (++bits == 6) {
-            out << static_cast<char>(value + 63);
-            bits = 0;
-            value = 0;
-        }
-    };
-    for (size_t i = 0; i < count; ++i) {
-        for (size_t j = i + 1; j < count; ++j) {
-            const bool edge = adjacent(vertices[i], vertices[j]);
-            emit_bit(complement ? !edge : edge);
-        }
-    }
-    if (bits != 0)
-        out << static_cast<char>((value << (6 - bits)) + 63);
-    out << '\n';
-}
-
 void dump_certificate(const std::string &path, const ArrangementGraph &graph,
                       const std::vector<std::vector<int>> &star,
                       const std::vector<int> &boundary_codes,
@@ -183,91 +129,46 @@ void dump_certificate(const std::string &path, const ArrangementGraph &graph,
         return;
     }
 
-    const int degree = graph.k * (graph.n - graph.k);
-    std::vector<unsigned char> star_mask(graph.status.size(), 0);
-    std::vector<unsigned char> cut_mask(graph.status.size(), 0);
-    for (const auto &vertex : star)
-        star_mask[graph.encode(vertex)] = 1;
-    for (const int code : boundary_codes)
-        cut_mask[code] = 1;
+    const int m = graph.n - graph.k;
+    const int degree = graph.k * m;
+    const int family_a = graph.k * (graph.k - 1) * m;
+    const int family_b = graph.k * (graph.k - 1) / 2 * m * (m - 1);
+    const int internal_edges = graph.k * (m + 1) * m / 2;
 
-    out << "# Exact certificate for the full radius-one Star cut\n";
-    out << "n=" << graph.n << " k=" << graph.k << " graph_degree=" << degree
-        << " g=" << g << " |S|=" << star.size()
-        << " |cut|=" << boundary_codes.size() << "\n";
-    out << "# Vertices are generated in lexicographic order and encoded as "
-           "base-n tuples.\n";
-    out << "# A cut witness is (star_index, changed_coordinate).\n";
-    out << "center=";
+    out << "# Compact exact certificate for the full radius-one Star cut\n";
+    out << "FORMAT=arrangement-star-cut-v1\n";
+    out << "PARAM n=" << graph.n << " k=" << graph.k << " m=" << m
+        << " degree=" << degree << " g=" << g << "\n";
+    out << "CENTER c=";
     print_vertex(out, star.front());
-    out << "\nstar_definition=S={center} union {c[i <- s]: 0<=i<k, k<=s<n}\n";
-
-    out << "STAR index vertex internal_degree boundary_incidence\n";
-    for (size_t index = 0; index < star.size(); ++index) {
-        int internal_degree = 0;
-        int boundary_incidence = 0;
-        for (const int neighbor : graph.encoded_neighbors(star[index])) {
-            if (star_mask[neighbor] != 0)
-                ++internal_degree;
-            if (cut_mask[neighbor] != 0)
-                ++boundary_incidence;
-        }
-        out << "STAR " << index << ' ';
-        print_vertex(out, star[index]);
-        out << ' ' << internal_degree << ' ' << boundary_incidence << '\n';
-    }
-
-    out << "CUT index vertex multiplicity witnesses\n";
-    for (size_t index = 0; index < boundary_codes.size(); ++index) {
-        const int code = boundary_codes[index];
-        const auto &vertex = graph.valid_vertices[graph.flat_index[code]];
-        std::vector<std::pair<int, int>> witnesses;
-        for (size_t star_index = 0; star_index < star.size(); ++star_index) {
-            for (int position = 0; position < graph.k; ++position) {
-                std::vector<int> changed = star[star_index];
-                for (int symbol = 0; symbol < graph.n; ++symbol) {
-                    if (symbol == changed[position])
-                        continue;
-                    changed[position] = symbol;
-                    if (graph.encode(changed) == code)
-                        witnesses.emplace_back(static_cast<int>(star_index),
-                                               position);
-                }
-            }
-        }
-        out << "CUT " << index << ' ';
-        print_vertex(out, vertex);
-        out << ' ' << witnesses.size() << " [";
-        for (size_t w = 0; w < witnesses.size(); ++w) {
-            if (w != 0)
-                out << ',';
-            out << witnesses[w].first << ':' << witnesses[w].second;
-        }
-        out << "]\n";
-    }
-
+    out << "\nFRESH_SYMBOLS F={k,...,n-1}\n";
+    out << "STAR_RULE S={c} union {c[i<-s]: i=0..k-1, s in F}\n";
+    out << "CUT_RULE C={w: w notin S and differs from some v in S in one "
+           "coordinate}\n";
+    out << "CUT_FAMILY A template=c[i<-s,j<-i] constraints=i!=j, s in F "
+           "multiplicity=1 count="
+        << family_a << "\n";
+    out << "CUT_FAMILY B template=c[i<-s,j<-t] constraints=i<j, s,t in F, s!=t "
+           "multiplicity=2 count="
+        << family_b << "\n";
+    out << "CHECK star_size=1+k*m value=" << star.size() << "\n";
+    out << "CHECK cut_size=A+B value=" << family_a + family_b
+        << " enumerated=" << boundary_codes.size() << "\n";
+    out << "CHECK internal_edges=k*choose(m+1,2) value=" << internal_edges
+        << "\n";
+    out << "CUT_INCIDENCE=A+2B value=" << family_a + 2 * family_b << "\n";
     out << "COMPONENT_SIZES";
     for (const int size : component_sizes)
         out << ' ' << size;
     out << "\n";
-    out << "STAR_BITSET_LEX_ORDER\n";
-    print_bitset(out, graph, star_mask);
-    out << "CUT_BITSET_LEX_ORDER\n";
-    print_bitset(out, graph, cut_mask);
-    std::vector<std::vector<int>> cut_vertices;
-    cut_vertices.reserve(boundary_codes.size());
-    std::transform(boundary_codes.begin(), boundary_codes.end(),
-                   std::back_inserter(cut_vertices), [&graph](const int code) {
-                       return graph.valid_vertices[graph.flat_index[code]];
-                   });
-    out << "STAR_GRAPH6\n";
-    print_graph6(out, star, false);
-    out << "STAR_COMPLEMENT_GRAPH6\n";
-    print_graph6(out, star, true);
-    out << "CUT_GRAPH6\n";
-    print_graph6(out, cut_vertices, false);
-    out << "CUT_COMPLEMENT_GRAPH6\n";
-    print_graph6(out, cut_vertices, true);
+    out << "STAR_ADJACENCY center=all leaves; leaf(i,s)=center plus "
+           "{c[i<-t]: t in F, t!=s}\n";
+    out << "STAR_DEGREE_SEQUENCE center^1=" << graph.k * m << " leaves^"
+        << graph.k * m << "=" << m << "\n";
+    out << "STAR_COMPLEMENT_DEGREE_SEQUENCE center^1=0 leaves^" << graph.k * m
+        << "=" << (graph.k - 1) * m << "\n";
+    out << "CUT_MULTIPLICITY_SEQUENCE 1^" << family_a << " 2^" << family_b
+        << "\n";
 
     out << "\n# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     out << "# BEGIN STDOUT ~~\n";
