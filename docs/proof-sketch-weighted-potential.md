@@ -483,19 +483,19 @@ prove that state enrichment is necessary.
 
 ### Coordinate-averaged squeeze is refuted (2026-09-16)
 
-The verifier now uses the exact symbol-slice children of each coordinate
-split and the exact sum of their potentials. For the full Star S_4 in A(8,4),
-with R=17 and m=4, each active coordinate has one child of size 13 and four
-singleton children. Therefore `sum child P = 4 P(13) = 460`, while
-`sum Delta-X + (m+1)D = 144 + 5*16 = 224`, and `k P(17) = 4*169 = 676`.
-The exact left side is 684, so the averaged inequality has slack -8,
-matching the four local gaps of -2.
+The verifier now uses the exact symbol-slice children of each coordinate split
+and the exact sum of their potentials. For the full Star S_4 in A(8,4), with
+R=17 and m=4, each active coordinate has one child of size 13 and four singleton
+children. Therefore `sum child P = 4 P(13) = 460`, while
+`sum Delta-X + (m+1)D = 144 + 5*16 = 224`, and `k P(17) = 4*169 = 676`. The
+exact left side is 684, so the averaged inequality has slack -8, matching the
+four local gaps of -2.
 
 The fracture identity and pairwise multiplicity envelope remain useful
 accounting statements, but their independent combination cannot prove the
-boundary target. The former superadditive proxy is deprecated: its failures
-came from confusing symbol slices with deleted-coordinate roots. No
-restricted theorem or Lean proof follows from this failed squeeze.
+boundary target. The former superadditive proxy is deprecated: its failures came
+from confusing symbol slices with deleted-coordinate roots. No restricted
+theorem or Lean proof follows from this failed squeeze.
 
 ### Separated collision slack fails on Star children (2026-09-16)
 
@@ -2363,3 +2363,28 @@ reflects the bound on $R$, not the truth of the unrestricted claim. The existing
 Cheng et al. computational results \cite{cheng2022extraconnectivity} do not
 supply this — they are limited to small g and do not address the all-subsets
 vertex-isoperimetric question.
+
+### Pair-peeling audit (2026-09-17)
+
+The native diagnostic was extended to test a two-vertex potential step. Define
+
+\[ Q_m(S)=X(S)+(m+1)D(S)=m|S|k-|\partial S|, \qquad G_m(R)=C(R)+mE(R). \]
+
+The tested condition is whether every set of size $R\ge2$ contains a pair $T$
+such that
+
+\[ Q_m(S)-Q_m(S\setminus T)\le G_m(R)-G_m(R-2). \]
+
+Exhaustive origin-pinned scans pass this condition for the tested cells $A(5,3)$
+through $R=6$, $A(6,3)$ through $R=5$, $A(7,3)$ through $R=5$, and $A(6,4)$
+through $R=4$. The corresponding defect and collision margins also pass over
+these scans. This is evidence for a finite-regime two-vertex recurrence, not a
+universal theorem: the unrestricted boundary inequality is already refuted by
+the $A(10,8)$ full-Star example at $R=17$. Hence pair peeling must eventually
+fail, or require an additional safe-range hypothesis. Tight pairs are not
+uniformly adjacent; a zero-margin nonadjacent pair occurs in the $A(6,3),R=5$
+scan.
+
+The next proof task is to characterize the safe range and derive the pair-drop
+formula by coordinate-agreement type, rather than promote the finite audit to an
+unrestricted induction.
