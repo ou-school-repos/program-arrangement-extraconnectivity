@@ -44,24 +44,46 @@ int main(int argc, char **argv) {
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
         std::cout << "usage: " << argv[0]
-                  << " [timeout-seconds] [partial-state-file]\n";
+                  << " [timeout-seconds] [partial-state-file]\n"
+                  << "       " << argv[0]
+                  << " [--timeout=SECONDS] [--partial=FILE]\n";
         return 0;
     }
 
     int timeout_seconds = 600;
-    try {
-        if (argc > 1)
-            timeout_seconds = std::stoi(argv[1]);
-    } catch (const std::exception &) {
-        std::cerr << "usage: " << argv[0]
-                  << " [timeout-seconds] [partial-state-file]\n";
-        return 2;
+    std::string partial_path;
+    for (int argument_index = 1; argument_index < argc; ++argument_index) {
+        const std::string argument = argv[argument_index];
+        const std::string timeout_prefix = "--timeout=";
+        const std::string partial_prefix = "--partial=";
+        try {
+            if (argument.rfind(timeout_prefix, 0) == 0) {
+                timeout_seconds =
+                    std::stoi(argument.substr(timeout_prefix.size()));
+            } else if (argument.rfind(partial_prefix, 0) == 0) {
+                partial_path = argument.substr(partial_prefix.size());
+            } else {
+                try {
+                    timeout_seconds = std::stoi(argument);
+                } catch (const std::invalid_argument &) {
+                    if (partial_path.empty())
+                        partial_path = argument;
+                    else
+                        throw;
+                }
+            }
+        } catch (const std::exception &) {
+            std::cerr << "usage: " << argv[0]
+                      << " [timeout-seconds] [partial-state-file]\n"
+                      << "       " << argv[0]
+                      << " [--timeout=SECONDS] [--partial=FILE]\n";
+            return 2;
+        }
     }
     if (timeout_seconds <= 0) {
         std::cerr << "timeout must be positive\n";
         return 2;
     }
-    const std::string partial_path = argc > 2 ? argv[2] : "";
 
     std::vector<Vertex> vertices;
     Vertex vertex{};
