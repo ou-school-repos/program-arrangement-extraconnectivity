@@ -1,5 +1,5 @@
 // Exact slice-transfer prototype for A(n,k).
-// Usage: ./transfer_dp_prototype [n] [k] [max_R]
+// Usage: ./profile_dp_slice [n] [k] [max_R]
 
 #include "arrangement_core.hpp"
 

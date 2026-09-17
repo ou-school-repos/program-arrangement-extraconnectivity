@@ -1,5 +1,5 @@
 // Exact unified-envelope transfer prototype.
-// Usage: ./transfer_dp_window [n] [k] [max_R] [max_states] [--no-canonical]
+// Usage: ./profile_dp_window [n] [k] [max_R] [max_states] [--no-canonical]
 // max_states is optional; omitted or zero means unlimited.
 
 #include "arrangement_core.hpp"

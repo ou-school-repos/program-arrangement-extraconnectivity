@@ -59,17 +59,28 @@ BIN_A10_SMT = a10_5_smt_oracle
 SRC_ROOT_STATE = scripts/root_state_validator.cpp
 BIN_ROOT_STATE = root_state_validator
 SRC_PROFILE_DP = scripts/profile_dp_subset.cpp
-BIN_PROFILE_DP = a10_5_profile_dp
+BIN_PROFILE_DP = profile_dp_subset
 SRC_EMPIRICAL_GAMMA = scripts/empirical_gamma_bound.cpp
 BIN_EMPIRICAL_GAMMA = empirical_gamma_bound
 SRC_TRANSFER = scripts/profile_dp_slice.cpp
-BIN_TRANSFER = transfer_dp_prototype
+BIN_TRANSFER = profile_dp_slice
 SRC_FIBER = scripts/profile_dp_order.cpp
-BIN_FIBER = fiber_ordering
+BIN_FIBER = profile_dp_order
 SRC_WINDOW = scripts/profile_dp_window.cpp
-BIN_WINDOW = transfer_dp_window
+BIN_WINDOW = profile_dp_window
 SRC_ANNEAL = scripts/simulated_annealing_hunt.cpp
 BIN_ANNEAL = simulated_annealing_hunt
+
+# Every top-level executable produced by this Makefile.  Keep this list
+# explicit: several source names intentionally map to different binary names
+# and some targets require optional external dependencies.
+ALL_BINS = $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) \
+	$(BIN_UNIQUENESS) $(BIN_SWEEP_DEFICIT) $(BIN_GHOSTS) $(BIN_TRIPLES) \
+	$(BIN_SINGLE) $(BIN_PROFILE_TELESCOPE) $(BIN_A10_RECON) $(BIN_A10_HUNT) \
+	$(BIN_A10_BOOST) $(BIN_A10_SMT) $(BIN_ROOT_STATE) $(BIN_PROFILE_DP) \
+	$(BIN_EMPIRICAL_GAMMA) $(BIN_TRANSFER) $(BIN_FIBER) $(BIN_WINDOW) \
+	$(BIN_ANNEAL)
+LEGACY_PROFILE_BINS = a10_5_profile_dp transfer_dp_prototype fiber_ordering transfer_dp_window
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
@@ -474,8 +485,16 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BIN_OPT) $(BIN_PRED) $(BIN_UNIVERSAL) $(BIN_SLACK) $(BIN_UNIQUENESS) $(BIN_GHOSTS) $(BIN_TRIPLES) $(BIN_SINGLE) $(BIN_A10_RECON) $(BIN_A10_HUNT) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(ALL_BINS) $(LEGACY_PROFILE_BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
+
+# .PHONY: list-unknown-binaries
+# list-unknown-binaries:	##H @General List executable top-level files not managed by Make
+# 	@find . -maxdepth 1 -type f -executable -printf '%f\n' | \
+# 		sort | while read -r file; do \
+# 			case " $(ALL_BINS) " in *" $$file "*) ;; \
+# 			*) echo "$$file" ;; esac; \
+# 		done
 
 .PHONY: vars
 vars:	##H @General Debug: Print project variables

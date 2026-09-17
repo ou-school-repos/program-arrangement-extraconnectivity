@@ -1,5 +1,5 @@
 // Greedy fiber ordering for arrangement-graph frontier measurement.
-// Usage: ./fiber_ordering [n] [k]
+// Usage: ./profile_dp_order [n] [k]
 
 #include "arrangement_core.hpp"
 
