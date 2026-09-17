@@ -20,14 +20,14 @@ variable {n k : ℕ}
 
 /-- Sum of internal vertex-pairs lying in a common coordinate root. -/
 def fiber_pair_count (V : Finset (ArrVertex n k)) : ℕ :=
-  ∑ p : Fin k, ∑ r in V.image (fun v => drop_pos v p),
-    Nat.choose ((V.filter (fun v => drop_pos v p = r)).card) 2
+  ∑ p : Fin k, (∑ r in V.image (fun v => drop_pos v p),
+    Nat.choose ((V.filter (fun v => drop_pos v p = r)).card) 2)
 
 private def v01 : ArrVertex 4 2 :=
-  ⟨![0, 1], by decide⟩
+  ⟨fun i => Fin.cases 0 (fun _ => 1) i, by decide⟩
 
 private def v02 : ArrVertex 4 2 :=
-  ⟨![0, 2], by decide⟩
+  ⟨fun i => Fin.cases 0 (fun _ => 2) i, by decide⟩
 
 private def adjacent_pair : Finset (ArrVertex 4 2) := {v01, v02}
 
