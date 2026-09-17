@@ -1689,13 +1689,13 @@ reduces to this) is open and is not addressed anywhere in this file; see
   hypercube embedding conditions.
 -/
 theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k)
+    (h_lower : RestrictedLowerBound R n k)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
-  exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower R n k h_cond V' hR hnk⟩
+  exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower h_cond V' hR hnk⟩
 
 /--
   COROLLARY: Globally Optimal Growth Strategy.
@@ -1711,7 +1711,7 @@ theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_
 -/
 theorem globally_optimal_growth_strategy_of_cross
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k)
+    (h_lower : RestrictedLowerBound R n k)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
