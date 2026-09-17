@@ -14,12 +14,94 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 struct Metrics {
     int boundary;
     int incidences;
     int collisions;
     int active_roots;
 };
+
+struct IntegerRange {
+    int first;
+    int last;
+};
+
+IntegerRange parse_range(const std::string &text) {
+    const std::size_t separator = text.find('-');
+    if (separator == std::string::npos) {
+        const int value = std::stoi(text);
+        return {value, value};
+    }
+    const int first = std::stoi(text.substr(0, separator));
+    const int last = std::stoi(text.substr(separator + 1));
+    if (first > last)
+        throw std::invalid_argument("descending range");
+    return {first, last};
+}
+
+boost::multiprecision::cpp_int vertex_count(int n, int k) {
+    boost::multiprecision::cpp_int count = 1;
+    for (int offset = 0; offset < k; ++offset)
+        count *= n - offset;
+    return count;
+}
+
+boost::multiprecision::cpp_int total_nodes(int n, int k, int target_size) {
+    const boost::multiprecision::cpp_int vertices = vertex_count(n, k);
+    boost::multiprecision::cpp_int choose = 1;
+    boost::multiprecision::cpp_int total = 0;
+    for (int depth = 1; depth <= target_size; ++depth) {
+        choose *= vertices - depth + 1;
+        choose /= depth;
+        total += choose;
+    }
+    return total;
+}
+
+int precompute_ranges(int argc, char **argv) {
+    if (argc != 5) {
+        std::cerr << "usage: " << argv[0]
+                  << " --pre n[-n] k[-k] target[-target]\n";
+        return 2;
+    }
+    try {
+        const IntegerRange n_range = parse_range(argv[2]);
+        const IntegerRange k_range = parse_range(argv[3]);
+        const IntegerRange target_range = parse_range(argv[4]);
+        for (int n = n_range.first; n <= n_range.last; ++n) {
+            for (int k = k_range.first; k <= k_range.last; ++k) {
+                for (int target = target_range.first;
+                     target <= target_range.last; ++target) {
+                    if (n < 1 || k < 1 || k > n || target < 1) {
+                        std::cout << "A(" << n << ',' << k << ") R=" << target
+                                  << ": invalid\n";
+                        continue;
+                    }
+                    const auto vertices = vertex_count(n, k);
+                    if (vertices < target) {
+                        std::cout << "A(" << n << ',' << k << ") R=" << target
+                                  << ": invalid (target exceeds " << vertices
+                                  << " vertices)\n";
+                        continue;
+                    }
+                    const auto leaves = total_nodes(n, k, target) -
+                                        total_nodes(n, k, target - 1);
+                    std::cout
+                        << "A(" << n << ',' << k << ") R=" << target
+                        << ": vertices=" << vertices << " leaves=" << leaves
+                        << " total-nodes=" << total_nodes(n, k, target) << '\n';
+                }
+            }
+        }
+    } catch (const std::exception &) {
+        std::cerr << "usage: " << argv[0]
+                  << " --pre n[-n] k[-k] target[-target]\n";
+        return 2;
+    }
+    return 0;
+}
 
 struct Instance {
     int n;
@@ -316,21 +398,22 @@ void random_test(const Instance &instance) {
 }
 
 struct SearchProgress {
+    static constexpr std::uint64_t kReportInterval = 10'000'000;
     std::chrono::steady_clock::time_point started =
         std::chrono::steady_clock::now();
-    std::uint64_t next_report = 1'000'000;
+    std::uint64_t next_report = kReportInterval;
 
     void report(std::uint64_t nodes, int depth, int best) {
         if (nodes < next_report)
             return;
         const double elapsed = std::chrono::duration<double>(
-                                    std::chrono::steady_clock::now() - started)
-                                    .count();
+                                   std::chrono::steady_clock::now() - started)
+                                   .count();
         const double rate = elapsed > 0.0 ? nodes / elapsed : 0.0;
         std::cout << "  progress nodes=" << nodes << " depth=" << depth
                   << " best=" << best << " rate=" << rate << "/s\n"
                   << std::flush;
-        next_report += 1'000'000;
+        next_report += kReportInterval;
     }
 };
 
@@ -440,6 +523,8 @@ void canonicalization_test() {
 }
 
 int main(int argc, char **argv) {
+    if (argc > 1 && std::string(argv[1]) == "--pre")
+        return precompute_ranges(argc, argv);
     if (argc > 1 &&
         (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help")) {
         std::cout << "usage: " << argv[0] << " [n] [k] [target-size]\n"
