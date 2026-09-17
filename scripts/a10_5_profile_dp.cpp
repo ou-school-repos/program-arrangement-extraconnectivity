@@ -18,12 +18,15 @@
 #include <unordered_set>
 #include <vector>
 
+#include "arrangement_core.hpp"
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
 namespace {
 
+using namespace arrangement;
 using boost::multiprecision::cpp_int;
 
 cpp_int falling_factorial(const int n, const int k) {
@@ -45,6 +48,7 @@ cpp_int raw_tree_nodes(const int vertices, const int target,
     return total;
 }
 
+#if 0 // Shared geometry is provided by arrangement_core.hpp.
 struct Instance {
     int n;
     int k;
@@ -269,6 +273,7 @@ bool is_isomorphic(const std::vector<int> &subset,
 std::uint64_t bit_mask(const int bit) { return std::uint64_t{1} << (bit % 64); }
 
 int word_index(const int bit) { return bit / 64; }
+#endif
 
 struct ProfileState {
     const Instance &instance;
