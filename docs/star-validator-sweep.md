@@ -65,11 +65,11 @@ Legend:
 |        8 |  /  |  /  |  o  |  o  |  o  |  o  |  o  |  ~  |  ~  |  ~  |
 |        9 |  /  |  /  |  o  |  o  |  o  |  x  |  o  |  o  |  ~  |  ~  |
 |       10 |  /  |  /  |  o  |  o  |  o  |  x  |  x  |  x  |  o  |  ~  |
-|       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  ?  |  ?  |
+|       11 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  x  |  ?  |
 |       12 |  /  |  /  |  o  |  o  |  o  |  X  |  x  |  x  |  ?  |  ?  |
 |       13 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  x  |  ?  |  ?  |
 |       14 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  X  |  ?  |  ?  |
-|       15 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ?  |  ?  |  ?  |
+|       15 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  X  |  ?  |  ?  |
 |       16 |  /  |  /  |  o  |  o  |  o  |  X  |  X  |  ?  |  ?  |  ?  |
 |       17 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ?  |  ?  |  ?  |
 |       18 |  /  |  /  |  o  |  o  |  o  |  x  |  X  |  ?  |  ?  |  ?  |
@@ -80,12 +80,16 @@ The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
 no non-Star topology gives a smaller hard counterexample.
 
-The complete `A(14, 1..8)` row is now confirmed. The feasible `A(15, 1..7)`,
-`A(16, 1..7)`, `A(17, 1..7)`, and `A(18, 1..7)` cells are also confirmed; their
-`k=8` cells are marked `?` because the flat-space guard rejected them. The
-`A(19,1..7)` and `A(20,1..7)` rows are now confirmed, with `k=8..10` likewise
-rejected by the guard. The remaining `.` cells have not been run; they are not
-negative results.
+The `A(11,9)` case is now deeply confirmed as a soft counterexample after
+raising the flat-space guard. The complete `A(14, 1..8)` row is now confirmed.
+The feasible `A(15, 1..7)`, `A(16, 1..7)`, `A(17, 1..7)`, and `A(18, 1..7)`
+cells are also confirmed; their `k=8` cells are marked `?` because the
+flat-space guard rejected them. The `A(19,1..7)` and `A(20,1..7)` rows are now
+confirmed, with `k=8..10` likewise rejected by the guard. The remaining `.`
+cells have not been run; they are not negative results.
+
+The largest deeply certified hard counterexample so far is `A(15,8)`, with
+`R=57`, `g=56`, and `|N(S)|=1568` (~2 minutes to compute).
 
 ## Representative hard counterexamples
 
@@ -106,6 +110,7 @@ negative results.
 | `A(18,7)` |  78 |  77 |          2772 |             3200 | 428 | `7,(7,11)`  |
 | `A(19,7)` |  85 |  84 |          3276 |             3783 | 507 | `7,(7,12)`  |
 | `A(20,7)` |  92 |  91 |          3822 |             4356 | 534 | `7,(7,13)`  |
+| `A(15,8)` |  57 |  56 |          1568 |             1903 | 335 | `6,(8,7)`   |
 
 ## New result: `A(19,7)`
 

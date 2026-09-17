@@ -32,7 +32,8 @@ struct ArrangementGraph {
         status.assign(capacity, 255);
         place.assign(k, 1);
         for (int position = k - 2; position >= 0; --position)
-            place[position] = place[position + 1] * static_cast<std::uint64_t>(n);
+            place[position] =
+                place[position + 1] * static_cast<std::uint64_t>(n);
 
         std::vector<int> prefix;
         std::vector<bool> used(n, false);
@@ -357,8 +358,7 @@ int main(int argc, char **argv) {
 
     // A(14,8) needs 14^8 = 1,475,789,056 one-byte status slots.  Keep a
     // finite guard, but do not reject that useful boundary case outright.
-    constexpr std::uint64_t max_code_space =
-        std::numeric_limits<std::uint32_t>::max();
+    constexpr std::uint64_t max_code_space = 16ULL * 1024 * 1024 * 1024;
     bool code_space_overflow = false;
     const std::uint64_t code_space = flat_code_space(n, k, code_space_overflow);
     if (code_space_overflow || code_space > max_code_space) {
