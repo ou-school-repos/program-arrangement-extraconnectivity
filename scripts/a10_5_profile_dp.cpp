@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <iostream>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -697,9 +698,33 @@ int main(int argc, char **argv) {
     std::size_t state_count = 0;
     for (const auto &[signature, keys] : seen)
         state_count += keys.size();
+    std::ostringstream coverage_stream;
+    coverage_stream << std::fixed << std::setprecision(12) << coverage;
+    std::ostringstream reduction_stream;
+    reduction_stream << std::fixed << std::setprecision(12) << reduction;
+    const std::string coverage_text = coverage_stream.str();
+    const std::string reduction_text = reduction_stream.str();
+    const auto integer_digits = [](const std::string &text) {
+        const std::size_t dot = text.find('.');
+        return dot == std::string::npos ? text.size() : dot;
+    };
+    const std::string coverage_prefix = "raw ordered-transition coverage=";
+    const std::string reduction_prefix = "raw ordered-transition reduction=";
+    const std::size_t decimal_column =
+        std::max(coverage_prefix.size() + integer_digits(coverage_text),
+                 reduction_prefix.size() + integer_digits(reduction_text)) +
+        1;
     std::cout << state_count << '\n'
-              << "raw ordered-transition coverage=  " << coverage << "%\n"
-              << "raw ordered-transition reduction=" << reduction << "%\n";
+              << coverage_prefix
+              << std::string(decimal_column - coverage_prefix.size() -
+                                 integer_digits(coverage_text),
+                             ' ')
+              << coverage_text << "%\n"
+              << reduction_prefix
+              << std::string(decimal_column - reduction_prefix.size() -
+                                 integer_digits(reduction_text),
+                             ' ')
+              << reduction_text << "%\n";
     std::cout << "bucket misses=" << stats.bucket_misses
               << " iso-matches=" << stats.bucket_iso_matches
               << " iso-misses=" << stats.bucket_iso_misses << '\n'
