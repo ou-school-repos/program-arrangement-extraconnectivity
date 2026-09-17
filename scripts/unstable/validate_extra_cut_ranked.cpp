@@ -90,6 +90,11 @@ int main(int argc, char **argv) {
     }
 
     const PackedArrangementGraph graph(n, k);
+    if (graph.valid_count > std::numeric_limits<std::uint32_t>::max()) {
+        std::cerr
+            << "Error: rank frontier requires fewer than 2^32 vertices.\n";
+        return 1;
+    }
     const FullStarParameters parameters = full_star_parameters(n, k);
     std::cout << "Building rank-indexed A(" << n << ',' << k << ")...\n"
               << "Total valid vertices: " << graph.valid_count << "\n"
@@ -148,11 +153,13 @@ int main(int argc, char **argv) {
         if (visited.test(start_rank))
             return;
         std::uint64_t size = 0;
-        std::vector<std::uint64_t> frontier{start};
+        std::vector<std::uint32_t> frontier{
+            static_cast<std::uint32_t>(start_rank)};
         visited.set(start_rank);
         while (!frontier.empty()) {
-            std::vector<std::uint64_t> next;
-            for (const std::uint64_t current : frontier) {
+            std::vector<std::uint32_t> next;
+            for (const std::uint32_t current_rank : frontier) {
+                const std::uint64_t current = graph.decode_rank(current_rank);
                 ++size;
                 ++discovered_survivors;
                 if (discovered_survivors % progress_interval == 0)
@@ -162,7 +169,7 @@ int main(int argc, char **argv) {
                         const std::size_t rank = graph.rank_code(neighbor);
                         if (!visited.test(rank)) {
                             visited.set(rank);
-                            next.push_back(neighbor);
+                            next.push_back(static_cast<std::uint32_t>(rank));
                         }
                     });
             }

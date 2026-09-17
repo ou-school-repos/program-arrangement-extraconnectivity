@@ -2,6 +2,7 @@
 #define ARRANGEMENT_UTILS_HPP
 
 #include <cstdint>
+#include <limits>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -45,6 +46,26 @@ struct PackedArrangementGraph {
             used |= std::uint64_t{1} << symbol;
         }
         return rank;
+    }
+
+    std::uint64_t decode_rank(std::size_t rank) const {
+        std::uint64_t code = 0;
+        const std::uint64_t all_symbols =
+            n == 64 ? std::numeric_limits<std::uint64_t>::max()
+                    : (std::uint64_t{1} << n) - 1;
+        std::uint64_t unused = all_symbols;
+        for (int position = 0; position < k; ++position) {
+            const std::size_t weight = rank_weight[position];
+            const std::size_t ordinal = rank / weight;
+            rank %= weight;
+            std::uint64_t candidates = unused;
+            for (std::size_t count = 0; count < ordinal; ++count)
+                candidates &= candidates - 1;
+            const int symbol = __builtin_ctzll(candidates);
+            code |= static_cast<std::uint64_t>(symbol) << (6 * position);
+            unused &= ~(std::uint64_t{1} << symbol);
+        }
+        return code;
     }
 
     template <typename Function>
