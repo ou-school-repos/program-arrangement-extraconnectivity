@@ -131,7 +131,7 @@ Command:
 ./bin/validate_extra_cut 16 8
 ```
 
-Output summary:
+Output summary, (commit `5c5c68e0fcaac8318e15e4e77c31d75c2e29ab16`):
 
 ```shell
 $ time ./bin/validate_extra_cut 16 8
@@ -158,15 +158,14 @@ user    3m55.815s
 sys     0m2.316s
 ```
 
-The comparison gap is `3783 - 3276 = 507`. Therefore the Star gives
+The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives
 
 ```text
-kappa_84(A(19,7)) <= 3276
+kappa_64(A(16,8)) <= 2016
 ```
 
 and refutes the embedding-gated Hamming lower-bound hypothesis at
-`(R,n,k) = (85,19,7)`. It does not establish equality; a matching lower-bound
-proof is still required.
+`(R,n,k) = (65,16,8)`. This isn't necessarily the lowest possible bound.
 
 ## Fixed-`k` pattern
 
