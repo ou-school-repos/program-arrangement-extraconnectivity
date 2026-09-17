@@ -10,6 +10,8 @@
 //   D <= E(R)
 //   X + D <= C(R) + (n-k)(E(R)-D).
 //   Q(S)-Q(S-v) <= 1+ceil(log2 R)+(n-k-1) popcount(R-1).
+//   Q(S)-Q(S-T) <= G(R)-G(R-|T|), for |T|=2.
+//   Q(S)-Q(S-v) <= 1+ceil(log2 R)+(n-k-1) popcount(R-1).
 //
 // This is a finite adversarial search, not a universal proof.
 
@@ -80,6 +82,7 @@ struct Search {
     Best collision_slack;
     Best boundary_best;
     Best peeling_margin;
+    Best pair_peeling_margin;
 
     Search(const Instance &instance, int size, Int limit)
         : graph(instance), target(size), node_limit(limit),
@@ -115,7 +118,9 @@ struct Search {
             if (--root_count[position][root] != 0)
                 continue;
             for (const int member : graph.lines[position][root]) {
-                if (--incidence[member] == 0 && !selected[member])
+                --incidence[member];
+                if (member != vertex && incidence[member] == 0 &&
+                    !selected[member])
                     --boundary_size;
             }
         }
@@ -174,6 +179,26 @@ struct Search {
             add(vertex, false);
         }
         peeling_margin.update(threshold - best_drop, chosen);
+
+        Int best_pair_margin = std::numeric_limits<Int>::min();
+        if (r >= 3) {
+            const Int pair_budget = c_constant(target) + m * e_seq(target) -
+                                    c_constant(target - 2) -
+                                    m * e_seq(target - 2);
+            for (std::size_t i = 0; i < chosen.size(); ++i) {
+                remove(chosen[i], false);
+                for (std::size_t j = i + 1; j < chosen.size(); ++j) {
+                    remove(chosen[j], false);
+                    const Int q_after = m * (r - 2) * graph.k - boundary_size;
+                    const Int drop = q_before - q_after;
+                    best_pair_margin =
+                        std::max(best_pair_margin, pair_budget - drop);
+                    add(chosen[j], false);
+                }
+                add(chosen[i], false);
+            }
+        }
+        pair_peeling_margin.update(best_pair_margin, chosen);
 
         if (!reported_counterexample &&
             (defect_margin < 0 || collision_margin < 0 ||
@@ -263,15 +288,18 @@ int main(int argc, char **argv) {
     print_result("min_collision_margin", search.collision_slack);
     print_result("min_boundary", search.boundary_best);
     print_result("min_peeling_margin", search.peeling_margin);
+    print_result("min_pair_peeling_margin", search.pair_peeling_margin);
     std::cout << "defect_lemma_on_scan="
               << (search.defect_slack.value >= 0 ? "yes" : "no") << '\n';
     std::cout << "collision_lemma_on_scan="
               << (search.collision_slack.value >= 0 ? "yes" : "no") << '\n';
     std::cout << "peeling_lemma_on_scan="
               << (search.peeling_margin.value >= 0 ? "yes" : "no") << '\n';
+    std::cout << "pair_peeling_lemma_on_scan="
+              << (search.pair_peeling_margin.value >= 0 ? "yes" : "no") << '\n';
     return search.defect_slack.value >= 0 &&
                    search.collision_slack.value >= 0 &&
-                   search.peeling_margin.value >= 0
+                   search.pair_peeling_margin.value >= 0
                ? 0
                : 1;
 }
