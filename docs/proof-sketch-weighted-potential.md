@@ -2404,16 +2404,16 @@ Consequently,
 
 \[ Q_m(S_j)=X(S_j)+(m+1)D(S_j) =m(m-1)\binom{j}{2}+jm(m+1). \]
 
-The (k)-dependence disappears after parameterizing the Star by (m=n-k) and (j);
-(k) only converts the branch count into the volume (R). The formula-only sweep
+The $k$-dependence disappears after parameterizing the Star by $m=n-k$ and $j$;
+$k$ only converts the branch count into the volume $R$. The formula-only sweep
 recorded in `docs/profiling.md` gives the following first failures:
 
-| (m) | first negative pair margin | first negative boundary slack |
+| $m$ | first negative pair margin | first negative boundary slack |
 | --: | -------------------------: | ----------------------------: |
-|   2 |                (j=7, R=15) |                   (j=8, R=17) |
-|   3 |                (j=6, R=19) |                   (j=6, R=19) |
-|   4 |                (j=4, R=17) |                   (j=4, R=17) |
-|   5 |                (j=4, R=21) |                   (j=6, R=31) |
+|   2 |              $j=7$, $R=15$ |                 $j=8$, $R=17$ |
+|   3 |              $j=6$, $R=19$ |                 $j=6$, $R=19$ |
+|   4 |              $j=4$, $R=17$ |                 $j=4$, $R=17$ |
+|   5 |              $j=4$, $R=21$ |                 $j=6$, $R=31$ |
 
 This table is an obstruction map, not a proof that these are universal
 thresholds for arbitrary subsets. It proves that unrestricted pair peeling is
@@ -2422,14 +2422,12 @@ shape/range hypothesis or use a potential that accounts for Star collisions.
 
 The asymptotic mechanism is nevertheless clear. Since
 
-\[ E(R)=\tfrac12R\log*2R+O(R),\qquad \sum*{i=1}^{R-1}\lceil\log_2(i+1)\rceil
-=R\log_2R+O(R), \]
+$E(R)=R\log_2(R)/2+O(R)$ and the logarithmic sum in $C(R)$ is
+$R\log_2(R)+O(R)$, we have
 
-we have
+$G_m(R)=(m+1)R\log_2(R)/2+O_m(R)$,
 
-\[ G_m(R)=\frac{m+1}{2}R\log_2R+O_m(R), \]
-
-whereas (Q_m(S_j)=\frac{m-1}{2m}R^2+O_m(R)). Thus every fixed (m\ge2) admits
+whereas $Q_m(S_j)=(m-1)R^2/(2m)+O_m(R)$. Thus every fixed $m\ge2$ admits
 sufficiently large Star obstructions. The remaining mathematical task is not to
 extend the unrestricted surrogate, but to prove a restricted geometric lemma and
 state its exact domain honestly.
@@ -2439,3 +2437,38 @@ tested ranges, but the manuscript should retain the distinction between that
 finite audit and a proof of the digit-sum inequalities. The capstone is reached
 only after those inequalities and the restricted geometric boundary lemma have
 both been established.
+
+### Safe-region formulation (conditional)
+
+Let $p_m(j)$ be the maximum pair-peeling margin over the four pair orbits of the
+radius-one Star with $j$ active branches. Define the Star obstruction index
+
+$$
+j_{\mathrm{Star}}(m)=\min\{j\ge 1:p_m(j)<0\},
+\qquad R_{\mathrm{Star}}(m)=1+mj_{\mathrm{Star}}(m).
+$$
+
+This is an exactly computable obstruction boundary for the Star family. It is
+not a universal safe-region theorem: a non-Star subset could violate the
+potential inequality earlier. The desired restricted lemma would be
+
+$$
+|S|<R_{\mathrm{safe}}(m)\Longrightarrow Q_m(S)\le G_m(|S|),
+$$
+
+with $R_{\mathrm{safe}}(m)\le R_{\mathrm{Star}}(m)$, plus a proof that every
+subset in this range admits a legal pair with the required potential drop.
+Establishing equality between these thresholds requires a separate compression
+or extremal argument; the current computations do not establish it.
+
+The four-orbit decomposition is essential. The pair types are center--leaf, two
+leaves in one branch, and two leaves in different branches with either the same
+or different unused symbols. Removing a pair generally produces a perturbed Star
+rather than $S_{j-2}$, so the recurrence cannot be reduced to one difference of
+the closed form $Q_m(S_j)$. The next algebraic step is to write the four reduced
+configurations explicitly and compare their potential drops with the digit-sum
+budget.
+
+The algebraic subadditivity audit remains finite computational evidence until
+the corresponding digit-sum inequalities are proved. Likewise, the restricted
+geometric lemma remains the central open step of the capstone.
