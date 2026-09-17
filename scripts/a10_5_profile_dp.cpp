@@ -211,6 +211,60 @@ std::vector<int> canonical_key(const std::vector<int> &subset,
     return best;
 }
 
+bool is_isomorphic(const std::vector<int> &subset,
+                   const std::vector<int> &target, const Instance &instance,
+                   const std::vector<Automorphism> &stabilizer) {
+    if (target.size() == 1 && target[0] == -1)
+        return subset.size() == 1;
+    if (target.size() == 2 && target[0] == -2 && subset.size() == 2) {
+        int matching_coordinates = 0;
+        for (int position = 0; position < instance.k; ++position)
+            matching_coordinates +=
+                instance.vertices[subset[0]][position] ==
+                        instance.vertices[subset[1]][position]
+                    ? 1
+                    : 0;
+        return target[1] == matching_coordinates;
+    }
+    return std::any_of(subset.begin(), subset.end(), [&](const int anchor) {
+        std::vector<int> shift(instance.n);
+        std::vector<bool> used(instance.n, false);
+        for (int position = 0; position < instance.k; ++position) {
+            shift[instance.vertices[anchor][position]] = position;
+            used[instance.vertices[anchor][position]] = true;
+        }
+        int next_symbol = instance.k;
+        for (int symbol = 0; symbol < instance.n; ++symbol) {
+            if (!used[symbol])
+                shift[symbol] = next_symbol++;
+        }
+
+        std::vector<int> shifted;
+        shifted.reserve(subset.size());
+        for (const int vertex : subset) {
+            int code = 0;
+            for (int position = 0; position < instance.k; ++position)
+                code = instance.n * code +
+                       shift[instance.vertices[vertex][position]];
+            shifted.push_back(instance.index.at(code));
+        }
+
+        return std::any_of(stabilizer.begin(), stabilizer.end(),
+                           [&](const Automorphism &automorphism) {
+                               std::vector<int> mapped;
+                               mapped.reserve(shifted.size());
+                               std::transform(shifted.begin(), shifted.end(),
+                                              std::back_inserter(mapped),
+                                              [&](const int vertex) {
+                                                  return automorphism.apply(
+                                                      vertex, instance);
+                                              });
+                               std::sort(mapped.begin(), mapped.end());
+                               return mapped == target;
+                           });
+    });
+}
+
 std::uint64_t bit_mask(const int bit) { return std::uint64_t{1} << (bit % 64); }
 
 int word_index(const int bit) { return bit / 64; }
@@ -225,6 +279,18 @@ struct ProfileState {
     int selected_count = 0;
     int boundary_size = 0;
     int total_incidences = 0;
+
+    struct Invariant {
+        int boundary = 0;
+        int incidences = 0;
+        std::vector<std::vector<int>> root_signature;
+
+        bool operator==(const Invariant &other) const {
+            return boundary == other.boundary &&
+                   incidences == other.incidences &&
+                   root_signature == other.root_signature;
+        }
+    };
 
     explicit ProfileState(const Instance &graph)
         : instance(graph), selected((graph.vertices.size() + 63) / 64, 0),
@@ -321,6 +387,21 @@ struct ProfileState {
                          coordinate_max, 0});
     }
 
+    Invariant invariant() const {
+        Invariant result{boundary_size, total_incidences, {}};
+        result.root_signature.reserve(instance.k);
+        for (const auto &roots : root_count) {
+            std::vector<int> signature;
+            std::copy_if(roots.begin(), roots.end(),
+                         std::back_inserter(signature),
+                         [](const int count) { return count > 0; });
+            std::sort(signature.begin(), signature.end());
+            result.root_signature.push_back(std::move(signature));
+        }
+        std::sort(result.root_signature.begin(), result.root_signature.end());
+        return result;
+    }
+
     std::vector<std::uint64_t> exact_key() const {
         std::vector<std::uint64_t> key = selected;
         for (const auto &roots : active_roots)
@@ -330,12 +411,19 @@ struct ProfileState {
     }
 };
 
-struct VectorHash {
-    std::size_t operator()(const std::vector<int> &key) const {
+struct InvariantHash {
+    std::size_t operator()(const ProfileState::Invariant &key) const {
         std::size_t hash = 1469598103934665603ULL;
-        for (const int value : key) {
+        const auto combine = [&hash](const int value) {
             hash ^= static_cast<std::size_t>(value);
             hash *= 1099511628211ULL;
+        };
+        combine(key.boundary);
+        combine(key.incidences);
+        for (const auto &signature : key.root_signature) {
+            for (const int value : signature)
+                combine(value);
+            combine(-1);
         }
         return hash;
     }
@@ -374,20 +462,31 @@ struct ProgressReporter {
     }
 };
 
-void search(const Instance &instance, ProfileState &state,
-            std::vector<int> &chosen, const int target, int &best,
-            std::unordered_set<std::vector<int>, VectorHash> &seen,
-            SearchStats &stats, const std::vector<Automorphism> &stabilizer,
-            ProgressReporter *progress) {
+void search(
+    const Instance &instance, ProfileState &state, std::vector<int> &chosen,
+    const int target, int &best,
+    std::unordered_map<ProfileState::Invariant, std::vector<std::vector<int>>,
+                       InvariantHash> &seen,
+    SearchStats &stats, const std::vector<Automorphism> &stabilizer,
+    ProgressReporter *progress) {
     if (state.optimistic_bound(target) >= best) {
         ++stats.bound_prunes;
         return;
     }
-    const std::vector<int> key = canonical_key(chosen, instance, stabilizer);
-    if (!seen.insert(key).second) {
-        ++stats.cache_hits;
-        return;
+    const ProfileState::Invariant signature = state.invariant();
+    auto bucket_it = seen.find(signature);
+    if (bucket_it != seen.end()) {
+        if (std::any_of(bucket_it->second.begin(), bucket_it->second.end(),
+                        [&](const auto &key) {
+                            return is_isomorphic(chosen, key, instance,
+                                                 stabilizer);
+                        })) {
+            ++stats.cache_hits;
+            return;
+        }
     }
+    const std::vector<int> key = canonical_key(chosen, instance, stabilizer);
+    seen[signature].push_back(key);
     if (state.selected_count == target) {
         best = std::min(best, state.boundary_size);
         return;
@@ -417,11 +516,12 @@ int available_threads() {
 #endif
 }
 
-void search_parallel(const Instance &instance, const int target, int &best,
-                     std::unordered_set<std::vector<int>, VectorHash> &seen,
-                     SearchStats &stats,
-                     const std::vector<Automorphism> &stabilizer,
-                     const int thread_count, ProgressReporter *progress) {
+void search_parallel(
+    const Instance &instance, const int target, int &best,
+    std::unordered_map<ProfileState::Invariant, std::vector<std::vector<int>>,
+                       InvariantHash> &seen,
+    SearchStats &stats, const std::vector<Automorphism> &stabilizer,
+    const int thread_count, ProgressReporter *progress) {
     // Vertex transitivity lets us pin one vertex without changing the
     // optimum, giving independent second-vertex branches to the workers.
     std::vector<int> origin(instance.k);
@@ -450,7 +550,9 @@ void search_parallel(const Instance &instance, const int target, int &best,
         state.add(origin_id);
         state.add(second_vertex);
         SearchStats local_stats;
-        std::unordered_set<std::vector<int>, VectorHash> local_seen;
+        std::unordered_map<ProfileState::Invariant,
+                           std::vector<std::vector<int>>, InvariantHash>
+            local_seen;
         int local_best = INT_MAX;
         local_stats.nodes_by_depth.assign(target + 1, 0);
         local_stats.nodes = 1;
@@ -470,7 +572,18 @@ void search_parallel(const Instance &instance, const int target, int &best,
             for (int depth = 0; depth <= target; ++depth)
                 stats.nodes_by_depth[depth] +=
                     local_stats.nodes_by_depth[depth];
-            seen.insert(local_seen.begin(), local_seen.end());
+            for (const auto &[signature, keys] : local_seen) {
+                auto &global_keys = seen[signature];
+                std::copy_if(keys.begin(), keys.end(),
+                             std::back_inserter(global_keys),
+                             [&](const auto &key) {
+                                 return std::none_of(global_keys.begin(),
+                                                     global_keys.end(),
+                                                     [&](const auto &existing) {
+                                                         return existing == key;
+                                                     });
+                             });
+            }
         }
     }
 }
@@ -517,7 +630,9 @@ int main(int argc, char **argv) {
     progress.expected_nodes = expected_nodes.convert_to<long double>();
     std::cout << "raw ordered-transition nodes=" << expected_nodes << " ("
               << (thread_count > 1 ? "origin-pinned" : "full") << ")\n";
-    std::unordered_set<std::vector<int>, VectorHash> seen;
+    std::unordered_map<ProfileState::Invariant, std::vector<std::vector<int>>,
+                       InvariantHash>
+        seen;
     SearchStats stats;
     stats.nodes_by_depth.assign(target + 1, 0);
     int best = INT_MAX;
@@ -543,8 +658,11 @@ int main(int argc, char **argv) {
               << " nodes=" << stats.nodes
               << " bound-prunes=" << stats.bound_prunes
               << " exact-cache-hits=" << stats.cache_hits
-              << " threads=" << thread_count << " states=" << seen.size()
-              << '\n'
+              << " threads=" << thread_count << " states=";
+    std::size_t state_count = 0;
+    for (const auto &[signature, keys] : seen)
+        state_count += keys.size();
+    std::cout << state_count << '\n'
               << "raw ordered-transition coverage=  " << coverage << "%\n"
               << "raw ordered-transition reduction=" << reduction << "%\n";
     if (target >= 2 && stats.nodes_by_depth[target - 1] != 0 &&
