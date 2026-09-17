@@ -32,7 +32,7 @@ struct ArrangementGraph {
         status.assign(capacity, 255);
         place.assign(k, 1);
         for (int position = k - 2; position >= 0; --position)
-            place[position] *= static_cast<std::uint64_t>(n);
+            place[position] = place[position + 1] * static_cast<std::uint64_t>(n);
 
         std::vector<int> prefix;
         std::vector<bool> used(n, false);
