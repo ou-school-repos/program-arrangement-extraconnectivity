@@ -15,18 +15,21 @@ and computer-asssted findings.
 6.  **Universal Defect Bound:** `sum_unique_roots_lower_bound` proves $D(V') \le E_{seq}(R)$ for ALL $R$-element subsets of $A(n,k)$, by strong induction.
 7.  **Formal Definition of $A(n,k)$:** `ArrVertex n k` defines vertices as injective $k$-sequences from $\{0..n-1\}$ with `Fintype` and `DecidableEq` instances. Adjacency (`arr_adjacent`) and external neighbors (`external_neighbors`) are computable.
 
-### ✓ Axiomatized (computationally verified via `predict --verify R`)
+### Remaining interfaces and conditional results
 
-1.  **Collision Bound** (`external_neighbors_collision_bound`): Each unique root extends to $(n-k)$ distinct external neighbors, with $C_{constant}(R)$ bounding maximum overlaps. Justified by Kruskal-Katona; see [collision-axiom-roadmap.md](collision-axiom-roadmap.md).
-    TODO(review): this is still a roadmap claim, not a discharged theorem.
-2.  TODO(review): the coefficient/constant match is still only computationally
-    checked here, not fully formalized.
-    **Hamming Ball Upper Bound** (`hamming_ball_achieves_bound`): The constructive Hamming Ball achieves the formula exactly. Partially formalized (`nat_to_cube`, `nat_to_cube_injective`); exact evaluation axiomatized.
+1.  **Restricted lower bound** (`RestrictedLowerBound`): This remains an
+    explicit per-instance hypothesis. The embedding condition only guarantees
+    that the Hamming-ball witness fits; it does not prove the lower bound.
+2.  **Hamming-ball evaluation** is proved by `CrossTop`; it is a witness
+    statement, not a proof that the witness is globally minimizing.
 
 ### ✓ Proven by Computer-Assisted Search
 
-1.  **Local Optimality:** Through exhaustive enumeration of the $\Omega(R^{R-2})$ search space, the Hamming Ball is the unique topology maximizing internal edges for small R.
-2.  **Coefficient/Constant Match:** The analytical formulas for $E(R)$ and $C(R)$ match every globally optimal vertex set discovered by the search.
+1.  **Finite audits:** Exhaustive searches and the certificate/oracle bundle
+    verify selected small cells; they do not establish a universal theorem or
+    uniqueness.
+2.  **Coefficient/constant checks:** The formulas match the tested witnesses,
+    subject to the documented finite ranges.
 
 ---
 
@@ -52,23 +55,27 @@ The constant $C(R) = (R-1) + \sum_{i=1}^{R-1} \text{bit\_length}(i) - A000788(R)
 TODO(review): do not present the shadow-operator reduction as completed until
 the support-projection bridge is repaired or removed.
 
-### Uniqueness (Open Problem)
+### Uniqueness (not established; blanket version is false)
 
-The theorem pins the exact extraconnectivity value but does not prove the Hamming Ball is the **unique** minimizer. Computationally confirmed unique for $R \le 10$. Proving uniqueness would require showing equality in the defect bound forces hypercube structure.
+The framework does not prove uniqueness, and the blanket claim is false for
+defect maximization: three vertices on one arrangement line have defect
+$2=E(3)$ but form a triangle rather than a path. Any future equality theorem
+must impose additional hypotheses and classify embedded configurations.
 
 ---
 
-## Corollary: Globally Optimal Growth Strategy
+## Conditional growth strategy
 
-The "Squeeze" proof establishes that the Hamming Ball ordering is the **Globally Optimal Growth Strategy** for subgraphs in $A(n,k)$.
-TODO(review): this section still inherits the false stronger penalty narrative;
-it needs a conditional restatement.
+The squeeze composition is conditional on `RestrictedLowerBound`; it does not
+establish a globally optimal growth strategy unconditionally.
 
-This provides the **Full Isoperimetric Profile** for the graph:
+Under that supplied hypothesis it provides the corresponding conditional
+boundary statement:
 
 - It is not merely a collection of bounds for "perfect" hypercubes ($R=2^d$).
-- The formula remains tight for every natural number $R$ because the Hamming Ball ordering maintains the maximum possible internal "shielding" at every step of growth ($R \to R+1$).
-- **Implication:** There is no "hidden" value of $R$ where a non-standard configuration (like a large clique or a path) can outperform the lexicographic Hamming ordering.
+- The formula is tight for the Hamming-ball witness in the embeddable range.
+- No unconditional claim excludes a competing clique, path, Star, or other
+  topology.
 
 ---
 

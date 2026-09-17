@@ -4,14 +4,18 @@ Under Propositions~\ref{prop:restricted_lower_bound} and~\ref{prop:hb-eval}, the
 (Theorem~\ref{thm:main}) identifies the Hamming Ball as the dense limit. We
 conjecture that the Star Graph provides the sparse limit:
 
-\begin{conjecture}[The Sparse Limit Upper Bound]
+\begin{remark}[The proposed sparse-limit bound is false]
 The external boundary of any optimal connected $R$-vertex subgraph $V'$ in
 $A(n,k)$ is bounded above by the Star Graph $K_{1, R-1}$, yielding a total
 correction $(X+D) = \binom{R}{2}$:
 	\begin{equation}\label{eq:sparse-limit}
 		\left| \extbd(V') \right| \le \big(R \cdot k - (R - 1)\big)(n - k) - \binom{R}{2}
 	\end{equation}
-\end{conjecture}
+The four-vertex path in $A(6,3)$ has external boundary $22$, while the
+right-hand side of \eqref{eq:sparse-limit} is $21$. Thus this displayed
+inequality is retained only as a record of the abandoned heuristic and is not
+used in any subsequent argument.
+\end{remark}
 
 \begin{figure}[H]
 	\centering
@@ -227,9 +231,9 @@ competitors as the network dimensions scale.
 \end{table}
 
 The numerical results confirm that at $n=100$, the Hamming Ball for $R=8$ wins
-by 464 vertices against a Star Graph and by 190 vertices against the second-best
-connected subgraph. In large-scale systems, this linear divergence ensures that
-the Hamming Ball remains the unique boundary minimizer.
+by 464 vertices against the tested Star Graph and by 190 vertices against the
+tested second-best connected subgraph. This is a fixed-topology asymptotic
+comparison, not a proof that the Hamming Ball is the unique minimizer.
 
 \paragraph{The Structural Inversion: Hypercubes vs.\ Arrangement Graphs.}
 In recent literature concerning hypercube variants like Augmented Cubes
@@ -242,7 +246,7 @@ of defect is a static constant. The Star Graph produces cross-collisions that
 scale quadratically as $\binom{R-1}{2}$, quickly overpowering the static penalty
 and minimizing the boundary. In $A(n,k)$, however, the penalty for each missing
 unit of defect is $(n-k)$ (Theorem~\ref{thm:penalty}). Because $(n-k)$ scales
-with the network dimensions, it completely obliterates the static
-$\binom{R-1}{2}$ savings of the Star Graph. Thus, the optimal structure
-permanently inverts: in hypercubes, the minimum cut is the Sparse Limit, but in
-arrangement graphs, the minimum cut is the Dense Limit.
+with the network dimensions, it eventually dominates the static savings of a
+fixed Star topology. Thus the argument establishes eventual fixed-topology
+dominance only; it does not prove a permanent global inversion over all
+topologies and parameter ranges.

@@ -1699,16 +1699,12 @@ theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_
   exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower h_cond V' hR hnk⟩
 
 /--
-  COROLLARY: Globally Optimal Growth Strategy.
+  CONDITIONAL GROWTH-STRATEGY COROLLARY.
 
-  The "Squeeze" proof establishes that the Hamming Ball ordering is the
-  Globally Optimal Growth Strategy for subgraphs in A(n,k).
-  This provides a **conditional boundary profile** for the graph:
-  - The formula remains tight for every natural number R because the
-    Hamming Ball ordering maintains the maximum possible internal
-    "shielding" (defect minimization) at every step of growth (R → R+1).
-  - IMPLICATION: There is no "hidden" value of R where a non-standard
-    configuration (clique, path, etc.) can outperform the Hamming Ball.
+  Under the supplied per-instance RestrictedLowerBound hypothesis, this
+  composition returns the conditional boundary profile and Hamming-ball
+  witness. It does not establish an unconditional growth strategy or exclude
+  competing cliques, paths, Stars, or other topologies.
 -/
 theorem globally_optimal_growth_strategy_of_cross
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
@@ -1725,7 +1721,7 @@ theorem globally_optimal_growth_strategy_of_cross
 -/
 
 /--
-  CONJECTURE 1: Uniqueness of the Hamming Ball Minimizer.
+  OPEN EQUALITY-CASE CONJECTURE (NOT USED BY THE CAPSTONE).
 
   `penalty_defect` (in `Arrangement/PenaltyExact.lean`) gives the *exact*,
   unconditional identity `|∂V₁| + (X₁+D₁) = |∂V₂| + (X₂+D₂) + ΔD·(n−k)` for any
@@ -1755,8 +1751,11 @@ theorem globally_optimal_growth_strategy_of_cross
   Any uniqueness or tie-breaking claim requires a separate extremal theorem;
   it does not follow from the penalty identity or from Kruskal--Katona alone.
 
-  This conjecture formally states that any set achieving the minimum boundary
-  must be isomorphic to the Hamming Ball under the graph's automorphism group.
+  The blanket uniqueness statement is not established and is false for the
+  defect-maximization problem: a three-vertex triangle in one arrangement line
+  has the same defect as the three-vertex Boolean initial segment but is not
+  isomorphic to that path-shaped segment. Any boundary-minimizer equality
+  theorem needs additional hypotheses and a separate classification.
 -/
 def uniqueness_conjecture (R n k : ℕ) : Prop :=
   ∀ (V₁ V₂ : Finset (ArrVertex n k)),
@@ -1779,10 +1778,9 @@ def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
 /--
   CONDITIONAL CONNECTED ISOPERIMETRIC SANDWICH
 
-  Computational enumeration reveals that the boundary of any Pareto-optimal
-  connected R-vertex subgraph is perfectly sandwiched between:
-  1. The Dense Limit: The Hamming Ball (Minimum boundary)
-  2. The Sparse Limit: The Star Graph K_{1, R-1} (Maximum boundary for an optimal tree)
+  The lower side is conditional on RestrictedLowerBound. The proposed sparse
+  upper side is retained only as a testable conjecture and is not used by the
+  capstone.
 
   HALF 1: CONDITIONAL.
   The lower bound follows only from the explicit `RestrictedLowerBound`
@@ -1797,10 +1795,10 @@ theorem sandwich_lower_bound_conditional (R n k : ℕ) (h_embed : can_embed_hype
   exact h_lower h_embed V' hR hnk
 
 /--
-  HALF 2: CONJECTURE.
-  The Upper Bound for Pareto-optimal sparse graphs. For the Star Graph,
-  the Defect is R-1, and Inclusion-Exclusion on the overlapping 2-paths
-  yields a collision constant exactly equal to the triangular numbers (R choose 2).
+  HALF 2: REFUTED AS STATED.
+  The path on four vertices in A(6,3) has boundary 22, while this proposed
+  right-hand side is 21. The definition is retained only as a historical
+  conjecture interface and must not be cited as a bound.
 -/
 def sandwich_upper_bound_conjecture (R n k : ℕ) : Prop :=
   ∀ V' : Finset (ArrVertex n k),

@@ -10,9 +10,10 @@ identities used in Theorem~\ref{thm:penalty} are likewise mechanized in
 \texttt{penalty\_exact}, \texttt{penalty\_defect}, and \texttt{penalty\_ge}; the
 asymptotic-dominance conclusion in the prose is then the immediate large-$(n-k)$
 reading of those exact formulas. The Fracture Gap, Defect Continuity, Secondary
-Fracture Gap, and Partial Defect Classification results of
-Section~\ref{sec:fracture} are proven on paper from Harper's edge-isoperimetric
-theorem but are not yet mechanized. The entire graph theory of $A(n,k)$ is
+Fracture Gap, and Partial Defect Classification statements of
+Section~\ref{sec:fracture} are explicitly conjectural or computational
+observations; they are not established by Harper's theorem and are not in the
+Lean dependency chain. The entire graph theory of $A(n,k)$ is
 formalized from first principles; rather than declaring the unproved bounds as
 global axioms, we express the remaining capstone dependency by parameterizing
 the final exact boundary-minimum theorem with the explicit

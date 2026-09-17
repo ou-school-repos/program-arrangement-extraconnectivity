@@ -171,24 +171,26 @@ public capstone remains conditional on `RestrictedLowerBound`:
 
 - **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven
   constructor, conditional on its explicit `HBCrossCollisions` argument.
-- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`):
-  Combines `RestrictedLowerBound` and the explicit Hamming-ball collision
-  interface to squeeze the exact minimum cut.
+- **Boundary capstone** (`arrangement_boundary_minimum`): Combines
+  `RestrictedLowerBound` and the explicit Hamming-ball collision interface to
+  squeeze the exact minimum cut.
 
 ## Novel Contributions
 
-- **A000788 Discovery**: The maximum internal edges for R vertices in A(n,k)
-  equals the cumulative popcount sequence (OEIS A000788).
-- **Pareto Spectrum**: The full topology-boundary tradeoff between the Star
-  graph and the Hamming Ball.
-- **Compression No-Go Theorem**: The standard Kruskal-Katona/Harper compression
-  technique provably FAILS for arrangement graphs due to "coordinate tangling".
-  Documented in `IsoperimetricPartialPermutation.lean`.
+- **A000788 defect bound**: The universal bound applies to the defect, not to
+  internal edge count; arrangement lines can contain triangles.
+- **Pareto spectrum**: exploratory topology-boundary data, not a completed
+  classification.
+- **Compression diagnostic**: one standard Kruskal-Katona/Harper compression
+  operator fails on tested arrangement configurations; this is not a general
+  no-go theorem.
 - **Exact Penalty Framework**: `Arrangement/PenaltyExact.lean` proves the
   unconditional boundary identity and comparative penalty formulas used by the
   paper's asymptotic-penalty section.
-- **Sandwich Conjecture & Hypercube Fracture Gap**: Formalized topological phase
-  transitions and bounds.
+- **Sandwich conjecture & hypercube fracture gap**: retained as explicitly open
+  interfaces/diagnostics; the proposed sandwich upper bound is refuted by the
+  four-vertex path in A(6,3), and the fracture claims do not follow from Harper
+  because arrangement lines are cliques.
 
 ## Open Conjectures
 
