@@ -90,3 +90,26 @@ Thus the pair recurrence succeeds existentially, but not for arbitrary pair
 types. The $c=2$ pairs are adjacent in this $k=3$ case; nonadjacent pairs also
 tie the overall zero margin. This supports studying the full pair-drop quantity
 rather than treating coordinate agreement as a sufficient statistic.
+
+## Full-Star pair-peeling shoreline: A(10,8) (2026-09-17)
+
+The native `diagnose_star_clusters` probe evaluates the established radius-one
+full-Star spine $S_j$ in $A(10,8)$, where $m=2$ and $|S_j|=1+2j$:
+
+```text
+time ./diagnose_star_clusters 10 8 8
+```
+
+The pair-peeling margins along the spine were:
+
+| $j$ | $R$ | Pair margin | Boundary slack |
+| --: | --: | ----------: | -------------: |
+|   6 |  13 |           0 |              5 |
+|   7 |  15 |          -1 |              3 |
+|   8 |  17 |          -3 |             -1 |
+
+Thus pair peeling fails at $R=15$, before the surrogate boundary inequality
+fails at the known full-Star counterexample $R=17$. Pair peeling is therefore
+a sufficient safe-regime mechanism, not an exact characterization of the
+surrogate's failure threshold. The C++ probe uses the radius-one Star
+definition from `scripts/full_star_spine.py`, not a full coordinate subspace.
