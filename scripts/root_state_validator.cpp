@@ -112,12 +112,22 @@ struct Instance {
     std::vector<std::vector<std::vector<int>>> lines;
     std::vector<std::vector<int>> root_id;
     std::unordered_map<int, int> index;
+    std::vector<int> flat_index;
 
     int encode(const std::vector<int> &vertex) const {
         return std::accumulate(vertex.begin(), vertex.end(), 0,
                                [&](const int code, const int symbol) {
                                    return n * code + symbol;
                                });
+    }
+
+    int lookup(int code) const {
+        if (code >= 0 && code < static_cast<int>(flat_index.size())) {
+            const int vertex_id = flat_index[code];
+            if (vertex_id >= 0)
+                return vertex_id;
+        }
+        return index.at(code);
     }
 
     void enumerate(std::vector<int> &prefix, std::vector<bool> &used) {
@@ -143,6 +153,14 @@ struct Instance {
         std::vector<int> prefix;
         std::vector<bool> used(n, false);
         enumerate(prefix, used);
+        long long index_capacity = 1;
+        for (int coordinate = 0; coordinate < k; ++coordinate)
+            index_capacity *= n;
+        if (index_capacity <= 1'000'000) {
+            flat_index.assign(static_cast<std::size_t>(index_capacity), -1);
+            for (const auto &[code, vertex_id] : index)
+                flat_index[code] = vertex_id;
+        }
         root_id.assign(k, std::vector<int>(vertices.size(), -1));
         lines.resize(k);
         for (int position = 0; position < k; ++position) {
@@ -457,7 +475,7 @@ struct Automorphism {
                        symbols[instance
                                    .vertices[vertex_id][coordinates[position]]];
             });
-        return instance.index.at(code);
+        return instance.lookup(code);
     }
 };
 
