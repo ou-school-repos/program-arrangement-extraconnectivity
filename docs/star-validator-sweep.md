@@ -42,6 +42,10 @@ The embedding gate is open exactly when `d <= k` and `d <= n-k`.
 
 ## Sweep map
 
+```shell
+time for i in $(seq 11 14); do for j in $(seq 9 10); do ./bin/validate_extra_cut $i $j; done done
+```
+
 Each `(n,k)` cell tests the full radius-one Star at `R = 1 + k(n-k)`, with
 `g = R - 1`. This is one selected volume per graph parameter pair, not a sweep
 over arbitrary `R` values.
