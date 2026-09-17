@@ -183,24 +183,27 @@ minimality is captured by the following universal boundary inequality. Together
 with the evaluation of the Hamming Ball, these two propositions form our
 extremal framework.
 
-\begin{proposition}[Restricted Boundary Inequality]\label{prop:restricted_lower_bound}
+\begin{conjecture}[Restricted Boundary Inequality]\label{prop:restricted_lower_bound}
 	Under the hypercube embedding conditions $k \ge \lceil \log_2 R \rceil$ and
 	$n-k \ge \lceil \log_2 R \rceil$, every subset $V' \subseteq V(A(n,k))$ of
 	cardinality $R$ satisfies
 	\begin{equation}\label{eq:restricted-bound}
 		\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 	\end{equation}
-\end{proposition}
+\end{conjecture}
 
 \begin{remark}[Scope of the restricted bound]
 The unrestricted form of this inequality (without the embedding conditions)
 fails: in $A(10,8)$, the full Star with $R=17$ has boundary $168$, below
-the target $169$. However, the embedding conditions $R \le 2^m$ restrict
-$R$ to a range that lies entirely below the failure threshold for $m \le 4$.
-Specifically, $2^m < 1 + j_{\mathrm{fail}} \cdot m$ for $m \le 4$, where
-$j_{\mathrm{fail}}$ is the cumulative-slack failure point of the full
-Star. Computational verification confirms the restricted bound for all
-parameters with $m \le 4$; the proof for general $m$ remains open.
+the target $169$. More importantly, the embedding conditions do not by
+themselves establish the claim for general $m$. For example, the full Star in
+$A(12,6)$ at $R=37$ satisfies
+$k=m=6\ge\lceil\log_2 37\rceil$, but has boundary slack $-57$ relative to
+the proposed lower bound. The conditions are therefore a useful motivation
+for the Hamming embedding, not a proved safe-range criterion. Computational
+verification confirms the restricted bound for all tested parameters with
+$m\le4$; the general geometric statement remains open and must be given an
+additional range or shape hypothesis.
 \end{remark}
 
 \begin{remark}[Full-Star obstruction shoreline]
@@ -384,7 +387,7 @@ Combining these propositions with the boundary decomposition yields our main
 result:
 
 \begin{theorem}[Conditional Minimum-Boundary Theorem]\label{thm:main}
-\textup{(Conditional on Propositions~\ref{prop:restricted_lower_bound}
+\textup{(Conditional on Conjecture~\ref{prop:restricted_lower_bound}
 and~\ref{prop:hb-eval}.)} Assume the hypercube embedding conditions
 $k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$.
 Then for all $R \ge 2$:
