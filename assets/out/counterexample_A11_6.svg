@@ -42,12 +42,12 @@
     <text x="450" y="484" font-size="10" fill="white">c</text>
     <text x="532" y="438" font-size="10">6</text><text x="532" y="461" font-size="10">7</text><text x="532" y="484" font-size="10">8</text><text x="532" y="507" font-size="10">9</text><text x="532" y="530" font-size="10">10</text>
     <text x="435" y="544" font-size="10">c[0←6,7,8,9,10]</text>
-    <text x="430" y="570" font-size="12">Cross-branch leaves share</text>
+    <text x="430" y="570" font-size="12">For i≠i′ and s≠s′, leaves share</text>
     <text x="430" y="586" font-size="12">k−2=4 coordinates → X.</text>
     <text x="74" y="610" font-size="18">D = jm = 30  (root/fiber defect)</text>
     <text x="74" y="640" font-size="18">X = m(m−1) C(j,2) = 5·4·15 = 300  (external excess)</text>
     <text x="74" y="670" font-size="18">Q = X + (m+1)D = 300 + 6·30 = 480</text>
-    <text x="74" y="700" font-size="14">Cross-branch check: leaves (i←s) and (i′←s′), i≠i′,</text>
+    <text x="74" y="700" font-size="14">Cross-branch check: leaves (i←s) and (i′←s′), i≠i′, s≠s′,</text>
     <text x="74" y="721" font-size="14">share k−2 = 4 fixed coordinates; the resulting common</text>
     <text x="74" y="742" font-size="14">external neighbors contribute to X (not to internal edge count).</text>
 
@@ -66,6 +66,7 @@
     <text x="680" y="658" font-size="13">j = 6 active coordinate branches; m = n−k</text>
     <text x="680" y="679" font-size="13">D = Rk − U: root/fiber defect; X = external multiplicity excess</text>
     <text x="680" y="700" font-size="13">Q = kmR − |∂S| = 2|E(S)| + X;  G = C(R) + mE(R)</text>
-    <text x="680" y="721" font-size="13">E(R)=Σ_{i&lt;R} popcount(i);  C(R)=(R−1)+Σ bit_length(i)−E(R)</text>
+    <text x="680" y="721" font-size="13">E(R)=Σ_{0≤i&lt;R} popcount(i)</text>
+    <text x="680" y="742" font-size="13">C(R)=(R−1)+Σ_{1≤i&lt;R} bit_length(i)−E(R)</text>
   </g>
 </svg>

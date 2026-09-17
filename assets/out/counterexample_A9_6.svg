@@ -3,7 +3,7 @@
   <rect width="1200" height="760" fill="white"/>
   <g fill="black" font-family="DejaVu Sans, Arial, sans-serif">
     <text x="60" y="58" font-size="30" font-weight="bold">Counterexample 1: A(9,6), R = 19</text>
-    <text x="60" y="92" font-size="18">Full radius-one Star beats the Hamming-ball boundary (refutes UniversalLowerBound)</text>
+    <text x="60" y="92" font-size="18">Full radius-one Star beats the formal Hamming-ball baseline (refutes UniversalLowerBound only)</text>
 
     <rect x="55" y="120" width="1090" height="125" fill="none" stroke="black" stroke-width="2"/>
     <text x="78" y="153" font-size="20" font-weight="bold">Parameters</text>
@@ -40,12 +40,12 @@
     <text x="450" y="484" font-size="10" fill="white">c</text>
     <text x="532" y="453" font-size="11">6</text><text x="532" y="483" font-size="11">7</text><text x="532" y="513" font-size="11">8</text>
     <text x="435" y="538" font-size="11">c[0←6], c[0←7], c[0←8]</text>
-    <text x="430" y="570" font-size="12">Cross-branch leaves share</text>
+    <text x="430" y="570" font-size="12">For i≠i′ and s≠s′, leaves share</text>
     <text x="430" y="586" font-size="12">k−2=4 coordinates → X.</text>
     <text x="74" y="610" font-size="18">D = jm = 18  (root/fiber defect)</text>
     <text x="74" y="640" font-size="18">X = m(m−1) C(j,2) = 3·2·15 = 90  (external excess)</text>
     <text x="74" y="670" font-size="18">Q = X + (m+1)D = 90 + 4·18 = 162</text>
-    <text x="74" y="700" font-size="14">Cross-branch check: leaves (i←s) and (i′←s′), i≠i′,</text>
+    <text x="74" y="700" font-size="14">Cross-branch check: leaves (i←s) and (i′←s′), i≠i′, s≠s′,</text>
     <text x="74" y="721" font-size="14">share k−2 = 4 fixed coordinates; the resulting common</text>
     <text x="74" y="742" font-size="14">external neighbors contribute to X (not to internal edge count).</text>
 
@@ -53,7 +53,7 @@
     <text x="680" y="322" font-size="21" font-weight="bold">Boundary comparison</text>
     <line x1="680" y1="340" x2="1070" y2="340" stroke="black"/>
     <text x="680" y="378" font-size="18">degree · R = kmR = 6·3·19 = 342</text>
-    <text x="680" y="420" font-size="19" font-weight="bold">Hamming ball: 342 − G = 186</text>
+    <text x="680" y="420" font-size="19" font-weight="bold">Formal HB baseline: 342 − G = 186</text>
     <text x="680" y="462" font-size="19" font-weight="bold">Full Star:     342 − Q = 180</text>
     <line x1="680" y1="485" x2="1070" y2="485" stroke="black"/>
     <text x="680" y="528" font-size="24" font-weight="bold">180 &lt; 186</text>
@@ -64,6 +64,7 @@
     <text x="680" y="658" font-size="13">j = 6 active coordinate branches; m = n−k</text>
     <text x="680" y="679" font-size="13">D = Rk − U: root/fiber defect; X = external multiplicity excess</text>
     <text x="680" y="700" font-size="13">Q = kmR − |∂S| = 2|E(S)| + X;  G = C(R) + mE(R)</text>
-    <text x="680" y="721" font-size="13">E(R)=Σ_{i&lt;R} popcount(i);  C(R)=(R−1)+Σ bit_length(i)−E(R)</text>
+    <text x="680" y="721" font-size="13">E(R)=Σ_{0≤i&lt;R} popcount(i)</text>
+    <text x="680" y="742" font-size="13">C(R)=(R−1)+Σ_{1≤i&lt;R} bit_length(i)−E(R)</text>
   </g>
 </svg>
