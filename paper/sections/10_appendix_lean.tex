@@ -36,7 +36,7 @@ $\Cconst(R)$ respectively.
 {\small
 \begin{lstlisting}[language={}, breaklines=true]
 theorem arrangement_boundary_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
-    (h_lower : forall (R n k : Nat), RestrictedLowerBound R n k) :
+    (h_lower : RestrictedLowerBound R n k) :
   (exists V' : Finset (ArrVertex n k), V'.card = R /\
     external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
   (forall V' : Finset (ArrVertex n k), V'.card = R ->

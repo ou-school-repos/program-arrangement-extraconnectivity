@@ -2351,12 +2351,12 @@ For $m \le 4$, we have $2^m < R_{\text{fail}}$:
 
 <!-- markdownlint-disable MD013 -->
 
-| $m$ | $2^m$ (embed max) | $R_{\text{fail}}$ | Safe margin | Status                                                     |
-| --- | ----------------- | ----------------- | ----------- | ---------------------------------------------------------- |
-| 2   | 4                 | 17                | +13         | Unconditionally Safe ($A(10,8)$ has $m=2$)                 |
-| 3   | 8                 | 19                | +11         | Unconditionally Safe ($A(6,3), A(7,4), A(9,6)$ have $m=3$) |
-| 4   | 16                | 25                | +9          | Star-safe only; universal claim remains open               |
-| 5   | 32                | 31                | -1          | Counterexample within the embedding range                  |
+| $m$ | $2^m$ (embed max) | $R_{\text{fail}}$ | Safe margin | Status                                       |
+| --- | ----------------- | ----------------- | ----------- | -------------------------------------------- |
+| 2   | 4                 | 17                | +13         | Star-safe only; universal claim remains open |
+| 3   | 8                 | 19                | +11         | Star-safe only; universal claim remains open |
+| 4   | 16                | 25                | +9          | Star-safe only; universal claim remains open |
+| 5   | 32                | 31                | -1          | Counterexample within the embedding range    |
 
 <!-- markdownlint-enable MD013 -->
 

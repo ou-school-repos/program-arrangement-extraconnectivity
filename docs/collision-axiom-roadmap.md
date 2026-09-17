@@ -128,20 +128,22 @@ family of (r-1)-element subsets contained in at least one member).
   future route; it is not an identity for arrangement-graph external
   multiplicity excess.
 
-## Step 2: Hamming Ball Maximizes Squares
+## Step 2: A separate hypercube square/shadow route
 
 ### What's needed (2)
 
-Prove that among all R-element subsets of the d-dimensional hypercube Q_d, the
-initial segment in binary lexicographic order (the Hamming Ball) maximizes the
-number of 4-cycles.
+This is a possible auxiliary hypercube problem: prove that among all
+$R$-element subsets of the binary cube, the initial segment maximizes the
+chosen square statistic. Even if established, it would not identify the
+arrangement-graph quantity $X$, which is external multiplicity excess/open
+square-corner overlap rather than a 4-cycle count.
 
 ### Proof approach
 
 1. Define the "square count" function:
    `squares(S) = |{(u,v,w) : u,v ∈ S, w ∈ N(S), adj(u,w) ∧ adj(v,w)}|`
 2. Show that square count is monotone under compression (shifting toward the
-   Hamming Ball)
+   Hamming Ball).
 3. Apply KK to conclude the Hamming Ball is optimal
 
 ### Estimated effort (2)

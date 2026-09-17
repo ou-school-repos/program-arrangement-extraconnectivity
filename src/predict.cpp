@@ -236,7 +236,7 @@ static void print_audit(int R) {
               << RST << "\n";
     std::cout << "      ├─ Topology         : Lexicographic Hamming Ball\n";
     std::cout << "      ├─ Algebraic Defect : " << dense_e
-              << " (OEIS A000788 maximum internal edges)\n";
+              << " (OEIS A000788 defect bound / hypercube edge benchmark)\n";
     std::cout << "      ├─ Collision Factor : " << dense_c
               << " (Kruskal-Katona maximal shadow overlaps)\n";
     std::cout << "      └─ Boundary Eq      : (" << R << "k - " << dense_e
