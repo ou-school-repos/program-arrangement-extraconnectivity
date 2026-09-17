@@ -19,7 +19,7 @@ struct ArrangementGraph {
     int k;
     std::vector<std::uint8_t>
         status; // 255 invalid, 0 surviving, 1 S, 2 N(S), 3 visited
-    std::vector<int> valid_codes;
+    std::size_t valid_count = 0;
     std::vector<int> place;
 
     ArrangementGraph(int n_value, int k_value) : n(n_value), k(k_value) {
@@ -47,7 +47,7 @@ struct ArrangementGraph {
         if (static_cast<int>(prefix.size()) == k) {
             const int code = encode(prefix);
             status[code] = 0;
-            valid_codes.push_back(code);
+            ++valid_count;
             return;
         }
         for (int symbol = 0; symbol < n; ++symbol) {
@@ -59,6 +59,29 @@ struct ArrangementGraph {
             prefix.pop_back();
             used[symbol] = false;
         }
+    }
+
+    template <typename Function>
+    void enumerate_valid(int depth, int code, std::vector<unsigned char> &used,
+                         Function &function) const {
+        if (depth == k) {
+            function(code);
+            return;
+        }
+        for (int symbol = 0; symbol < n; ++symbol) {
+            if (used[symbol])
+                continue;
+            used[symbol] = 1;
+            enumerate_valid(depth + 1, code + symbol * place[depth], used,
+                            function);
+            used[symbol] = 0;
+        }
+    }
+
+    template <typename Function>
+    void for_each_valid_code(Function function) const {
+        std::vector<unsigned char> used(n, 0);
+        enumerate_valid(0, 0, used, function);
     }
 
     template <typename Function>
@@ -246,8 +269,7 @@ int main(int argc, char **argv) {
         std::cout << "Building A(" << n << ',' << k << ")...\n";
     ArrangementGraph graph(n, k);
     if (show_progress)
-        std::cout << "Total valid vertices: " << graph.valid_codes.size()
-                  << "\n";
+        std::cout << "Total valid vertices: " << graph.valid_count << "\n";
 
     std::vector<int> center(k);
     std::iota(center.begin(), center.end(), 0);
@@ -297,9 +319,9 @@ int main(int argc, char **argv) {
     if (show_progress)
         std::cout << "Validating " << g << "-extra cut properties...\n";
     std::vector<int> component_sizes;
-    for (const int start : graph.valid_codes) {
+    graph.for_each_valid_code([&](const int start) {
         if (graph.status[start] != 0 && graph.status[start] != 1)
-            continue;
+            return;
 
         int size = 0;
         std::queue<int> pending;
@@ -317,7 +339,7 @@ int main(int argc, char **argv) {
             });
         }
         component_sizes.push_back(size);
-    }
+    });
 
     std::sort(component_sizes.begin(), component_sizes.end());
     if (show_progress)

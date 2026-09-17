@@ -1,0 +1,151 @@
+# Full-Star validator sweep
+
+Research log for `bin/validate_extra_cut`, recorded 2026-09-17.
+
+The validator constructs the full radius-one Star in `A(n,k)`, computes its
+external boundary, and checks the extra-cut condition after deleting that
+boundary. A successful run proves an explicit upper bound on extraconnectivity.
+It does **not** prove that the upper bound is exact.
+
+## Parameters and formulas
+
+```text
+m = n - k
+R = |S| = 1 + k*m
+g = R - 1 = k*m
+d = bit_length(R - 1)
+```
+
+For the full Star:
+
+```text
+|N(S)| = k(k - 1)m(m + 1) / 2
+```
+
+The Hamming comparison is
+
+```text
+H(n,k,R) = (R*k - E(R))*(n-k) - C(R)
+```
+
+The embedding gate is open exactly when `d <= k` and `d <= n-k`.
+
+## Classification
+
+- **HARD COUNTEREXAMPLE**: the Star is a valid extra cut, beats the Hamming
+  baseline, and the embedding gate is open.
+- **SOFT COUNTEREXAMPLE**: the Star beats the formal Hamming baseline, but the
+  embedding gate is closed.
+- **SATISFIES HAMMING OPTIMALITY**: the valid Star cut does not beat the Hamming
+  baseline.
+- **INVALID EXTRA CUT**: deletion leaves a component of size at most `g`.
+
+## Sweep map
+
+`H` means hard, `s` soft, `S` satisfies the Hamming comparison, and `I` is an
+invalid extra cut. A dash is outside `k < n`; later `k` values were rejected by
+the flat code-space guard.
+
+| `n \\ k` |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+| -------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|        8 |  I  |  I  |  S  |  S  |  S  |  S  |  S  | --  |
+|        9 |  I  |  I  |  S  |  S  |  S  |  s  |  S  |  S  |
+|       10 |  I  |  I  |  S  |  S  |  S  |  s  |  s  |  s  |
+|       11 |  I  |  I  |  S  |  S  |  S  |  H  |  s  |  s  |
+|       12 |  I  |  I  |  S  |  S  |  S  |  H  |  s  |  s  |
+|       13 |  I  |  I  |  S  |  S  |  S  |  H  |  H  |  s  |
+
+The smallest known hard counterexample, and the smallest hard counterexample
+within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
+no non-Star topology gives a smaller hard counterexample.
+
+## Representative hard counterexamples
+
+| graph     | `R` | `g` | Star boundary | Hamming baseline | gate |
+| --------- | --: | --: | ------------: | ---------------: | :--: |
+| `A(11,6)` |  31 |  30 |           450 |              476 | open |
+| `A(12,6)` |  37 |  36 |           630 |              687 | open |
+| `A(13,6)` |  43 |  42 |           840 |              921 | open |
+| `A(13,7)` |  43 |  42 |           882 |             1029 | open |
+| `A(17,7)` |  71 |  70 |          2310 |             2658 | open |
+| `A(19,7)` |  85 |  84 |          3276 |             3783 | open |
+
+## New result: `A(19,7)`
+
+Command:
+
+```bash
+./bin/validate_extra_cut 19 7
+```
+
+Output summary:
+
+```text
+Total valid vertices: 253955520
+Candidate g = 84
+|S| = 85
+|N(S)| = 3276
+component sizes after deletion:
+  85
+  253952159
+valid 84-extra cut: yes
+therefore kappa_84(A(19,7)) <= 3276
+Hamming baseline: 3783; Star boundary: 3276
+Embedding gate: d = 7, k = 7, n-k = 12 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+```
+
+The comparison gap is `3783 - 3276 = 507`. Therefore the Star gives
+
+```text
+kappa_84(A(19,7)) <= 3276
+```
+
+and refutes the embedding-gated Hamming lower-bound hypothesis at
+`(R,n,k) = (85,19,7)`. It does not establish equality; a matching lower-bound
+proof is still required.
+
+## Fixed-`k` pattern
+
+For fixed `k`, `R-1 = k(n-k)`. For `k=6`, the gate is open through `n=16` and
+closes at `n=17`, so the full-Star family gives hard counterexamples through
+`A(16,6)` and soft counterexamples thereafter when the Star remains below the
+Hamming baseline.
+
+For `k=7`, `A(17,7)` has `m=10`, `R-1=70`, and `d=7`, so both gate inequalities
+hold. Its Hamming gap is `2658 - 2310 = 348`. The later `A(19,7)` run has
+`m=12`, `R-1=84`, and gap `3783 - 3276 = 507`. The arithmetic gate remains open
+while `7(n-7) < 2^7`, subject to the validator being able to construct the
+graph.
+
+## Reproduction commands
+
+One log file per `n`, with progress and validator output together:
+
+```bash
+mkdir -p .tmp
+for n in 8 9 10 11 12 13; do
+    ./bin/validate_extra_cut "$n" 1 2>&1 \
+        | tee ".tmp/star_A${n}.txt"
+    for k in $(seq 2 $((n - 1))); do
+        printf '\n' | tee -a ".tmp/star_A${n}.txt"
+        ./bin/validate_extra_cut "$n" "$k" 2>&1 \
+            | tee -a ".tmp/star_A${n}.txt"
+    done
+done
+```
+
+For a larger fixed-`k` sweep:
+
+```bash
+for n in 14 15 16 17 18 19; do
+    ./bin/validate_extra_cut "$n" 6 2>&1 \
+        | tee ".tmp/star_A${n}_k6.txt"
+done
+
+./bin/validate_extra_cut 19 7 2>&1 \
+    | tee ".tmp/star_A19_k7.txt"
+```
+
+The validator's flat code-space guard is a computational resource limit, not a
+mathematical claim about instances it rejects.
