@@ -188,34 +188,7 @@ test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator outp
 lean: _lean/cache	##H @Lean Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
 	mkdir -p .tmp
-	cd proofs && lake build | tee $(CURDIR)/.tmp/out-build-lean.log
-	@printf "\n\033[1;32m--- Verification Complete ---\033[0m\n"
-	@printf "\033[1;36mMapped Theorems & Definitions:\033[0m\n"
-	@awk 'BEGIN {last_file=""} \
-		/^(theorem|lemma|def|axiom|class|instance|structure) / { \
-			if (in_decl) process_buf(); \
-			buf = $$0; in_decl = 1; \
-			if (buf ~ /(:=|:= by|by|where|=>)/) process_buf(); \
-			next; \
-		} \
-		in_decl { \
-			gsub(/^[[:space:]]+/, " ", $$0); \
-			buf = buf $$0; \
-			if ($$0 ~ /(:=|:= by|by|where|=>)/) process_buf(); \
-		} \
-		function process_buf() { \
-			gsub(/[[:space:]]+/, " ", buf); \
-			file = FILENAME; sub(/^proofs\//, "", file); \
-			if (file != last_file) { \
-				printf "\n\033[1;33m%s:\033[0m\n", file; \
-				last_file = file; \
-			} \
-			printf "  %s\n", buf; \
-			buf = ""; in_decl = 0; \
-		} \
-		END { if (in_decl) process_buf(); }' \
-		proofs/Arrangement/*.lean proofs/Arrangement/unstable/*.lean 2>/dev/null || true
-	@printf "\033[1;32m--------------------------------\033[0m\n"
+	cd proofs && lake build 2>&1 | tee $(CURDIR)/.tmp/out-build-lean.log
 	cd proofs && lake env lean Arrangement/ProofAudit.lean
 	@$(call print_success,Lean proofs verified.)
 
