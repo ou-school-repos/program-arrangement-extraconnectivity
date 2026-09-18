@@ -205,6 +205,8 @@ Then A(21,7), followed by A(15,9).
 A(19,8) and A(16,9) are substantially riskier because the frontier may exceed 16
 GB even though the rank bitset itself is manageable.
 
+---
+
 ## New result: `A(16,8)`
 
 Command:
