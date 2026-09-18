@@ -6,7 +6,7 @@ SHELL:=/bin/bash
 # Variables
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 CXX      ?= g++
-CXXFLAGS ?= -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -Werror=unknown-pragmas
+CXXFLAGS ?= -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -Werror=unknown-pragmas -Wconversion -Wshadow
 LDFLAGS  ?=
 
 VERSION   ?= 0.1.0
@@ -162,6 +162,8 @@ _check/default: format lint
 # 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 # 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
+# NOTE: run a sanitizer test with:
+# make test CXXFLAGS="-std=c++17 -g -O0 -fsanitize=address,undefined -Wall -Wextra -Wpedantic"
 .PHONY: test _test/predict _test/checkpoint _test/validate_extra_cut _test/validate_extra_cut/full
 test: _test/checkpoint _test/validate_extra_cut _test/predict	##H @Test Run fast test suites
 
