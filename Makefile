@@ -33,7 +33,7 @@ HDRS := $(wildcard include/*.hpp)
 # Build profiles are inferred from the source's own includes/pragmas.
 H := \#
 uses = $(patsubst src/%.cpp,bin/%,$(shell grep -lE '^[[:space:]]*$(H)[[:space:]]*($(1))' $(SRCS) /dev/null))
-OMP_BINS     := $(call uses,include[[:space:]]*[<"]omp\.h|pragma[[:space:]]+omp)
+OMP_BINS     := $(call uses,include[[:space:]]*omp[.]h|pragma[[:space:]]+omp)
 NAUTY_BINS   := $(call uses,include.*nauty[a-z]*\.h)
 ORTOOLS_BINS := $(call uses,include.*ortools/)
 Z3_BINS      := $(call uses,include.*z3)
@@ -302,7 +302,7 @@ _csv/base: bin/predict	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_success,docs/predictions.csv written.)
 
 .PHONY: _csv/full
-_csv/full: bin/predict	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
+_csv/full: bin/predict	##H @General Verified CSV, set R: I..K
 	@if [ ! -f docs/verifications.csv ]; then \
 		./bin/predict --csv --verify-range $(I) $(K) | tee docs/verifications.csv; \
 	else \
