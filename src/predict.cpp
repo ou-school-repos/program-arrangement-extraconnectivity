@@ -24,6 +24,7 @@
 //
 // Usage: bin/predict [R]       Single R prediction
 //        bin/predict --csv N   CSV output for R=2..N
+//        bin/predict --boundary-star n k  Full-Star comparison
 //
 // Vertex representation: inline std::array<SymT, K> with lexicographical
 // ordering. SymT = uint8_t when R ≤ 127, uint16_t for R ≥ 128. Vertex storage
@@ -477,6 +478,17 @@ static int run_verify(int R, int64_t expected_nk1, int64_t expected_const,
 
 // -- Main -------------------------------------------------------------
 
+static void print_usage(std::ostream &out) {
+    out << "Usage:\n"
+        << "  bin/predict <R>                       Analytical formula\n"
+        << "  bin/predict --boundary-star <n> <k> Full-Star comparison\n"
+        << "  bin/predict --audit <R>               Bounds audit report\n"
+        << "  bin/predict --verify <R>              Brute-force cross-check\n"
+        << "  bin/predict --verify-range [s] <e>    Sweep R=s..e\n"
+        << "  bin/predict --csv <N>                 CSV table for R=2..N\n"
+        << "  bin/predict --csv --verify-range <N>  Verified CSV for R=2..N\n";
+}
+
 /// CLI entry point: single-R prediction, --verify, --verify-range, and --csv
 /// modes.
 int main(int argc, const char *argv[]) {
@@ -485,6 +497,7 @@ int main(int argc, const char *argv[]) {
     bool verify_mode = false;
     bool range_mode = false;
     bool audit_mode = false;
+    bool boundary_mode = false;
     bool no_header = false;
     int start_r = 2, end_r = 0;
     int R = 10;
@@ -494,12 +507,17 @@ int main(int argc, const char *argv[]) {
         std::string arg = argv[i];
         if (arg == "--csv")
             csv_mode = true;
-        else if (arg == "--verify")
+        else if (arg == "-h" || arg == "--help") {
+            print_usage(std::cout);
+            return 0;
+        } else if (arg == "--verify")
             verify_mode = true;
         else if (arg == "--verify-range")
             range_mode = true;
         else if (arg == "--audit")
             audit_mode = true;
+        else if (arg == "--boundary-star")
+            boundary_mode = true;
         else if (arg == "--no-header")
             no_header = true;
         else
@@ -507,7 +525,33 @@ int main(int argc, const char *argv[]) {
     }
 
     // Parse positional args based on mode
-    if (range_mode) {
+    if (boundary_mode) {
+        if (positional.size() != 2 || !parse_int_arg(positional[0], start_r) ||
+            !parse_int_arg(positional[1], end_r)) {
+            std::cerr << "Usage: bin/predict --boundary-star <n> <k>\n";
+            return 1;
+        }
+        const int n = start_r;
+        const int k = end_r;
+        if (k < 1 || n <= k) {
+            std::cerr << "Error: require n > k >= 1\n";
+            return 1;
+        }
+        const int m = n - k;
+        R = 1 + k * m;
+        const int64_t e = A000788(R);
+        const int64_t c = constant_analytical(R);
+        const int128_t hamming = (widen(R) * k - e) * m - c;
+        const int128_t star =
+            widen(k) * (k - 1) * m + widen(k) * (k - 1) / 2 * m * (m - 1);
+        std::cout << "A(" << n << "," << k << "): R=" << R
+                  << " (full Star volume)\n"
+                  << "  Hamming baseline: " << i128_to_string(hamming) << "\n"
+                  << "  Star boundary:    " << i128_to_string(star) << "\n"
+                  << "  Delta:            " << i128_to_string(hamming - star)
+                  << "\n";
+        return 0;
+    } else if (range_mode) {
         if (positional.size() == 1) {
             if (!parse_int_arg(positional[0], end_r)) {
                 std::cerr << "Error: invalid integer argument '"
@@ -556,16 +600,7 @@ int main(int argc, const char *argv[]) {
 
     // -- Usage ----------------------------------------------------------
     if (positional.empty() && !range_mode && !csv_mode) {
-        std::cerr
-            << "Usage:\n"
-            << "  bin/predict <R>                     Analytical formula\n"
-            << "  bin/predict --audit <R>             Bounds audit report\n"
-            << "  bin/predict --verify <R>             Brute-force "
-               "cross-check\n"
-            << "  bin/predict --verify-range [s] <e>   Sweep R=s..e\n"
-            << "  bin/predict --csv <N>                CSV table for R=2..N\n"
-            << "  bin/predict --csv --verify-range <N> Verified CSV for "
-               "R=2..N\n";
+        print_usage(std::cerr);
         return 1;
     }
 
