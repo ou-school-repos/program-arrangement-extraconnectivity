@@ -55,6 +55,7 @@ SKIP := $(if $(strip $(ORTOOLS_LIBS)),,$(ORTOOLS_BINS)) \
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,6 +64,7 @@ DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 _help:
 	@printf '\nUsage: make <command>, valid commands:\n'
 	@awk -f scripts/make-help.awk $(MAKEFILE_LIST)
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Print Helpers
@@ -102,7 +104,10 @@ $(BINS): bin/%: src/%.cpp
 -include $(BINS:=.d)
 
 
-LINT_SRCS := $(shell git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
+LINT_SRCS_CPP ?= $(shell git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
+LINT_SRCS_PY ?= $(shell git ls-files '*.py')
+LINT_SRCS_PRETTIER ?= $(shell git ls-files .clang-format '*.json' '.*.y*ml' '*.md')
+LINT_SRCS_SH ?= $(shell git ls-files '*.sh')
 
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
@@ -111,36 +116,37 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	cppcheck --language=c++ --std=c++17 \
 		--enable=information,performance,portability,style,unusedFunction,warning \
 		--check-level=exhaustive --checkers-report=.tmp/cppcheck-checkers.txt \
-		--quiet $(LINT_SRCS) | tee .tmp/out-lint-all.log
-	flake8 --jobs=1 $$(git ls-files '*.py')
+		--quiet $(LINT_SRCS_CPP) | tee .tmp/out-lint-all.log
+	flake8 --jobs=1 $(LINT_SRCS_PY)
+	-shellcheck $(LINT_SRCS_SH)
 	@$(call print_success,Lint complete.)
 
 .PHONY: _lint/clang
 _lint/clang: ##H @Dev Run clang-tidy lint only
 	mkdir -p .tmp/
-	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -Include $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
+	clang-tidy $(LINT_SRCS_CPP) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -Include $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
 
 .PHONY: _lint/pylint
 _lint/pylint:	##H @Dev Run pylint only
-	pylint $$(git ls-files '*.py')
+	pylint $(LINT_SRCS_PY)
 
 .PHONY: _lint/mypy
 _lint/mypy:	##H @Dev Run mypy only
-	mypy $$(git ls-files '*.py')
+	mypy $(LINT_SRCS_PY)
 
 
 .PHONY: format
 format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
 	find . -not -path '*/.lake/*' -name '*.md' -exec sed -i 's/[[:space:]]*$$//' {} +
-	-prettier -w $$(git ls-files .clang-format '*.json' '.*.y*ml' '*.md')
-	-black $$(git ls-files '*.py')
-	-isort $$(git ls-files '*.py')
-	-ruff format $$(git ls-files '*.py')
-	-ruff check --fix $$(git ls-files '*.py')
+	-prettier -w $(LINT_SRCS_PRETTIER)
+	-black $(LINT_SRCS_PY)
+	-isort $(LINT_SRCS_PY)
+	-ruff format $(LINT_SRCS_PY)
+	-ruff check --fix $(LINT_SRCS_PY)
 	-pre-commit run --all-files
-	-shfmt -w $$(git ls-files '*.sh')
-	clang-format -i $(LINT_SRCS)
+	-shfmt -w $(LINT_SRCS_SH)
+	clang-format -i $(LINT_SRCS_CPP)
 	@$(call print_success,Format complete.)
 
 
@@ -154,22 +160,8 @@ format:	##H @Dev Format C++ sources (clang-format)
 # 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 .PHONY: test/predict
-test/predict: bin/predict	##H @Test Verify predictor matches search for R: 2..$(R)
-	@$(call print_info,Testing ./bin/predict against ./bin/arrangement)
-	@fail=0; \
-	for r in $$(seq 2 $(R)); do \
-		expected=$$(./bin/arrangement $$r 2>/dev/null | grep 'EX:' | tail -1 | sed 's/,.*//' | tr -d ' '); \
-		actual=$$(./bin/predict $$r 2>/dev/null | sed 's/,.*//' | tr -d ' '); \
-		if [ "$$actual" = "$$expected" ]; then \
-			$(call print_success,R=$$r: prediction matches search.); \
-		else \
-			$(call print_err,R=$$r: mismatch); \
-			echo "  search:  $$expected"; \
-			echo "  predict: $$actual"; \
-			fail=1; \
-		fi; \
-	done; \
-	if [ $$fail -eq 1 ]; then exit 1; fi
+test/predict: bin/predict bin/arrangement	##H @Test Verify predictor matches search for R: 2..$(R)
+	python3 tests/test_predict.py --max-r $(R)
 
 .PHONY: test/validate_extra_cut
 test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator output with tests/oracle_baseline.json
@@ -242,6 +234,36 @@ paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 _paper/docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
 
 
+PDF_ENGINE ?= xelatex
+
+# NOTE: Generic target
+%.pdf: %.md
+	@$(call print_info,Generating $@ from $<)
+	# NOTE: if fails, try with PDF_ENGINE=lualatex
+	pandoc $< -o $@ \
+		--pdf-engine=${PDF_ENGINE} \
+		-V geometry:margin=0.5in \
+		-V monofont="DejaVu Sans Mono" \
+		-V monofontoptions="Scale=0.8" \
+		-V pagestyle=empty
+	@$(call print_success,Generated $@)
+
+
+.PHONY: _bundle/default
+_bundle/default: clean ##H @General Create a zip archive of the project sources
+	@$(call print_info,Creating $(BUNDLE_OUT))
+	rm -f $(BUNDLE_OUT)
+	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/Arrangement/*.lean scripts/*.py assets/* Makefile
+	@$(call print_success,Bundle created.)
+
+.PHONY: _bundle/site
+_bundle/site:	##H @General Create site.zip of Lean HTML documentation
+	@$(call print_info,Creating $(SITE_OUT))
+	rm -f $(SITE_OUT)
+	cd proofs/docbuild/.lake/build/doc && zip -r9 ../../../../../$(SITE_OUT) .
+	@$(call print_success,Site archive created.)
+
+
 .PHONY: _csv/base
 _csv/base: bin/predict	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_info,Generating predictions CSV)
@@ -263,34 +285,6 @@ _csv/full: bin/predict	##H @General Verified CSV, set R: I..K
 	fi
 	@$(call print_success,docs/verifications.csv — $$(wc -l < docs/verifications.csv) rows.)
 
-
-PDF_ENGINE ?= xelatex
-
-# NOTE: Generic target
-%.pdf: %.md
-	@$(call print_info,Generating $@ from $<)
-	# NOTE: if fails, try with PDF_ENGINE=lualatex
-	pandoc $< -o $@ \
-		--pdf-engine=${PDF_ENGINE} \
-		-V geometry:margin=0.5in \
-		-V monofont="DejaVu Sans Mono" \
-		-V monofontoptions="Scale=0.8" \
-		-V pagestyle=empty
-	@$(call print_success,Generated $@)
-
-.PHONY: _bundle/default
-_bundle/default: clean ##H @General Create a zip archive of the project sources
-	@$(call print_info,Creating $(BUNDLE_OUT))
-	rm -f $(BUNDLE_OUT)
-	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/Arrangement/*.lean scripts/*.py assets/* Makefile
-	@$(call print_success,Bundle created.)
-
-.PHONY: _bundle/site
-_bundle/site:	##H @General Create site.zip of Lean HTML documentation
-	@$(call print_info,Creating $(SITE_OUT))
-	rm -f $(SITE_OUT)
-	cd proofs/docbuild/.lake/build/doc && zip -r9 ../../../../../$(SITE_OUT) .
-	@$(call print_success,Site archive created.)
 
 .PHONY: clean
 clean:	##H @General Remove build artifacts
