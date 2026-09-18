@@ -59,10 +59,6 @@ DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: version
-version:
-	@printf '%s\n' '$(BUILD_ID)'
-
 .PHONY: _help
 _help:
 	@printf '\nUsage: make <command>, valid commands:\n'
@@ -242,8 +238,8 @@ paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 		pdflatex -interaction=nonstopmode paper.tex
 	@$(call print_success,Paper built: docs/paper/paper.pdf)
 
-.PHONY: docs
-docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
+.PHONY: _paper/docs
+_paper/docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
 
 
 .PHONY: _csv/base
@@ -309,10 +305,14 @@ clean:	##H @General Remove build artifacts
 # Debug
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: vars
-vars:	##H @General Debug: Print project variables
+.PHONY: debug/vars
+debug/vars:	##H @General Debug: Print project variables
 	@$(foreach v,$(sort $(.VARIABLES)), \
 		$(if $(filter file command line override,$(origin $(v))), \
 			$(info $(v) = $($(v))) \
 		) \
 	)
+
+.PHONY: debug/version
+debug/version:
+	@printf '%s\n' '$(BUILD_ID)'
