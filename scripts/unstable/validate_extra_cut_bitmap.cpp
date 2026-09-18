@@ -2,90 +2,13 @@
 // The trusted flat and ranked validators remain separate references.
 // Usage: validate_extra_cut_bitmap n k
 
-#include "arrangement_utils.hpp"
+#include "bfs_utils.hpp"
 
 #include <algorithm>
-#include <atomic>
 #include <cstdint>
 #include <iostream>
-#include <memory>
 #include <numeric>
-#include <string>
 #include <vector>
-
-class AtomicBitset {
-  public:
-    explicit AtomicBitset(std::size_t bits)
-        : num_words_((bits + 63) / 64),
-          words_(std::make_unique<std::atomic<std::uint64_t>[]>(num_words_)) {
-        for (std::size_t i = 0; i < num_words_; ++i)
-            words_[i].store(0, std::memory_order_relaxed);
-    }
-
-    bool test(std::size_t bit) const {
-        return (words_[bit / 64].load(std::memory_order_relaxed) >>
-                (bit % 64)) &
-               1;
-    }
-
-    void set_atomic(std::size_t bit) {
-        const std::uint64_t mask = std::uint64_t{1} << (bit % 64);
-        words_[bit / 64].fetch_or(mask, std::memory_order_relaxed);
-    }
-
-    void merge_from(const AtomicBitset &other) {
-        for (std::size_t index = 0; index < num_words_; ++index) {
-            const std::uint64_t bits = other.load_word(index);
-            if (bits)
-                words_[index].fetch_or(bits, std::memory_order_relaxed);
-        }
-    }
-
-    void swap(AtomicBitset &other) { words_.swap(other.words_); }
-
-    void clear() {
-        for (std::size_t index = 0; index < num_words_; ++index)
-            words_[index].store(0, std::memory_order_relaxed);
-    }
-
-    std::size_t num_words() const { return num_words_; }
-
-    std::uint64_t load_word(std::size_t index) const {
-        return words_[index].load(std::memory_order_relaxed);
-    }
-
-  private:
-    std::size_t num_words_;
-    std::unique_ptr<std::atomic<std::uint64_t>[]> words_;
-};
-
-static bool star_connected(const PackedArrangementGraph &graph,
-                           const std::vector<std::uint64_t> &star) {
-    if (star.empty())
-        return true;
-
-    std::vector<bool> seen(star.size(), false);
-    std::vector<std::size_t> pending{0};
-    seen[0] = true;
-    std::size_t reached = 1;
-    while (!pending.empty()) {
-        const std::uint64_t current = star[pending.back()];
-        pending.pop_back();
-        graph.for_each_neighbor(current, [&](const std::uint64_t neighbor) {
-            const auto match = std::find(star.begin(), star.end(), neighbor);
-            if (match == star.end())
-                return;
-            const std::size_t index =
-                static_cast<std::size_t>(match - star.begin());
-            if (!seen[index]) {
-                seen[index] = true;
-                pending.push_back(index);
-                ++reached;
-            }
-        });
-    }
-    return reached == star.size();
-}
 
 int main(int argc, char **argv) {
     if (argc != 3) {
@@ -94,8 +17,8 @@ int main(int argc, char **argv) {
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
-    if (n <= k || k < 1 || n > 64 || k > 15) {
-        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 15.\n";
+    if (n <= k || k < 1 || n > 64 || k > 10) {
+        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 10.\n";
         return 1;
     }
 
@@ -138,6 +61,10 @@ int main(int argc, char **argv) {
     AtomicBitset current_frontier(graph.valid_count);
     AtomicBitset next_frontier(graph.valid_count);
     std::vector<std::uint64_t> component_sizes{star.size()};
+    const std::uint64_t total_survivors =
+        graph.valid_count - star.size() - boundary.size();
+    std::uint64_t discovered_survivors = 0;
+    constexpr std::uint64_t progress_interval = 1'000'000;
 
     graph.for_each_valid_code([&](const std::uint64_t start) {
         const std::size_t start_rank = graph.rank_code(start);
@@ -157,6 +84,10 @@ int main(int argc, char **argv) {
                     word &= word - 1;
                     const std::size_t rank = word_index * 64 + bit;
                     ++level_size;
+                    ++discovered_survivors;
+                    if (discovered_survivors % progress_interval == 0)
+                        report_bfs_progress(discovered_survivors,
+                                            total_survivors);
                     const std::uint64_t code = graph.decode_rank(rank);
                     graph.for_each_neighbor(
                         code, [&](const std::uint64_t neighbor) {
@@ -177,6 +108,9 @@ int main(int argc, char **argv) {
         }
         component_sizes.push_back(size);
     });
+
+    report_bfs_progress(discovered_survivors, total_survivors);
+    std::cerr << '\n';
 
     std::sort(component_sizes.begin(), component_sizes.end());
     const bool valid = component_sizes.size() >= 2 &&

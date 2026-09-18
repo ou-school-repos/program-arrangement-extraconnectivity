@@ -2,11 +2,10 @@
 // The trusted flat validator remains bin/validate_extra_cut.
 // Usage: validate_extra_cut_ranked n k
 
-#include "arrangement_utils.hpp"
+#include "bfs_utils.hpp"
 
 #include <algorithm>
 #include <cstdint>
-#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -49,34 +48,6 @@ static void report_progress(std::uint64_t discovered,
               << std::flush;
 }
 
-static bool star_connected(const PackedArrangementGraph &graph,
-                           const std::vector<std::uint64_t> &star) {
-    if (star.empty())
-        return true;
-
-    std::vector<bool> seen(star.size(), false);
-    std::vector<std::size_t> pending{0};
-    seen[0] = true;
-    std::size_t reached = 1;
-    while (!pending.empty()) {
-        const std::uint64_t current = star[pending.back()];
-        pending.pop_back();
-        graph.for_each_neighbor(current, [&](const std::uint64_t neighbor) {
-            const auto match = std::find(star.begin(), star.end(), neighbor);
-            if (match == star.end())
-                return;
-            const std::size_t index =
-                static_cast<std::size_t>(match - star.begin());
-            if (!seen[index]) {
-                seen[index] = true;
-                pending.push_back(index);
-                ++reached;
-            }
-        });
-    }
-    return reached == star.size();
-}
-
 int main(int argc, char **argv) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " n k\n";
@@ -84,8 +55,8 @@ int main(int argc, char **argv) {
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
-    if (n <= k || k < 1 || n > 64 || k > 12) {
-        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 12.\n";
+    if (n <= k || k < 1 || n > 64 || k > 10) {
+        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 10.\n";
         return 1;
     }
 
