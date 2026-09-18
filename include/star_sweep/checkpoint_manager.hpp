@@ -4,8 +4,10 @@
 #include "checkpoint_types.hpp"
 #include "frontier_delta.hpp"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -51,6 +53,30 @@ class CheckpointManager {
     bool has_current() const {
         struct stat status{};
         return lstat((directory_ + "/CURRENT").c_str(), &status) == 0;
+    }
+
+    bool has_checkpoint_artifacts() const {
+        namespace fs = std::filesystem;
+        std::error_code error;
+        if (!fs::is_directory(directory_, error)) {
+            if (error)
+                throw std::runtime_error(
+                    "cannot inspect checkpoint directory: " + directory_);
+            return false;
+        }
+        const fs::directory_iterator begin(
+            directory_, fs::directory_options::skip_permission_denied, error);
+        const fs::directory_iterator end;
+        const bool has_artifacts =
+            std::any_of(begin, end, [](const fs::directory_entry &entry) {
+                const std::string name = entry.path().filename().string();
+                return name == "CURRENT" || name == "CURRENT.tmp" ||
+                       name.rfind("gen-", 0) == 0;
+            });
+        if (error)
+            throw std::runtime_error("cannot inspect checkpoint directory: " +
+                                     directory_);
+        return has_artifacts;
     }
 
     CheckpointState read_state(std::uint64_t generation,

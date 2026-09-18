@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
                                     " --interrupt-at-generation 2 > " +
                                     interrupted_log.string() + " 2>&1";
     const std::string resumed = binary + " 7 4 --disk-backed " + prefix +
-                                " --resume > " + resumed_log.string() + " 2>&1";
+                                " > " + resumed_log.string() + " 2>&1";
 
     assert(run(fresh) == 0);
     assert(run(interrupted) == 99);

@@ -1,6 +1,6 @@
 // Serial bitmap-frontier experiment for A(n,k).
 // The trusted flat and ranked validators remain separate references.
-// Usage: validate_extra_cut_bitmap n k [--disk-backed prefix] [--resume]
+// Usage: validate_extra_cut_bitmap n k [--disk-backed prefix]
 
 #include "bfs_utils.hpp"
 #include "star_sweep/checkpoint_manager.hpp"
@@ -26,14 +26,12 @@ inline int omp_get_thread_num() { return 0; }
 
 int main(int argc, char **argv) {
     if (argc < 3) {
-        std::cerr << "Usage: " << argv[0]
-                  << " n k [--disk-backed prefix] [--resume]\n";
+        std::cerr << "Usage: " << argv[0] << " n k [--disk-backed prefix]\n";
         return 1;
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
     bool disk_backed = false;
-    bool resume_mode = false;
     std::string disk_prefix;
     std::uint64_t interrupt_generation = 0;
     for (int index = 3; index < argc; ++index) {
@@ -41,21 +39,15 @@ int main(int argc, char **argv) {
         if (argument == "--disk-backed" && index + 1 < argc) {
             disk_backed = true;
             disk_prefix = argv[++index];
-        } else if (argument == "--resume") {
-            resume_mode = true;
         } else if (argument == "--interrupt-at-generation" &&
                    index + 1 < argc) {
             interrupt_generation = std::stoull(argv[++index]);
         } else {
             std::cerr << "Usage: " << argv[0]
-                      << " n k [--disk-backed prefix] [--resume]"
+                      << " n k [--disk-backed prefix]"
                          " [--interrupt-at-generation N]\n";
             return 1;
         }
-    }
-    if (resume_mode && !disk_backed) {
-        std::cerr << "Error: --resume requires --disk-backed.\n";
-        return 1;
     }
     if (n <= k || k < 1 || n > 64 || k > 21) {
         std::cerr << "Error: require 64 >= n > k >= 1 and k <= 21.\n";
@@ -64,6 +56,20 @@ int main(int argc, char **argv) {
 
     const PackedArrangementGraph graph(n, k);
     const FullStarParameters parameters = full_star_parameters(n, k);
+
+    std::unique_ptr<star_sweep::CheckpointManager> checkpoint_manager;
+    bool resume_mode = false;
+    if (disk_backed) {
+        checkpoint_manager =
+            std::make_unique<star_sweep::CheckpointManager>(disk_prefix);
+        if (checkpoint_manager->has_current())
+            resume_mode = true;
+        else if (checkpoint_manager->has_checkpoint_artifacts()) {
+            std::cerr << "Error: checkpoint artifacts exist but CURRENT is "
+                         "missing; refusing to overwrite the broken chain.\n";
+            return 1;
+        }
+    }
 
     std::cout << "Build: " << build_version << "\n"
               << "Building rank-indexed A(" << n << ',' << k << ")...\n"
@@ -119,16 +125,6 @@ int main(int argc, char **argv) {
     star_sweep::CheckpointSignature expected_signature{
         n, k, graph.valid_count,
         ((graph.valid_count + 63) / 64) * sizeof(std::uint64_t)};
-    std::unique_ptr<star_sweep::CheckpointManager> checkpoint_manager;
-    if (disk_backed)
-        checkpoint_manager =
-            std::make_unique<star_sweep::CheckpointManager>(disk_prefix);
-    if (disk_backed && !resume_mode && checkpoint_manager->has_current()) {
-        std::cerr << "Error: checkpoint exists; use --resume or choose a new "
-                     "prefix.\n";
-        return 1;
-    }
-
     for (const packed_code_t code : star)
         visited.set_atomic(graph.rank_code(code));
 
@@ -153,8 +149,8 @@ int main(int argc, char **argv) {
 
     if (resume_mode) {
         if (!checkpoint_manager->has_current()) {
-            std::cerr << "Error: --resume requested but checkpoint CURRENT is "
-                         "missing.\n";
+            std::cerr << "Error: checkpoint CURRENT disappeared during "
+                         "startup.\n";
             return 1;
         }
         active_generation = checkpoint_manager->current_generation();
@@ -176,11 +172,32 @@ int main(int argc, char **argv) {
                 current_frontier);
             resume_component = true;
         }
-        std::cout << "Resuming checkpoint generation " << active_generation
-                  << ".\n";
+        std::cout
+            << "Checkpoint resume:\n"
+            << "  generation: " << active_generation << "\n"
+            << "  phase: "
+            << (resume_state.phase == star_sweep::CheckpointPhase::LayerBoundary
+                    ? "active frontier"
+                    : "component complete")
+            << "\n"
+            << "  layer: " << resume_state.layer << "\n"
+            << "  component anchor rank: " << resume_state.component_anchor
+            << "\n"
+            << "  component size: " << resume_state.component_size << "\n"
+            << "  restored frontier size: " << resume_state.active_frontier_size
+            << "\n"
+            << "  discovered survivors: " << resume_state.discovered_survivors
+            << " / " << total_survivors << "\n"
+            << "  saved component history: " << component_sizes.size()
+            << " entries\n"
+            << "  saved direction history: "
+            << resume_state.direction_history.size() << " layers\n";
     }
     constexpr std::uint64_t progress_interval = 1'000'000;
-    std::uint64_t next_progress = progress_interval;
+    std::uint64_t next_progress =
+        resume_mode ? ((discovered_survivors / progress_interval) + 1) *
+                          progress_interval
+                    : progress_interval;
     bool direction_message_printed = false;
 
     std::cout << "|S| = " << star.size() << "\n"
@@ -241,9 +258,8 @@ int main(int argc, char **argv) {
                 direction_message_printed = true;
             }
             if (!bottom_up)
-                report_bfs_topdown_progress(
-                    layer, 0, current_frontier.num_blocks(),
-                    discovered_survivors, total_survivors);
+                std::cerr << "Layer " << std::setw(3) << layer << ": frontier "
+                          << current_frontier_size << '\n';
 
             if (bottom_up) {
                 const std::size_t total_words = visited.num_words();
@@ -405,6 +421,7 @@ int main(int argc, char **argv) {
                                     layer, bottom_up);
                 next_progress = (discovered_survivors / progress_interval + 1) *
                                 progress_interval;
+                std::cerr << '\n';
             }
 
             if (disk_backed) {

@@ -195,7 +195,7 @@ inline void report_bfs_progress(std::uint64_t discovered,
                                ? 100.0
                                : 100.0 * static_cast<double>(discovered) /
                                      static_cast<double>(total_survivors);
-    std::cerr << "\rOverall BFS progress: " << discovered << " / "
+    std::cerr << "\r\033[2KOverall BFS progress: " << discovered << " / "
               << total_survivors << " (" << std::fixed << std::setprecision(1)
               << percent << "%)" << std::flush;
 }
@@ -207,9 +207,8 @@ inline void report_bfs_progress(std::uint64_t discovered,
                                ? 100.0
                                : 100.0 * static_cast<double>(discovered) /
                                      static_cast<double>(total_survivors);
-    std::cerr << "\r\033[K" << "BFS progress:   ["
-              << (bottom_up ? "bottom-up" : "top-down") << " layer "
-              << std::setw(3) << layer << "] " << discovered << " / "
+    std::cerr << "\r\033[2KBFS: " << (bottom_up ? "BU" : "TD") << " L"
+              << std::setw(3) << layer << " " << discovered << " / "
               << total_survivors << " (" << std::fixed << std::setprecision(1)
               << percent << "%)" << std::flush;
 }
@@ -226,11 +225,10 @@ inline void report_bfs_scan_progress(std::size_t layer, std::size_t scanned,
         total_survivors == 0 ? 100.0
                              : 100.0 * static_cast<double>(discovered) /
                                    static_cast<double>(total_survivors);
-    std::cerr << "\r\033[KBottom-up scan:  [bottom-up layer " << std::setw(3)
-              << layer << "] scan " << std::fixed << std::setprecision(1)
-              << std::setw(5) << scan_percent << "% | overall " << std::setw(5)
-              << overall_percent << "% (" << discovered << " / "
-              << total_survivors << ")" << std::flush;
+    std::cerr << "\r\033[2KBU L" << std::setw(3) << layer << " scan "
+              << std::fixed << std::setprecision(1) << std::setw(5)
+              << scan_percent << "% | " << std::setw(5) << overall_percent
+              << "%" << std::flush;
 }
 
 inline void report_bfs_topdown_progress(std::size_t layer, std::size_t scanned,
@@ -245,11 +243,10 @@ inline void report_bfs_topdown_progress(std::size_t layer, std::size_t scanned,
         total_survivors == 0 ? 100.0
                              : 100.0 * static_cast<double>(discovered) /
                                    static_cast<double>(total_survivors);
-    std::cerr << "\r\033[KTop-down expand: [top-down layer " << std::setw(3)
-              << layer << "] blocks " << std::fixed << std::setprecision(1)
-              << std::setw(5) << scan_percent << "% | overall " << std::setw(5)
-              << overall_percent << "% (" << discovered << " / "
-              << total_survivors << ")" << std::flush;
+    std::cerr << "\r\033[2KTD L" << std::setw(3) << layer << " blocks "
+              << std::fixed << std::setprecision(1) << std::setw(5)
+              << scan_percent << "% | " << std::setw(5) << overall_percent
+              << "%" << std::flush;
 }
 
 inline bool star_connected(const PackedArrangementGraph &graph,

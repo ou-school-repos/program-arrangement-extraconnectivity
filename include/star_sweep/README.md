@@ -18,6 +18,7 @@ The working bitmaps are not themselves the durable checkpoint. A resume path
 must reconstruct them from committed frontier deltas and reject any generation
 whose signature, sizes, or metadata do not match the requested `A(n,k)`.
 
-The validator now has opt-in `--resume` integration and a separate interruption
-test target. The support remains draft infrastructure until the smoke and
+The validator automatically resumes from `CURRENT` when a disk-backed prefix
+already contains a committed checkpoint. A separate interruption
+test target remains available. The support remains draft infrastructure until the smoke and
 end-to-end recovery tests are run successfully on the current build.
