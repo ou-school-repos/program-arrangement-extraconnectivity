@@ -33,22 +33,20 @@ TOOL_BINS = $(addprefix bin/,$(basename $(notdir $(TOOL_SOURCES))))
 
 # These names are retained as lightweight aliases for scripts and muscle
 # memory.  The actual files live under bin/.
-BIN_OPT = bin/arrangement
-BIN_PRED = bin/predict
-BIN_UNIVERSAL = bin/universal_lower_bound
+# BIN_OPT = bin/arrangement
+# BIN_PRED = bin/predict
+# BIN_UNIVERSAL = bin/universal_lower_bound
 
 # Optional dependency: install OR-Tools/Z3 separately before using this group.
-OPTIONAL_SOURCES = src/search_ghosts.cpp src/search_triples.cpp \
-	src/search_single.cpp src/profile_telescope_milp.cpp \
-	scripts/a10_5_hunt.cpp scripts/a10_5_boost.cpp scripts/a10_5_smt_oracle.cpp
-OPTIONAL_BINS = $(addprefix bin/,$(basename $(notdir $(OPTIONAL_SOURCES))))
+# OPTIONAL_SOURCES = src/search_ghosts.cpp src/search_triples.cpp \
+# 	src/search_single.cpp src/profile_telescope_milp.cpp \
+# 	scripts/a10_5_hunt.cpp scripts/a10_5_boost.cpp scripts/a10_5_smt_oracle.cpp
+# OPTIONAL_BINS = $(addprefix bin/,$(basename $(notdir $(OPTIONAL_SOURCES))))
 
-ALL_BINS = $(TOOL_BINS) $(OPTIONAL_BINS) $(BIN_OPT)
+# ALL_BINS = $(TOOL_BINS) $(OPTIONAL_BINS) $(BIN_OPT)
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
 ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
-
-SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
@@ -60,11 +58,12 @@ NAUTY_LIBS   = -lnauty
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.PHONY: _help help version
 
+.PHONY: version
 version:
 	@printf '%s\n' '$(BUILD_ID)'
-help: _help
+
+.PHONY: _help
 _help:
 	@printf "\nUsage: make <command>, valid commands:\n\n"
 	@awk 'BEGIN {FS = ":.*?##H "}; \
@@ -116,27 +115,26 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Header dependencies for arrangement
-ARRANGEMENT_HDRS = $(wildcard src/*.h)
-
-CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
+# ARRANGEMENT_HDRS = $(wildcard src/*.h)
+# CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
 
 # `tools` is the one extensible build target: every ordinary standalone
 # source becomes bin/<basename>.  The generated aliases below keep
 # `make <tool>` and Make's tab completion convenient without another rule per
 # source file.
-.PHONY: tools
-tools: $(TOOL_BINS) ##H @Build Build all standalone C/C++ tools into bin/
+# .PHONY: tools
+# tools: $(TOOL_BINS) ##H @Build Build all standalone C/C++ tools into bin/
 
 .PHONY: build
-build: tools ##H @Build Build the core search and all standalone tools
+build: $(TOOL_BINS) ##H @Build Build the core search and all standalone tools
 
 
-define TOOL_template
-bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
-	@mkdir -p bin
-	$(CXX) $(CXXFLAGS) -o $$@ $$<
-endef
-$(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
+# define TOOL_template
+# bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
+# 	@mkdir -p bin
+# 	$(CXX) $(CXXFLAGS) -o $$@ $$<
+# endef
+# $(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
 
 # The nauty executable and the optional solver programs use non-default link
 # flags, so they remain explicit, but are grouped rather than mixed into the
@@ -145,8 +143,8 @@ $(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
 # 	@mkdir -p bin
 # 	$(CXX) $(CXXFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $@ $< $(NAUTY_LIBS)
 
-.PHONY: optional-tools
-optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
+# .PHONY: optional-tools
+# optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
 
 # define OPTIONAL_template
 # bin/$(notdir $(basename $(1))): $(1)
@@ -173,6 +171,7 @@ optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
 # fracture-arithmetic-check:
 # 	$(CXX) -O2 -std=c++17 -Wall -Wextra scripts/unstable/fracture_arith_check.cpp -o /tmp/fracture_arith_check
 # 	/tmp/fracture_arith_check 12
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Run
@@ -240,9 +239,13 @@ csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$
 	fi
 	@$(call print_success,docs/verifications.csv — $$(wc -l < docs/verifications.csv) rows.)
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lint & Format
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
+
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
@@ -284,6 +287,7 @@ format:	##H @Dev Format C++ sources (clang-format)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lean 4 Proofs
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .PHONY: lean
 lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
@@ -353,9 +357,11 @@ render: ##H Render all visual assets (.dot to .png)
 	@$(call print_info,Rendering visual assets)
 	python3 scripts/render_assets.py
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .PHONY: paper
 paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 	@$(call print_info,Building LaTeX paper)
@@ -402,7 +408,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(ALL_BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(TOOL_BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 .PHONY: vars
