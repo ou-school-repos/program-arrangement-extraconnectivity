@@ -73,7 +73,7 @@ Legend:
 |      12 |  ∘  |  ∘  |  ∘  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  | \\  |
 |      13 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  |
 |      14 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ⊞  |  ⊞  |  ∘  |  ?  |  /  | \\  | \\  |
-|      15 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  •  |  /  |  /  |  /  |  /  | \\  |
+|      15 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  ⊞  |  /  |  /  |  /  |  /  | \\  |
 |      16 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |
 |      17 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ?  |  •  |  /  |  /  |  /  |  /  |  /  |
 |      18 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |  /  |
@@ -816,6 +816,62 @@ HARD COUNTEREXAMPLE: RestrictedLowerBound
 real    118m17.819s
 user    117m34.612s
 sys     0m8.120s
+
+# shane@coffeelake:~/Documents/school/ou-papers/program-cheng-connectivity-asymptote
+$ time ./bin/validate_extra_cut_bitmap 15 10 --disk-backed ./state_A15_10
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '202111'
+  [host] OMP_DYNAMIC = 'FALSE'
+  [host] OMP_NESTED = 'FALSE'
+  [host] OMP_NUM_THREADS = '1'
+  [host] OMP_SCHEDULE = 'DYNAMIC'
+  [host] OMP_PROC_BIND = 'FALSE'
+  [host] OMP_PLACES = ''
+  [host] OMP_STACKSIZE = '0'
+  [host] OMP_WAIT_POLICY = 'PASSIVE'
+  [host] OMP_THREAD_LIMIT = '4294967295'
+  [host] OMP_MAX_ACTIVE_LEVELS = '1'
+  [host] OMP_NUM_TEAMS = '0'
+  [host] OMP_TEAMS_THREAD_LIMIT = '0'
+  [all] OMP_CANCELLATION = 'FALSE'
+  [all] OMP_DEFAULT_DEVICE = '0'
+  [all] OMP_MAX_TASK_PRIORITY = '0'
+  [all] OMP_DISPLAY_AFFINITY = 'FALSE'
+  [host] OMP_AFFINITY_FORMAT = 'level %L thread %i affinity %A'
+  [host] OMP_ALLOCATOR = 'omp_default_mem_alloc'
+  [all] OMP_TARGET_OFFLOAD = 'DEFAULT'
+OPENMP DISPLAY ENVIRONMENT END
+Build: 0.1.0 (draft-2026-07-21-emailed-laszlo-eddie-435-g2b77f21b7db7-dirty)
+Building rank-indexed A(15,10)...
+Total valid vertices: 10897286400
+Visited bitset: 1362160800 bytes
+Storage: disk-backed (mmap)
+R = 51
+Candidate g = 50
+Subset S connectivity verified.
+|S| = 51
+|N(S)| = 1350
+Validating 50-extra cut properties...
+BFS progress: 242374803 / 10897284999 (2.2%)
+[Direction Optimized: Bottom-Up Scan Active]
+Bottom-up scan: [layer 9/?] 170270100 / 170270100 words (100.0%)
+Bottom-up scan: [layer 10/?] 170270100 / 170270100 words (100.0%)
+Bottom-up scan: [layer 11/?] 170270100 / 170270100 words (100.0%)
+Bottom-up scan: [layer 12/?] 170270100 / 170270100 words (100.0%)
+BFS progress: 10897284999 / 10897284999 (100.0%)
+component sizes after deletion:
+  51
+  10897284999
+valid 50-extra cut: yes
+therefore kappa_50(A(15,10)) <= 1350
+Hamming baseline: 1713; Star boundary: 1350; Delta: 363
+Embedding gate: d = 6, k = 10, n-k = 5 (closed)
+SOFT COUNTEREXAMPLE: UniversalLowerBound only
+
+real    313m38.746s
+user    310m15.734s
+sys     0m31.582s
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives
