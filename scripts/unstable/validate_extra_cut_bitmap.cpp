@@ -86,29 +86,37 @@ int main(int argc, char **argv) {
             return;
 
         std::uint64_t size = 0;
-        current_frontier.set_atomic(start_rank);
         visited.set_atomic(start_rank);
+        current_frontier.set_atomic(start_rank);
         while (true) {
             std::uint64_t level_size = 0;
-            const std::size_t total_words = current_frontier.num_words();
+            const std::size_t total_blocks = current_frontier.num_blocks();
 
-#pragma omp parallel for schedule(dynamic, 64) reduction(+ : level_size)
-            for (std::size_t word_index = 0; word_index < total_words;
-                 ++word_index) {
-                std::uint64_t word = current_frontier.load_word(word_index);
-                while (word != 0) {
-                    const int bit = __builtin_ctzll(word);
-                    word &= word - 1;
-                    const std::size_t rank = word_index * 64 + bit;
-                    ++level_size;
-                    const packed_code_t code = graph.decode_rank(rank);
-                    graph.for_each_neighbor(
-                        code, [&](const packed_code_t neighbor) {
-                            const std::size_t neighbor_rank =
-                                graph.rank_code(neighbor);
-                            if (!visited.test(neighbor_rank))
-                                next_frontier.set_atomic(neighbor_rank);
-                        });
+#pragma omp parallel for schedule(dynamic, 1) reduction(+ : level_size)
+            for (std::size_t block = 0; block < total_blocks; ++block) {
+                if (!current_frontier.block_dirty(block))
+                    continue;
+                const std::size_t first = block * AtomicBitset::block_size;
+                const std::size_t last =
+                    std::min(first + AtomicBitset::block_size,
+                             current_frontier.num_words());
+                for (std::size_t word_index = first; word_index < last;
+                     ++word_index) {
+                    std::uint64_t word = current_frontier.load_word(word_index);
+                    while (word != 0) {
+                        const int bit = __builtin_ctzll(word);
+                        word &= word - 1;
+                        const std::size_t rank = word_index * 64 + bit;
+                        ++level_size;
+                        const packed_code_t code = graph.decode_rank(rank);
+                        graph.for_each_neighbor(
+                            code, [&](const packed_code_t neighbor) {
+                                const std::size_t neighbor_rank =
+                                    graph.rank_code(neighbor);
+                                if (!visited.test(neighbor_rank))
+                                    next_frontier.set_atomic(neighbor_rank);
+                            });
+                    }
                 }
             }
 
