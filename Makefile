@@ -6,11 +6,11 @@ SHELL:=/bin/bash
 # Variables
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 CXX      ?= g++
-CXXFLAGS ?= -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic
+CXXFLAGS ?= -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -Werror=unknown-pragmas
 LDFLAGS  ?=
 
 VERSION   ?= 0.1.0
-GIT_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
+GIT_COMMIT ?= $(shell git describe --always --dirty --abbrev=12 2>/dev/null || echo unknown)
 BUILD_ID  ?= $(VERSION) ($(GIT_COMMIT))
 CPPFLAGS += -DBUILD_VERSION='"$(BUILD_ID)"'
 $(info Build version: $(BUILD_ID))
@@ -32,7 +32,7 @@ HDRS := $(wildcard include/*.hpp)
 
 # Build profiles are inferred from the source's own includes/pragmas.
 H := \#
-uses = $(patsubst src/%.cpp,bin/%,$(shell grep -lE '^[[:space:]]*$(H)[[:space:]]*($(1))' $(SRCS) 2>/dev/null))
+uses = $(patsubst src/%.cpp,bin/%,$(shell grep -lE '^[[:space:]]*$(H)[[:space:]]*($(1))' $(SRCS) /dev/null))
 OMP_BINS     := $(call uses,include[[:space:]]*[<"]omp\.h|pragma[[:space:]]+omp)
 NAUTY_BINS   := $(call uses,include.*nauty[a-z]*\.h)
 ORTOOLS_BINS := $(call uses,include.*ortools/)
@@ -41,18 +41,16 @@ Z3_BINS      := $(call uses,include.*z3)
 ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
 ORTOOLS_LIBS   ?= $(shell pkg-config --libs ortools 2>/dev/null)
 Z3_LIBS        ?= $(shell pkg-config --libs z3 2>/dev/null)
-NAUTY_AVAILABLE := $(wildcard /usr/include/nauty/nauty.h)
 
 $(OMP_BINS):     DEP_CXXFLAGS += -fopenmp
-$(NAUTY_BINS):   DEP_CPPFLAGS += $(if $(NAUTY_AVAILABLE),-I/usr/include/nauty,)
-$(NAUTY_BINS):   DEP_LIBS     += $(if $(NAUTY_AVAILABLE),-lnauty,)
+$(NAUTY_BINS):   DEP_CPPFLAGS += -I/usr/include/nauty
+$(NAUTY_BINS):   DEP_LIBS     += -lnauty
 $(ORTOOLS_BINS): DEP_CPPFLAGS += $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS))
 $(ORTOOLS_BINS): DEP_LIBS     += $(ORTOOLS_LIBS)
 $(Z3_BINS):      DEP_LIBS     += $(Z3_LIBS)
 
 SKIP := $(if $(strip $(ORTOOLS_LIBS)),,$(ORTOOLS_BINS)) \
-        $(if $(strip $(Z3_LIBS)),,$(Z3_BINS)) \
-        $(if $(strip $(NAUTY_AVAILABLE)),,$(NAUTY_BINS))
+        $(if $(strip $(Z3_LIBS)),,$(Z3_BINS))
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
@@ -123,24 +121,28 @@ build: $(filter-out $(SKIP),$(BINS)) ##H @Dev Build all tools (optional solver t
 		echo "Skipping unavailable solver tools: $(notdir $(SKIP))"; \
 	fi
 
-$(BINS): bin/%: src/%.cpp $(HDRS)
+$(BINS): bin/%: src/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) -Iinclude $(CPPFLAGS) $(DEP_CPPFLAGS) $(CXXFLAGS) $(DEP_CXXFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) $(DEP_LIBS)
+	$(CXX) -I./include -MMD -MP -MF $@.d $(CPPFLAGS) $(DEP_CPPFLAGS) $(CXXFLAGS) $(DEP_CXXFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) $(DEP_LIBS)
+
+-include $(BINS:=.d)
+
+LINT_SRCS := $(shell git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
-	@$(call print_info,Running cppcheck)
-	@cppcheck --language=c++ --std=c++17 \
+	mkdir -p .tmp/
+	cppcheck --language=c++ --std=c++17 \
 		--enable=information,performance,portability,style,unusedFunction,warning \
-		--check-level=exhaustive --checkers-report=.cppcheck-checkers.txt \
-		--quiet $(SRCS) | tee lint.log
+		--check-level=exhaustive --checkers-report=.tmp/cppcheck-checkers.txt \
+		--quiet $(LINT_SRCS) | tee lint.log
 	flake8 --jobs=1 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 
 .PHONY: clang
 clang: ##H @Dev Run clang-tidy lint only
-	clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(if $(NAUTY_AVAILABLE),-I/usr/include/nauty,) | tee -a lint.log
+	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -I./include $(CPPFLAGS) $(CXXFLAGS) -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee -a lint.log
 
 .PHONY: pylint
 pylint:	##H @Dev Run pylint only
@@ -161,7 +163,7 @@ format:	##H @Dev Format C++ sources (clang-format)
 	-ruff check --fix $$(git ls-files '*.py')
 	-pre-commit run --all-files
 	-shfmt -w $$(git ls-files '*.sh')
-	clang-format -i $(SRCS)
+	clang-format -i $(LINT_SRCS)
 	@$(call print_success,Format complete.)
 
 
@@ -341,7 +343,9 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -rf .ruff_cache/ .mypy_cache/
+	find . -maxdepth 3 -name __pycache__
+	rm -f $(BINS) $(BINS:=.d) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 
