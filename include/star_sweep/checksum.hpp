@@ -26,7 +26,7 @@ class Crc32c {
         while (length >= sizeof(std::uint64_t)) {
             std::uint64_t word = 0;
             std::memcpy(&word, bytes, sizeof(word));
-            value_ = _mm_crc32_u64(value_, word);
+            value_ = static_cast<std::uint32_t>(_mm_crc32_u64(value_, word));
             bytes += sizeof(word);
             length -= sizeof(word);
         }
