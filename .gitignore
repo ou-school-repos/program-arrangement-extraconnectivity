@@ -77,6 +77,10 @@ Thumbs.db
 docs/*.gif
 paper/archive/
 
+# bitmap stores and other disk persistances
+*.bitmap
+*.bin
+
 # LaTeX build artifacts
 *.aux
 *.bbl

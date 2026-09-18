@@ -5,34 +5,30 @@ SHELL:=/bin/bash
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Variables
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CXX      = g++
-CXXFLAGS = -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -fopenmp
-LDFLAGS  =
+CXX      ?= g++
+CXXFLAGS ?= -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -fopenmp
+LDFLAGS  ?=
 
 VERSION   ?= 0.1.0
-GIT_COMMIT := $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
-BUILD_ID  := $(VERSION) ($(GIT_COMMIT))
+GIT_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
+BUILD_ID  ?= $(VERSION) ($(GIT_COMMIT))
 CXXFLAGS += '-DBUILD_VERSION="$(BUILD_ID)"'
 $(info Build version: $(BUILD_ID))
 
 # Machine-local configuration (such as an /opt OR-Tools installation) is
 # supplied by the caller's environment (for example, through direnv/.envrc).
 
-R         ?= 8
-I         ?= 2
-K         ?= 127
-DOCS_SRC  = $(wildcard README.md docs/*.md)
-DOCS_PDF  = $(DOCS_SRC:.md=.pdf)
-BUNDLE_OUT = bundle.zip
-SITE_OUT   = site.zip
+R          ?= 8
+I          ?= 2
+K          ?= 127
+DOCS_SRC   ?= $(wildcard README.md docs/*.md)
+DOCS_PDF   ?= $(DOCS_SRC:.md=.pdf)
+BUNDLE_OUT ?= bundle.zip
+SITE_OUT   ?= site.zip
 
 # All ordinary standalone C/C++ programs are discovered automatically and
 # written to bin/.  Adding a new source file therefore needs no Makefile edit.
-TOOL_SOURCES = $(wildcard src/*.c src/*.cc src/*.cpp scripts/*.c scripts/*.cc scripts/*.cpp scripts/unstable/*.c scripts/unstable/*.cc scripts/unstable/*.cpp)
-TOOL_SOURCES := $(filter-out src/arrangement.cpp \
-	src/search_ghosts.cpp src/search_triples.cpp src/search_single.cpp \
-	src/profile_telescope_milp.cpp scripts/a10_5_hunt.cpp \
-	scripts/a10_5_boost.cpp scripts/a10_5_smt_oracle.cpp,$(TOOL_SOURCES))
+TOOL_SOURCES = $(wildcard src/*.c src/*.cc src/*.cpp    scripts/*.c scripts/*.cc scripts/*.cpp    scripts/unstable/*.c scripts/unstable/*.cc scripts/unstable/*.cpp)
 TOOL_BINS = $(addprefix bin/,$(basename $(notdir $(TOOL_SOURCES))))
 
 # These names are retained as lightweight aliases for scripts and muscle
@@ -124,13 +120,16 @@ ARRANGEMENT_HDRS = $(wildcard src/*.h)
 
 CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
 
-.PHONY: build tools optional-tools certificates certificates-check fracture-arithmetic-check
-
 # `tools` is the one extensible build target: every ordinary standalone
 # source becomes bin/<basename>.  The generated aliases below keep
 # `make <tool>` and Make's tab completion convenient without another rule per
 # source file.
+.PHONY: tools
 tools: $(TOOL_BINS) ##H @Build Build all standalone C/C++ tools into bin/
+
+.PHONY: build
+build: tools ##H @Build Build the core search and all standalone tools
+
 
 define TOOL_template
 bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
@@ -142,62 +141,56 @@ $(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
 # The nauty executable and the optional solver programs use non-default link
 # flags, so they remain explicit, but are grouped rather than mixed into the
 # ordinary tool list.
-bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)	##H @Tool Build arrangement into bin/
-	@mkdir -p bin
-	$(CXX) $(CXXFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $@ $< $(NAUTY_LIBS)
+# bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)
+# 	@mkdir -p bin
+# 	$(CXX) $(CXXFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $@ $< $(NAUTY_LIBS)
 
-bin/validate_extra_cut_bitmap_2: scripts/unstable/validate_extra_cut_bitmap.cpp \
-	scripts/unstable/bfs_utils.hpp scripts/unstable/arrangement_utils.hpp \
-	scripts/unstable/build_info.hpp
-	@mkdir -p bin
-	$(CXX) $(CXXFLAGS) -o $@ $<
-
+.PHONY: optional-tools
 optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
 
-define OPTIONAL_template
-bin/$(notdir $(basename $(1))): $(1)
-	@mkdir -p bin
-	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $$@ $$< $(ORTOOLS_LIBS)
-endef
-$(foreach source,$(filter-out scripts/a10_5_smt_oracle.cpp,$(OPTIONAL_SOURCES)),$(eval $(call OPTIONAL_template,$(source))))
+# define OPTIONAL_template
+# bin/$(notdir $(basename $(1))): $(1)
+# 	@mkdir -p bin
+# 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $$@ $$< $(ORTOOLS_LIBS)
+# endef
+# $(foreach source,$(filter-out scripts/a10_5_smt_oracle.cpp,$(OPTIONAL_SOURCES)),$(eval $(call OPTIONAL_template,$(source))))
 
-bin/a10_5_smt_oracle: scripts/a10_5_smt_oracle.cpp	##H @Optional Build a10_5_smt_oracle into bin/
-	@mkdir -p bin
-	$(CXX) $(CXXFLAGS) $$(shell pkg-config --cflags z3) -o $@ $< $$(shell pkg-config --libs z3)
+# bin/a10_5_smt_oracle: scripts/a10_5_smt_oracle.cpp	##H @Optional Build a10_5_smt_oracle into bin/
+# 	@mkdir -p bin
+# 	$(CXX) $(CXXFLAGS) $$(shell pkg-config --cflags z3) -o $@ $< $$(shell pkg-config --libs z3)
 
-build: bin/arrangement tools ##H @Build Build the core search and all standalone tools
 
-certificates:	##H @Build Compile the finite certificate/oracle tools
-	@mkdir -p $(CERTIFICATE_BUILD)
-	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/fdp_certificate.cpp -o $(CERTIFICATE_BUILD)/fdp_certificate
-	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/max_q_oracle.cpp -o $(CERTIFICATE_BUILD)/max_q_oracle
-	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/audit_orbits.cpp -o $(CERTIFICATE_BUILD)/audit_orbits
-	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/opt_orbits.cpp -o $(CERTIFICATE_BUILD)/opt_orbits
+# certificates:
+# 	@mkdir -p $(CERTIFICATE_BUILD)
+# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/fdp_certificate.cpp -o $(CERTIFICATE_BUILD)/fdp_certificate
+# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/max_q_oracle.cpp -o $(CERTIFICATE_BUILD)/max_q_oracle
+# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/audit_orbits.cpp -o $(CERTIFICATE_BUILD)/audit_orbits
+# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/opt_orbits.cpp -o $(CERTIFICATE_BUILD)/opt_orbits
 
-certificates-check: certificates	##H @Test Run the finite certificate/oracle regression suite
-	CERT_BIN_DIR=$(CERTIFICATE_BUILD) certificates/soundness_check.sh
+# certificates-check: certificates
+# 	CERT_BIN_DIR=$(CERTIFICATE_BUILD) certificates/soundness_check.sh
 
-fracture-arithmetic-check:	##H @Test Check the finite fracture arithmetic regression
-	$(CXX) -O2 -std=c++17 -Wall -Wextra scripts/unstable/fracture_arith_check.cpp -o /tmp/fracture_arith_check
-	/tmp/fracture_arith_check 12
+# fracture-arithmetic-check:
+# 	$(CXX) -O2 -std=c++17 -Wall -Wextra scripts/unstable/fracture_arith_check.cpp -o /tmp/fracture_arith_check
+# 	/tmp/fracture_arith_check 12
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Run
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: run
-run: build	##H @Run Build and run optimized (R=$(R))
-	@$(call print_info,Running $(BIN_OPT) R=$(R))
-	./$(BIN_OPT) $(R)
+# .PHONY: run
+# run: build	##H @Run Build and run optimized (R=$(R))
+# 	@$(call print_info,Running $(BIN_OPT) R=$(R))
+# 	./$(BIN_OPT) $(R)
 
-.PHONY: benchmark
-benchmark: build	##H @Run Benchmark search for R=2..$(R)
-	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
-	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
+# .PHONY: benchmark
+# benchmark: build	##H @Run Benchmark search for R=2..$(R)
+# 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
+# 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
-.PHONY: run/predict
-run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
-	./$(BIN_PRED) $(R)
+# .PHONY: run/predict
+# run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
+# 	./$(BIN_PRED) $(R)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

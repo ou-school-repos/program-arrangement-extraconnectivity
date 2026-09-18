@@ -73,7 +73,7 @@ Legend:
 |      13 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  |
 |      14 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ⊞  |  ⊞  |  ∘  |  ◆  |  /  | \\  | \\  |
 |      15 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  | \\  |
-|      16 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      16 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      17 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  ◆  |  /  |  /  |  /  |  /  |  /  |
 |      18 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      19 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |
@@ -705,6 +705,61 @@ SATISFIES HAMMING OPTIMALITY
 real    129m43.141s
 user    129m30.498s
 sys     0m1.319s
+
+$ time ./bin/validate_extra_cut_bitmap 16 8 --disk-backed ./state_A16_8
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '202111'
+  [host] OMP_DYNAMIC = 'FALSE'
+  [host] OMP_NESTED = 'FALSE'
+  [host] OMP_NUM_THREADS = '1'
+  [host] OMP_SCHEDULE = 'DYNAMIC'
+  [host] OMP_PROC_BIND = 'FALSE'
+  [host] OMP_PLACES = ''
+  [host] OMP_STACKSIZE = '0'
+  [host] OMP_WAIT_POLICY = 'PASSIVE'
+  [host] OMP_THREAD_LIMIT = '4294967295'
+  [host] OMP_MAX_ACTIVE_LEVELS = '1'
+  [host] OMP_NUM_TEAMS = '0'
+  [host] OMP_TEAMS_THREAD_LIMIT = '0'
+  [all] OMP_CANCELLATION = 'FALSE'
+  [all] OMP_DEFAULT_DEVICE = '0'
+  [all] OMP_MAX_TASK_PRIORITY = '0'
+  [all] OMP_DISPLAY_AFFINITY = 'FALSE'
+  [host] OMP_AFFINITY_FORMAT = 'level %L thread %i affinity %A'
+  [host] OMP_ALLOCATOR = 'omp_default_mem_alloc'
+  [all] OMP_TARGET_OFFLOAD = 'DEFAULT'
+OPENMP DISPLAY ENVIRONMENT END
+Build: 0.1.0 (37e365e808eb)
+Building rank-indexed A(16,8)...
+Total valid vertices: 518918400
+Visited bitset: 64864800 bytes
+Storage: disk-backed (mmap)
+R = 65
+Candidate g = 64
+Subset S connectivity verified.
+|S| = 65
+|N(S)| = 2016
+Validating 64-extra cut properties...
+BFS progress: 5897904 / 518916319 (1.1%)
+[Direction Optimized: Bottom-Up Scan Active]
+Bottom-up scan: 8108100 / 8108100 words (100.0%)
+Bottom-up scan: 8108100 / 8108100 words (100.0%)
+Bottom-up scan: 8108100 / 8108100 words (100.0%)
+Bottom-up scan: 8108100 / 8108100 words (100.0%)
+BFS progress: 518916319 / 518916319 (100.0%)
+component sizes after deletion:
+  65
+  518916319
+valid 64-extra cut: yes
+therefore kappa_64(A(16,8)) <= 2016
+Hamming baseline: 2417; Star boundary: 2016; Delta: 401
+Embedding gate: d = 7, k = 8, n-k = 8 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+real    13m19.257s
+user    13m15.790s
+sys     0m0.723s
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives
