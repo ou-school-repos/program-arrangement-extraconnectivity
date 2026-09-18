@@ -243,8 +243,8 @@ static inline std::pair<int, int> calc_step(int count) {
         int differs = 0, diff1 = 0, diff2 = 0;
 
         while (xor_val) {
-            int bit = __builtin_ctzll(xor_val);
-            int chunk = chunk_idx[bit];
+            int changed_bit = __builtin_ctzll(xor_val);
+            int chunk = chunk_idx[changed_bit];
             int pos = (R - 1) - chunk;
 
             // ctzll finds lowest bits first → highest pos first.
@@ -443,8 +443,8 @@ static uint64_t solve(int point, int nodl, int largchg,
             if (point < MAX_R) {
                 nodes_iso_d[point]++;
                 if (count_evals_d[point] > 0)
-                    est_saved_iso +=
-                        (double)sum_evals_d[point] / count_evals_d[point];
+                    est_saved_iso += static_cast<double>(sum_evals_d[point]) /
+                                     static_cast<double>(count_evals_d[point]);
             }
             return 0;
         }
@@ -461,7 +461,8 @@ static uint64_t solve(int point, int nodl, int largchg,
                 nodes_exact_d[point]++;
                 if (count_evals_d[point] > 0)
                     est_saved_exact +=
-                        (double)sum_evals_d[point] / count_evals_d[point];
+                        static_cast<double>(sum_evals_d[point]) /
+                        static_cast<double>(count_evals_d[point]);
             }
             return 0;
         }
@@ -498,8 +499,9 @@ static uint64_t solve(int point, int nodl, int largchg,
                     if (point < MAX_R) {
                         nodes_local_d[point]++;
                         if (point + 1 < MAX_R && count_evals_d[point + 1] > 0)
-                            est_saved_local += (double)sum_evals_d[point + 1] /
-                                               count_evals_d[point + 1];
+                            est_saved_local +=
+                                static_cast<double>(sum_evals_d[point + 1]) /
+                                static_cast<double>(count_evals_d[point + 1]);
                     }
                     continue;
                 }
@@ -678,7 +680,7 @@ int main(int argc, const char *argv[]) {
             rate =
                 (static_cast<double>(nodes_iso_d[i] + nodes_exact_d[i] + loc) *
                  100.0) /
-                (nodes_gen_d[i] + loc);
+                static_cast<double>(nodes_gen_d[i] + loc);
         }
         std::cout << " [" << i << (i <= global_nauty_limit ? "-n" : "") << "] "
                   << std::fixed << std::setprecision(1) << rate << "%"

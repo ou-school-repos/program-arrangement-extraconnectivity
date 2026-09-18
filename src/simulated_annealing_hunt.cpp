@@ -67,10 +67,12 @@ std::vector<uint64_t> hamming_ball() {
 
 struct State {
     explicit State(const std::vector<int> &initial,
-                   const std::vector<std::vector<int>> &adjacency)
-        : members(adjacency.size(), false), counts(adjacency.size(), 0),
-          boundary(adjacency.size(), false), member_pos(adjacency.size(), -1),
-          boundary_pos(adjacency.size(), -1), adjacency(adjacency) {
+                   const std::vector<std::vector<int>> &input_adjacency)
+        : members(input_adjacency.size(), false),
+          counts(input_adjacency.size(), 0),
+          boundary(input_adjacency.size(), false),
+          member_pos(input_adjacency.size(), -1),
+          boundary_pos(input_adjacency.size(), -1), adjacency(input_adjacency) {
         for (int vertex : initial)
             members[vertex] = true;
         member_list = initial;

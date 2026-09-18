@@ -428,7 +428,8 @@ struct ProgressReporter {
         const double seconds = std::chrono::duration<double>(
                                    std::chrono::steady_clock::now() - started)
                                    .count();
-        const double rate = seconds > 0.0 ? count / seconds : 0.0;
+        const double rate =
+            seconds > 0.0 ? static_cast<double>(count) / seconds : 0.0;
         const long double percent =
             expected_nodes > 0.0L ? 100.0L * count / expected_nodes : 0.0L;
 #ifdef _OPENMP
@@ -713,7 +714,8 @@ int main(int argc, char **argv) {
         const long double predicted_next =
             stats.nodes_by_depth[target] * growth;
         const long double predicted_total = stats.nodes + predicted_next;
-        const long double rate = stats.nodes / elapsed_seconds;
+        const long double rate =
+            static_cast<long double>(stats.nodes) / elapsed_seconds;
         const long double predicted_seconds =
             elapsed_seconds + predicted_next / rate;
         std::cout << "heuristic R=" << target + 1

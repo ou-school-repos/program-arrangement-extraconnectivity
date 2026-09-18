@@ -191,8 +191,10 @@ struct alignas(64) PaddedScanCounter {
 
 inline void report_bfs_progress(std::uint64_t discovered,
                                 std::uint64_t total_survivors) {
-    const double percent =
-        total_survivors == 0 ? 100.0 : 100.0 * discovered / total_survivors;
+    const double percent = total_survivors == 0
+                               ? 100.0
+                               : 100.0 * static_cast<double>(discovered) /
+                                     static_cast<double>(total_survivors);
     std::cerr << "\rOverall BFS progress: " << discovered << " / "
               << total_survivors << " (" << std::fixed << std::setprecision(1)
               << percent << "%)" << std::flush;
@@ -201,8 +203,10 @@ inline void report_bfs_progress(std::uint64_t discovered,
 inline void report_bfs_progress(std::uint64_t discovered,
                                 std::uint64_t total_survivors,
                                 std::size_t layer, bool bottom_up) {
-    const double percent =
-        total_survivors == 0 ? 100.0 : 100.0 * discovered / total_survivors;
+    const double percent = total_survivors == 0
+                               ? 100.0
+                               : 100.0 * static_cast<double>(discovered) /
+                                     static_cast<double>(total_survivors);
     std::cerr << "\r\033[K" << "BFS progress:   ["
               << (bottom_up ? "bottom-up" : "top-down") << " layer "
               << std::setw(3) << layer << "] " << discovered << " / "
@@ -214,10 +218,14 @@ inline void report_bfs_scan_progress(std::size_t layer, std::size_t scanned,
                                      std::size_t total_words,
                                      std::uint64_t discovered,
                                      std::uint64_t total_survivors) {
-    const double scan_percent =
-        total_words == 0 ? 100.0 : 100.0 * scanned / total_words;
+    const double scan_percent = total_words == 0
+                                    ? 100.0
+                                    : 100.0 * static_cast<double>(scanned) /
+                                          static_cast<double>(total_words);
     const double overall_percent =
-        total_survivors == 0 ? 100.0 : 100.0 * discovered / total_survivors;
+        total_survivors == 0 ? 100.0
+                             : 100.0 * static_cast<double>(discovered) /
+                                   static_cast<double>(total_survivors);
     std::cerr << "\r\033[KBottom-up scan:  [bottom-up layer " << std::setw(3)
               << layer << "] scan " << std::fixed << std::setprecision(1)
               << std::setw(5) << scan_percent << "% | overall " << std::setw(5)

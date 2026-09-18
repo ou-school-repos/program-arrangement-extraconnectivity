@@ -101,7 +101,7 @@ int main(int, char **a) {
             for (int i = 0; i < k; ++i)
                 d += V[x][i] != V[y][i];
             if (d == 1)
-                adj[x].push_back(y);
+                adj[x].push_back(static_cast<int>(y));
         }
     ch.push_back(0);
     add(0, 1);

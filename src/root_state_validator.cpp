@@ -400,7 +400,7 @@ void random_test(const Instance &instance) {
                 chosen.push_back(vertex);
                 state.add(vertex);
             } else {
-                const int position = rng() % chosen.size();
+                const int position = static_cast<int>(rng() % chosen.size());
                 const int vertex = chosen[position];
                 chosen.erase(chosen.begin() + position);
                 state.remove(vertex);
@@ -429,7 +429,8 @@ struct SearchProgress {
         const double elapsed = std::chrono::duration<double>(
                                    std::chrono::steady_clock::now() - started)
                                    .count();
-        const double rate = elapsed > 0.0 ? nodes / elapsed : 0.0;
+        const double rate =
+            elapsed > 0.0 ? static_cast<double>(nodes) / elapsed : 0.0;
         std::cout << "  progress nodes=" << nodes << " depth=" << depth
                   << " best=" << best << " rate=" << rate << "/s\n"
                   << std::flush;
@@ -491,12 +492,13 @@ std::vector<Automorphism> origin_stabilizer(const Instance &instance) {
             Automorphism automorphism;
             for (int position = 0; position < instance.k; ++position)
                 automorphism.symbols[coordinate_permutation[position]] =
-                    position;
+                    static_cast<std::uint8_t>(position);
             for (int index = 0; index < instance.n - instance.k; ++index)
-                automorphism.symbols[instance.k + index] = free_symbols[index];
+                automorphism.symbols[instance.k + index] =
+                    static_cast<std::uint8_t>(free_symbols[index]);
             for (int position = 0; position < instance.k; ++position)
                 automorphism.coordinates[position] =
-                    coordinate_permutation[position];
+                    static_cast<std::uint8_t>(coordinate_permutation[position]);
             permutations.push_back(automorphism);
         } while (
             std::next_permutation(free_symbols.begin(), free_symbols.end()));
@@ -624,9 +626,10 @@ void canonicalization_test() {
         std::vector<int> subset{origin};
         std::vector<bool> present(instance.vertices.size(), false);
         present[origin] = true;
-        const int size = 1 + (rng() % 5);
+        const int size = 1 + static_cast<int>(rng() % 5);
         while (static_cast<int>(subset.size()) < size) {
-            const int vertex = rng() % instance.vertices.size();
+            const int vertex =
+                static_cast<int>(rng() % instance.vertices.size());
             if (present[vertex])
                 continue;
             present[vertex] = true;

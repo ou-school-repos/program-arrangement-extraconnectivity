@@ -33,7 +33,8 @@ HDRS := $(wildcard include/*.hpp)
 # Build profiles are inferred from the source's own includes/pragmas.
 H := \#
 uses = $(patsubst src/%.cpp,bin/%,$(shell grep -lE '^[[:space:]]*$(H)[[:space:]]*($(1))' $(SRCS) /dev/null))
-OMP_BINS     := $(call uses,include[[:space:]]*omp[.]h|pragma[[:space:]]+omp)
+# OMP_DEPS: bfs_utils.hpp currently contains OpenMP-dependent operations.
+OMP_BINS     := $(call uses,include[[:space:]]*omp[.]h|pragma[[:space:]]+omp|include.*bfs_utils[.]hpp)
 NAUTY_BINS   := $(call uses,include.*nauty[a-z]*\.h)
 ORTOOLS_BINS := $(call uses,include.*ortools/)
 Z3_BINS      := $(call uses,include.*z3)

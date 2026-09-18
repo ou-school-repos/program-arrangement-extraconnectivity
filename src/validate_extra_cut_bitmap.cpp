@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     for (const packed_code_t code : star)
         visited.set_atomic(graph.rank_code(code));
 
-    std::vector<std::uint64_t> boundary;
+    std::vector<packed_code_t> boundary;
     for (const packed_code_t code : star) {
         graph.for_each_neighbor(code, [&](const packed_code_t neighbor) {
             const std::size_t rank = graph.rank_code(neighbor);
