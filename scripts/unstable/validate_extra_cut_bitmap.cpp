@@ -73,6 +73,7 @@ int main(int argc, char **argv) {
         graph.valid_count - star.size() - boundary.size();
     std::uint64_t discovered_survivors = 0;
     constexpr std::uint64_t progress_interval = 1'000'000;
+    std::uint64_t next_progress = progress_interval;
 
     std::cout << "|S| = " << star.size() << "\n"
               << "|N(S)| = " << boundary.size() << "\n"
@@ -115,8 +116,11 @@ int main(int argc, char **argv) {
                 break;
             size += level_size;
             discovered_survivors += level_size;
-            if (discovered_survivors % progress_interval == 0)
+            if (discovered_survivors >= next_progress) {
                 report_bfs_progress(discovered_survivors, total_survivors);
+                next_progress = (discovered_survivors / progress_interval + 1) *
+                                progress_interval;
+            }
             visited.merge_from(next_frontier);
             current_frontier.swap(next_frontier);
             next_frontier.clear();
