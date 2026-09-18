@@ -140,7 +140,7 @@ _lint/mypy:	##H @Dev Run mypy only
 format:	##H @Dev Format C++ sources (clang-format)
 	@$(call print_info,Formatting)
 	find . -not -path '*/.lake/*' -name '*.md' -exec sed -i 's/[[:space:]]*$$//' {} +
-	-prettier -w $(LINT_SRCS_PRETTIER)
+	-prettier --prose-wrap always --print-width 80 --write -w $(LINT_SRCS_PRETTIER)
 	-black $(LINT_SRCS_PY)
 	-isort $(LINT_SRCS_PY)
 	-ruff format $(LINT_SRCS_PY)
