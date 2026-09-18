@@ -18,13 +18,14 @@ int main() {
     const fs::path base =
         fs::temp_directory_path() / "star-sweep-checkpoint-test";
     fs::remove_all(base);
-    fs::create_directories(base / "gen-00001");
+    fs::create_directories(base / star_sweep::generation_name(1));
 
     AtomicBitset frontier(4096);
     frontier.set_atomic(3);
     frontier.set_atomic(2048);
 
-    const fs::path delta = base / "gen-00001" / "frontier.delta";
+    const fs::path delta =
+        base / star_sweep::generation_name(1) / "frontier.delta";
     assert(star_sweep::write_frontier_delta(frontier, delta.string()) == 1);
     AtomicBitset restored(4096);
     star_sweep::replay_frontier_delta(delta.string(), restored);

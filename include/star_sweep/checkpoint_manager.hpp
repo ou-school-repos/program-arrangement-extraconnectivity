@@ -4,10 +4,12 @@
 #include "checkpoint_types.hpp"
 #include "frontier_delta.hpp"
 
+#include <cerrno>
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <utility>
 

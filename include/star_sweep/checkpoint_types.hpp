@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <cstring>
 #include <fcntl.h>
+#include <iomanip>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
@@ -67,7 +69,9 @@ inline bool signature_matches(const CheckpointSignature &expected,
 }
 
 inline std::string generation_name(std::uint64_t generation) {
-    return "gen-" + std::to_string(generation);
+    std::ostringstream name;
+    name << "gen-" << std::setw(5) << std::setfill('0') << generation;
+    return name.str();
 }
 
 } // namespace star_sweep

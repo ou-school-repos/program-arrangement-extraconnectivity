@@ -14,7 +14,23 @@ BINARY = Path(os.environ.get("VALIDATOR_BIN", ROOT / "bin" / "validate_extra_cut
 
 def main() -> int:
     """Run every recorded validator case and compare its JSON output."""
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--max-vertices",
+        type=int,
+        help="only run oracle cases no larger than this graph size",
+    )
+    args = parser.parse_args()
+
     cases = json.loads(ORACLE.read_text())["cases"]
+    if args.max_vertices is not None:
+        cases = [case for case in cases if case["valid_vertices"] <= args.max_vertices]
+    if not cases:
+        print("No oracle cases match the selected size limit.", file=sys.stderr)
+        return 2
+
     failures = 0
     for case in cases:
         n, k = case["n"], case["k"]

@@ -42,7 +42,8 @@ class Xxh64 {
         }
 
         while (offset + memory_.size() <= length) {
-            consume(bytes + offset);
+            std::memcpy(memory_.data(), bytes + offset, memory_.size());
+            consume(memory_.data());
             offset += memory_.size();
         }
 

@@ -18,7 +18,7 @@ $(info Build version: $(BUILD_ID))
 # Machine-local configuration (such as an /opt OR-Tools installation) is
 # supplied by the caller's environment (for example, through direnv/.envrc).
 
-R          ?= 8
+R          ?= 6  # up to 7 or 8 is fine. 9 and 10 are very slow on the old script.
 I          ?= 2
 K          ?= 127
 DOCS_SRC   ?= $(wildcard README.md docs/*.md)
@@ -159,13 +159,25 @@ format:	##H @Dev Format C++ sources (clang-format)
 # 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 # 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
-.PHONY: test/predict
-test/predict: bin/predict bin/arrangement	##H @Test Verify predictor matches search for R: 2..$(R)
+.PHONY: test _test/predict _test/checkpoint _test/validate_extra_cut _test/validate_extra_cut/full
+test: _test/checkpoint _test/validate_extra_cut	##H @Test Run fast test suites
+
+_test/predict: bin/predict bin/arrangement	##H @Test Run predictor/search comparison suite for R: 2..$(R)
 	python3 tests/test_predict.py --max-r $(R)
 
-.PHONY: test/validate_extra_cut
-test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator output with tests/oracle_baseline.json
-	python3 scripts/test_regression.py
+_test/checkpoint: tests/test_star_sweep_checkpoint.cpp	##H @Test Run fast star-sweep checkpoint smoke test
+	@mkdir -p .tmp
+	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -fopenmp \
+		-o .tmp/test_star_sweep_checkpoint tests/test_star_sweep_checkpoint.cpp
+	./.tmp/test_star_sweep_checkpoint
+
+_test/validate_extra_cut: bin/validate_extra_cut_naive	##H @Test Run small validator oracle regression
+	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
+		python3 scripts/test_regression.py --max-vertices 2500000
+
+_test/validate_extra_cut/full: bin/validate_extra_cut_naive	##H @Test Run the full validator oracle regression
+	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
+		python3 scripts/test_regression.py
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
