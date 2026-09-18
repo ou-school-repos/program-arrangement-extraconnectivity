@@ -6,7 +6,7 @@ SHELL:=/bin/bash
 # Variables
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 CXX      ?= g++
-CXXFLAGS ?= -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -fopenmp
+CXXFLAGS ?= -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic
 LDFLAGS  ?=
 
 VERSION   ?= 0.1.0
@@ -26,27 +26,13 @@ DOCS_PDF   ?= $(DOCS_SRC:.md=.pdf)
 BUNDLE_OUT ?= bundle.zip
 SITE_OUT   ?= site.zip
 
-# All ordinary standalone C/C++ programs are discovered automatically and
-# written to bin/.  Adding a new source file therefore needs no Makefile edit.
-TOOL_SOURCES = $(wildcard src/*.cpp scripts/*.cpp scripts/unstable/*.cpp)
-TOOL_BINS = $(addprefix bin/,$(basename $(notdir $(TOOL_SOURCES))))
+PROFILE_DIRS := src/plain src/openmp src/nauty src/ortools src/z3
 
 # These names are retained as lightweight aliases for scripts and muscle
 # memory.  The actual files live under bin/.
 # BIN_OPT = bin/arrangement
 # BIN_PRED = bin/predict
 # BIN_UNIVERSAL = bin/universal_lower_bound
-
-# Optional dependency: install OR-Tools/Z3 separately before using this group.
-# OPTIONAL_SOURCES = src/search_ghosts.cpp src/search_triples.cpp \
-# 	src/search_single.cpp src/profile_telescope_milp.cpp \
-# 	scripts/a10_5_hunt.cpp scripts/a10_5_boost.cpp scripts/a10_5_smt_oracle.cpp
-# OPTIONAL_BINS = $(addprefix bin/,$(basename $(notdir $(OPTIONAL_SOURCES))))
-
-# ALL_BINS = $(TOOL_BINS) $(OPTIONAL_BINS) $(BIN_OPT)
-ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
-ORTOOLS_LIBS ?= $(shell pkg-config --libs ortools 2>/dev/null || echo -lortools)
-ORTOOLS_ISYSFLAGS = $(subst -I,-isystem ,$(ORTOOLS_CFLAGS))
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
@@ -116,7 +102,8 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: build
-build: $(TOOL_BINS) ##H @Dev Build the core search and all standalone tools
+build: ##H @Dev Build all source profiles
+	@for dir in $(PROFILE_DIRS); do $(MAKE) -C $$dir; done
 
 SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
