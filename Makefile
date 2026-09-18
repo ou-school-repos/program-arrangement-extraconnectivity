@@ -173,7 +173,7 @@ _test/checkpoint: tests/test_star_sweep_checkpoint.cpp	##H @Test Run fast star-s
 
 _test/validate_extra_cut: bin/validate_extra_cut_naive	##H @Test Run small validator oracle regression
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
-		python3 scripts/test_regression.py --max-vertices 2500000
+		python3 scripts/test_regression.py --oracle tests/oracle_small.json
 
 _test/validate_extra_cut/full: bin/validate_extra_cut_naive	##H @Test Run the full validator oracle regression
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \

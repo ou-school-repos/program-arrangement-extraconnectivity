@@ -1,0 +1,95 @@
+{
+  "cases": [
+    {
+      "n": 4,
+      "k": 3,
+      "m": 1,
+      "g": 3,
+      "R": 4,
+      "valid_vertices": 24,
+      "boundary": 6,
+      "components": [4, 14],
+      "hamming_boundary": 4,
+      "embedding_gate": false,
+      "classification": "SATISFIES HAMMING OPTIMALITY"
+    },
+    {
+      "n": 5,
+      "k": 3,
+      "m": 2,
+      "g": 6,
+      "R": 7,
+      "valid_vertices": 60,
+      "boundary": 18,
+      "components": [7, 35],
+      "hamming_boundary": 13,
+      "embedding_gate": false,
+      "classification": "SATISFIES HAMMING OPTIMALITY"
+    },
+    {
+      "n": 5,
+      "k": 4,
+      "m": 1,
+      "g": 4,
+      "R": 5,
+      "valid_vertices": 120,
+      "boundary": 12,
+      "components": [5, 103],
+      "hamming_boundary": 8,
+      "embedding_gate": false,
+      "classification": "SATISFIES HAMMING OPTIMALITY"
+    },
+    {
+      "n": 6,
+      "k": 3,
+      "m": 3,
+      "g": 9,
+      "R": 10,
+      "valid_vertices": 120,
+      "boundary": 36,
+      "components": [10, 74],
+      "hamming_boundary": 26,
+      "embedding_gate": false,
+      "classification": "SATISFIES HAMMING OPTIMALITY"
+    },
+    {
+      "n": 6,
+      "k": 4,
+      "m": 2,
+      "g": 8,
+      "R": 9,
+      "valid_vertices": 360,
+      "boundary": 36,
+      "components": [9, 315],
+      "hamming_boundary": 30,
+      "embedding_gate": false,
+      "classification": "SATISFIES HAMMING OPTIMALITY"
+    },
+    {
+      "n": 7,
+      "k": 3,
+      "m": 4,
+      "g": 12,
+      "R": 13,
+      "valid_vertices": 210,
+      "boundary": 60,
+      "components": [13, 137],
+      "hamming_boundary": 41,
+      "embedding_gate": false,
+      "classification": "SATISFIES HAMMING OPTIMALITY"
+    },
+    {
+      "n": 7,
+      "k": 4,
+      "m": 3,
+      "g": 12,
+      "R": 13,
+      "valid_vertices": 840,
+      "boundary": 72,
+      "components": [13, 755],
+      "hamming_boundary": 63,
+      "embedding_gate": false,
+      "classification": "SATISFIES HAMMING OPTIMALITY"
+    }
+  ]
+}

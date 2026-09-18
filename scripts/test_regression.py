@@ -17,6 +17,7 @@ def main() -> int:
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--oracle", type=Path, default=ORACLE)
     parser.add_argument(
         "--max-vertices",
         type=int,
@@ -24,7 +25,8 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    cases = json.loads(ORACLE.read_text())["cases"]
+    oracle = args.oracle if args.oracle.is_absolute() else ROOT / args.oracle
+    cases = json.loads(oracle.read_text())["cases"]
     if args.max_vertices is not None:
         cases = [case for case in cases if case["valid_vertices"] <= args.max_vertices]
     if not cases:
