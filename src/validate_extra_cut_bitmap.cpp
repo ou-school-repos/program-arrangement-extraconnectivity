@@ -284,7 +284,8 @@ int main(int argc, char **argv) {
             size += current_frontier_size;
             discovered_survivors += current_frontier_size;
             if (discovered_survivors >= next_progress) {
-                report_bfs_progress(discovered_survivors, total_survivors);
+                report_bfs_progress(discovered_survivors, total_survivors,
+                                    layer);
                 next_progress = (discovered_survivors / progress_interval + 1) *
                                 progress_interval;
             }

@@ -73,9 +73,9 @@ Legend:
 |      13 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  |
 |      14 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ⊞  |  ⊞  |  ∘  |  ?  |  /  | \\  | \\  |
 |      15 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  | \\  |
-|      16 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      17 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  ◆  |  /  |  /  |  /  |  /  |  /  |
-|      18 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      16 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |
+|      17 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ?  |  ◆  |  /  |  /  |  /  |  /  |  /  |
+|      18 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      19 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      20 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      21 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |
@@ -760,6 +760,61 @@ HARD COUNTEREXAMPLE: RestrictedLowerBound
 real    13m19.257s
 user    13m15.790s
 sys     0m0.723s
+
+$ time ./bin/validate_extra_cut_bitmap 16 9 --disk-backed ./state_A16_9  # coffeelake
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '202111'
+  [host] OMP_DYNAMIC = 'FALSE'
+  [host] OMP_NESTED = 'FALSE'
+  [host] OMP_NUM_THREADS = '1'
+  [host] OMP_SCHEDULE = 'DYNAMIC'
+  [host] OMP_PROC_BIND = 'FALSE'
+  [host] OMP_PLACES = ''
+  [host] OMP_STACKSIZE = '0'
+  [host] OMP_WAIT_POLICY = 'PASSIVE'
+  [host] OMP_THREAD_LIMIT = '4294967295'
+  [host] OMP_MAX_ACTIVE_LEVELS = '1'
+  [host] OMP_NUM_TEAMS = '0'
+  [host] OMP_TEAMS_THREAD_LIMIT = '0'
+  [all] OMP_CANCELLATION = 'FALSE'
+  [all] OMP_DEFAULT_DEVICE = '0'
+  [all] OMP_MAX_TASK_PRIORITY = '0'
+  [all] OMP_DISPLAY_AFFINITY = 'FALSE'
+  [host] OMP_AFFINITY_FORMAT = 'level %L thread %i affinity %A'
+  [host] OMP_ALLOCATOR = 'omp_default_mem_alloc'
+  [all] OMP_TARGET_OFFLOAD = 'DEFAULT'
+OPENMP DISPLAY ENVIRONMENT END
+Build: 0.1.0 (37e365e808eb)
+Building rank-indexed A(16,9)...
+Total valid vertices: 4151347200
+Visited bitset: 518918400 bytes
+Storage: disk-backed (mmap)
+R = 64
+Candidate g = 63
+Subset S connectivity verified.
+|S| = 64
+|N(S)| = 2016
+Validating 63-extra cut properties...
+BFS progress: 64051674 / 4151345120 (1.5%)
+[Direction Optimized: Bottom-Up Scan Active]
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+BFS progress: 4151345120 / 4151345120 (100.0%)
+component sizes after deletion:
+  64
+  4151345120
+valid 63-extra cut: yes
+therefore kappa_63(A(16,9)) <= 2016
+Hamming baseline: 2496; Star boundary: 2016; Delta: 480
+Embedding gate: d = 6, k = 9, n-k = 7 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+real    118m17.819s
+user    117m34.612s
+sys     0m8.120s
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives

@@ -198,6 +198,16 @@ inline void report_bfs_progress(std::uint64_t discovered,
               << std::flush;
 }
 
+inline void report_bfs_progress(std::uint64_t discovered,
+                                std::uint64_t total_survivors,
+                                std::size_t layer) {
+    const double percent =
+        total_survivors == 0 ? 100.0 : 100.0 * discovered / total_survivors;
+    std::cerr << "\rBFS progress:   [layer " << layer << "/?] " << discovered
+              << " / " << total_survivors << " (" << std::fixed
+              << std::setprecision(1) << percent << "%)" << std::flush;
+}
+
 inline void report_bfs_scan_progress(std::size_t layer, std::size_t scanned,
                                      std::size_t total_words) {
     const double percent =
