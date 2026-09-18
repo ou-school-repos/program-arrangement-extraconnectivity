@@ -94,8 +94,8 @@ int main(int argc, char **argv) {
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
-    if (n <= k || k < 1 || n > 64 || k > 10) {
-        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 10.\n";
+    if (n <= k || k < 1 || n > 64 || k > 15) {
+        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 15.\n";
         return 1;
     }
 
