@@ -140,17 +140,17 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	flake8 --jobs=1 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 
-.PHONY: clang
-clang: ##H @Dev Run clang-tidy lint only
+.PHONY: _lint/clang
+_lint/clang: ##H @Dev Run clang-tidy lint only
 	mkdir -p .tmp/
-	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -Iinclude $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
+	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -Include $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
 
-.PHONY: pylint
-pylint:	##H @Dev Run pylint only
+.PHONY: _lint/pylint
+_lint/pylint:	##H @Dev Run pylint only
 	pylint $$(git ls-files '*.py')
 
-.PHONY: mypy
-mypy:	##H @Dev Run mypy only
+.PHONY: _lint/mypy
+_lint/mypy:	##H @Dev Run mypy only
 	mypy $$(git ls-files '*.py')
 
 .PHONY: format
@@ -205,7 +205,7 @@ test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator outp
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: lean
-lean:	##H @Lean Build Lean 4 proofs (proofs/)
+lean: _lean/cache	##H @Lean Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
 	mkdir -p .tmp
 	cd proofs && lake build | tee $(CURDIR)/.tmp/out-build-lean.log
@@ -239,13 +239,13 @@ lean:	##H @Lean Build Lean 4 proofs (proofs/)
 	cd proofs && lake env lean Arrangement/ProofAudit.lean
 	@$(call print_success,Lean proofs verified.)
 
-.PHONY: lean/cache
-lean/cache:	##H @Lean Download pre-built Mathlib cache
+.PHONY: _lean/cache
+_lean/cache:	##H @Lean Download pre-built Mathlib cache
 	@$(call print_info,Fetching Mathlib cache)
 	cd proofs && lake exe cache get
 	@$(call print_success,Mathlib cache downloaded.)
 
-.PHONY: _lean/docs/setup
+.PHONY: _lean/docs-setup
 _lean/docs/setup:	##H @Lean Fetch doc-gen4 dependency (run once)
 	@$(call print_info,Fetching doc-gen4)
 	cd proofs/docbuild && MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4
@@ -257,8 +257,8 @@ _lean/docs:	##H @Lean Generate Lean documentation
 	cd proofs/docbuild && lake build Proofs:docs
 	@$(call print_success,Lean docs generated in proofs/docbuild/.lake/build/doc/)
 
-.PHONY: _lean/docs/clean
-_lean/docs/clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
+.PHONY: _lean/docs-clean
+_lean/docs-clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
 	@$(call print_info,Cleaning project doc artifacts)
 	rm -rf proofs/docbuild/.lake/build/doc/Arrangement \
 	       proofs/docbuild/.lake/build/doc/index.html \
@@ -274,8 +274,8 @@ _lean/docs/clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: render
-render: ##H Render all visual assets (.dot to .png)
+.PHONY: _paper/render-assets
+_paper/render-assets: ##H Render all visual assets (.dot to .png)
 	@$(call print_info,Rendering visual assets)
 	python3 scripts/render_assets.py
 
@@ -293,14 +293,14 @@ paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
 
 
-.PHONY: csv
-csv: build	##H @General Generate docs/predictions.csv (R=2..1024)
+.PHONY: _csv/base
+_csv/base:	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_info,Generating predictions CSV)
 	./$(BIN_PRED) --csv 1024 | tee docs/predictions.csv
 	@$(call print_success,docs/predictions.csv written.)
 
-.PHONY: csv/full
-csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
+.PHONY: _csv/full
+_csv/full:	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
 	@if [ ! -f docs/verifications.csv ]; then \
 		./$(BIN_PRED) --csv --verify-range $(I) $(K) | tee docs/verifications.csv; \
 	else \
@@ -328,15 +328,15 @@ PDF_ENGINE ?= xelatex
 		-V pagestyle=empty
 	@$(call print_success,Generated $@)
 
-.PHONY: bundle
-bundle: clean ##H @General Create a zip archive of the project sources
+.PHONY: _bundle/default
+_bundle/default: clean ##H @General Create a zip archive of the project sources
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
 	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/Arrangement/*.lean scripts/*.py assets/* Makefile
 	@$(call print_success,Bundle created.)
 
-.PHONY: site
-site:	##H @General Create site.zip of Lean HTML documentation
+.PHONY: _bundle/site
+_bundle/site:	##H @General Create site.zip of Lean HTML documentation
 	@$(call print_info,Creating $(SITE_OUT))
 	rm -f $(SITE_OUT)
 	cd proofs/docbuild/.lake/build/doc && zip -r9 ../../../../../$(SITE_OUT) .
