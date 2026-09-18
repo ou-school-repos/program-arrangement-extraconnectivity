@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "utils.h"
+#include "utils.hpp"
 
 extern "C" {
 #include <nauty/nauty.h>
@@ -329,9 +329,9 @@ static inline std::pair<int, int> calc_step(int count) {
 }
 
 // ── Internal edge count ────────────────────────────────────────────────────
-// Delegates to shared utility (see arrangement_utils.h)
+// Delegates to shared utility (see utils.hpp)
 /// Count internal edges among the first n vertices of verts (delegates to
-/// utils.h).
+/// utils.hpp).
 static int count_internal_edges(const uint64_t *verts, int n) {
     return arrangement::count_internal_edges(verts, n);
 }

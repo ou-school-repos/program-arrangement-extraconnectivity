@@ -28,7 +28,7 @@ SITE_OUT   ?= site.zip
 
 # All ordinary standalone C/C++ programs are discovered automatically and
 # written to bin/.  Adding a new source file therefore needs no Makefile edit.
-TOOL_SOURCES = $(wildcard src/*.c src/*.cc src/*.cpp    scripts/*.c scripts/*.cc scripts/*.cpp    scripts/unstable/*.c scripts/unstable/*.cc scripts/unstable/*.cpp)
+TOOL_SOURCES = $(wildcard src/*.cpp scripts/*.cpp scripts/unstable/*.cpp)
 TOOL_BINS = $(addprefix bin/,$(basename $(notdir $(TOOL_SOURCES))))
 
 # These names are retained as lightweight aliases for scripts and muscle
@@ -110,139 +110,13 @@ define print_info
 	printf "\033[1;36m%s\033[0m\n" "$(1)"
 endef
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Build
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Header dependencies for arrangement
-# ARRANGEMENT_HDRS = $(wildcard src/*.h)
-# CERTIFICATE_BUILD ?= /tmp/arrangement-certificates
-
-# `tools` is the one extensible build target: every ordinary standalone
-# source becomes bin/<basename>.  The generated aliases below keep
-# `make <tool>` and Make's tab completion convenient without another rule per
-# source file.
-# .PHONY: tools
-# tools: $(TOOL_BINS) ##H @Build Build all standalone C/C++ tools into bin/
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Dev
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: build
-build: $(TOOL_BINS) ##H @Build Build the core search and all standalone tools
-
-
-# define TOOL_template
-# bin/$(notdir $(basename $(1))): $(1) $(ARRANGEMENT_HDRS)
-# 	@mkdir -p bin
-# 	$(CXX) $(CXXFLAGS) -o $$@ $$<
-# endef
-# $(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
-
-# The nauty executable and the optional solver programs use non-default link
-# flags, so they remain explicit, but are grouped rather than mixed into the
-# ordinary tool list.
-# bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)
-# 	@mkdir -p bin
-# 	$(CXX) $(CXXFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $@ $< $(NAUTY_LIBS)
-
-# .PHONY: optional-tools
-# optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
-
-# define OPTIONAL_template
-# bin/$(notdir $(basename $(1))): $(1)
-# 	@mkdir -p bin
-# 	$(CXX) $(CXXFLAGS) $(ORTOOLS_ISYSFLAGS) $(LDFLAGS) -o $$@ $$< $(ORTOOLS_LIBS)
-# endef
-# $(foreach source,$(filter-out scripts/a10_5_smt_oracle.cpp,$(OPTIONAL_SOURCES)),$(eval $(call OPTIONAL_template,$(source))))
-
-# bin/a10_5_smt_oracle: scripts/a10_5_smt_oracle.cpp	##H @Optional Build a10_5_smt_oracle into bin/
-# 	@mkdir -p bin
-# 	$(CXX) $(CXXFLAGS) $$(shell pkg-config --cflags z3) -o $@ $< $$(shell pkg-config --libs z3)
-
-
-# certificates:
-# 	@mkdir -p $(CERTIFICATE_BUILD)
-# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/fdp_certificate.cpp -o $(CERTIFICATE_BUILD)/fdp_certificate
-# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/max_q_oracle.cpp -o $(CERTIFICATE_BUILD)/max_q_oracle
-# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/audit_orbits.cpp -o $(CERTIFICATE_BUILD)/audit_orbits
-# 	$(CXX) -O2 -std=c++17 -Wall -Wextra certificates/opt_orbits.cpp -o $(CERTIFICATE_BUILD)/opt_orbits
-
-# certificates-check: certificates
-# 	CERT_BIN_DIR=$(CERTIFICATE_BUILD) certificates/soundness_check.sh
-
-# fracture-arithmetic-check:
-# 	$(CXX) -O2 -std=c++17 -Wall -Wextra scripts/unstable/fracture_arith_check.cpp -o /tmp/fracture_arith_check
-# 	/tmp/fracture_arith_check 12
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Run
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# .PHONY: run
-# run: build	##H @Run Build and run optimized (R=$(R))
-# 	@$(call print_info,Running $(BIN_OPT) R=$(R))
-# 	./$(BIN_OPT) $(R)
-
-# .PHONY: benchmark
-# benchmark: build	##H @Run Benchmark search for R=2..$(R)
-# 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
-# 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
-
-# .PHONY: run/predict
-# run/predict: build	##H @Run Predict extraconnectivity for R=$(R)
-# 	./$(BIN_PRED) $(R)
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Test
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.PHONY: test/predict
-test/predict: build	##H @Dev Verify predictor matches search for R=2..$(R)
-	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
-	@fail=0; \
-	for r in $$(seq 2 $(R)); do \
-		expected=$$(./$(BIN_OPT) $$r 2>/dev/null | grep 'EX:' | tail -1 | sed 's/,.*//' | tr -d ' '); \
-		actual=$$(./$(BIN_PRED) $$r 2>/dev/null | sed 's/,.*//' | tr -d ' '); \
-		if [ "$$actual" = "$$expected" ]; then \
-			$(call print_success,R=$$r: prediction matches search.); \
-		else \
-			$(call print_err,R=$$r: mismatch); \
-			echo "  search:  $$expected"; \
-			echo "  predict: $$actual"; \
-			fail=1; \
-		fi; \
-	done; \
-	if [ $$fail -eq 1 ]; then exit 1; fi
-
-.PHONY: test/validate_extra_cut
-test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator output with tests/oracle_baseline.json
-	python3 scripts/test_regression.py
-
-.PHONY: csv
-csv: build	##H @General Generate docs/predictions.csv (R=2..1024)
-	@$(call print_info,Generating predictions CSV)
-	./$(BIN_PRED) --csv 1024 | tee docs/predictions.csv
-	@$(call print_success,docs/predictions.csv written.)
-
-.PHONY: csv/full
-csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
-	@if [ ! -f docs/verifications.csv ]; then \
-		./$(BIN_PRED) --csv --verify-range $(I) $(K) | tee docs/verifications.csv; \
-	else \
-		last=$$(tail -1 docs/verifications.csv | cut -d, -f1); \
-		next=$$((last + 1)); \
-		if [ $$next -le $(K) ]; then \
-			./$(BIN_PRED) --csv --verify-range --no-header $$next $(K) | tee -a docs/verifications.csv; \
-		else \
-			echo "Already complete up to R=$$last"; \
-		fi; \
-	fi
-	@$(call print_success,docs/verifications.csv — $$(wc -l < docs/verifications.csv) rows.)
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Lint & Format
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build: $(TOOL_BINS) ##H @Dev Build the core search and all standalone tools
 
 SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
@@ -285,11 +159,43 @@ format:	##H @Dev Format C++ sources (clang-format)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Lean 4 Proofs
+# Test
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# .PHONY: benchmark
+# benchmark: build	##H @Run Benchmark search for R=2..$(R)
+# 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
+# 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
+
+.PHONY: test/predict
+test/predict: build	##H @Test Verify predictor matches search for R=2..$(R)
+	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
+	@fail=0; \
+	for r in $$(seq 2 $(R)); do \
+		expected=$$(./$(BIN_OPT) $$r 2>/dev/null | grep 'EX:' | tail -1 | sed 's/,.*//' | tr -d ' '); \
+		actual=$$(./$(BIN_PRED) $$r 2>/dev/null | sed 's/,.*//' | tr -d ' '); \
+		if [ "$$actual" = "$$expected" ]; then \
+			$(call print_success,R=$$r: prediction matches search.); \
+		else \
+			$(call print_err,R=$$r: mismatch); \
+			echo "  search:  $$expected"; \
+			echo "  predict: $$actual"; \
+			fail=1; \
+		fi; \
+	done; \
+	if [ $$fail -eq 1 ]; then exit 1; fi
+
+.PHONY: test/validate_extra_cut
+test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator output with tests/oracle_baseline.json
+	python3 scripts/test_regression.py
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Lean
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: lean
-lean:	##H @Build Build Lean 4 proofs (proofs/)
+lean:	##H @Lean Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
 	set -o pipefail; cd proofs && lake build | tee lean.log
 	@printf "\n\033[1;32m--- Verification Complete ---\033[0m\n"
@@ -323,25 +229,25 @@ lean:	##H @Build Build Lean 4 proofs (proofs/)
 	@$(call print_success,Lean proofs verified.)
 
 .PHONY: lean/cache
-lean/cache:	##H @Build Download pre-built Mathlib cache
+lean/cache:	##H @Lean Download pre-built Mathlib cache
 	@$(call print_info,Fetching Mathlib cache)
 	cd proofs && lake exe cache get
 	@$(call print_success,Mathlib cache downloaded.)
 
 .PHONY: _lean/docs/setup
-_lean/docs/setup:	##H @Build Fetch doc-gen4 dependency (run once)
+_lean/docs/setup:	##H @Lean Fetch doc-gen4 dependency (run once)
 	@$(call print_info,Fetching doc-gen4)
 	cd proofs/docbuild && MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4
 	@$(call print_success,doc-gen4 ready.)
 
 .PHONY: _lean/docs
-_lean/docs:	##H @Build Generate Lean documentation
+_lean/docs:	##H @Lean Generate Lean documentation
 	@$(call print_info,Generating Lean docs)
 	cd proofs/docbuild && lake build Proofs:docs
 	@$(call print_success,Lean docs generated in proofs/docbuild/.lake/build/doc/)
 
 .PHONY: _lean/docs/clean
-_lean/docs/clean:	##H @Build Clean project doc cache (fast targeted rebuild)
+_lean/docs/clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
 	@$(call print_info,Cleaning project doc artifacts)
 	rm -rf proofs/docbuild/.lake/build/doc/Arrangement \
 	       proofs/docbuild/.lake/build/doc/index.html \
@@ -352,15 +258,15 @@ _lean/docs/clean:	##H @Build Clean project doc cache (fast targeted rebuild)
 	find proofs/docbuild/.lake/build -path '*Proofs*' -delete 2>/dev/null || true
 	@$(call print_success,Project doc cache cleared. Run make _lean/docs to rebuild.)
 
-.PHONY: render
-render: ##H Render all visual assets (.dot to .png)
-	@$(call print_info,Rendering visual assets)
-	python3 scripts/render_assets.py
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.PHONY: render
+render: ##H Render all visual assets (.dot to .png)
+	@$(call print_info,Rendering visual assets)
+	python3 scripts/render_assets.py
 
 .PHONY: paper
 paper:	##H @General Build the LaTeX paper (paper/paper.tex)
@@ -375,16 +281,36 @@ paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 .PHONY: docs
 docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
 
+
+.PHONY: csv
+csv: build	##H @General Generate docs/predictions.csv (R=2..1024)
+	@$(call print_info,Generating predictions CSV)
+	./$(BIN_PRED) --csv 1024 | tee docs/predictions.csv
+	@$(call print_success,docs/predictions.csv written.)
+
+.PHONY: csv/full
+csv/full: build	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
+	@if [ ! -f docs/verifications.csv ]; then \
+		./$(BIN_PRED) --csv --verify-range $(I) $(K) | tee docs/verifications.csv; \
+	else \
+		last=$$(tail -1 docs/verifications.csv | cut -d, -f1); \
+		next=$$((last + 1)); \
+		if [ $$next -le $(K) ]; then \
+			./$(BIN_PRED) --csv --verify-range --no-header $$next $(K) | tee -a docs/verifications.csv; \
+		else \
+			echo "Already complete up to R=$$last"; \
+		fi; \
+	fi
+	@$(call print_success,docs/verifications.csv — $$(wc -l < docs/verifications.csv) rows.)
+
+
+PDF_ENGINE ?= xelatex
+
 %.pdf: %.md
 	@$(call print_info,Generating $@ from $<)
+	# NOTE: if fails, try with PDF_ENGINE=lualatex
 	pandoc $< -o $@ \
-		--pdf-engine=xelatex \
-		-V geometry:margin=0.5in \
-		-V monofont="DejaVu Sans Mono" \
-		-V monofontoptions="Scale=0.8" \
-		-V pagestyle=empty || \
-	pandoc $< -o $@ \
-		--pdf-engine=lualatex \
+		--pdf-engine=${PDF_ENGINE} \
 		-V geometry:margin=0.5in \
 		-V monofont="DejaVu Sans Mono" \
 		-V monofontoptions="Scale=0.8" \
@@ -410,6 +336,11 @@ clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
 	rm -f $(TOOL_BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Debug
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: vars
 vars:	##H @General Debug: Print project variables

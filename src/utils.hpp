@@ -1,5 +1,5 @@
 #pragma once
-// ── utils.h ───────────────────────────────────────────────────────────────
+// ── utils.hpp ─────────────────────────────────────────────────────────────
 // Shared utility functions for Arrangement Graph A(n,k) analysis.
 // Vertices are packed as k 5-bit symbols in a uint64_t.
 // ──────────────────────────────────────────────────────────────────────────
