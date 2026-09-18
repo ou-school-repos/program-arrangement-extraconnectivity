@@ -52,6 +52,12 @@ class AtomicBitset {
         return (old & mask) == 0;
     }
 
+    void set_word_atomic(std::size_t word_index, std::uint64_t mask) {
+        words_[word_index].fetch_or(mask, std::memory_order_relaxed);
+        dirty_blocks_[word_index / block_size].store(1,
+                                                     std::memory_order_relaxed);
+    }
+
     void merge_from(const AtomicBitset &other) {
 #pragma omp parallel for schedule(static)
         for (std::size_t block = 0; block < other.num_blocks(); ++block) {

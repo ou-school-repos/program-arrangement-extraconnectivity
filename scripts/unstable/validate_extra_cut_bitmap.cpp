@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <vector>
 
@@ -112,31 +113,45 @@ int main(int argc, char **argv) {
                 current_frontier_size >= graph.valid_count / 20;
 
             if (bottom_up) {
-#pragma omp parallel for schedule(dynamic, 1024)                               \
-    reduction(+ : next_frontier_size)
-                for (std::size_t rank = 0; rank < graph.valid_count; ++rank) {
-                    if (visited.test(rank))
+#pragma omp parallel for schedule(static) reduction(+ : next_frontier_size)
+                for (std::size_t word_index = 0;
+                     word_index < visited.num_words(); ++word_index) {
+                    const std::uint64_t visited_word =
+                        visited.load_word(word_index);
+                    if (visited_word ==
+                        std::numeric_limits<std::uint64_t>::max())
                         continue;
 
-                    const packed_code_t code = graph.decode_rank(rank);
-                    bool discovered = false;
-                    graph.for_each_neighbor(
-                        code, [&](const packed_code_t neighbor) {
-                            if (discovered)
-                                return;
-                            const std::size_t neighbor_rank =
-                                graph.rank_code(neighbor);
-                            if (current_frontier.test(neighbor_rank))
-                                discovered = true;
-                        });
-                    if (discovered) {
-                        next_frontier.set_atomic(rank);
-                        ++next_frontier_size;
+                    std::uint64_t new_word = 0;
+                    for (int bit = 0; bit < 64; ++bit) {
+                        if ((visited_word >> bit) & 1)
+                            continue;
+                        const std::size_t rank = word_index * 64 + bit;
+                        if (rank >= graph.valid_count)
+                            break;
+
+                        const packed_code_t code = graph.decode_rank(rank);
+                        bool discovered = false;
+                        graph.for_each_neighbor(
+                            code, [&](const packed_code_t neighbor) {
+                                if (discovered)
+                                    return;
+                                const std::size_t neighbor_rank =
+                                    graph.rank_code(neighbor);
+                                if (current_frontier.test(neighbor_rank))
+                                    discovered = true;
+                            });
+                        if (discovered) {
+                            new_word |= std::uint64_t{1} << bit;
+                            ++next_frontier_size;
+                        }
                     }
+                    if (new_word != 0)
+                        next_frontier.set_word_atomic(word_index, new_word);
                 }
             } else {
                 const std::size_t total_blocks = current_frontier.num_blocks();
-#pragma omp parallel for schedule(dynamic, 1) reduction(+ : next_frontier_size)
+#pragma omp parallel for schedule(guided) reduction(+ : next_frontier_size)
                 for (std::size_t block = 0; block < total_blocks; ++block) {
                     if (!current_frontier.block_dirty(block))
                         continue;
