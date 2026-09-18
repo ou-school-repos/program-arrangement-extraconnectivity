@@ -46,8 +46,8 @@ int main(int argc, char **argv) {
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
-    if (n <= k || k < 1 || n > 64 || k > 10) {
-        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 10.\n";
+    if (n <= k || k < 1 || n > 64 || k > 21) {
+        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 21.\n";
         return 1;
     }
 
@@ -66,14 +66,15 @@ int main(int argc, char **argv) {
 
     std::vector<int> center(k);
     std::iota(center.begin(), center.end(), 0);
-    const std::uint64_t center_code = graph.encode(center);
-    std::vector<std::uint64_t> star{center_code};
+    const packed_code_t center_code = graph.encode(center);
+    std::vector<packed_code_t> star{center_code};
     for (int position = 0; position < k; ++position) {
         for (int symbol = k; symbol < n; ++symbol) {
-            const std::uint64_t mask = ~(std::uint64_t{63} << (6 * position));
+            const packed_code_t mask =
+                ~(static_cast<packed_code_t>(63) << (6 * position));
             star.push_back(
                 (center_code & mask) |
-                (static_cast<std::uint64_t>(symbol) << (6 * position)));
+                (static_cast<packed_code_t>(symbol) << (6 * position)));
         }
     }
 
@@ -84,12 +85,12 @@ int main(int argc, char **argv) {
     std::cout << "Subset S connectivity verified.\n";
 
     Bitset visited(graph.valid_count);
-    for (const std::uint64_t code : star)
+    for (const packed_code_t code : star)
         visited.set(graph.rank_code(code));
 
-    std::vector<std::uint64_t> boundary;
-    for (const std::uint64_t code : star) {
-        graph.for_each_neighbor(code, [&](const std::uint64_t neighbor) {
+    std::vector<packed_code_t> boundary;
+    for (const packed_code_t code : star) {
+        graph.for_each_neighbor(code, [&](const packed_code_t neighbor) {
             const std::size_t rank = graph.rank_code(neighbor);
             if (!visited.test(rank)) {
                 visited.set(rank);
@@ -110,7 +111,7 @@ int main(int argc, char **argv) {
     std::uint64_t discovered_survivors = 0;
     constexpr std::uint64_t progress_interval = 1'000'000;
     std::vector<std::uint64_t> component_sizes{star.size()};
-    graph.for_each_valid_code([&](const std::uint64_t start) {
+    graph.for_each_valid_code([&](const packed_code_t start) {
         const std::size_t start_rank = graph.rank_code(start);
         if (visited.test(start_rank))
             return;
@@ -121,13 +122,13 @@ int main(int argc, char **argv) {
         while (!frontier.empty()) {
             std::vector<std::uint32_t> next;
             for (const std::uint32_t current_rank : frontier) {
-                const std::uint64_t current = graph.decode_rank(current_rank);
+                const packed_code_t current = graph.decode_rank(current_rank);
                 ++size;
                 ++discovered_survivors;
                 if (discovered_survivors % progress_interval == 0)
                     report_bfs_progress(discovered_survivors, total_survivors);
                 graph.for_each_neighbor(
-                    current, [&](const std::uint64_t neighbor) {
+                    current, [&](const packed_code_t neighbor) {
                         const std::size_t rank = graph.rank_code(neighbor);
                         if (!visited.test(rank)) {
                             visited.set(rank);

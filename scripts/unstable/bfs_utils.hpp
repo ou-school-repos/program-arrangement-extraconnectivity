@@ -34,6 +34,7 @@ class AtomicBitset {
     }
 
     void merge_from(const AtomicBitset &other) {
+#pragma omp parallel for schedule(static)
         for (std::size_t index = 0; index < num_words_; ++index) {
             const std::uint64_t bits = other.load_word(index);
             if (bits)
@@ -44,6 +45,7 @@ class AtomicBitset {
     void swap(AtomicBitset &other) { words_.swap(other.words_); }
 
     void clear() {
+#pragma omp parallel for schedule(static)
         for (std::size_t index = 0; index < num_words_; ++index)
             words_[index].store(0, std::memory_order_relaxed);
     }
@@ -69,7 +71,7 @@ inline void report_bfs_progress(std::uint64_t discovered,
 }
 
 inline bool star_connected(const PackedArrangementGraph &graph,
-                           const std::vector<std::uint64_t> &star) {
+                           const std::vector<packed_code_t> &star) {
     if (star.empty())
         return true;
 
@@ -78,9 +80,9 @@ inline bool star_connected(const PackedArrangementGraph &graph,
     seen[0] = true;
     std::size_t reached = 1;
     while (!pending.empty()) {
-        const std::uint64_t current = star[pending.back()];
+        const packed_code_t current = star[pending.back()];
         pending.pop_back();
-        graph.for_each_neighbor(current, [&](const std::uint64_t neighbor) {
+        graph.for_each_neighbor(current, [&](const packed_code_t neighbor) {
             const auto match = std::find(star.begin(), star.end(), neighbor);
             if (match == star.end())
                 return;

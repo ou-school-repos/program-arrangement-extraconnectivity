@@ -17,8 +17,8 @@ int main(int argc, char **argv) {
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
-    if (n <= k || k < 1 || n > 64 || k > 15) {
-        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 15.\n";
+    if (n <= k || k < 1 || n > 64 || k > 21) {
+        std::cerr << "Error: require 64 >= n > k >= 1 and k <= 21.\n";
         return 1;
     }
 
@@ -33,14 +33,15 @@ int main(int argc, char **argv) {
 
     std::vector<int> center(k);
     std::iota(center.begin(), center.end(), 0);
-    const std::uint64_t center_code = graph.encode(center);
-    std::vector<std::uint64_t> star{center_code};
+    const packed_code_t center_code = graph.encode(center);
+    std::vector<packed_code_t> star{center_code};
     for (int position = 0; position < k; ++position) {
         for (int symbol = k; symbol < n; ++symbol) {
-            const std::uint64_t mask = ~(std::uint64_t{63} << (6 * position));
+            const packed_code_t mask =
+                ~(static_cast<packed_code_t>(63) << (6 * position));
             star.push_back(
                 (center_code & mask) |
-                (static_cast<std::uint64_t>(symbol) << (6 * position)));
+                (static_cast<packed_code_t>(symbol) << (6 * position)));
         }
     }
 
@@ -51,12 +52,12 @@ int main(int argc, char **argv) {
     std::cout << "Subset S connectivity verified.\n";
 
     AtomicBitset visited(graph.valid_count);
-    for (const std::uint64_t code : star)
+    for (const packed_code_t code : star)
         visited.set_atomic(graph.rank_code(code));
 
     std::vector<std::uint64_t> boundary;
-    for (const std::uint64_t code : star) {
-        graph.for_each_neighbor(code, [&](const std::uint64_t neighbor) {
+    for (const packed_code_t code : star) {
+        graph.for_each_neighbor(code, [&](const packed_code_t neighbor) {
             const std::size_t rank = graph.rank_code(neighbor);
             if (!visited.test(rank)) {
                 visited.set_atomic(rank);
@@ -78,7 +79,7 @@ int main(int argc, char **argv) {
               << "Validating " << parameters.g()
               << "-extra cut properties...\n";
 
-    graph.for_each_valid_code([&](const std::uint64_t start) {
+    graph.for_each_valid_code([&](const packed_code_t start) {
         const std::size_t start_rank = graph.rank_code(start);
         if (visited.test(start_rank))
             return;
@@ -88,21 +89,20 @@ int main(int argc, char **argv) {
         visited.set_atomic(start_rank);
         while (true) {
             std::uint64_t level_size = 0;
-            for (std::size_t word_index = 0;
-                 word_index < current_frontier.num_words(); ++word_index) {
+            const std::size_t total_words = current_frontier.num_words();
+
+#pragma omp parallel for schedule(dynamic, 64) reduction(+ : level_size)
+            for (std::size_t word_index = 0; word_index < total_words;
+                 ++word_index) {
                 std::uint64_t word = current_frontier.load_word(word_index);
                 while (word != 0) {
                     const int bit = __builtin_ctzll(word);
                     word &= word - 1;
                     const std::size_t rank = word_index * 64 + bit;
                     ++level_size;
-                    ++discovered_survivors;
-                    if (discovered_survivors % progress_interval == 0)
-                        report_bfs_progress(discovered_survivors,
-                                            total_survivors);
-                    const std::uint64_t code = graph.decode_rank(rank);
+                    const packed_code_t code = graph.decode_rank(rank);
                     graph.for_each_neighbor(
-                        code, [&](const std::uint64_t neighbor) {
+                        code, [&](const packed_code_t neighbor) {
                             const std::size_t neighbor_rank =
                                 graph.rank_code(neighbor);
                             if (!visited.test(neighbor_rank))
@@ -114,6 +114,9 @@ int main(int argc, char **argv) {
             if (level_size == 0)
                 break;
             size += level_size;
+            discovered_survivors += level_size;
+            if (discovered_survivors % progress_interval == 0)
+                report_bfs_progress(discovered_survivors, total_survivors);
             visited.merge_from(next_frontier);
             current_frontier.swap(next_frontier);
             next_frontier.clear();

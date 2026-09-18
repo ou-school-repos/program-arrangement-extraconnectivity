@@ -4,8 +4,11 @@
 #include <cstdint>
 #include <limits>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <vector>
+
+using packed_code_t = unsigned __int128;
 
 struct PackedArrangementGraph {
     int n;
@@ -21,19 +24,24 @@ struct PackedArrangementGraph {
                     static_cast<std::size_t>(n - position - 1 - factor);
             }
         }
-        for (int position = 0; position < k; ++position)
-            valid_count *= static_cast<std::size_t>(n - position);
+        for (int position = 0; position < k; ++position) {
+            const std::size_t factor = static_cast<std::size_t>(n - position);
+            if (valid_count > std::numeric_limits<std::size_t>::max() / factor)
+                throw std::overflow_error(
+                    "P(n,k) overflows the rank address space.");
+            valid_count *= factor;
+        }
     }
 
-    std::uint64_t encode(const std::vector<int> &vertex) const {
-        std::uint64_t code = 0;
+    packed_code_t encode(const std::vector<int> &vertex) const {
+        packed_code_t code = 0;
         for (int position = 0; position < k; ++position)
-            code |= static_cast<std::uint64_t>(vertex[position])
+            code |= static_cast<packed_code_t>(vertex[position])
                     << (6 * position);
         return code;
     }
 
-    std::size_t rank_code(std::uint64_t code) const {
+    std::size_t rank_code(packed_code_t code) const {
         std::uint64_t used = 0;
         std::size_t rank = 0;
         for (int position = 0; position < k; ++position) {
@@ -48,8 +56,8 @@ struct PackedArrangementGraph {
         return rank;
     }
 
-    std::uint64_t decode_rank(std::size_t rank) const {
-        std::uint64_t code = 0;
+    packed_code_t decode_rank(std::size_t rank) const {
+        packed_code_t code = 0;
         const std::uint64_t all_symbols =
             n == 64 ? std::numeric_limits<std::uint64_t>::max()
                     : (std::uint64_t{1} << n) - 1;
@@ -62,14 +70,14 @@ struct PackedArrangementGraph {
             for (std::size_t count = 0; count < ordinal; ++count)
                 candidates &= candidates - 1;
             const int symbol = __builtin_ctzll(candidates);
-            code |= static_cast<std::uint64_t>(symbol) << (6 * position);
+            code |= static_cast<packed_code_t>(symbol) << (6 * position);
             unused &= ~(std::uint64_t{1} << symbol);
         }
         return code;
     }
 
     template <typename Function>
-    void enumerate_valid(int depth, std::uint64_t code, std::uint64_t used,
+    void enumerate_valid(int depth, packed_code_t code, std::uint64_t used,
                          Function &function) const {
         if (depth == k) {
             function(code);
@@ -81,7 +89,7 @@ struct PackedArrangementGraph {
                 continue;
             enumerate_valid(
                 depth + 1,
-                code | (static_cast<std::uint64_t>(symbol) << (6 * depth)),
+                code | (static_cast<packed_code_t>(symbol) << (6 * depth)),
                 used | bit, function);
         }
     }
@@ -92,19 +100,20 @@ struct PackedArrangementGraph {
     }
 
     template <typename Function>
-    void for_each_neighbor(std::uint64_t code, Function function) const {
+    void for_each_neighbor(packed_code_t code, Function function) const {
         std::uint64_t used = 0;
         for (int position = 0; position < k; ++position) {
             const int symbol = static_cast<int>((code >> (6 * position)) & 63);
             used |= std::uint64_t{1} << symbol;
         }
         for (int position = 0; position < k; ++position) {
-            const std::uint64_t mask = ~(std::uint64_t{63} << (6 * position));
-            const std::uint64_t base = code & mask;
+            const packed_code_t mask =
+                ~(static_cast<packed_code_t>(63) << (6 * position));
+            const packed_code_t base = code & mask;
             for (int symbol = 0; symbol < n; ++symbol) {
                 if ((used >> symbol) & 1)
                     continue;
-                function(base | (static_cast<std::uint64_t>(symbol)
+                function(base | (static_cast<packed_code_t>(symbol)
                                  << (6 * position)));
             }
         }

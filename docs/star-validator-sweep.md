@@ -72,7 +72,7 @@ Legend:
 |       9 |  ∘  |  ∘  |  ∘  |  ⊞  |  ∘  |  ∘  | \\  | \\  | \\  | \\  | \\  | \\  | \\  |
 |      10 |  ∘  |  ∘  |  ∘  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  | \\  | \\  | \\  |
 |      11 |  ∘  |  ∘  |  ∘  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  | \\  | \\  |
-|      12 |  ∘  |  ∘  |  ∘  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  /  | \\  | \\  | \\  | \\  |
+|      12 |  ∘  |  ∘  |  ∘  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  | \\  |
 |      13 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ⊞  |  ⊞  |  /  |  /  |  /  | \\  | \\  | \\  |
 |      14 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ⊞  |  /  |  /  |  /  |  /  | \\  | \\  |
 |      15 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  /  |  /  |  /  |  /  |  /  | \\  |
@@ -330,6 +330,27 @@ therefore kappa_98(A(21,7)) <= 4410
 Hamming baseline: 4982; Star boundary: 4410
 Embedding gate: d = 7, k = 7, n-k = 14 (open)
 HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+
+$ ./bin/validate_extra_cut_bitmap 12 11  # gg@vps76
+Building rank-indexed A(12,11)...
+Total valid vertices: 479001600
+Visited bitset: 59875200 bytes
+R = 12
+Candidate g = 11
+Subset S connectivity verified.
+|S| = 12
+|N(S)| = 110
+Validating 11-extra cut properties...
+BFS progress: 479001478 / 479001478 (100.0%)
+component sizes after deletion:
+  12
+  479001478
+valid 11-extra cut: yes
+therefore kappa_11(A(12,11)) <= 110
+Hamming baseline: 88; Star boundary: 110
+Embedding gate: d = 4, k = 11, n-k = 1 (closed)
+SATISFIES HAMMING OPTIMALITY
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives
