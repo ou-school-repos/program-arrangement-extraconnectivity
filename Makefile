@@ -288,9 +288,9 @@ _csv/full: bin/predict	##H @General Verified CSV, set R: I..K
 
 GIT_CLEAN_FLAGS := -fdx
 
-# ifndef y
+ifndef y
 GIT_CLEAN_FLAGS += -n
-# endif
+endif
 
 GIT_CLEAN_FLAGS += \
 	-e '*.bitmap' \
@@ -307,12 +307,12 @@ GIT_CLEAN_FLAGS += \
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	find . -maxdepth 3 -name __pycache__ -prune -exec rm -rf {} +
+	# Python
 	rm -rf bin/ .ruff_cache/ .mypy_cache/
+	find . -maxdepth 3 -name __pycache__ -prune -exec rm -rf {} +
+	# Docs/paper
 	rm -f $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
-	# git clean -fdnx -e '*.bitmap' -e '.env' -e assets/out/ -e other/ -e .tmp/ -e .agents/ -e .claude/ -e .codex/ -e 'paper/journal-pads/*.xopp'
-	# cd paper/; _gflags=(-fnx); test -v y && _gflags+=(-e journal-pads/); echo git clean "$${_gflags[@]}"
-	echo $(GIT_CLEAN_FLAGS)
+	# General git clean (BE CAREFUL, if you set the var: y)
 	cd paper/ && git clean $(GIT_CLEAN_FLAGS)
 	@$(call print_success,Clean complete.)
 
