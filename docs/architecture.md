@@ -19,8 +19,8 @@ conditional on explicit hypothesis interfaces.
 
 ### Vertex Representation
 
-Each k-permutation is packed into a `uint64_t` using 5-bit fields (supporting
-up to 32 symbols, R ≤ 12). Position 0 occupies the highest bits so integer
+Each k-permutation is packed into a `uint64_t` using 5-bit fields (supporting up
+to 32 symbols, R ≤ 12). Position 0 occupies the highest bits so integer
 comparison equals lexicographic comparison.
 
 ```
@@ -32,11 +32,20 @@ Vertex layout (R=5):  [sym₀|sym₁|sym₂|sym₃|sym₄|unused...]
 
 The engine performs a depth-first enumeration of connected subgraphs:
 
-1. **Root:** Start with two adjacent vertices `ver[0] = identity`, `ver[1]` = identity with position 0 replaced by symbol R.
-2. **Branching (Candidate Generation):** At each depth, generate candidate vertices adjacent to any vertex in the current set, subject to bounds on symbol index (`nodl`) and position (`largchg`). This local node expansion strictly takes **O(R⁴) time** and **O(1) auxiliary space**.
-3. **Leaf evaluation:** At depth R, record the accumulated neighbor-set formula `(Rk - nk1)(n-k) - cons` in **O(1) time and space**.
+1. **Root:** Start with two adjacent vertices `ver[0] = identity`, `ver[1]` =
+   identity with position 0 replaced by symbol R.
+2. **Branching (Candidate Generation):** At each depth, generate candidate
+   vertices adjacent to any vertex in the current set, subject to bounds on
+   symbol index (`nodl`) and position (`largchg`). This local node expansion
+   strictly takes **O(R⁴) time** and **O(1) auxiliary space**.
+3. **Leaf evaluation:** At depth R, record the accumulated neighbor-set formula
+   `(Rk - nk1)(n-k) - cons` in **O(1) time and space**.
 
-**Global vs. Local Complexity:** While the global search space of connected subgraphs grows super-exponentially bounded by Cayley's tree formula ($\Omega(R^{R-2})$), the architectural design ensures that the work done at any single node to expand the frontier remains strictly polynomial ($O(R^4)$) with zero heap allocation.
+**Global vs. Local Complexity:** While the global search space of connected
+subgraphs grows super-exponentially bounded by Cayley's tree formula
+($\Omega(R^{R-2})$), the architectural design ensures that the work done at any
+single node to expand the frontier remains strictly polynomial ($O(R^4)$) with
+zero heap allocation.
 
 ### Three-Tier Deduplication
 
@@ -57,12 +66,12 @@ capturing the full S_n × S_R symmetry group.
 Instead of recomputing the full neighbor formula at each depth, `calc_step()`
 computes the O(R) delta contributed by the newly-added vertex:
 
-1. **XOR diff detection:** `cur ^ cur2` instantly identifies all differing
-   5-bit fields between the new vertex and each existing vertex.
+1. **XOR diff detection:** `cur ^ cur2` instantly identifies all differing 5-bit
+   fields between the new vertex and each existing vertex.
 2. **1-diff (edge):** If vertices differ in exactly one position, that position
    becomes "shared" — its anonymous neighbors are absorbed.
-3. **2-diff (named neighbors):** Vertices differing in exactly two positions
-   may create named neighbors that reduce the external boundary.
+3. **2-diff (named neighbors):** Vertices differing in exactly two positions may
+   create named neighbors that reduce the external boundary.
 
 The accumulated `(nk1, cons)` pair is passed down the recursion, so leaves
 require zero additional computation.
@@ -73,8 +82,8 @@ Every result is cross-validated by two independent methods:
 
 1. **`verify_neighbor_set()`** — Recomputes the formula using a completely
    separate algorithm (group-key based counting).
-2. **Brute-force enumeration** — Explicitly generates all neighbors in
-   A(2R, R) and counts distinct non-member vertices.
+2. **Brute-force enumeration** — Explicitly generates all neighbors in A(2R, R)
+   and counts distinct non-member vertices.
 
 Both must agree with the search output or the program reports a verification
 failure.
@@ -134,17 +143,18 @@ the expected (8k-7) to the actual **(8k-12)**.
 
 ### OEIS A000788 Connection
 
-The true internal edge count E(R) follows [OEIS A000788](https://oeis.org/A000788)
-— the cumulative binary weight (total number of 1-bits in 0, 1, ..., R-1).
-This sequence coincides with the linear prediction at R=5,6,7 but diverges at
-every power of 2 where the vertices form a perfect hypercube.
+The true internal edge count E(R) follows
+[OEIS A000788](https://oeis.org/A000788) — the cumulative binary weight (total
+number of 1-bits in 0, 1, ..., R-1). This sequence coincides with the linear
+prediction at R=5,6,7 but diverges at every power of 2 where the vertices form a
+perfect hypercube.
 
 ### Lean 4 Formalization
 
-The closed-form `E(d) = d · 2^{d-1}` for d-dimensional hypercubes is proven
-by induction in `proofs/HypercubeEdges.lean`. The proof avoids natural number
-subtraction by establishing `E(d) * 2 = d * 2^d`. Machine-verified with
-Lean 4.30.0-rc2 + Mathlib.
+The closed-form `E(d) = d · 2^{d-1}` for d-dimensional hypercubes is proven by
+induction in `proofs/HypercubeEdges.lean`. The proof avoids natural number
+subtraction by establishing `E(d) * 2 = d * 2^d`. Machine-verified with Lean
+4.30.0-rc2 + Mathlib.
 
 ## Dependencies
 
