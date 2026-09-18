@@ -1,6 +1,6 @@
 SHELL:=/bin/bash
 .DEFAULT_GOAL := _help
-.SHELLFLAGS = -ec
+.SHELLFLAGS := -o pipefail -c
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Variables
@@ -143,7 +143,7 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 .PHONY: clang
 clang: ##H @Dev Run clang-tidy lint only
 	mkdir -p .tmp/
-	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -I./include $(CPPFLAGS) $(CXXFLAGS) -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
+	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -Iinclude $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
 
 .PHONY: pylint
 pylint:	##H @Dev Run pylint only
@@ -207,8 +207,8 @@ test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator outp
 .PHONY: lean
 lean:	##H @Lean Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
-	mkdir -p .tmp/
-	set -o pipefail; cd proofs && lake build | tee .tmp/out-build-lean.log
+	mkdir -p .tmp
+	cd proofs && lake build | tee $(CURDIR)/.tmp/out-build-lean.log
 	@printf "\n\033[1;32m--- Verification Complete ---\033[0m\n"
 	@printf "\033[1;36mMapped Theorems & Definitions:\033[0m\n"
 	@awk 'BEGIN {last_file=""} \
@@ -345,9 +345,9 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -rf .ruff_cache/ .mypy_cache/
-	find . -maxdepth 3 -name __pycache__
-	rm -f $(BINS) $(BINS:=.d) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	find . -maxdepth 3 -name __pycache__ -prune -exec rm -rf {} +
+	rm -rf bin/ .ruff_cache/ .mypy_cache/
+	rm -f $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 
