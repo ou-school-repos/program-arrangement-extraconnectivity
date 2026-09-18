@@ -149,17 +149,17 @@ format:	##H @Dev Format C++ sources (clang-format)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # .PHONY: benchmark
-# benchmark: build	##H @Run Benchmark search for R=2..$(R)
+# benchmark: build	##H @Run Benchmark search for R: 2..$(R)
 # 	@$(call print_info,Benchmarking $(BIN_OPT) R=2..$(R))
 # 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 .PHONY: test/predict
-test/predict: bin/predict	##H @Test Verify predictor matches search for R=2..$(R)
-	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
+test/predict: bin/predict	##H @Test Verify predictor matches search for R: 2..$(R)
+	@$(call print_info,Testing ./bin/predict against ./bin/arrangement)
 	@fail=0; \
 	for r in $$(seq 2 $(R)); do \
-		expected=$$(./$(BIN_OPT) $$r 2>/dev/null | grep 'EX:' | tail -1 | sed 's/,.*//' | tr -d ' '); \
-		actual=$$(./$(BIN_PRED) $$r 2>/dev/null | sed 's/,.*//' | tr -d ' '); \
+		expected=$$(./bin/arrangement $$r 2>/dev/null | grep 'EX:' | tail -1 | sed 's/,.*//' | tr -d ' '); \
+		actual=$$(./bin/predict $$r 2>/dev/null | sed 's/,.*//' | tr -d ' '); \
 		if [ "$$actual" = "$$expected" ]; then \
 			$(call print_success,R=$$r: prediction matches search.); \
 		else \
