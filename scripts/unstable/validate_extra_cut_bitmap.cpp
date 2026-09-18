@@ -4,6 +4,13 @@
 
 #include "bfs_utils.hpp"
 
+#ifdef _OPENMP
+#include <omp.h>
+#else
+inline int omp_get_max_threads() { return 1; }
+inline int omp_get_thread_num() { return 0; }
+#endif
+
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
@@ -121,42 +128,96 @@ int main(int argc, char **argv) {
             }
 
             if (bottom_up) {
-#pragma omp parallel for schedule(static) reduction(+ : next_frontier_size)
-                for (std::size_t word_index = 0;
-                     word_index < visited.num_words(); ++word_index) {
-                    const std::uint64_t visited_word =
-                        visited.load_word(word_index);
-                    if (visited_word ==
-                        std::numeric_limits<std::uint64_t>::max())
-                        continue;
+                const std::size_t total_words = visited.num_words();
+                const std::size_t thread_count =
+                    static_cast<std::size_t>(omp_get_max_threads());
+                const std::size_t report_step =
+                    std::max<std::size_t>(1, total_words / 100);
+                const std::size_t local_report_step = std::max<std::size_t>(
+                    1024,
+                    (total_words + thread_count * 99) / (thread_count * 100));
+                const auto scan_counters =
+                    std::make_unique<std::vector<PaddedScanCounter>>(
+                        thread_count);
+                std::atomic<std::size_t> next_scan_report{report_step};
 
-                    std::uint64_t new_word = 0;
-                    for (int bit = 0; bit < 64; ++bit) {
-                        if ((visited_word >> bit) & 1)
-                            continue;
-                        const std::size_t rank = word_index * 64 + bit;
-                        if (rank >= graph.valid_count)
-                            break;
+#pragma omp parallel
+                {
+                    const int thread_index = omp_get_thread_num();
+                    std::size_t local_scanned = 0;
+#pragma omp for schedule(static) reduction(+ : next_frontier_size)
+                    for (std::size_t word_index = 0; word_index < total_words;
+                         ++word_index) {
+                        const std::uint64_t visited_word =
+                            visited.load_word(word_index);
+                        if (visited_word !=
+                            std::numeric_limits<std::uint64_t>::max()) {
+                            std::uint64_t new_word = 0;
+                            for (int bit = 0; bit < 64; ++bit) {
+                                if ((visited_word >> bit) & 1)
+                                    continue;
+                                const std::size_t rank = word_index * 64 + bit;
+                                if (rank >= graph.valid_count)
+                                    break;
 
-                        const packed_code_t code = graph.decode_rank(rank);
-                        bool discovered = false;
-                        graph.for_each_neighbor(
-                            code, [&](const packed_code_t neighbor) {
-                                if (discovered)
-                                    return;
-                                const std::size_t neighbor_rank =
-                                    graph.rank_code(neighbor);
-                                if (current_frontier.test(neighbor_rank))
-                                    discovered = true;
-                            });
-                        if (discovered) {
-                            new_word |= std::uint64_t{1} << bit;
-                            ++next_frontier_size;
+                                const packed_code_t code =
+                                    graph.decode_rank(rank);
+                                bool discovered = false;
+                                graph.for_each_neighbor(
+                                    code, [&](const packed_code_t neighbor) {
+                                        if (discovered)
+                                            return;
+                                        const std::size_t neighbor_rank =
+                                            graph.rank_code(neighbor);
+                                        if (current_frontier.test(
+                                                neighbor_rank))
+                                            discovered = true;
+                                    });
+                                if (discovered) {
+                                    new_word |= std::uint64_t{1} << bit;
+                                    ++next_frontier_size;
+                                }
+                            }
+                            if (new_word != 0)
+                                next_frontier.set_word_atomic(word_index,
+                                                              new_word);
+                        }
+
+                        ++local_scanned;
+                        if (local_scanned % local_report_step == 0 ||
+                            word_index + 1 == total_words) {
+                            (*scan_counters)[thread_index].value.store(
+                                local_scanned, std::memory_order_relaxed);
+#pragma omp critical(bfs_scan_progress)
+                            {
+                                const std::size_t scanned = std::accumulate(
+                                    scan_counters->begin(),
+                                    scan_counters->end(), std::size_t{0},
+                                    [](std::size_t total,
+                                       const PaddedScanCounter &counter) {
+                                        return total +
+                                               counter.value.load(
+                                                   std::memory_order_relaxed);
+                                    });
+                                const std::size_t target =
+                                    next_scan_report.load(
+                                        std::memory_order_relaxed);
+                                if (scanned >= target) {
+                                    report_bfs_scan_progress(scanned,
+                                                             total_words);
+                                    next_scan_report.store(
+                                        ((scanned / report_step) + 1) *
+                                            report_step,
+                                        std::memory_order_relaxed);
+                                }
+                            }
                         }
                     }
-                    if (new_word != 0)
-                        next_frontier.set_word_atomic(word_index, new_word);
+                    (*scan_counters)[thread_index].value.store(
+                        local_scanned, std::memory_order_relaxed);
                 }
+                report_bfs_scan_progress(total_words, total_words);
+                std::cerr << '\n';
             } else {
                 const std::size_t total_blocks = current_frontier.num_blocks();
 #pragma omp parallel for schedule(guided) reduction(+ : next_frontier_size)

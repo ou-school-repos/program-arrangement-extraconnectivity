@@ -112,6 +112,10 @@ class AtomicBitset {
     std::unique_ptr<std::atomic<std::uint8_t>[]> dirty_blocks_;
 };
 
+struct alignas(64) PaddedScanCounter {
+    std::atomic<std::size_t> value{0};
+};
+
 inline void report_bfs_progress(std::uint64_t discovered,
                                 std::uint64_t total_survivors) {
     const double percent =
@@ -119,6 +123,15 @@ inline void report_bfs_progress(std::uint64_t discovered,
     std::cerr << "\rBFS progress: " << discovered << " / " << total_survivors
               << " (" << std::fixed << std::setprecision(1) << percent << "%)"
               << std::flush;
+}
+
+inline void report_bfs_scan_progress(std::size_t scanned,
+                                     std::size_t total_words) {
+    const double percent =
+        total_words == 0 ? 100.0 : 100.0 * scanned / total_words;
+    std::cerr << "\rBottom-up scan: " << scanned << " / " << total_words
+              << " words (" << std::fixed << std::setprecision(1) << percent
+              << "%)" << std::flush;
 }
 
 inline bool star_connected(const PackedArrangementGraph &graph,
