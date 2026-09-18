@@ -286,12 +286,15 @@ _csv/full: bin/predict	##H @General Verified CSV, set R: I..K
 	@$(call print_success,docs/verifications.csv — $$(wc -l < docs/verifications.csv) rows.)
 
 
+y ?=
+
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
 	find . -maxdepth 3 -name __pycache__ -prune -exec rm -rf {} +
 	rm -rf bin/ .ruff_cache/ .mypy_cache/
 	rm -f $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	_gflags=(-fnx); test -v y && _gflags+=(-e journal-pads/); cd paper/ && echo git clean "$${_gflags[@]}"
 	@$(call print_success,Clean complete.)
 
 
