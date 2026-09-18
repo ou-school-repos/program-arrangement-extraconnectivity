@@ -297,9 +297,7 @@ clean:	##H @General Remove build artifacts
 	find . -maxdepth 3 -name __pycache__ -prune -exec rm -rf {} +
 	rm -rf bin/ .ruff_cache/ .mypy_cache/
 	rm -f $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
-# 	cd paper/ && { _gflags=(-fnx); test -v y && _gflags+=(-e journal-pads/); git clean "$${_gflags[@]}"; }
 	cd paper/; _gflags=(-fnx); test -v y && _gflags+=(-e journal-pads/); echo git clean "$${_gflags[@]}"
-# 	_gflags=(-fnx); test -v y && _gflags+=(-e journal-pads/); cd paper/; echo git clean "$${_gflags[@]}"
 	@$(call print_success,Clean complete.)
 
 
