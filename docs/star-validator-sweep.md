@@ -94,7 +94,8 @@ Legend:
 |      31 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      32 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 
-`time for i in $(seq 21 26); do for j in $(seq 1 6); do ./bin/validate_extra_cut $i $j; done done`
+- `time for i in $(seq 21 26); do for j in $(seq 1 6); do ./bin/validate_extra_cut $i $j; done done`
+- `time for i in $(seq 22 26); do time ./bin/validate_extra_cut_bitmap $i 7; done`
 
 The smallest known hard counterexample, and the smallest hard counterexample
 within the full-Star family, is `A(11,6)` with `R=31`. This does not prove that
