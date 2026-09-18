@@ -123,6 +123,7 @@ int main(int argc, char **argv) {
             return;
 
         std::uint64_t size = 0;
+        std::size_t bfs_layer = 0;
         visited.set_atomic(start_rank);
         current_frontier.set_atomic(start_rank);
         while (true) {
@@ -143,6 +144,8 @@ int main(int argc, char **argv) {
 
             if (current_frontier_size == 0)
                 break;
+
+            const std::size_t layer = ++bfs_layer;
 
             std::uint64_t next_frontier_size = 0;
             const bool bottom_up =
@@ -230,7 +233,7 @@ int main(int argc, char **argv) {
                                     next_scan_report.load(
                                         std::memory_order_relaxed);
                                 if (scanned >= target) {
-                                    report_bfs_scan_progress(scanned,
+                                    report_bfs_scan_progress(layer, scanned,
                                                              total_words);
                                     next_scan_report.store(
                                         ((scanned / report_step) + 1) *
@@ -243,7 +246,7 @@ int main(int argc, char **argv) {
                     (*scan_counters)[thread_index].value.store(
                         local_scanned, std::memory_order_relaxed);
                 }
-                report_bfs_scan_progress(total_words, total_words);
+                report_bfs_scan_progress(layer, total_words, total_words);
                 std::cerr << '\n';
             } else {
                 const std::size_t total_blocks = current_frontier.num_blocks();

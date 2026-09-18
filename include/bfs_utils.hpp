@@ -198,13 +198,13 @@ inline void report_bfs_progress(std::uint64_t discovered,
               << std::flush;
 }
 
-inline void report_bfs_scan_progress(std::size_t scanned,
+inline void report_bfs_scan_progress(std::size_t layer, std::size_t scanned,
                                      std::size_t total_words) {
     const double percent =
         total_words == 0 ? 100.0 : 100.0 * scanned / total_words;
-    std::cerr << "\rBottom-up scan: " << scanned << " / " << total_words
-              << " words (" << std::fixed << std::setprecision(1) << percent
-              << "%)" << std::flush;
+    std::cerr << "\rBottom-up scan: [layer " << layer << "/?] " << scanned
+              << " / " << total_words << " words (" << std::fixed
+              << std::setprecision(1) << percent << "%)" << std::flush;
 }
 
 inline bool star_connected(const PackedArrangementGraph &graph,
