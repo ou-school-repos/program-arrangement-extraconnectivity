@@ -596,9 +596,6 @@ int main(int argc, char **argv) {
     if (partition_mode)
         return partition_finished ? 0 : 1;
 
-    report_bfs_progress(discovered_survivors, total_survivors);
-    std::cerr << '\n';
-
     std::sort(component_sizes.begin(), component_sizes.end());
     const bool valid = component_sizes.size() >= 2 &&
                        std::all_of(component_sizes.begin(),

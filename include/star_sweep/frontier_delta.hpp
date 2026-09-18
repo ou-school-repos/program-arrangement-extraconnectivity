@@ -103,7 +103,8 @@ inline std::uint64_t write_frontier_delta(const AtomicBitset &frontier,
 
 // Replays one immutable frontier delta into a fresh working bitmap.
 inline void replay_frontier_delta(const std::string &path,
-                                  AtomicBitset &frontier) {
+                                  AtomicBitset &frontier,
+                                  std::uint64_t *payload_bits = nullptr) {
     std::ifstream input(path, std::ios::binary);
     if (!input)
         throw std::runtime_error("cannot open frontier delta for replay: " +
@@ -147,6 +148,8 @@ inline void replay_frontier_delta(const std::string &path,
                 throw std::runtime_error("failed to read delta block data: " +
                                          path);
             checksum.update(&value, sizeof(value));
+            if (payload_bits != nullptr)
+                *payload_bits += __builtin_popcountll(value);
         }
         previous_block = static_cast<std::size_t>(block.block_index);
         have_previous_block = true;

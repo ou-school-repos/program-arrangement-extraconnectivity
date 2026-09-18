@@ -6,7 +6,58 @@
 #include <cstdint>
 #include <cstring>
 
+#if defined(__SSE4_2__) && (defined(__x86_64__) || defined(__i386__))
+#include <nmmintrin.h>
+#define STAR_SWEEP_CRC32C_HW 1
+#endif
+
 namespace star_sweep {
+
+// CRC32C with the SSE4.2 instruction when the target enables it, and a
+// dependency-free table fallback otherwise. This protects metadata against
+// accidental truncation/corruption; it is not an adversarial hash.
+class Crc32c {
+  public:
+    void reset() { value_ = 0xffffffffU; }
+
+    void update(const void *data, std::size_t length) {
+        const auto *bytes = static_cast<const std::uint8_t *>(data);
+#if defined(STAR_SWEEP_CRC32C_HW)
+        while (length >= sizeof(std::uint64_t)) {
+            std::uint64_t word = 0;
+            std::memcpy(&word, bytes, sizeof(word));
+            value_ = _mm_crc32_u64(value_, word);
+            bytes += sizeof(word);
+            length -= sizeof(word);
+        }
+#endif
+        while (length != 0) {
+            value_ = table()[(value_ ^ *bytes) & 0xffU] ^ (value_ >> 8);
+            ++bytes;
+            --length;
+        }
+    }
+
+    std::uint32_t digest() const { return value_ ^ 0xffffffffU; }
+
+  private:
+    static const std::array<std::uint32_t, 256> &table() {
+        static const std::array<std::uint32_t, 256> values = [] {
+            std::array<std::uint32_t, 256> generated{};
+            for (std::size_t index = 0; index < generated.size(); ++index) {
+                std::uint32_t value = static_cast<std::uint32_t>(index);
+                for (int bit = 0; bit < 8; ++bit)
+                    value = (value & 1U) != 0 ? (value >> 1) ^ 0x82f63b78U
+                                              : value >> 1;
+                generated[index] = value;
+            }
+            return generated;
+        }();
+        return values;
+    }
+
+    std::uint32_t value_ = 0xffffffffU;
+};
 
 // Small dependency-free streaming XXH64 implementation for WAL payloads.
 class Xxh64 {

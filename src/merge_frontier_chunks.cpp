@@ -77,7 +77,11 @@ int run(int argc, char **argv) {
             bottom_up = chunk.bottom_up;
             have_direction = true;
         }
-        star_sweep::replay_frontier_delta(chunk_path, canonical_next);
+        std::uint64_t chunk_bits = 0;
+        star_sweep::replay_frontier_delta(chunk_path, canonical_next,
+                                          &chunk_bits);
+        if (chunk_bits != chunk.local_frontier_size)
+            throw std::runtime_error("partition chunk cardinality mismatch");
     }
 
     std::uint64_t canonical_size = 0;
