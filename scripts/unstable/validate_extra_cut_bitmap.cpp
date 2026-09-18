@@ -25,6 +25,12 @@ int main(int argc, char **argv) {
     const PackedArrangementGraph graph(n, k);
     const FullStarParameters parameters = full_star_parameters(n, k);
 
+    std::cout << "Building rank-indexed A(" << n << ',' << k << ")...\n"
+              << "Total valid vertices: " << graph.valid_count << "\n"
+              << "Visited bitset: " << (graph.valid_count + 7) / 8 << " bytes\n"
+              << "R = " << parameters.volume() << "\n"
+              << "Candidate g = " << parameters.g() << "\n";
+
     std::vector<int> center(k);
     std::iota(center.begin(), center.end(), 0);
     const std::uint64_t center_code = graph.encode(center);
@@ -42,6 +48,7 @@ int main(int argc, char **argv) {
         std::cerr << "Error: constructed Star is not connected.\n";
         return 1;
     }
+    std::cout << "Subset S connectivity verified.\n";
 
     AtomicBitset visited(graph.valid_count);
     for (const std::uint64_t code : star)
@@ -65,6 +72,11 @@ int main(int argc, char **argv) {
         graph.valid_count - star.size() - boundary.size();
     std::uint64_t discovered_survivors = 0;
     constexpr std::uint64_t progress_interval = 1'000'000;
+
+    std::cout << "|S| = " << star.size() << "\n"
+              << "|N(S)| = " << boundary.size() << "\n"
+              << "Validating " << parameters.g()
+              << "-extra cut properties...\n";
 
     graph.for_each_valid_code([&](const std::uint64_t start) {
         const std::size_t start_rank = graph.rank_code(start);
@@ -119,19 +131,27 @@ int main(int argc, char **argv) {
                                        return size > static_cast<std::uint64_t>(
                                                          parameters.g());
                                    });
-    std::cout << "A(" << n << ',' << k << ") bitmap validation\n"
-              << "R = " << parameters.volume() << ", g = " << parameters.g()
-              << ", m = " << parameters.m() << ", d = " << parameters.d()
-              << "\n"
-              << "|N(S)| = " << boundary.size() << " (formula "
-              << parameters.boundary() << ")\n"
-              << "Hamming baseline = " << parameters.hamming_boundary()
-              << ", embedding gate = "
-              << (parameters.embedding_gate() ? "open" : "closed") << "\n"
-              << "component sizes after deletion:\n";
+    std::cout << "component sizes after deletion:\n";
     for (const std::uint64_t size : component_sizes)
         std::cout << "  " << size << '\n';
     std::cout << "valid " << parameters.g()
               << "-extra cut: " << (valid ? "yes" : "no") << '\n';
-    return valid ? 0 : 1;
+    if (valid)
+        std::cout << "therefore kappa_" << parameters.g() << "(A(" << n << ','
+                  << k << ")) <= " << boundary.size() << '\n';
+    std::cout << "Hamming baseline: " << parameters.hamming_boundary()
+              << "; Star boundary: " << boundary.size() << '\n'
+              << "Embedding gate: d = " << parameters.d() << ", k = " << k
+              << ", n-k = " << parameters.m() << " ("
+              << (parameters.embedding_gate() ? "open" : "closed") << ")\n";
+    if (!valid)
+        std::cout << "INVALID EXTRA CUT\n";
+    else if (parameters.boundary() < parameters.hamming_boundary() &&
+             parameters.embedding_gate())
+        std::cout << "HARD COUNTEREXAMPLE: RestrictedLowerBound\n";
+    else if (parameters.boundary() < parameters.hamming_boundary())
+        std::cout << "SOFT COUNTEREXAMPLE: UniversalLowerBound only\n";
+    else
+        std::cout << "SATISFIES HAMMING OPTIMALITY\n";
+    return 0;
 }

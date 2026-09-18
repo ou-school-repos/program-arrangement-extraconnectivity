@@ -39,15 +39,6 @@ static std::string classification(const FullStarParameters &parameters,
     return "SATISFIES HAMMING OPTIMALITY";
 }
 
-static void report_progress(std::uint64_t discovered,
-                            std::uint64_t total_survivors) {
-    const double percent =
-        total_survivors == 0 ? 100.0 : 100.0 * discovered / total_survivors;
-    std::cerr << "\rBFS progress: " << discovered << " / " << total_survivors
-              << " (" << std::fixed << std::setprecision(1) << percent << "%)"
-              << std::flush;
-}
-
 int main(int argc, char **argv) {
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " n k\n";
@@ -134,7 +125,7 @@ int main(int argc, char **argv) {
                 ++size;
                 ++discovered_survivors;
                 if (discovered_survivors % progress_interval == 0)
-                    report_progress(discovered_survivors, total_survivors);
+                    report_bfs_progress(discovered_survivors, total_survivors);
                 graph.for_each_neighbor(
                     current, [&](const std::uint64_t neighbor) {
                         const std::size_t rank = graph.rank_code(neighbor);
@@ -149,7 +140,7 @@ int main(int argc, char **argv) {
         component_sizes.push_back(size);
     });
 
-    report_progress(discovered_survivors, total_survivors);
+    report_bfs_progress(discovered_survivors, total_survivors);
     std::cerr << '\n';
 
     std::sort(component_sizes.begin(), component_sizes.end());
