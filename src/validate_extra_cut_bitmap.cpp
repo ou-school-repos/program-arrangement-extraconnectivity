@@ -124,6 +124,7 @@ int main(int argc, char **argv) {
 
         std::uint64_t size = 0;
         std::size_t bfs_layer = 0;
+        std::vector<bool> bottom_up_by_layer;
         visited.set_atomic(start_rank);
         current_frontier.set_atomic(start_rank);
         while (true) {
@@ -150,9 +151,10 @@ int main(int argc, char **argv) {
             std::uint64_t next_frontier_size = 0;
             const bool bottom_up =
                 current_frontier_size >= graph.valid_count / 20;
+            bottom_up_by_layer.push_back(bottom_up);
 
             if (bottom_up && !direction_message_printed) {
-                std::cerr << "\n[Direction Optimized: Bottom-Up Scan Active]\n"
+                std::cerr << "[Direction Optimized: Bottom-Up Scan Active]\n"
                           << std::flush;
                 direction_message_printed = true;
             }
@@ -233,8 +235,9 @@ int main(int argc, char **argv) {
                                     next_scan_report.load(
                                         std::memory_order_relaxed);
                                 if (scanned >= target) {
-                                    report_bfs_scan_progress(layer, scanned,
-                                                             total_words);
+                                    report_bfs_scan_progress(
+                                        layer, scanned, total_words,
+                                        discovered_survivors, total_survivors);
                                     next_scan_report.store(
                                         ((scanned / report_step) + 1) *
                                             report_step,
@@ -246,7 +249,8 @@ int main(int argc, char **argv) {
                     (*scan_counters)[thread_index].value.store(
                         local_scanned, std::memory_order_relaxed);
                 }
-                report_bfs_scan_progress(layer, total_words, total_words);
+                report_bfs_scan_progress(layer, total_words, total_words,
+                                         discovered_survivors, total_survivors);
                 std::cerr << '\n';
             } else {
                 const std::size_t total_blocks = current_frontier.num_blocks();
@@ -285,7 +289,7 @@ int main(int argc, char **argv) {
             discovered_survivors += current_frontier_size;
             if (discovered_survivors >= next_progress) {
                 report_bfs_progress(discovered_survivors, total_survivors,
-                                    layer);
+                                    layer, bottom_up);
                 next_progress = (discovered_survivors / progress_interval + 1) *
                                 progress_interval;
             }
@@ -296,6 +300,10 @@ int main(int argc, char **argv) {
             current_frontier.swap(next_frontier);
             next_frontier.clear();
         }
+        std::cerr << "BFS complete: " << bfs_layer << " layers (directions:";
+        for (const bool layer_bottom_up : bottom_up_by_layer)
+            std::cerr << (layer_bottom_up ? " BU" : " TD");
+        std::cerr << ")\n";
         component_sizes.push_back(size);
     });
 
