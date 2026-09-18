@@ -136,13 +136,14 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	cppcheck --language=c++ --std=c++17 \
 		--enable=information,performance,portability,style,unusedFunction,warning \
 		--check-level=exhaustive --checkers-report=.tmp/cppcheck-checkers.txt \
-		--quiet $(LINT_SRCS) | tee lint.log
+		--quiet $(LINT_SRCS) | tee .tmp/out-lint-all.log
 	flake8 --jobs=1 $$(git ls-files '*.py')
 	@$(call print_success,Lint complete.)
 
 .PHONY: clang
 clang: ##H @Dev Run clang-tidy lint only
-	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -I./include $(CPPFLAGS) $(CXXFLAGS) -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee -a lint.log
+	mkdir -p .tmp/
+	clang-tidy $(LINT_SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -I./include $(CPPFLAGS) $(CXXFLAGS) -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
 
 .PHONY: pylint
 pylint:	##H @Dev Run pylint only
@@ -206,7 +207,8 @@ test/validate_extra_cut: bin/validate_extra_cut	##H @Test Compare validator outp
 .PHONY: lean
 lean:	##H @Lean Build Lean 4 proofs (proofs/)
 	@$(call print_info,Building Lean proofs)
-	set -o pipefail; cd proofs && lake build | tee lean.log
+	mkdir -p .tmp/
+	set -o pipefail; cd proofs && lake build | tee .tmp/out-build-lean.log
 	@printf "\n\033[1;32m--- Verification Complete ---\033[0m\n"
 	@printf "\033[1;36mMapped Theorems & Definitions:\033[0m\n"
 	@awk 'BEGIN {last_file=""} \
