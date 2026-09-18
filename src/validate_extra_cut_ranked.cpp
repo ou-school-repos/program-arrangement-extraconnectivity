@@ -4,6 +4,8 @@
 
 #include "bfs_utils.hpp"
 
+#include <omp.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <iostream>

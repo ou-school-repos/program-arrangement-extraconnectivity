@@ -12,7 +12,7 @@ LDFLAGS  ?=
 VERSION   ?= 0.1.0
 GIT_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
 BUILD_ID  ?= $(VERSION) ($(GIT_COMMIT))
-CXXFLAGS += '-DBUILD_VERSION="$(BUILD_ID)"'
+CPPFLAGS += -DBUILD_VERSION='"$(BUILD_ID)"'
 $(info Build version: $(BUILD_ID))
 
 # Machine-local configuration (such as an /opt OR-Tools installation) is
@@ -26,22 +26,36 @@ DOCS_PDF   ?= $(DOCS_SRC:.md=.pdf)
 BUNDLE_OUT ?= bundle.zip
 SITE_OUT   ?= site.zip
 
-PROFILE_DIRS := src/plain src/openmp src/nauty src/ortools src/z3
-PROFILE_SOURCES := $(foreach dir,$(PROFILE_DIRS),$(wildcard $(dir)/*.cpp))
-PROFILE_BINS := $(patsubst %.cpp,bin/%,$(notdir $(PROFILE_SOURCES)))
+SRCS := $(wildcard src/*.cpp)
+BINS := $(patsubst src/%.cpp,bin/%,$(SRCS))
+HDRS := $(wildcard include/*.hpp)
 
-# These names are retained as lightweight aliases for scripts and muscle
-# memory.  The actual files live under bin/.
-# BIN_OPT = bin/arrangement
-# BIN_PRED = bin/predict
-# BIN_UNIVERSAL = bin/universal_lower_bound
+# Build profiles are inferred from the source's own includes/pragmas.
+H := \#
+uses = $(patsubst src/%.cpp,bin/%,$(shell grep -lE '^[[:space:]]*$(H)[[:space:]]*($(1))' $(SRCS) 2>/dev/null))
+OMP_BINS     := $(call uses,include[[:space:]]*[<"]omp\.h|pragma[[:space:]]+omp)
+NAUTY_BINS   := $(call uses,include.*nauty[a-z]*\.h)
+ORTOOLS_BINS := $(call uses,include.*ortools/)
+Z3_BINS      := $(call uses,include.*z3)
+
+ORTOOLS_CFLAGS ?= $(shell pkg-config --cflags ortools 2>/dev/null)
+ORTOOLS_LIBS   ?= $(shell pkg-config --libs ortools 2>/dev/null)
+Z3_LIBS        ?= $(shell pkg-config --libs z3 2>/dev/null)
+NAUTY_AVAILABLE := $(wildcard /usr/include/nauty/nauty.h)
+
+$(OMP_BINS):     DEP_CXXFLAGS += -fopenmp
+$(NAUTY_BINS):   DEP_CPPFLAGS += $(if $(NAUTY_AVAILABLE),-I/usr/include/nauty,)
+$(NAUTY_BINS):   DEP_LIBS     += $(if $(NAUTY_AVAILABLE),-lnauty,)
+$(ORTOOLS_BINS): DEP_CPPFLAGS += $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS))
+$(ORTOOLS_BINS): DEP_LIBS     += $(ORTOOLS_LIBS)
+$(Z3_BINS):      DEP_LIBS     += $(Z3_LIBS)
+
+SKIP := $(if $(strip $(ORTOOLS_LIBS)),,$(ORTOOLS_BINS)) \
+        $(if $(strip $(Z3_LIBS)),,$(Z3_BINS)) \
+        $(if $(strip $(NAUTY_AVAILABLE)),,$(NAUTY_BINS))
 
 # Build modes (set once, below in Build section)
 DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
-
-# nauty (canonical graph labeling)
-NAUTY_CFLAGS = -I/usr/include/nauty
-NAUTY_LIBS   = -lnauty
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Help
@@ -104,20 +118,14 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: build
-build: ##H @Dev Build all source profiles
-	@for dir in $(PROFILE_DIRS); do $(MAKE) -C $$dir; done
+build: $(filter-out $(SKIP),$(BINS)) ##H @Dev Build all tools (optional solver tools when configured)
+	@if [ -n "$(strip $(SKIP))" ]; then \
+		echo "Skipping unavailable solver tools: $(notdir $(SKIP))"; \
+	fi
 
-.PHONY: bin bin/
-bin bin/: build ##H @Dev Build all source profiles (bin/ alias)
-
-define PROFILE_BIN_alias
-.PHONY: bin/$(basename $(notdir $(1)))
-bin/$(basename $(notdir $(1))):
-	@$(MAKE) -C $(dir $(1)) ../../bin/$(basename $(notdir $(1)))
-endef
-$(foreach source,$(PROFILE_SOURCES),$(eval $(call PROFILE_BIN_alias,$(source))))
-
-SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
+$(BINS): bin/%: src/%.cpp $(HDRS)
+	@mkdir -p $(@D)
+	$(CXX) -Iinclude $(CPPFLAGS) $(DEP_CPPFLAGS) $(CXXFLAGS) $(DEP_CXXFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) $(DEP_LIBS)
 
 .PHONY: lint
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
@@ -132,7 +140,7 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 
 .PHONY: clang
 clang: ##H @Dev Run clang-tidy lint only
-	clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(NAUTY_CFLAGS) | tee -a lint.log
+	clang-tidy $(SRCS) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- $(CXXFLAGS) $(if $(NAUTY_AVAILABLE),-I/usr/include/nauty,) | tee -a lint.log
 
 .PHONY: pylint
 pylint:	##H @Dev Run pylint only
@@ -333,7 +341,7 @@ site:	##H @General Create site.zip of Lean HTML documentation
 .PHONY: clean
 clean:	##H @General Remove build artifacts
 	@$(call print_info,Cleaning)
-	rm -f $(PROFILE_BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
+	rm -f $(BINS) *.o *.d *.gch *.class $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	@$(call print_success,Clean complete.)
 
 
