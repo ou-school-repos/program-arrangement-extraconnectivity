@@ -7,6 +7,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -114,11 +115,11 @@ int main(int argc, char **argv) {
               << (rank32 ? "fits" : "does not fit") << '\n'
               << "Ranked uint64 frontier: "
               << (rank64 ? "fits" : "does not fit") << '\n'
-              << "One bitset: " << bitset_bytes << " bytes ["
+              << "One bitset: " << std::setw(16) << bitset_bytes << " bytes ["
               << format_bytes(bitset_bytes) << "]\n"
-              << "Three bitmap states: " << state_bytes << " bytes ["
-              << format_bytes(state_bytes) << "]\n"
-              << "Flat n^k guard: " << flat_slots << " slots\n"
+              << "Three bitmap states: " << std::setw(16) << state_bytes
+              << " bytes [" << format_bytes(state_bytes) << "]\n"
+              << "Flat n^k guard: " << std::setw(16) << flat_slots << " slots\n"
               << "Star classification: ";
 
     if (delta > 0 && gate)
