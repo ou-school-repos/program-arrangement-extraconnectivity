@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
     const long long delta = hamming - star_boundary;
     const bool gate = d <= k && d <= m;
     const bool rank32 = vertices <= std::numeric_limits<std::uint32_t>::max();
+    const bool rank64 = vertices <= std::numeric_limits<std::uint64_t>::max();
 
     std::cout << "Build: " << build_version << '\n'
               << "Planning full-Star A(" << n << ',' << k << ")\n"
@@ -111,10 +112,12 @@ int main(int argc, char **argv) {
               << "Embedding gate: " << (gate ? "open" : "closed") << '\n'
               << "Ranked uint32 frontier: "
               << (rank32 ? "fits" : "does not fit") << '\n'
-              << "One bitset: " << bitset_bytes << " bytes ("
-              << format_bytes(bitset_bytes) << ")\n"
-              << "Three bitmap states: " << state_bytes << " bytes ("
-              << format_bytes(state_bytes) << ")\n"
+              << "Ranked uint64 frontier: "
+              << (rank64 ? "fits" : "does not fit") << '\n'
+              << "One bitset: " << bitset_bytes << " bytes ["
+              << format_bytes(bitset_bytes) << "]\n"
+              << "Three bitmap states: " << state_bytes << " bytes ["
+              << format_bytes(state_bytes) << "]\n"
               << "Flat n^k guard: " << flat_slots << " slots\n"
               << "Star classification: ";
 
