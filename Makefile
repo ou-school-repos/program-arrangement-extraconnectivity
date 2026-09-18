@@ -114,10 +114,10 @@ LINT_SRCS_SH ?= $(shell git ls-files '*.sh')
 lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 	@$(call print_info,Linting)
 	mkdir -p .tmp/
-	cppcheck --language=c++ --std=c++17 \
+	cppcheck --language=c++ --std=c++17 --quiet \
 		--enable=information,performance,portability,style,unusedFunction,warning \
 		--check-level=exhaustive --checkers-report=.tmp/cppcheck-checkers.txt \
-		--quiet $(LINT_SRCS_CPP) | tee .tmp/out-lint-all.log
+		$(LINT_SRCS_CPP) | tee .tmp/out-lint-all.log
 	flake8 --jobs=1 $(LINT_SRCS_PY)
 	-shellcheck $(LINT_SRCS_SH)
 	@$(call print_success,Lint complete.)

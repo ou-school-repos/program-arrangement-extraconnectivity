@@ -150,16 +150,26 @@ bool choose_absorb(const PackedArrangementGraph &graph,
                    std::mt19937 &rng, Vertex &result) {
     std::size_t eligible = 0;
     graph.for_each_neighbor(anchor, [&](const Vertex neighbor) {
-        if (!contains(subset, neighbor)) {
+        if (!contains(subset, neighbor))
             ++eligible;
-            // Reservoir sampling selects one eligible neighbor uniformly while
-            // generating the anchor neighborhood only once.
-            std::uniform_int_distribution<std::size_t> pick(1, eligible);
-            if (pick(rng) == 1)
+    });
+    if (eligible == 0)
+        return false;
+
+    std::uniform_int_distribution<std::size_t> pick(0, eligible - 1);
+    const std::size_t wanted = pick(rng);
+    std::size_t seen = 0;
+    bool found = false;
+    graph.for_each_neighbor(anchor, [&](const Vertex neighbor) {
+        if (!found && !contains(subset, neighbor)) {
+            if (seen == wanted) {
                 result = neighbor;
+                found = true;
+            }
+            ++seen;
         }
     });
-    return eligible != 0;
+    return found;
 }
 
 std::uint64_t boundary_size(const std::vector<Vertex> &subset, const int degree,
