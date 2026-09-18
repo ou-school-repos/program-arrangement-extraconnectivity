@@ -24,12 +24,12 @@ BEGIN {
 
 END {
     last_category = ""
-    for (index = 1; index <= count; ++index) {
-        if (categories[index] != last_category) {
-            printf "\n\033[1;36m%s Commands:\033[0m\n", categories[index]
-            last_category = categories[index]
+    for (i = 1; i <= count; ++i) {
+        if (categories[i] != last_category) {
+            printf "\n\033[1;36m%s Commands:\033[0m\n", categories[i]
+            last_category = categories[i]
         }
-        printf "  \033[1;34m%-*s\033[0m  %s\n", max, targets[index], docs[index]
+        printf "  \033[1;34m%-*s\033[0m  %s\n", max, targets[i], docs[i]
     }
     print ""
 }
