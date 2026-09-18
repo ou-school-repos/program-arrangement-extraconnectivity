@@ -65,31 +65,8 @@ version:
 
 .PHONY: _help
 _help:
-	@printf "\nUsage: make <command>, valid commands:\n\n"
-	@awk 'BEGIN {FS = ":.*?##H "}; \
-		/##H/ && !/@awk.*?##H/ && $$0 !~ /^[[:space:]]*#/ { \
-			target=$$1; doc=$$2; \
-			category="General"; \
-			if (doc ~ /^@/) { \
-				category=substr(doc, 2, index(doc, " ")-2); \
-				doc=substr(doc, index(doc, " ")+1); \
-			} \
-			if (length(target) > max) max = length(target); \
-			targets[NR] = target; docs[NR] = doc; cats[NR] = category; \
-		} \
-		END { \
-			last_cat = ""; \
-			for (i = 1; i <= NR; i++) { \
-				if (cats[i] != "") { \
-					if (cats[i] != last_cat) { \
-						printf "\n\033[1;36m%s Commands:\033[0m\n", cats[i]; \
-						last_cat = cats[i]; \
-					} \
-					printf "  \033[1;34m%-*s\033[0m  %s\n", max, targets[i], docs[i]; \
-				} \
-			} \
-			print ""; \
-		}' $(MAKEFILE_LIST)
+	@printf '\nUsage: make <command>, valid commands:\n'
+	@awk -f scripts/make-help.awk $(MAKEFILE_LIST)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Print Helpers
@@ -154,6 +131,7 @@ _lint/pylint:	##H @Dev Run pylint only
 .PHONY: _lint/mypy
 _lint/mypy:	##H @Dev Run mypy only
 	mypy $$(git ls-files '*.py')
+
 
 .PHONY: format
 format:	##H @Dev Format C++ sources (clang-format)
