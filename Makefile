@@ -286,14 +286,19 @@ _csv/full: bin/predict	##H @General Verified CSV, set R: I..K
 	@$(call print_success,docs/verifications.csv — $$(wc -l < docs/verifications.csv) rows.)
 
 
-y ?=
+GIT_CLEAN_FLAGS := -fdx
 
-GIT_CLEAN_EXCLUDES := \
+# ifndef y
+GIT_CLEAN_FLAGS += -n
+# endif
+
+GIT_CLEAN_FLAGS += \
 	-e '*.bitmap' \
 	-e '.env' \
 	-e 'other/' \
 	-e '.tmp/' \
 	-e 'assets/out/' \
+	-e 'paper/archive/' \
 	-e 'paper/journal-pads/*.xopp' \
 	-e '.agents/' \
 	-e '.claude/' \
@@ -305,8 +310,10 @@ clean:	##H @General Remove build artifacts
 	find . -maxdepth 3 -name __pycache__ -prune -exec rm -rf {} +
 	rm -rf bin/ .ruff_cache/ .mypy_cache/
 	rm -f $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
-# 	git clean -fdnx -e '*.bitmap' -e '.env' -e assets/out/ -e other/ -e .tmp/ -e .agents/ -e .claude/ -e .codex/ -e 'paper/journal-pads/*.xopp'
-	cd paper/; _gflags=(-fnx); test -v y && _gflags+=(-e journal-pads/); echo git clean "$${_gflags[@]}"
+	# git clean -fdnx -e '*.bitmap' -e '.env' -e assets/out/ -e other/ -e .tmp/ -e .agents/ -e .claude/ -e .codex/ -e 'paper/journal-pads/*.xopp'
+	# cd paper/; _gflags=(-fnx); test -v y && _gflags+=(-e journal-pads/); echo git clean "$${_gflags[@]}"
+	echo $(GIT_CLEAN_FLAGS)
+	cd paper/ && git clean $(GIT_CLEAN_FLAGS)
 	@$(call print_success,Clean complete.)
 
 
