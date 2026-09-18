@@ -121,11 +121,13 @@ build: $(filter-out $(SKIP),$(BINS)) ##H @Dev Build all tools (optional solver t
 		echo "Skipping unavailable solver tools: $(notdir $(SKIP))"; \
 	fi
 
+# NOTE: Generic targets
 $(BINS): bin/%: src/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) -I./include -MMD -MP -MF $@.d $(CPPFLAGS) $(DEP_CPPFLAGS) $(CXXFLAGS) $(DEP_CXXFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) $(DEP_LIBS)
 
 -include $(BINS:=.d)
+
 
 LINT_SRCS := $(shell git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
@@ -294,20 +296,20 @@ docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown file
 
 
 .PHONY: _csv/base
-_csv/base:	##H @General Generate docs/predictions.csv (R=2..1024)
+_csv/base: bin/predict	##H @General Generate docs/predictions.csv (R=2..1024)
 	@$(call print_info,Generating predictions CSV)
-	./$(BIN_PRED) --csv 1024 | tee docs/predictions.csv
+	./bin/predict --csv 1024 | tee docs/predictions.csv
 	@$(call print_success,docs/predictions.csv written.)
 
 .PHONY: _csv/full
-_csv/full:	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
+_csv/full: bin/predict	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K=$(K))
 	@if [ ! -f docs/verifications.csv ]; then \
-		./$(BIN_PRED) --csv --verify-range $(I) $(K) | tee docs/verifications.csv; \
+		./bin/predict --csv --verify-range $(I) $(K) | tee docs/verifications.csv; \
 	else \
 		last=$$(tail -1 docs/verifications.csv | cut -d, -f1); \
 		next=$$((last + 1)); \
 		if [ $$next -le $(K) ]; then \
-			./$(BIN_PRED) --csv --verify-range --no-header $$next $(K) | tee -a docs/verifications.csv; \
+			./bin/predict --csv --verify-range --no-header $$next $(K) | tee -a docs/verifications.csv; \
 		else \
 			echo "Already complete up to R=$$last"; \
 		fi; \
@@ -317,6 +319,7 @@ _csv/full:	##H @General Verified CSV R=I..K → docs/verifications.csv (I=$(I) K
 
 PDF_ENGINE ?= xelatex
 
+# NOTE: Generic target
 %.pdf: %.md
 	@$(call print_info,Generating $@ from $<)
 	# NOTE: if fails, try with PDF_ENGINE=lualatex
