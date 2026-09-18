@@ -70,22 +70,22 @@ Legend:
 |      10 |  ∘  |  ∘  |  ∘  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  | \\  | \\  | \\  |
 |      11 |  ∘  |  ∘  |  ∘  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  | \\  | \\  |
 |      12 |  ∘  |  ∘  |  ∘  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  | \\  |
-|      13 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ⊞  |  ⊞  |  ⊞  |  /  |  ◆  | \\  | \\  | \\  |
-|      14 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ⊞  |  ⊞  |  ◆  |  /  |  /  | \\  | \\  |
+|      13 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ⊞  |  ⊞  |  ⊞  |  ⊞  |  ∘  | \\  | \\  | \\  |
+|      14 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ⊞  |  ⊞  |  ∘  |  ◆  |  /  | \\  | \\  |
 |      15 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  | \\  |
 |      16 |  ∘  |  ∘  |  ∘  |  ■  |  ■  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      17 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  ◆  |  /  |  /  |  /  |  /  |  /  |
 |      18 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      19 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      20 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      21 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      19 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      20 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ?  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      21 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ■  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      22 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      23 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      24 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      25 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      26 |  ∘  |  ∘  |  ∘  |  ∘  |  ⊞  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      27 |  ∘  |  ∘  |  ∘  |  ∘  |  ⊞  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      28 |  ∘  |  ∘  |  ∘  |  ∘  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      28 |  ∘  |  ∘  |  ∘  |  ∘  |  ?  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      29 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      30 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      31 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
@@ -145,7 +145,8 @@ boundary**, while $|∂H|$ denotes the **Hamming baseline** for volume `R`.
 | 8.3  | `A(16,8)` |   518,918,400 |  16,605,388,800 |  4,294,967,296 |  65 |  64 |  2,016 |   2,417 |  401 | `7,(8,8)`   |
 | 8.4  | `A(17,8)` |   980,179,200 |  35,286,451,200 |  6,975,757,441 |  73 |  72 |  2,520 |   3,088 |  568 | `7,(8,9)`   |
 | 8.5  | `A(18,8)` | 1,764,322,560 |  70,572,902,400 | 11,019,960,576 |  81 |  80 |  3,080 |   3,782 |  702 | `7,(8,10)`  |
-| 8.?  | `A(21,8)` | 8,204,716,800 | 328,188,672,000 | 37,822,859,361 | 105 | 104 |  5,096 |   6,188 | 1092 | `7,(8,10)`  |
+| 8.6  | `A(19,8)` | 3,047,466,240 | 134,088,514,560 | 16,983,563,041 |  89 |  88 |  3,696 |   4,538 |  842 | `7,(8,11)`  |
+| 8.?  | `A(21,8)` | 8,204,716,800 | 426,645,273,600 | 37,822,859,361 | 105 | 104 |  5,096 |   6,188 | 1092 | `7,(8,13)`  |
 |      | **k=9**   |               |                 |                |     |     |        | **k=9** |      |             |
 | 9.1  | `A(15,9)` | 1,816,214,400 |  49,037,788,800 | 38,443,359,375 |  55 |  54 |  1,512 |   1,894 |  382 | `6,(9,6)`   |
 
@@ -524,6 +525,186 @@ direnv: loading ~/Documents/school/ou-papers/program-cheng-connectivity-asymptot
 direnv: warning: proofs/.lake -> /run/media/shane/shane4tb-ent/.lake/program-cheng-connectivity-asymptote-proofs, not /path/to/some/device/.lake/program-cheng-connectivity-asymptote-proofs (not touching it)
 direnv: export +LEAN_CACHE_DIR +OMP_DISPLAY_ENV +OMP_NUM_THREADS +ORTOOLS_CFLAGS +ORTOOLS_HOME +ORTOOLS_LIBS
 
+$ ssh gg@nightly cat program-cheng-connectivity-asymptote/.tmp/star_A$n_k$k.log
+nohup: ignoring input
+Build: 0.1.0 (74cdb6fb2409)
+Building rank-indexed A(19,8)...
+Total valid vertices: 3047466240
+Visited bitset: 380933280 bytes
+R = 89
+Candidate g = 88
+Subset S connectivity verified.
+|S| = 89
+|N(S)| = 3696
+Validating 88-extra cut properties...
+BFS progress: 21921624 / 3047462455 (0.7%)
+[Direction Optimized: Bottom-Up Scan Active]
+BFS progress: 3047462455 / 3047462455 (100.0%)
+component sizes after deletion:
+  89
+  3047462455
+valid 88-extra cut: yes
+therefore kappa_88(A(19,8)) <= 3696
+Hamming baseline: 4538; Star boundary: 3696; Delta: 842
+Embedding gate: d = 7, k = 8, n-k = 11 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+$ ./bin/validate_extra_cut_bitmap 16 9
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '202111'
+  [host] OMP_DYNAMIC = 'FALSE'
+  [host] OMP_NESTED = 'FALSE'
+  [host] OMP_NUM_THREADS = '1'
+  [host] OMP_SCHEDULE = 'DYNAMIC'
+  [host] OMP_PROC_BIND = 'FALSE'
+  [host] OMP_PLACES = ''
+  [host] OMP_STACKSIZE = '0'
+  [host] OMP_WAIT_POLICY = 'PASSIVE'
+  [host] OMP_THREAD_LIMIT = '4294967295'
+  [host] OMP_MAX_ACTIVE_LEVELS = '1'
+  [host] OMP_NUM_TEAMS = '0'
+  [host] OMP_TEAMS_THREAD_LIMIT = '0'
+  [all] OMP_CANCELLATION = 'FALSE'
+  [all] OMP_DEFAULT_DEVICE = '0'
+  [all] OMP_MAX_TASK_PRIORITY = '0'
+  [all] OMP_DISPLAY_AFFINITY = 'FALSE'
+  [host] OMP_AFFINITY_FORMAT = 'level %L thread %i affinity %A'
+  [host] OMP_ALLOCATOR = 'omp_default_mem_alloc'
+  [all] OMP_TARGET_OFFLOAD = 'DEFAULT'
+OPENMP DISPLAY ENVIRONMENT END
+Build: 0.1.0 (37e365e808eb)
+Building rank-indexed A(16,9)...
+Total valid vertices: 4151347200
+Visited bitset: 518918400 bytes
+R = 64
+Candidate g = 63
+Subset S connectivity verified.
+|S| = 64
+|N(S)| = 2016
+Validating 63-extra cut properties...
+BFS progress: 64051674 / 4151345120 (1.5%)
+[Direction Optimized: Bottom-Up Scan Active]
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+Bottom-up scan: 64864800 / 64864800 words (100.0%)
+BFS progress: 4151345120 / 4151345120 (100.0%)
+component sizes after deletion:
+  64
+  4151345120
+valid 63-extra cut: yes
+therefore kappa_63(A(16,9)) <= 2016
+Hamming baseline: 2496; Star boundary: 2016; Delta: 480
+Embedding gate: d = 6, k = 9, n-k = 7 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+
+$ ./bin/validate_extra_cut_bitmap 13 11
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '202111'
+  [host] OMP_DYNAMIC = 'FALSE'
+  [host] OMP_NESTED = 'FALSE'
+  [host] OMP_NUM_THREADS = '1'
+  [host] OMP_SCHEDULE = 'DYNAMIC'
+  [host] OMP_PROC_BIND = 'FALSE'
+  [host] OMP_PLACES = ''
+  [host] OMP_STACKSIZE = '0'
+  [host] OMP_WAIT_POLICY = 'PASSIVE'
+  [host] OMP_THREAD_LIMIT = '4294967295'
+  [host] OMP_MAX_ACTIVE_LEVELS = '1'
+  [host] OMP_NUM_TEAMS = '0'
+  [host] OMP_TEAMS_THREAD_LIMIT = '0'
+  [all] OMP_CANCELLATION = 'FALSE'
+  [all] OMP_DEFAULT_DEVICE = '0'
+  [all] OMP_MAX_TASK_PRIORITY = '0'
+  [all] OMP_DISPLAY_AFFINITY = 'FALSE'
+  [host] OMP_AFFINITY_FORMAT = 'level %L thread %i affinity %A'
+  [host] OMP_ALLOCATOR = 'omp_default_mem_alloc'
+  [all] OMP_TARGET_OFFLOAD = 'DEFAULT'
+OPENMP DISPLAY ENVIRONMENT END
+Build: 0.1.0 (74cdb6fb2409)
+Building rank-indexed A(13,11)...
+Total valid vertices: 3113510400
+Visited bitset: 389188800 bytes
+R = 23
+Candidate g = 22
+Subset S connectivity verified.
+|S| = 23
+|N(S)| = 330
+Validating 22-extra cut properties...
+BFS progress: 85608949 / 3113510047 (2.7%)
+[Direction Optimized: Bottom-Up Scan Active]
+Bottom-up scan: 48648600 / 48648600 words (100.0%)
+Bottom-up scan: 48648600 / 48648600 words (100.0%)
+Bottom-up scan: 48648600 / 48648600 words (100.0%)
+Bottom-up scan: 48648600 / 48648600 words (100.0%)
+Bottom-up scan: 48648600 / 48648600 words (100.0%)
+BFS progress: 3113510047 / 3113510047 (100.0%)
+component sizes after deletion:
+  23
+  3113510047
+valid 22-extra cut: yes
+therefore kappa_22(A(13,11)) <= 330
+Hamming baseline: 352; Star boundary: 330; Delta: 22
+Embedding gate: d = 5, k = 11, n-k = 2 (closed)
+SOFT COUNTEREXAMPLE: UniversalLowerBound only
+
+$ time ./bin/validate_extra_cut_bitmap 13 12
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '202111'
+  [host] OMP_DYNAMIC = 'FALSE'
+  [host] OMP_NESTED = 'FALSE'
+  [host] OMP_NUM_THREADS = '1'
+  [host] OMP_SCHEDULE = 'DYNAMIC'
+  [host] OMP_PROC_BIND = 'FALSE'
+  [host] OMP_PLACES = ''
+  [host] OMP_STACKSIZE = '0'
+  [host] OMP_WAIT_POLICY = 'PASSIVE'
+  [host] OMP_THREAD_LIMIT = '4294967295'
+  [host] OMP_MAX_ACTIVE_LEVELS = '1'
+  [host] OMP_NUM_TEAMS = '0'
+  [host] OMP_TEAMS_THREAD_LIMIT = '0'
+  [all] OMP_CANCELLATION = 'FALSE'
+  [all] OMP_DEFAULT_DEVICE = '0'
+  [all] OMP_MAX_TASK_PRIORITY = '0'
+  [all] OMP_DISPLAY_AFFINITY = 'FALSE'
+  [host] OMP_AFFINITY_FORMAT = 'level %L thread %i affinity %A'
+  [host] OMP_ALLOCATOR = 'omp_default_mem_alloc'
+  [all] OMP_TARGET_OFFLOAD = 'DEFAULT'
+OPENMP DISPLAY ENVIRONMENT END
+Build: 0.1.0 (37e365e808eb)
+Building rank-indexed A(13,12)...
+Total valid vertices: 6227020800
+Visited bitset: 778377600 bytes
+Storage: RAM
+R = 13
+Candidate g = 12
+Subset S connectivity verified.
+|S| = 13
+|N(S)| = 132
+Validating 12-extra cut properties...
+BFS progress: 131131709 / 6227020655 (2.1%)
+[Direction Optimized: Bottom-Up Scan Active]
+Bottom-up scan: 97297200 / 97297200 words (100.0%)
+Bottom-up scan: 97297200 / 97297200 words (100.0%)
+Bottom-up scan: 97297200 / 97297200 words (100.0%)
+Bottom-up scan: 97297200 / 97297200 words (100.0%)
+Bottom-up scan: 97297200 / 97297200 words (100.0%)
+BFS progress: 6227020655 / 6227020655 (100.0%)
+component sizes after deletion:
+  13
+  6227020655
+valid 12-extra cut: yes
+therefore kappa_12(A(13,12)) <= 132
+Hamming baseline: 107; Star boundary: 132; Delta: 18446744073709551591
+Embedding gate: d = 4, k = 12, n-k = 1 (closed)
+SATISFIES HAMMING OPTIMALITY
+
+real    129m43.141s
+user    129m30.498s
+sys     0m1.319s
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives

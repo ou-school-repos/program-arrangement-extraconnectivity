@@ -15,16 +15,25 @@ inline int omp_get_thread_num() { return 0; }
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <numeric>
+#include <string>
 #include <vector>
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " n k\n";
+    if (argc != 3 && argc != 5) {
+        std::cerr << "Usage: " << argv[0] << " n k [--disk-backed prefix]\n";
         return 1;
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
+    const bool disk_backed =
+        argc == 5 && std::string(argv[3]) == "--disk-backed";
+    if (argc == 5 && !disk_backed) {
+        std::cerr << "Usage: " << argv[0] << " n k [--disk-backed prefix]\n";
+        return 1;
+    }
+    const std::string disk_prefix = disk_backed ? argv[4] : std::string{};
     if (n <= k || k < 1 || n > 64 || k > 21) {
         std::cerr << "Error: require 64 >= n > k >= 1 and k <= 21.\n";
         return 1;
@@ -37,6 +46,8 @@ int main(int argc, char **argv) {
               << "Building rank-indexed A(" << n << ',' << k << ")...\n"
               << "Total valid vertices: " << graph.valid_count << "\n"
               << "Visited bitset: " << (graph.valid_count + 7) / 8 << " bytes\n"
+              << "Storage: " << (disk_backed ? "disk-backed (mmap)" : "RAM")
+              << "\n"
               << "R = " << parameters.volume() << "\n"
               << "Candidate g = " << parameters.g() << "\n";
 
@@ -60,7 +71,25 @@ int main(int argc, char **argv) {
     }
     std::cout << "Subset S connectivity verified.\n";
 
-    AtomicBitset visited(graph.valid_count);
+    const auto bitmap_path = [&](const char *name) {
+        return disk_prefix + "." + name + ".bitmap";
+    };
+    auto visited_storage =
+        disk_backed ? std::make_unique<AtomicBitset>(graph.valid_count,
+                                                     bitmap_path("visited"))
+                    : std::make_unique<AtomicBitset>(graph.valid_count);
+    auto current_storage =
+        disk_backed ? std::make_unique<AtomicBitset>(graph.valid_count,
+                                                     bitmap_path("current"))
+                    : std::make_unique<AtomicBitset>(graph.valid_count);
+    auto next_storage =
+        disk_backed ? std::make_unique<AtomicBitset>(graph.valid_count,
+                                                     bitmap_path("next"))
+                    : std::make_unique<AtomicBitset>(graph.valid_count);
+    AtomicBitset &visited = *visited_storage;
+    AtomicBitset &current_frontier = *current_storage;
+    AtomicBitset &next_frontier = *next_storage;
+
     for (const packed_code_t code : star)
         visited.set_atomic(graph.rank_code(code));
 
@@ -75,8 +104,6 @@ int main(int argc, char **argv) {
         });
     }
 
-    AtomicBitset current_frontier(graph.valid_count);
-    AtomicBitset next_frontier(graph.valid_count);
     std::vector<std::uint64_t> component_sizes{star.size()};
     const std::uint64_t total_survivors =
         graph.valid_count - star.size() - boundary.size();
@@ -288,7 +315,9 @@ int main(int argc, char **argv) {
                   << k << ")) <= " << boundary.size() << '\n';
     std::cout << "Hamming baseline: " << parameters.hamming_boundary()
               << "; Star boundary: " << boundary.size() << "; Delta: "
-              << (parameters.hamming_boundary() - boundary.size()) << '\n'
+              << (parameters.hamming_boundary() -
+                  static_cast<long long>(boundary.size()))
+              << '\n'
               << "Embedding gate: d = " << parameters.d() << ", k = " << k
               << ", n-k = " << parameters.m() << " ("
               << (parameters.embedding_gate() ? "open" : "closed") << ")\n";

@@ -160,7 +160,9 @@ int main(int argc, char **argv) {
                   << k << ")) <= " << boundary.size() << "\n";
     std::cout << "Hamming baseline: " << parameters.hamming_boundary()
               << "; Star boundary: " << boundary.size() << "; Delta: "
-              << (parameters.hamming_boundary() - boundary.size()) << "\n"
+              << (parameters.hamming_boundary() -
+                  static_cast<long long>(boundary.size()))
+              << "\n"
               << "Embedding gate: d = " << parameters.d() << ", k = " << k
               << ", n-k = " << parameters.m() << " ("
               << (parameters.embedding_gate() ? "open" : "closed") << ")\n"
