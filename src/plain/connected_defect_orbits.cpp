@@ -1,6 +1,6 @@
 // Orbit-reduced diagnostic for high-defect connected subsets.
 // Usage: connected_defect_orbits n k R target
-#include "../../scripts/arrangement_core.hpp"
+#include "arrangement_core.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>

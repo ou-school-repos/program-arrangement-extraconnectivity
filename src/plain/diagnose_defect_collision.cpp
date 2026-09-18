@@ -15,7 +15,7 @@
 //
 // This is a finite adversarial search, not a universal proof.
 
-#include "../scripts/arrangement_core.hpp"
+#include "arrangement_core.hpp"
 
 #include <algorithm>
 #include <cstdint>
