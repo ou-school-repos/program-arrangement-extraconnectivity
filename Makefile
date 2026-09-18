@@ -60,8 +60,8 @@ DBGFLAGS  ?= -g -O0 -fsanitize=address,undefined
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: _help
-_help:
+.PHONY: help
+help:
 	@printf '\nUsage: make <command>, valid commands:\n'
 	@awk -f scripts/make-help.awk $(MAKEFILE_LIST)
 
@@ -163,7 +163,7 @@ _check/default: format lint
 # 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 .PHONY: test _test/predict _test/checkpoint _test/validate_extra_cut _test/validate_extra_cut/full
-test: _test/checkpoint _test/validate_extra_cut	##H @Test Run fast test suites
+test: _test/checkpoint _test/validate_extra_cut _test/predict	##H @Test Run fast test suites
 
 _test/predict: bin/predict bin/arrangement	##H @Test Run predictor/search comparison suite for R: 2..$(R)
 	python3 tests/test_predict.py --max-r $(R)
