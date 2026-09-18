@@ -44,11 +44,7 @@ The embedding gate is open exactly when $d \le k$ and $d \le n-k$.
   baseline.
 - `INVALID EXTRA CUT`: deletion leaves a component of size at most `g`.
 
-## Sweep map
-
-```shell
-time for i in $(seq 11 14); do for j in $(seq 9 10); do ./bin/validate_extra_cut $i $j; done done
-```
+## Sweep map: Star extreme `S(n,k)`
 
 Each `(n,k)` cell tests the full radius-one Star at $R = 1 + k(n-k)$, with
 $g = R - 1$. This is one selected volume per graph parameter pair, not a sweep
@@ -61,7 +57,7 @@ Legend:
 - `∘` — satisfies the Hamming comparison.
 - `\` — invalid extra cut or outside `k < n`.
 - `/` — not yet run or thus far intractable.
-- `◆` — unknown but sought or of interest.
+- `◆` — unknown but sought, or of interest.
 
 | `n \ k` |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  | 11  | 12  | 13  | 14  | 15  |
 | ------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -83,19 +79,22 @@ Legend:
 |      19 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      20 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      21 |  ∘  |  ∘  |  ∘  |  ⊞  |  ■  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      22 |  ∘  |  ∘  |  ∘  |  ∘  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      23 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      24 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      25 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      26 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      27 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
-|      28 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      22 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      23 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      24 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      25 |  ∘  |  ∘  |  ∘  |  ∘  |  ■  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      26 |  ∘  |  ∘  |  ∘  |  ∘  |  ⊞  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      27 |  ∘  |  ∘  |  ∘  |  ∘  |  ⊞  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
+|      28 |  ∘  |  ∘  |  ∘  |  ∘  |  ◆  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      29 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      30 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      31 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 |      32 |  ∘  |  ∘  |  ∘  |  ∘  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |  /  |
 
-- `time for i in $(seq 21 26); do for j in $(seq 1 6); do ./bin/validate_extra_cut $i $j; done done`
+<!-- Example commands -->
+
+- `time for i in $(seq 11 14); do for j in $(seq 9 10); do ./bin/validate_extra_cut $i $j; done done`
+- `time for i in $(seq 21 26); do for j in $(seq 1 6);  do ./bin/validate_extra_cut $i $j; done done`
 - `time for i in $(seq 22 26); do time ./bin/validate_extra_cut_bitmap $i 7; done`
 
 The smallest known hard counterexample, and the smallest hard counterexample
@@ -118,32 +117,36 @@ Sorted by `k`, then valid-vertex count `|V| = nP_k`. The graph edge count is
 $|E| = |V| * k (n-k) / 2$. Here $|∂S| = |N(S)|$ is the measured **Star
 boundary**, while $|∂H|$ denotes the **Hamming baseline** for volume `R`.
 
-|  #  | graph     |         \|V\| |          \|E\| |          `n^k` | `R` | `g` | \|∂S\| | \|∂H\| | `Δ` | `d,(k,n-k)` |
-| :-: | --------- | ------------: | -------------: | -------------: | --: | --: | -----: | -----: | --: | :---------- |
-| 6.1 | `A(11,6)` |       332,640 |      4,989,600 |      1,771,561 |  31 |  30 |    450 |    476 |  26 | `5,(6,5)`   |
-| 6.2 | `A(12,6)` |       665,280 |     11,975,040 |      2,985,984 |  37 |  36 |    630 |    687 |  57 | `6,(6,6)`   |
-| 6.3 | `A(13,6)` |     1,235,520 |     25,945,920 |      4,826,809 |  43 |  42 |    840 |    921 |  81 | `6,(6,7)`   |
-| 6.4 | `A(14,6)` |     2,162,160 |     51,891,840 |      7,529,536 |  49 |  48 |  1,080 |  1,163 |  83 | `6,(6,8)`   |
-| 6.5 | `A(15,6)` |     3,603,600 |     97,297,200 |     11,390,625 |  55 |  54 |  1,350 |  1,441 |  91 | `6,(6,9)`   |
-| 6.6 | `A(16,6)` |     5,765,760 |    172,972,800 |     16,777,216 |  61 |  60 |  1,650 |  1,713 |  63 | `6,(6,10)`  |
-|     | **k=7**   |               |                |                |     |     |        |        |     |             |
-| 7.1 | `A(13,7)` |     8,648,640 |    181,621,440 |     62,748,517 |  43 |  42 |    882 |  1,029 | 147 | `6,(7,6)`   |
-| 7.2 | `A(14,7)` |    17,297,280 |    423,783,360 |    105,413,504 |  50 |  49 |  1,176 |  1,366 | 190 | `6,(7,7)`   |
-| 7.3 | `A(15,7)` |    32,432,400 |    908,107,200 |    170,859,375 |  57 |  56 |  1,512 |  1,744 | 232 | `6,(7,8)`   |
-| 7.4 | `A(16,7)` |    57,657,600 |  1,816,214,400 |    268,435,456 |  64 |  63 |  1,890 |  2,112 | 222 | `6,(7,9)`   |
-| 7.5 | `A(17,7)` |    98,017,920 |  3,430,627,200 |    410,338,673 |  71 |  70 |  2,310 |  2,658 | 348 | `7,(7,10)`  |
-| 7.6 | `A(18,7)` |   160,392,960 |  6,175,128,960 |    612,220,032 |  78 |  77 |  2,772 |  3,200 | 428 | `7,(7,11)`  |
-| 7.7 | `A(19,7)` |   253,955,520 | 10,666,131,840 |    893,871,739 |  85 |  84 |  3,276 |  3,783 | 507 | `7,(7,12)`  |
-| 7.8 | `A(20,7)` |   390,700,800 | 17,776,886,400 |  1,280,000,000 |  92 |  91 |  3,822 |  4,356 | 534 | `7,(7,13)`  |
-| 7.9 | `A(21,7)` |   586,051,200 | 15,823,382,400 |  1,801,088,541 |  99 |  98 |  4,410 |  4,982 | 572 | `7,(14,7)`  |
-|     | **k=8**   |               |                |                |     |     |        |        |     |             |
-| 8.1 | `A(14,8)` |   121,080,960 |  2,905,943,040 |  1,475,789,056 |  49 |  48 |  1,176 |  1,423 | 247 | `6,(8,6)`   |
-| 8.2 | `A(15,8)` |   259,459,200 |  7,264,857,600 |  2,562,890,625 |  57 |  56 |  1,568 |  1,903 | 335 | `6,(8,7)`   |
-| 8.3 | `A(16,8)` |   518,918,400 | 16,605,388,800 |  4,294,967,296 |  65 |  64 |  2,016 |  2,417 | 401 | `7,(8,8)`   |
-| 8.4 | `A(17,8)` |   980,179,200 | 35,286,451,200 |  6,975,757,441 |  73 |  72 |  2,520 |  3,088 | 568 | `7,(8,9)`   |
-| 8.5 | `A(18,8)` | 1,764,322,560 | 70,572,902,400 | 11,019,960,576 |  81 |  80 |  3,080 |  3,782 | 702 | `7,(8,10)`  |
-|     | **k=9**   |               |                |                |     |     |        |        |     |             |
-| 9.1 | `A(15,9)` | 1,816,214,400 | 49,037,788,800 | 38,443,359,375 |  55 |  54 |  1,512 |  1,894 | 382 | `6,(9,6)`   |
+|  #   | graph     |         \|V\| |          \|E\| |          `n^k` | `R` | `g` | \|∂S\| | \|∂H\| | `Δ` | `d,(k,n-k)` |
+| :--: | --------- | ------------: | -------------: | -------------: | --: | --: | -----: | -----: | --: | :---------- |
+| 6.1  | `A(11,6)` |       332,640 |      4,989,600 |      1,771,561 |  31 |  30 |    450 |    476 |  26 | `5,(6,5)`   |
+| 6.2  | `A(12,6)` |       665,280 |     11,975,040 |      2,985,984 |  37 |  36 |    630 |    687 |  57 | `6,(6,6)`   |
+| 6.3  | `A(13,6)` |     1,235,520 |     25,945,920 |      4,826,809 |  43 |  42 |    840 |    921 |  81 | `6,(6,7)`   |
+| 6.4  | `A(14,6)` |     2,162,160 |     51,891,840 |      7,529,536 |  49 |  48 |  1,080 |  1,163 |  83 | `6,(6,8)`   |
+| 6.5  | `A(15,6)` |     3,603,600 |     97,297,200 |     11,390,625 |  55 |  54 |  1,350 |  1,441 |  91 | `6,(6,9)`   |
+| 6.6  | `A(16,6)` |     5,765,760 |    172,972,800 |     16,777,216 |  61 |  60 |  1,650 |  1,713 |  63 | `6,(6,10)`  |
+|      | **k=7**   |               |                |                |     |     |        |        |     |             |
+| 7.1  | `A(13,7)` |     8,648,640 |    181,621,440 |     62,748,517 |  43 |  42 |    882 |  1,029 | 147 | `6,(7,6)`   |
+| 7.2  | `A(14,7)` |    17,297,280 |    423,783,360 |    105,413,504 |  50 |  49 |  1,176 |  1,366 | 190 | `6,(7,7)`   |
+| 7.3  | `A(15,7)` |    32,432,400 |    908,107,200 |    170,859,375 |  57 |  56 |  1,512 |  1,744 | 232 | `6,(7,8)`   |
+| 7.4  | `A(16,7)` |    57,657,600 |  1,816,214,400 |    268,435,456 |  64 |  63 |  1,890 |  2,112 | 222 | `6,(7,9)`   |
+| 7.5  | `A(17,7)` |    98,017,920 |  3,430,627,200 |    410,338,673 |  71 |  70 |  2,310 |  2,658 | 348 | `7,(7,10)`  |
+| 7.6  | `A(18,7)` |   160,392,960 |  6,175,128,960 |    612,220,032 |  78 |  77 |  2,772 |  3,200 | 428 | `7,(7,11)`  |
+| 7.7  | `A(19,7)` |   253,955,520 | 10,666,131,840 |    893,871,739 |  85 |  84 |  3,276 |  3,783 | 507 | `7,(7,12)`  |
+| 7.8  | `A(20,7)` |   390,700,800 | 17,776,886,400 |  1,280,000,000 |  92 |  91 |  3,822 |  4,356 | 534 | `7,(7,13)`  |
+| 7.9  | `A(21,7)` |   586,051,200 | 15,823,382,400 |  1,801,088,541 |  99 |  98 |  4,410 |  4,982 | 572 | `7,(7,14)`  |
+| 7.10 | `A(22,7)` |   859,541,760 | 45,125,942,400 |                | 106 | 105 |  5,040 |  5,664 | 624 | `7,(7,15)`  |
+| 7.11 | `A(23,7)` | 1,235,591,280 |                |                | 113 | 112 |  5,712 |  6,315 | 603 | `7,(7,16)`  |
+| 7.12 | `A(24,7)` | 1,744,364,160 |                |                | 120 | 119 |  6,426 |  6,984 | 558 | `7,(7,17)`  |
+| 7.13 | `A(25,7)` | 2,422,728,000 |                |                | 127 | 126 |  7,182 |  7,617 | 435 | `7,(7,18)`  |
+|      | **k=8**   |               |                |                |     |     |        |        |     |             |
+| 8.1  | `A(14,8)` |   121,080,960 |  2,905,943,040 |  1,475,789,056 |  49 |  48 |  1,176 |  1,423 | 247 | `6,(8,6)`   |
+| 8.2  | `A(15,8)` |   259,459,200 |  7,264,857,600 |  2,562,890,625 |  57 |  56 |  1,568 |  1,903 | 335 | `6,(8,7)`   |
+| 8.3  | `A(16,8)` |   518,918,400 | 16,605,388,800 |  4,294,967,296 |  65 |  64 |  2,016 |  2,417 | 401 | `7,(8,8)`   |
+| 8.4  | `A(17,8)` |   980,179,200 | 35,286,451,200 |  6,975,757,441 |  73 |  72 |  2,520 |  3,088 | 568 | `7,(8,9)`   |
+| 8.5  | `A(18,8)` | 1,764,322,560 | 70,572,902,400 | 11,019,960,576 |  81 |  80 |  3,080 |  3,782 | 702 | `7,(8,10)`  |
+|      | **k=9**   |               |                |                |     |     |        |        |     |             |
+| 9.1  | `A(15,9)` | 1,816,214,400 | 49,037,788,800 | 38,443,359,375 |  55 |  54 |  1,512 |  1,894 | 382 | `6,(9,6)`   |
 
 ## TODOs
 
@@ -353,6 +356,145 @@ therefore kappa_11(A(12,11)) <= 110
 Hamming baseline: 88; Star boundary: 110
 Embedding gate: d = 4, k = 11, n-k = 1 (closed)
 SATISFIES HAMMING OPTIMALITY
+
+
+$ time for i in $(seq 22 26); do time ./bin/validate_extra_cut_bitmap $i 7; done  # coffeelake
+Building rank-indexed A(22,7)...
+Total valid vertices: 859541760
+Visited bitset: 107442720 bytes
+R = 106
+Candidate g = 105
+Subset S connectivity verified.
+|S| = 106
+|N(S)| = 5040
+Validating 105-extra cut properties...
+BFS progress: 859536614 / 859536614 (100.0%)
+component sizes after deletion:
+  106
+  859536614
+valid 105-extra cut: yes
+therefore kappa_105(A(22,7)) <= 5040
+Hamming baseline: 5664; Star boundary: 5040
+Embedding gate: d = 7, k = 7, n-k = 15 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+real    15m32.037s
+user    15m27.575s
+sys     0m0.652s
+
+Building rank-indexed A(23,7)...
+Total valid vertices: 1235591280
+Visited bitset: 154448910 bytes
+R = 113
+Candidate g = 112
+Subset S connectivity verified.
+|S| = 113
+|N(S)| = 5712
+Validating 112-extra cut properties...
+BFS progress: 1235585455 / 1235585455 (100.0%)
+component sizes after deletion:
+  113
+  1235585455
+valid 112-extra cut: yes
+therefore kappa_112(A(23,7)) <= 5712
+Hamming baseline: 6315; Star boundary: 5712
+Embedding gate: d = 7, k = 7, n-k = 16 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+real    3m32.252s
+user    12m2.083s
+sys     0m1.294s
+
+Building rank-indexed A(24,7)...
+Total valid vertices: 1744364160
+Visited bitset: 218045520 bytes
+R = 120
+Candidate g = 119
+Subset S connectivity verified.
+|S| = 120
+|N(S)| = 6426
+Validating 119-extra cut properties...
+BFS progress: 1744357614 / 1744357614 (100.0%)
+component sizes after deletion:
+  120
+  1744357614
+valid 119-extra cut: yes
+therefore kappa_119(A(24,7)) <= 6426
+Hamming baseline: 6984; Star boundary: 6426
+Embedding gate: d = 7, k = 7, n-k = 17 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+real    4m45.784s
+user    17m2.436s
+sys     0m1.529s
+
+Building rank-indexed A(25,7)...
+Total valid vertices: 2422728000
+Visited bitset: 302841000 bytes
+R = 127
+Candidate g = 126
+Subset S connectivity verified.
+|S| = 127
+|N(S)| = 7182
+Validating 126-extra cut properties...
+BFS progress: 2422720691 / 2422720691 (100.0%)
+component sizes after deletion:
+  127
+  2422720691
+valid 126-extra cut: yes
+therefore kappa_126(A(25,7)) <= 7182
+Hamming baseline: 7617; Star boundary: 7182
+Embedding gate: d = 7, k = 7, n-k = 18 (open)
+HARD COUNTEREXAMPLE: RestrictedLowerBound
+real    6m33.766s
+user    23m33.747s
+sys     0m2.240s
+
+Building rank-indexed A(26,7)...
+Total valid vertices: 3315312000
+Visited bitset: 414414000 bytes
+R = 134
+Candidate g = 133
+Subset S connectivity verified.
+|S| = 134
+|N(S)| = 7980
+Validating 133-extra cut properties...
+BFS progress: 3315303886 / 3315303886 (100.0%)
+component sizes after deletion:
+  134
+  3315303886
+valid 133-extra cut: yes
+therefore kappa_133(A(26,7)) <= 7980
+Hamming baseline: 8574; Star boundary: 7980
+Embedding gate: d = 8, k = 7, n-k = 19 (closed)
+SOFT COUNTEREXAMPLE: UniversalLowerBound only
+real    9m11.720s
+user    32m32.210s
+sys     0m2.917s
+
+real    39m35.560s
+user    100m38.053s
+sys     0m8.633s
+$ time ./bin/validate_extra_cut_bitmap 27 7
+Building rank-indexed A(27,7)...
+Total valid vertices: 4475671200
+Visited bitset: 559458900 bytes
+R = 141
+Candidate g = 140
+Subset S connectivity verified.
+|S| = 141
+|N(S)| = 8820
+Validating 140-extra cut properties...
+BFS progress: 4475662239 / 4475662239 (100.0%)
+component sizes after deletion:
+  141
+  4475662239
+valid 140-extra cut: yes
+therefore kappa_140(A(27,7)) <= 8820
+Hamming baseline: 9550; Star boundary: 8820
+Embedding gate: d = 8, k = 7, n-k = 20 (closed)
+SOFT COUNTEREXAMPLE: UniversalLowerBound only
+
+real    11m48.525s
+user    43m51.140s
+sys     0m1.920s
 ```
 
 The comparison gap is `2417 - 2016 = 401`. Therefore the Star gives

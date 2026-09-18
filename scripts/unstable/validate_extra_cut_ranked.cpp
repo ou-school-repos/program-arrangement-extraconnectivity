@@ -58,7 +58,8 @@ int main(int argc, char **argv) {
         return 1;
     }
     const FullStarParameters parameters = full_star_parameters(n, k);
-    std::cout << "Building rank-indexed A(" << n << ',' << k << ")...\n"
+    std::cout << "Build: " << build_version << "\n"
+              << "Building rank-indexed A(" << n << ',' << k << ")...\n"
               << "Total valid vertices: " << graph.valid_count << "\n"
               << "Visited bitset: " << (graph.valid_count + 7) / 8 << " bytes\n"
               << "R = " << parameters.volume() << "\n"
@@ -158,7 +159,8 @@ int main(int argc, char **argv) {
         std::cout << "therefore kappa_" << parameters.g() << "(A(" << n << ','
                   << k << ")) <= " << boundary.size() << "\n";
     std::cout << "Hamming baseline: " << parameters.hamming_boundary()
-              << "; Star boundary: " << boundary.size() << "\n"
+              << "; Star boundary: " << boundary.size() << "; Delta: "
+              << (parameters.hamming_boundary() - boundary.size()) << "\n"
               << "Embedding gate: d = " << parameters.d() << ", k = " << k
               << ", n-k = " << parameters.m() << " ("
               << (parameters.embedding_gate() ? "open" : "closed") << ")\n"

@@ -2,6 +2,7 @@
 #define BFS_UTILS_HPP
 
 #include "arrangement_utils.hpp"
+#include "build_info.hpp"
 
 #include <algorithm>
 #include <atomic>

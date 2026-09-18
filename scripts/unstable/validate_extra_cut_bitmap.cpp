@@ -26,7 +26,8 @@ int main(int argc, char **argv) {
     const PackedArrangementGraph graph(n, k);
     const FullStarParameters parameters = full_star_parameters(n, k);
 
-    std::cout << "Building rank-indexed A(" << n << ',' << k << ")...\n"
+    std::cout << "Build: " << build_version << "\n"
+              << "Building rank-indexed A(" << n << ',' << k << ")...\n"
               << "Total valid vertices: " << graph.valid_count << "\n"
               << "Visited bitset: " << (graph.valid_count + 7) / 8 << " bytes\n"
               << "R = " << parameters.volume() << "\n"
@@ -75,6 +76,7 @@ int main(int argc, char **argv) {
     std::uint64_t discovered_survivors = 0;
     constexpr std::uint64_t progress_interval = 1'000'000;
     std::uint64_t next_progress = progress_interval;
+    bool direction_message_printed = false;
 
     std::cout << "|S| = " << star.size() << "\n"
               << "|N(S)| = " << boundary.size() << "\n"
@@ -111,6 +113,12 @@ int main(int argc, char **argv) {
             std::uint64_t next_frontier_size = 0;
             const bool bottom_up =
                 current_frontier_size >= graph.valid_count / 20;
+
+            if (bottom_up && !direction_message_printed) {
+                std::cerr << "\n[Direction Optimized: Bottom-Up Scan Active]\n"
+                          << std::flush;
+                direction_message_printed = true;
+            }
 
             if (bottom_up) {
 #pragma omp parallel for schedule(static) reduction(+ : next_frontier_size)
@@ -218,7 +226,8 @@ int main(int argc, char **argv) {
         std::cout << "therefore kappa_" << parameters.g() << "(A(" << n << ','
                   << k << ")) <= " << boundary.size() << '\n';
     std::cout << "Hamming baseline: " << parameters.hamming_boundary()
-              << "; Star boundary: " << boundary.size() << '\n'
+              << "; Star boundary: " << boundary.size() << "; Delta: "
+              << (parameters.hamming_boundary() - boundary.size()) << '\n'
               << "Embedding gate: d = " << parameters.d() << ", k = " << k
               << ", n-k = " << parameters.m() << " ("
               << (parameters.embedding_gate() ? "open" : "closed") << ")\n";

@@ -9,6 +9,12 @@ CXX      = g++
 CXXFLAGS = -std=c++17 -O3 -march=native -Wall -Wextra -Wpedantic -fopenmp
 LDFLAGS  =
 
+VERSION   ?= 0.1.0
+GIT_COMMIT := $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
+BUILD_ID  := $(VERSION) ($(GIT_COMMIT))
+CXXFLAGS += '-DBUILD_VERSION="$(BUILD_ID)"'
+$(info Build version: $(BUILD_ID))
+
 # Machine-local configuration (such as an /opt OR-Tools installation) is
 # supplied by the caller's environment (for example, through direnv/.envrc).
 
@@ -58,7 +64,10 @@ NAUTY_LIBS   = -lnauty
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Help
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.PHONY: _help help
+.PHONY: _help help version
+
+version:
+	@printf '%s\n' '$(BUILD_ID)'
 help: _help
 _help:
 	@printf "\nUsage: make <command>, valid commands:\n\n"
@@ -136,6 +145,12 @@ $(foreach source,$(TOOL_SOURCES),$(eval $(call TOOL_template,$(source))))
 bin/arrangement: src/arrangement.cpp $(ARRANGEMENT_HDRS)	##H @Tool Build arrangement into bin/
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) $(NAUTY_CFLAGS) $(LDFLAGS) -o $@ $< $(NAUTY_LIBS)
+
+bin/validate_extra_cut_bitmap_2: scripts/unstable/validate_extra_cut_bitmap.cpp \
+	scripts/unstable/bfs_utils.hpp scripts/unstable/arrangement_utils.hpp \
+	scripts/unstable/build_info.hpp
+	@mkdir -p bin
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
 optional-tools: $(OPTIONAL_BINS) ##H @Build Build OR-Tools/Z3-dependent tools
 
