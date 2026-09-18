@@ -1,4 +1,5 @@
 #include "star_sweep/checkpoint_manager.hpp"
+#include "star_sweep/checksum.hpp"
 #include "star_sweep/frontier_delta.hpp"
 
 #include <cassert>
@@ -8,6 +9,12 @@
 
 int main() {
     namespace fs = std::filesystem;
+    star_sweep::Xxh64 checksum;
+    const std::uint64_t empty_checksum = checksum.digest();
+    const std::string probe = "checkpoint";
+    checksum.update(probe.data(), probe.size());
+    assert(checksum.digest() != empty_checksum);
+
     const fs::path base =
         fs::temp_directory_path() / "star-sweep-checkpoint-test";
     fs::remove_all(base);
@@ -40,6 +47,10 @@ int main() {
     manager.publish(state, "frontier.delta");
     const bool current_is_symlink = fs::is_symlink(base / "CURRENT");
     assert(current_is_symlink);
+    AtomicBitset chain_restored(4096);
+    assert(manager.replay_chain(signature, chain_restored) == 1);
+    assert(chain_restored.test(3));
+    assert(chain_restored.test(2048));
 
     fs::remove_all(base);
 }
