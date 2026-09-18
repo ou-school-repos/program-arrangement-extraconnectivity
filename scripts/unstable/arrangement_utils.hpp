@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-using packed_code_t = unsigned __int128;
+__extension__ typedef unsigned __int128 packed_code_t;
 
 struct PackedArrangementGraph {
     int n;

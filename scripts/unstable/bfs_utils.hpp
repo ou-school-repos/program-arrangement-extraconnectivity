@@ -42,6 +42,16 @@ class AtomicBitset {
         return !(old & mask);
     }
 
+    bool set_atomic_check(std::size_t bit) {
+        const std::size_t word_index = bit / 64;
+        const std::uint64_t mask = std::uint64_t{1} << (bit % 64);
+        const std::uint64_t old =
+            words_[word_index].fetch_or(mask, std::memory_order_relaxed);
+        dirty_blocks_[word_index / block_size].store(1,
+                                                     std::memory_order_relaxed);
+        return (old & mask) == 0;
+    }
+
     void merge_from(const AtomicBitset &other) {
 #pragma omp parallel for schedule(static)
         for (std::size_t block = 0; block < other.num_blocks(); ++block) {
