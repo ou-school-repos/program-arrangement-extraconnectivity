@@ -145,6 +145,16 @@ boundary**, while $|∂H|$ denotes the **Hamming baseline** for volume `R`.
 
 ## TODOs
 
+```shell
+gg@vps76:~$
+
+cd program-cheng-connectivity-asymptote/
+mkdir -p .tmp/
+export n=14
+export k=10
+nohup /usr/bin/time -v   -o .tmp/star_A${n}_k${k}.time   ./bin/validate_extra_cut_ranked ${n} ${k} >.tmp/star_A${n}_k${k}.log 2>&1 &
+```
+
 For the ranked backend, the best next target is below.
 
 ### 1. A(13,10)
@@ -158,7 +168,7 @@ For the ranked backend, the best next target is below.
 
 This is probably the best balance of low memory and useful coverage.
 
-### 2. A(21,7)
+<!-- ### **[DONE!!]** 2. A(21,7)
 
 - (n^k=1,801,088,541)
 - (V=586,051,200)
@@ -166,14 +176,14 @@ This is probably the best balance of low memory and useful coverage.
 - Directed neighbor visits: ~57.4 billion
 - Estimated runtime: 20–30 minutes
 
-Less memory, but more neighbor work.
+Less memory, but more neighbor work. -->
 
-### 3. A(15,9)
+<!-- ### **[DONE!!]** 3. A(15,9)
 
 - (V=1,816,214,400)
 - Visited bitset: ~216 MiB
 - Directed neighbor visits: ~98.1 billion
-- Estimated runtime: 25–40 minutes
+- Estimated runtime: 25–40 minutes -->
 
 ### 4. A(14,10)
 
