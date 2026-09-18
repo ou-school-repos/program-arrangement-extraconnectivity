@@ -154,7 +154,7 @@ format:	##H @Dev Format C++ sources (clang-format)
 # 	for i in $$(seq 2 $(R)); do ./$(BIN_OPT) $$i; echo ""; done
 
 .PHONY: test/predict
-test/predict: build	##H @Test Verify predictor matches search for R=2..$(R)
+test/predict: bin/predict	##H @Test Verify predictor matches search for R=2..$(R)
 	@$(call print_info,Testing $(BIN_PRED) against $(BIN_OPT))
 	@fail=0; \
 	for r in $$(seq 2 $(R)); do \
@@ -305,14 +305,14 @@ clean:	##H @General Remove build artifacts
 # Debug
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: debug/vars
-debug/vars:	##H @General Debug: Print project variables
+.PHONY: _debug/vars
+_debug/vars:	##H @General Debug: Print project variables
 	@$(foreach v,$(sort $(.VARIABLES)), \
 		$(if $(filter file command line override,$(origin $(v))), \
 			$(info $(v) = $($(v))) \
 		) \
 	)
 
-.PHONY: debug/version
-debug/version:
+.PHONY: _debug/version
+_debug/version:
 	@printf '%s\n' '$(BUILD_ID)'
