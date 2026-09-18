@@ -233,6 +233,25 @@ inline void report_bfs_scan_progress(std::size_t layer, std::size_t scanned,
               << total_survivors << ")" << std::flush;
 }
 
+inline void report_bfs_topdown_progress(std::size_t layer, std::size_t scanned,
+                                        std::size_t total_blocks,
+                                        std::uint64_t discovered,
+                                        std::uint64_t total_survivors) {
+    const double scan_percent = total_blocks == 0
+                                    ? 100.0
+                                    : 100.0 * static_cast<double>(scanned) /
+                                          static_cast<double>(total_blocks);
+    const double overall_percent =
+        total_survivors == 0 ? 100.0
+                             : 100.0 * static_cast<double>(discovered) /
+                                   static_cast<double>(total_survivors);
+    std::cerr << "\r\033[KTop-down expand: [top-down layer " << std::setw(3)
+              << layer << "] blocks " << std::fixed << std::setprecision(1)
+              << std::setw(5) << scan_percent << "% | overall " << std::setw(5)
+              << overall_percent << "% (" << discovered << " / "
+              << total_survivors << ")" << std::flush;
+}
+
 inline bool star_connected(const PackedArrangementGraph &graph,
                            const std::vector<packed_code_t> &star) {
     if (star.empty())

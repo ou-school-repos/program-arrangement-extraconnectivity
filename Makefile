@@ -317,6 +317,7 @@ endif
 
 GIT_CLEAN_FLAGS += \
 	-e '*.bitmap' \
+	-e 'state_*/' \
 	-e '.env' \
 	-e 'other/' \
 	-e '.tmp/' \
@@ -336,7 +337,7 @@ clean:	##H @General Remove build artifacts
 	# Docs/paper
 	rm -f $(DOCS_PDF) $(BUNDLE_OUT) $(SITE_OUT)
 	# General git clean (BE CAREFUL, if you set the var: y)
-	cd paper/ && git clean $(GIT_CLEAN_FLAGS)
+	git clean $(GIT_CLEAN_FLAGS)
 	@$(call print_success,Clean complete.)
 
 

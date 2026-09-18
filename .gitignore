@@ -80,6 +80,9 @@ paper/archive/
 # bitmap stores and other disk persistances
 *.bitmap
 *.bin
+CURRENT
+meta
+*.delta
 
 # LaTeX build artifacts
 *.aux

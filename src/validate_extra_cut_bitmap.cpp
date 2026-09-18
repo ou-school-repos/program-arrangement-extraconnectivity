@@ -241,9 +241,9 @@ int main(int argc, char **argv) {
                 direction_message_printed = true;
             }
             if (!bottom_up)
-                std::cerr << "\r\033[KTop-down expand: [top-down layer "
-                          << std::setw(3) << layer << "] frontier "
-                          << current_frontier_size << '\n';
+                report_bfs_topdown_progress(
+                    layer, 0, current_frontier.num_blocks(),
+                    discovered_survivors, total_survivors);
 
             if (bottom_up) {
                 const std::size_t total_words = visited.num_words();
@@ -340,35 +340,62 @@ int main(int argc, char **argv) {
                 std::cerr << '\n';
             } else {
                 const std::size_t total_blocks = current_frontier.num_blocks();
+                const std::size_t report_step =
+                    std::max<std::size_t>(1, total_blocks / 100);
+                std::atomic<std::size_t> scanned_blocks{0};
+                std::atomic<std::size_t> last_reported{0};
 #pragma omp parallel for schedule(guided) reduction(+ : next_frontier_size)
                 for (std::size_t block = 0; block < total_blocks; ++block) {
-                    if (!current_frontier.block_dirty(block))
-                        continue;
-                    const std::size_t first = block * AtomicBitset::block_size;
-                    const std::size_t last =
-                        std::min(first + AtomicBitset::block_size,
-                                 current_frontier.num_words());
-                    for (std::size_t word_index = first; word_index < last;
-                         ++word_index) {
-                        std::uint64_t word =
-                            current_frontier.load_word(word_index);
-                        while (word != 0) {
-                            const int bit = __builtin_ctzll(word);
-                            word &= word - 1;
-                            const std::size_t rank = word_index * 64 + bit;
-                            const packed_code_t code = graph.decode_rank(rank);
-                            graph.for_each_neighbor(
-                                code, [&](const packed_code_t neighbor) {
-                                    const std::size_t neighbor_rank =
-                                        graph.rank_code(neighbor);
-                                    if (!visited.test(neighbor_rank) &&
-                                        next_frontier.set_atomic_check(
-                                            neighbor_rank))
-                                        ++next_frontier_size;
-                                });
+                    if (current_frontier.block_dirty(block)) {
+                        const std::size_t first =
+                            block * AtomicBitset::block_size;
+                        const std::size_t last =
+                            std::min(first + AtomicBitset::block_size,
+                                     current_frontier.num_words());
+                        for (std::size_t word_index = first; word_index < last;
+                             ++word_index) {
+                            std::uint64_t word =
+                                current_frontier.load_word(word_index);
+                            while (word != 0) {
+                                const int bit = __builtin_ctzll(word);
+                                word &= word - 1;
+                                const std::size_t rank = word_index * 64 + bit;
+                                const packed_code_t code =
+                                    graph.decode_rank(rank);
+                                graph.for_each_neighbor(
+                                    code, [&](const packed_code_t neighbor) {
+                                        const std::size_t neighbor_rank =
+                                            graph.rank_code(neighbor);
+                                        if (!visited.test(neighbor_rank) &&
+                                            next_frontier.set_atomic_check(
+                                                neighbor_rank))
+                                            ++next_frontier_size;
+                                    });
+                            }
+                        }
+                    }
+                    const std::size_t scanned =
+                        scanned_blocks.fetch_add(1, std::memory_order_relaxed) +
+                        1;
+                    if (scanned % report_step == 0 || scanned == total_blocks) {
+#pragma omp critical(bfs_topdown_progress)
+                        {
+                            std::size_t previous =
+                                last_reported.load(std::memory_order_relaxed);
+                            if (scanned > previous) {
+                                last_reported.store(scanned,
+                                                    std::memory_order_relaxed);
+                                report_bfs_topdown_progress(
+                                    layer, scanned, total_blocks,
+                                    discovered_survivors, total_survivors);
+                            }
                         }
                     }
                 }
+                report_bfs_topdown_progress(layer, total_blocks, total_blocks,
+                                            discovered_survivors,
+                                            total_survivors);
+                std::cerr << '\n';
             }
 
             size += current_frontier_size;
