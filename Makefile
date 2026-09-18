@@ -67,7 +67,7 @@ version:
 _help:
 	@printf "\nUsage: make <command>, valid commands:\n\n"
 	@awk 'BEGIN {FS = ":.*?##H "}; \
-		/##H/ && !/@awk.*?##H/ { \
+		/##H/ && !/@awk.*?##H/ && $$0 !~ /^[[:space:]]*#/ { \
 			target=$$1; doc=$$2; \
 			category="General"; \
 			if (doc ~ /^@/) { \
