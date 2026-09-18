@@ -1,9 +1,11 @@
 // Serial bitmap-frontier experiment for A(n,k).
 // The trusted flat and ranked validators remain separate references.
 // Usage: validate_extra_cut_bitmap n k [--disk-backed prefix]
+//        [--partition-index P --partition-count C]
 
 #include "bfs_utils.hpp"
 #include "star_sweep/checkpoint_manager.hpp"
+#include "star_sweep/frontier_chunk.hpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -22,6 +24,7 @@ inline int omp_get_thread_num() { return 0; }
 #include <memory>
 #include <numeric>
 #include <string>
+#include <utility>
 #include <vector>
 
 int main(int argc, char **argv) {
@@ -34,17 +37,28 @@ int main(int argc, char **argv) {
     bool disk_backed = false;
     std::string disk_prefix;
     std::uint64_t interrupt_generation = 0;
+    std::size_t partition_index = 0;
+    std::size_t partition_count = 1;
+    bool partition_index_seen = false;
+    bool partition_count_seen = false;
     for (int index = 3; index < argc; ++index) {
         const std::string argument = argv[index];
         if (argument == "--disk-backed" && index + 1 < argc) {
             disk_backed = true;
             disk_prefix = argv[++index];
+        } else if (argument == "--partition-index" && index + 1 < argc) {
+            partition_index = std::stoull(argv[++index]);
+            partition_index_seen = true;
+        } else if (argument == "--partition-count" && index + 1 < argc) {
+            partition_count = std::stoull(argv[++index]);
+            partition_count_seen = true;
         } else if (argument == "--interrupt-at-generation" &&
                    index + 1 < argc) {
             interrupt_generation = std::stoull(argv[++index]);
         } else {
             std::cerr << "Usage: " << argv[0]
                       << " n k [--disk-backed prefix]"
+                         " [--partition-index P --partition-count C]"
                          " [--interrupt-at-generation N]\n";
             return 1;
         }
@@ -53,6 +67,19 @@ int main(int argc, char **argv) {
         std::cerr << "Error: require 64 >= n > k >= 1 and k <= 21.\n";
         return 1;
     }
+    if (partition_index_seen != partition_count_seen) {
+        std::cerr << "Error: --partition-index and --partition-count must "
+                     "be provided together.\n";
+        return 1;
+    }
+    const bool partition_mode = partition_index_seen;
+    if (partition_mode && (!disk_backed || partition_count == 0 ||
+                           partition_index >= partition_count)) {
+        std::cerr << "Error: partitioned execution requires valid disk-backed "
+                     "partition arguments.\n";
+        return 1;
+    }
+    const star_sweep::PartitionSpec partition{partition_index, partition_count};
 
     const PackedArrangementGraph graph(n, k);
     const FullStarParameters parameters = full_star_parameters(n, k);
@@ -70,6 +97,11 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
+    if (partition_mode && !resume_mode) {
+        std::cerr << "Error: partitioned execution requires an existing "
+                     "active checkpoint.\n";
+        return 1;
+    }
 
     std::cout << "Build: " << build_version << "\n"
               << "Building rank-indexed A(" << n << ',' << k << ")...\n"
@@ -82,6 +114,9 @@ int main(int argc, char **argv) {
               << "\n"
               << "R = " << parameters.volume() << "\n"
               << "Candidate g = " << parameters.g() << "\n";
+    if (partition_mode)
+        std::cout << "Partition: " << partition.index << "/" << partition.count
+                  << "\n";
 
     std::vector<int> center(k);
     std::iota(center.begin(), center.end(), 0);
@@ -104,7 +139,12 @@ int main(int argc, char **argv) {
     std::cout << "Subset S connectivity verified.\n";
 
     const auto bitmap_path = [&](const char *name) {
-        return disk_prefix + "." + name + ".bitmap";
+        const std::string working_prefix =
+            partition_mode ? disk_prefix + ".partition-" +
+                                 std::to_string(partition.index) + "-of-" +
+                                 std::to_string(partition.count)
+                           : disk_prefix;
+        return working_prefix + "." + name + ".bitmap";
     };
     auto visited_storage =
         disk_backed ? std::make_unique<AtomicBitset>(graph.valid_count,
@@ -172,6 +212,12 @@ int main(int argc, char **argv) {
                 current_frontier);
             resume_component = true;
         }
+        if (partition_mode &&
+            (!resume_component || resume_state.active_frontier_size == 0)) {
+            std::cerr << "Error: partitioned execution requires an active "
+                         "frontier checkpoint.\n";
+            return 1;
+        }
         std::cout
             << "Checkpoint resume:\n"
             << "  generation: " << active_generation << "\n"
@@ -205,7 +251,10 @@ int main(int argc, char **argv) {
               << "Validating " << parameters.g()
               << "-extra cut properties...\n";
 
+    bool partition_finished = false;
     graph.for_each_valid_code([&](const packed_code_t start) {
+        if (partition_finished)
+            return;
         const std::size_t start_rank = graph.rank_code(start);
         const bool restoring = resume_component;
         if (restoring) {
@@ -263,13 +312,19 @@ int main(int argc, char **argv) {
 
             if (bottom_up) {
                 const std::size_t total_words = visited.num_words();
+                const auto word_range =
+                    partition_mode
+                        ? partition.range(total_words)
+                        : std::pair<std::size_t, std::size_t>{0, total_words};
+                const std::size_t scan_words =
+                    word_range.second - word_range.first;
                 const std::size_t thread_count =
                     static_cast<std::size_t>(omp_get_max_threads());
                 const std::size_t report_step =
-                    std::max<std::size_t>(1, total_words / 100);
+                    std::max<std::size_t>(1, scan_words / 10);
                 const std::size_t local_report_step = std::max<std::size_t>(
                     1024,
-                    (total_words + thread_count * 99) / (thread_count * 100));
+                    (scan_words + thread_count * 99) / (thread_count * 100));
                 const auto scan_counters =
                     std::make_unique<std::vector<PaddedScanCounter>>(
                         thread_count);
@@ -280,8 +335,8 @@ int main(int argc, char **argv) {
                     const int thread_index = omp_get_thread_num();
                     std::size_t local_scanned = 0;
 #pragma omp for schedule(static) reduction(+ : next_frontier_size)
-                    for (std::size_t word_index = 0; word_index < total_words;
-                         ++word_index) {
+                    for (std::size_t word_index = word_range.first;
+                         word_index < word_range.second; ++word_index) {
                         const std::uint64_t visited_word =
                             visited.load_word(word_index);
                         if (visited_word !=
@@ -319,7 +374,7 @@ int main(int argc, char **argv) {
 
                         ++local_scanned;
                         if (local_scanned % local_report_step == 0 ||
-                            word_index + 1 == total_words) {
+                            word_index + 1 == word_range.second) {
                             (*scan_counters)[thread_index].value.store(
                                 local_scanned, std::memory_order_relaxed);
 #pragma omp critical(bfs_scan_progress)
@@ -337,9 +392,8 @@ int main(int argc, char **argv) {
                                     next_scan_report.load(
                                         std::memory_order_relaxed);
                                 if (scanned >= target) {
-                                    report_bfs_scan_progress(
-                                        layer, scanned, total_words,
-                                        discovered_survivors, total_survivors);
+                                    report_bfs_scan_progress(layer, scanned,
+                                                             scan_words);
                                     next_scan_report.store(
                                         ((scanned / report_step) + 1) *
                                             report_step,
@@ -351,17 +405,25 @@ int main(int argc, char **argv) {
                     (*scan_counters)[thread_index].value.store(
                         local_scanned, std::memory_order_relaxed);
                 }
-                report_bfs_scan_progress(layer, total_words, total_words,
-                                         discovered_survivors, total_survivors);
+                if (next_scan_report.load(std::memory_order_relaxed) <=
+                    scan_words)
+                    report_bfs_scan_progress(layer, scan_words, scan_words);
                 std::cerr << '\n';
             } else {
                 const std::size_t total_blocks = current_frontier.num_blocks();
+                const auto block_range =
+                    partition_mode
+                        ? partition.range(total_blocks)
+                        : std::pair<std::size_t, std::size_t>{0, total_blocks};
+                const std::size_t scan_blocks =
+                    block_range.second - block_range.first;
                 const std::size_t report_step =
-                    std::max<std::size_t>(1, total_blocks / 100);
+                    std::max<std::size_t>(1, scan_blocks / 10);
                 std::atomic<std::size_t> scanned_blocks{0};
                 std::atomic<std::size_t> last_reported{0};
 #pragma omp parallel for schedule(guided) reduction(+ : next_frontier_size)
-                for (std::size_t block = 0; block < total_blocks; ++block) {
+                for (std::size_t block = block_range.first;
+                     block < block_range.second; ++block) {
                     if (current_frontier.block_dirty(block)) {
                         const std::size_t first =
                             block * AtomicBitset::block_size;
@@ -393,7 +455,7 @@ int main(int argc, char **argv) {
                     const std::size_t scanned =
                         scanned_blocks.fetch_add(1, std::memory_order_relaxed) +
                         1;
-                    if (scanned % report_step == 0 || scanned == total_blocks) {
+                    if (scanned % report_step == 0 || scanned == scan_blocks) {
 #pragma omp critical(bfs_topdown_progress)
                         {
                             std::size_t previous =
@@ -401,16 +463,15 @@ int main(int argc, char **argv) {
                             if (scanned > previous) {
                                 last_reported.store(scanned,
                                                     std::memory_order_relaxed);
-                                report_bfs_topdown_progress(
-                                    layer, scanned, total_blocks,
-                                    discovered_survivors, total_survivors);
+                                report_bfs_topdown_progress(layer, scanned,
+                                                            scan_blocks);
                             }
                         }
                     }
                 }
-                report_bfs_topdown_progress(layer, total_blocks, total_blocks,
-                                            discovered_survivors,
-                                            total_survivors);
+                if (last_reported.load(std::memory_order_relaxed) < scan_blocks)
+                    report_bfs_topdown_progress(layer, scan_blocks,
+                                                scan_blocks);
                 std::cerr << '\n';
             }
 
@@ -422,6 +483,51 @@ int main(int argc, char **argv) {
                 next_progress = (discovered_survivors / progress_interval + 1) *
                                 progress_interval;
                 std::cerr << '\n';
+            }
+
+            if (partition_mode) {
+                const std::uint64_t target_generation = active_generation + 1;
+                const std::string generation_dir =
+                    checkpoint_manager->generation_directory(target_generation);
+                std::filesystem::create_directories(generation_dir);
+                const auto word_range = partition.range(visited.num_words());
+                const auto block_range =
+                    partition.range(current_frontier.num_blocks());
+                const std::string chunk_name = "frontier.chunk." +
+                                               std::to_string(partition.index) +
+                                               ".delta";
+                const std::string chunk_path =
+                    generation_dir + "/" + chunk_name;
+                if (bottom_up) {
+                    star_sweep::write_frontier_delta(next_frontier, chunk_path,
+                                                     block_range.first,
+                                                     block_range.second);
+                } else {
+                    star_sweep::write_frontier_delta(next_frontier, chunk_path);
+                }
+
+                star_sweep::PartitionChunkState chunk;
+                chunk.signature = expected_signature;
+                chunk.base_generation = active_generation;
+                chunk.target_generation = target_generation;
+                chunk.layer = bfs_layer;
+                chunk.partition_index = partition.index;
+                chunk.partition_count = partition.count;
+                chunk.first_word = word_range.first;
+                chunk.last_word = word_range.second;
+                chunk.first_block = block_range.first;
+                chunk.last_block = block_range.second;
+                chunk.local_frontier_size = next_frontier_size;
+                chunk.bottom_up = bottom_up;
+                star_sweep::write_partition_chunk_metadata(chunk_path + ".meta",
+                                                           chunk);
+                std::cout << "Partition chunk complete: generation "
+                          << target_generation << ", layer " << bfs_layer
+                          << ", partition " << partition.index << "/"
+                          << partition.count << ", local frontier "
+                          << next_frontier_size << "\n";
+                partition_finished = true;
+                return;
             }
 
             if (disk_backed) {
@@ -486,6 +592,9 @@ int main(int argc, char **argv) {
             checkpoint_manager->publish(state, delta_name);
         }
     });
+
+    if (partition_mode)
+        return partition_finished ? 0 : 1;
 
     report_bfs_progress(discovered_survivors, total_survivors);
     std::cerr << '\n';

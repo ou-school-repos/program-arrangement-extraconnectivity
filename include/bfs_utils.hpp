@@ -214,39 +214,25 @@ inline void report_bfs_progress(std::uint64_t discovered,
 }
 
 inline void report_bfs_scan_progress(std::size_t layer, std::size_t scanned,
-                                     std::size_t total_words,
-                                     std::uint64_t discovered,
-                                     std::uint64_t total_survivors) {
+                                     std::size_t total_words) {
     const double scan_percent = total_words == 0
                                     ? 100.0
                                     : 100.0 * static_cast<double>(scanned) /
                                           static_cast<double>(total_words);
-    const double overall_percent =
-        total_survivors == 0 ? 100.0
-                             : 100.0 * static_cast<double>(discovered) /
-                                   static_cast<double>(total_survivors);
-    std::cerr << "\r\033[2KBU L" << std::setw(3) << layer << " scan "
-              << std::fixed << std::setprecision(1) << std::setw(5)
-              << scan_percent << "% | " << std::setw(5) << overall_percent
-              << "%" << std::flush;
+    std::cerr << "\r\033[2KBU L" << std::setw(3) << layer << " words "
+              << scanned << " / " << total_words << " (" << std::fixed
+              << std::setprecision(1) << scan_percent << "%)" << std::flush;
 }
 
 inline void report_bfs_topdown_progress(std::size_t layer, std::size_t scanned,
-                                        std::size_t total_blocks,
-                                        std::uint64_t discovered,
-                                        std::uint64_t total_survivors) {
+                                        std::size_t total_blocks) {
     const double scan_percent = total_blocks == 0
                                     ? 100.0
                                     : 100.0 * static_cast<double>(scanned) /
                                           static_cast<double>(total_blocks);
-    const double overall_percent =
-        total_survivors == 0 ? 100.0
-                             : 100.0 * static_cast<double>(discovered) /
-                                   static_cast<double>(total_survivors);
     std::cerr << "\r\033[2KTD L" << std::setw(3) << layer << " blocks "
-              << std::fixed << std::setprecision(1) << std::setw(5)
-              << scan_percent << "% | " << std::setw(5) << overall_percent
-              << "%" << std::flush;
+              << scanned << " / " << total_blocks << " (" << std::fixed
+              << std::setprecision(1) << scan_percent << "%)" << std::flush;
 }
 
 inline bool star_connected(const PackedArrangementGraph &graph,
