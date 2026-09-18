@@ -158,6 +158,10 @@ int main(int argc, char **argv) {
                           << std::flush;
                 direction_message_printed = true;
             }
+            if (!bottom_up)
+                std::cerr << "\r\033[KTop-down expand: [top-down layer "
+                          << std::setw(3) << layer << "] frontier "
+                          << current_frontier_size << '\n';
 
             if (bottom_up) {
                 const std::size_t total_words = visited.num_words();
@@ -300,7 +304,8 @@ int main(int argc, char **argv) {
             current_frontier.swap(next_frontier);
             next_frontier.clear();
         }
-        std::cerr << "BFS complete: " << bfs_layer << " layers (directions:";
+        std::cerr << "Component complete: " << bfs_layer
+                  << " layers (directions:";
         for (const bool layer_bottom_up : bottom_up_by_layer)
             std::cerr << (layer_bottom_up ? " BU" : " TD");
         std::cerr << ")\n";
