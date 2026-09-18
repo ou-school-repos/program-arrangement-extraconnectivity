@@ -2,42 +2,18 @@
 #define STAR_SWEEP_FRONTIER_DELTA_HPP
 
 #include "bfs_utils.hpp"
+#include "checkpoint_types.hpp"
 
 #include <algorithm>
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
-#include <fcntl.h>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <string>
-#include <sys/stat.h>
-#include <unistd.h>
 
 namespace star_sweep {
-
-inline void durable_delta_file(const std::string &path) {
-    const int fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0 || fsync(fd) != 0) {
-        const std::string error = std::strerror(errno);
-        if (fd >= 0)
-            close(fd);
-        throw std::runtime_error("cannot fsync frontier delta: " + error);
-    }
-    close(fd);
-
-    const std::size_t separator = path.find_last_of('/');
-    const std::string directory =
-        separator == std::string::npos ? "." : path.substr(0, separator);
-    const int directory_fd = open(directory.c_str(), O_RDONLY | O_DIRECTORY);
-    if (directory_fd < 0 || fsync(directory_fd) != 0) {
-        const std::string error = std::strerror(errno);
-        if (directory_fd >= 0)
-            close(directory_fd);
-        throw std::runtime_error("cannot fsync frontier directory: " + error);
-    }
-    close(directory_fd);
-}
 
 struct DeltaHeader {
     static constexpr std::uint64_t magic = 0x535344454c544131ULL;
@@ -97,12 +73,70 @@ inline std::uint64_t write_frontier_delta(const AtomicBitset &frontier,
     if (written_blocks != header.block_count)
         throw std::runtime_error("frontier delta changed while being written");
 
-    durable_delta_file(temporary_path);
+    durable_fsync_path(temporary_path);
     if (rename(temporary_path.c_str(), path.c_str()) != 0)
         throw std::runtime_error("cannot publish frontier delta: " +
                                  std::string(std::strerror(errno)));
-    durable_delta_file(path);
+
+    namespace fs = std::filesystem;
+    const fs::path file_path(path);
+    const fs::path directory = file_path.parent_path().empty()
+                                   ? fs::path(".")
+                                   : file_path.parent_path();
+    durable_fsync_directory(directory.string());
     return written_blocks;
+}
+
+// Replays one immutable frontier delta into a fresh working bitmap.
+inline void replay_frontier_delta(const std::string &path,
+                                  AtomicBitset &frontier) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input)
+        throw std::runtime_error("cannot open frontier delta for replay: " +
+                                 path);
+
+    DeltaHeader header;
+    if (!input.read(reinterpret_cast<char *>(&header), sizeof(header)))
+        throw std::runtime_error("failed to read delta header: " + path);
+    if (header.magic_value != DeltaHeader::magic || header.version != 1 ||
+        header.block_words != AtomicBitset::block_size)
+        throw std::runtime_error("invalid frontier delta header: " + path);
+    if (header.num_words != frontier.num_words())
+        throw std::runtime_error("frontier delta word-count mismatch: " + path);
+    if (header.block_count > frontier.num_blocks())
+        throw std::runtime_error("frontier delta block-count mismatch: " +
+                                 path);
+
+    std::size_t previous_block = 0;
+    bool have_previous_block = false;
+    for (std::uint64_t index = 0; index < header.block_count; ++index) {
+        DeltaBlockHeader block;
+        if (!input.read(reinterpret_cast<char *>(&block), sizeof(block)))
+            throw std::runtime_error("failed to read delta block header: " +
+                                     path);
+        if (block.block_index >= frontier.num_blocks() ||
+            (have_previous_block && block.block_index <= previous_block))
+            throw std::runtime_error("invalid delta block index: " + path);
+
+        const std::size_t first = static_cast<std::size_t>(block.block_index) *
+                                  AtomicBitset::block_size;
+        const std::size_t available =
+            std::min(AtomicBitset::block_size, frontier.num_words() - first);
+        if (block.word_count > available)
+            throw std::runtime_error("invalid delta block length: " + path);
+
+        for (std::uint64_t word = 0; word < block.word_count; ++word) {
+            std::uint64_t value = 0;
+            if (!input.read(reinterpret_cast<char *>(&value), sizeof(value)))
+                throw std::runtime_error("failed to read delta block data: " +
+                                         path);
+            if (value != 0)
+                frontier.set_word_atomic(first + static_cast<std::size_t>(word),
+                                         value);
+        }
+        previous_block = static_cast<std::size_t>(block.block_index);
+        have_previous_block = true;
+    }
 }
 
 } // namespace star_sweep

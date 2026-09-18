@@ -3,40 +3,13 @@
 
 #include "checkpoint_types.hpp"
 
-#include <cerrno>
-#include <cstring>
-#include <fcntl.h>
 #include <fstream>
 #include <stdexcept>
 #include <string>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <utility>
 
 namespace star_sweep {
-
-inline void fsync_path(const std::string &path) {
-    const int fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0 || fsync(fd) != 0) {
-        const std::string error = std::strerror(errno);
-        if (fd >= 0)
-            close(fd);
-        throw std::runtime_error("cannot fsync " + path + ": " + error);
-    }
-    close(fd);
-}
-
-inline void fsync_directory(const std::string &path) {
-    const int fd = open(path.c_str(), O_RDONLY | O_DIRECTORY);
-    if (fd < 0 || fsync(fd) != 0) {
-        const std::string error = std::strerror(errno);
-        if (fd >= 0)
-            close(fd);
-        throw std::runtime_error("cannot fsync directory " + path + ": " +
-                                 error);
-    }
-    close(fd);
-}
 
 class CheckpointManager {
   public:
@@ -73,10 +46,10 @@ class CheckpointManager {
                << '\n'
                << delta_filename << '\n';
         output.close();
-        fsync_path(temporary_path);
+        durable_fsync_path(temporary_path);
         if (rename(temporary_path.c_str(), metadata_path.c_str()) != 0)
             throw std::runtime_error("cannot publish checkpoint metadata");
-        fsync_directory(generation_dir);
+        durable_fsync_directory(generation_dir);
 
         const std::string current_tmp = directory_ + "/CURRENT.tmp";
         const std::string current = directory_ + "/CURRENT";
@@ -85,7 +58,7 @@ class CheckpointManager {
                     current_tmp.c_str()) != 0 ||
             rename(current_tmp.c_str(), current.c_str()) != 0)
             throw std::runtime_error("cannot publish CURRENT checkpoint");
-        fsync_directory(directory_);
+        durable_fsync_directory(directory_);
     }
 
   private:

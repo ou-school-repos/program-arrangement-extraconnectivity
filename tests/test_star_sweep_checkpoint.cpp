@@ -19,6 +19,10 @@ int main() {
 
     const fs::path delta = base / "gen-00001" / "frontier.delta";
     assert(star_sweep::write_frontier_delta(frontier, delta.string()) == 1);
+    AtomicBitset restored(4096);
+    star_sweep::replay_frontier_delta(delta.string(), restored);
+    assert(restored.test(3));
+    assert(restored.test(2048));
 
     const star_sweep::CheckpointSignature signature{11, 7, 7920, 990};
     assert(star_sweep::signature_matches(signature, signature));
