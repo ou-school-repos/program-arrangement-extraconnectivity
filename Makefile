@@ -165,7 +165,7 @@ _check/default: format lint
 
 # NOTE: run a sanitizer test with:
 # make test CXXFLAGS="-std=c++17 -g -O0 -fsanitize=address,undefined -Wall -Wextra -Wpedantic"
-.PHONY: test _test/predict _test/checkpoint _test/validate_extra_cut _test/validate_extra_cut/full
+.PHONY: test _test/predict _test/checkpoint _test/checkpoint/e2e _test/validate_extra_cut _test/validate_extra_cut/full
 test: _test/checkpoint _test/validate_extra_cut _test/predict	##H @Test Run fast test suites
 
 _test/predict: bin/predict bin/arrangement	##H @Test Run predictor/search comparison suite for R: 2..$(R)
@@ -176,6 +176,11 @@ _test/checkpoint: tests/test_star_sweep_checkpoint.cpp	##H @Test Run fast star-s
 	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -fopenmp \
 		-o .tmp/test_star_sweep_checkpoint tests/test_star_sweep_checkpoint.cpp
 	./.tmp/test_star_sweep_checkpoint
+
+_test/checkpoint/e2e: bin/validate_extra_cut_bitmap tests/test_validate_extra_cut_checkpoint.cpp	##H @Test Run checkpoint interruption/resume test
+	@mkdir -p .tmp
+	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -o .tmp/test_validate_extra_cut_checkpoint tests/test_validate_extra_cut_checkpoint.cpp
+	./.tmp/test_validate_extra_cut_checkpoint ./bin/validate_extra_cut_bitmap
 
 _test/validate_extra_cut: bin/validate_extra_cut_naive	##H @Test Run small validator oracle regression
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \

@@ -49,7 +49,10 @@ int main() {
     state.component_anchor = 17;
     state.component_size = 128;
     state.discovered_survivors = 256;
-    state.boundary_size = 42;
+    state.star_boundary_size = 42;
+    state.active_frontier_size = 1;
+    state.component_sizes = {10, 20};
+    state.direction_history = {false, true, false, true};
 
     star_sweep::CheckpointManager manager(base.string());
     manager.publish(state, "frontier.delta");

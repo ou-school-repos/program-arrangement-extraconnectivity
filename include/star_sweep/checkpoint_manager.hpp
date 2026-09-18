@@ -48,6 +48,11 @@ class CheckpointManager {
         }
     }
 
+    bool has_current() const {
+        struct stat status{};
+        return lstat((directory_ + "/CURRENT").c_str(), &status) == 0;
+    }
+
     CheckpointState read_state(std::uint64_t generation,
                                const CheckpointSignature &expected,
                                std::string &delta_filename) const {
@@ -61,9 +66,36 @@ class CheckpointManager {
         CheckpointState state;
         input >> state.signature.n >> state.signature.k >>
             state.signature.valid_count >> state.signature.bitmap_bytes;
-        input >> state.generation >> state.layer >> state.component_anchor >>
-            state.component_size >> state.discovered_survivors >>
-            state.boundary_size;
+        std::uint64_t metadata_version = 0;
+        int phase = -1;
+        input >> metadata_version >> state.generation >> phase >> state.layer >>
+            state.component_anchor >> state.component_size >>
+            state.discovered_survivors >> state.star_boundary_size >>
+            state.active_frontier_size;
+        if (metadata_version != checkpoint_metadata_version ||
+            phase < static_cast<int>(CheckpointPhase::LayerBoundary) ||
+            phase > static_cast<int>(CheckpointPhase::ComponentComplete))
+            throw std::runtime_error("invalid checkpoint metadata: " +
+                                     metadata_path);
+        state.phase = static_cast<CheckpointPhase>(phase);
+
+        std::size_t component_count = 0;
+        input >> component_count;
+        state.component_sizes.resize(component_count);
+        for (std::uint64_t &size : state.component_sizes)
+            input >> size;
+
+        std::size_t direction_count = 0;
+        input >> direction_count;
+        state.direction_history.resize(direction_count);
+        for (std::size_t index = 0; index < direction_count; ++index) {
+            int value = 0;
+            input >> value;
+            if (value != 0 && value != 1)
+                throw std::runtime_error("invalid checkpoint direction: " +
+                                         metadata_path);
+            state.direction_history[index] = value != 0;
+        }
         input >> delta_filename;
         if (!input || state.generation != generation ||
             !signature_matches(expected, state.signature) ||
@@ -111,11 +143,18 @@ class CheckpointManager {
         output << state.signature.n << ' ' << state.signature.k << ' '
                << state.signature.valid_count << ' '
                << state.signature.bitmap_bytes << '\n'
-               << state.generation << ' ' << state.layer << ' '
+               << checkpoint_metadata_version << ' ' << state.generation << ' '
+               << static_cast<int>(state.phase) << ' ' << state.layer << ' '
                << state.component_anchor << ' ' << state.component_size << ' '
-               << state.discovered_survivors << ' ' << state.boundary_size
-               << '\n'
-               << delta_filename << '\n';
+               << state.discovered_survivors << ' ' << state.star_boundary_size
+               << ' ' << state.active_frontier_size << '\n'
+               << state.component_sizes.size();
+        for (const std::uint64_t size : state.component_sizes)
+            output << ' ' << size;
+        output << '\n' << state.direction_history.size();
+        for (const bool direction : state.direction_history)
+            output << ' ' << (direction ? 1 : 0);
+        output << '\n' << delta_filename << '\n';
         output.close();
         durable_fsync_path(temporary_path);
         if (rename(temporary_path.c_str(), metadata_path.c_str()) != 0)

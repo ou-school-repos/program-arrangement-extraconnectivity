@@ -11,8 +11,11 @@
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
+#include <vector>
 
 namespace star_sweep {
+
+inline constexpr std::uint64_t checkpoint_metadata_version = 1;
 
 inline void durable_fsync_path(const std::string &path) {
     const int fd = open(path.c_str(), O_RDONLY);
@@ -44,20 +47,35 @@ struct CheckpointSignature {
     std::uint64_t bitmap_bytes = 0;
 };
 
+enum class CheckpointPhase : int {
+    LayerBoundary = 0,
+    ComponentComplete = 1,
+};
+
 struct CheckpointState {
     CheckpointSignature signature;
     std::uint64_t generation = 0;
+    CheckpointPhase phase = CheckpointPhase::LayerBoundary;
     std::uint64_t layer = 0;
     std::uint64_t component_anchor = 0;
     std::uint64_t component_size = 0;
     std::uint64_t discovered_survivors = 0;
-    std::uint64_t boundary_size = 0;
+    std::uint64_t star_boundary_size = 0;
+    std::uint64_t active_frontier_size = 0;
+    std::vector<std::uint64_t> component_sizes;
+    std::vector<bool> direction_history;
 
     void validate() const {
         if (signature.n <= 0 || signature.k <= 0 ||
             signature.valid_count == 0 || signature.bitmap_bytes == 0)
             throw std::invalid_argument(
                 "invalid star-sweep checkpoint signature");
+        if (phase != CheckpointPhase::LayerBoundary &&
+            phase != CheckpointPhase::ComponentComplete)
+            throw std::invalid_argument("invalid star-sweep checkpoint phase");
+        if (component_sizes.empty() || direction_history.size() != layer)
+            throw std::invalid_argument(
+                "invalid star-sweep checkpoint history");
     }
 };
 

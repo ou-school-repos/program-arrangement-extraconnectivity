@@ -18,6 +18,6 @@ The working bitmaps are not themselves the durable checkpoint. A resume path
 must reconstruct them from committed frontier deltas and reject any generation
 whose signature, sizes, or metadata do not match the requested `A(n,k)`.
 
-The headers are currently draft infrastructure. They are not included by the
-validator and do not change existing binaries until integration is explicitly
-added.
+The validator now has opt-in `--resume` integration and a separate interruption
+test target. The support remains draft infrastructure until the smoke and
+end-to-end recovery tests are run successfully on the current build.

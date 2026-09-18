@@ -1,8 +1,9 @@
 // Serial bitmap-frontier experiment for A(n,k).
 // The trusted flat and ranked validators remain separate references.
-// Usage: validate_extra_cut_bitmap n k
+// Usage: validate_extra_cut_bitmap n k [--disk-backed prefix] [--resume]
 
 #include "bfs_utils.hpp"
+#include "star_sweep/checkpoint_manager.hpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -13,6 +14,9 @@ inline int omp_get_thread_num() { return 0; }
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -21,19 +25,38 @@ inline int omp_get_thread_num() { return 0; }
 #include <vector>
 
 int main(int argc, char **argv) {
-    if (argc != 3 && argc != 5) {
-        std::cerr << "Usage: " << argv[0] << " n k [--disk-backed prefix]\n";
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0]
+                  << " n k [--disk-backed prefix] [--resume]\n";
         return 1;
     }
     const int n = std::stoi(argv[1]);
     const int k = std::stoi(argv[2]);
-    const bool disk_backed =
-        argc == 5 && std::string(argv[3]) == "--disk-backed";
-    if (argc == 5 && !disk_backed) {
-        std::cerr << "Usage: " << argv[0] << " n k [--disk-backed prefix]\n";
+    bool disk_backed = false;
+    bool resume_mode = false;
+    std::string disk_prefix;
+    std::uint64_t interrupt_generation = 0;
+    for (int index = 3; index < argc; ++index) {
+        const std::string argument = argv[index];
+        if (argument == "--disk-backed" && index + 1 < argc) {
+            disk_backed = true;
+            disk_prefix = argv[++index];
+        } else if (argument == "--resume") {
+            resume_mode = true;
+        } else if (argument == "--interrupt-at-generation" &&
+                   index + 1 < argc) {
+            interrupt_generation = std::stoull(argv[++index]);
+        } else {
+            std::cerr << "Usage: " << argv[0]
+                      << " n k [--disk-backed prefix] [--resume]"
+                         " [--interrupt-at-generation N]\n";
+            return 1;
+        }
+    }
+    if (resume_mode && !disk_backed) {
+        std::cerr << "Error: --resume requires --disk-backed.\n";
         return 1;
     }
-    const std::string disk_prefix = disk_backed ? argv[4] : std::string{};
     if (n <= k || k < 1 || n > 64 || k > 21) {
         std::cerr << "Error: require 64 >= n > k >= 1 and k <= 21.\n";
         return 1;
@@ -46,7 +69,10 @@ int main(int argc, char **argv) {
               << "Building rank-indexed A(" << n << ',' << k << ")...\n"
               << "Total valid vertices: " << graph.valid_count << "\n"
               << "Visited bitset: " << (graph.valid_count + 7) / 8 << " bytes\n"
-              << "Storage: " << (disk_backed ? "disk-backed (mmap)" : "RAM")
+              << "Storage: "
+              << (disk_backed ? (resume_mode ? "disk-backed (resuming)"
+                                             : "disk-backed (mmap)")
+                              : "RAM")
               << "\n"
               << "R = " << parameters.volume() << "\n"
               << "Candidate g = " << parameters.g() << "\n";
@@ -90,6 +116,19 @@ int main(int argc, char **argv) {
     AtomicBitset &current_frontier = *current_storage;
     AtomicBitset &next_frontier = *next_storage;
 
+    star_sweep::CheckpointSignature expected_signature{
+        n, k, graph.valid_count,
+        ((graph.valid_count + 63) / 64) * sizeof(std::uint64_t)};
+    std::unique_ptr<star_sweep::CheckpointManager> checkpoint_manager;
+    if (disk_backed)
+        checkpoint_manager =
+            std::make_unique<star_sweep::CheckpointManager>(disk_prefix);
+    if (disk_backed && !resume_mode && checkpoint_manager->has_current()) {
+        std::cerr << "Error: checkpoint exists; use --resume or choose a new "
+                     "prefix.\n";
+        return 1;
+    }
+
     for (const packed_code_t code : star)
         visited.set_atomic(graph.rank_code(code));
 
@@ -108,6 +147,38 @@ int main(int argc, char **argv) {
     const std::uint64_t total_survivors =
         graph.valid_count - star.size() - boundary.size();
     std::uint64_t discovered_survivors = 0;
+    std::uint64_t active_generation = 0;
+    star_sweep::CheckpointState resume_state;
+    bool resume_component = false;
+
+    if (resume_mode) {
+        if (!checkpoint_manager->has_current()) {
+            std::cerr << "Error: --resume requested but checkpoint CURRENT is "
+                         "missing.\n";
+            return 1;
+        }
+        active_generation = checkpoint_manager->current_generation();
+        std::string delta_filename;
+        resume_state = checkpoint_manager->read_state(
+            active_generation, expected_signature, delta_filename);
+        checkpoint_manager->replay_chain(expected_signature, visited);
+        component_sizes = resume_state.component_sizes;
+        discovered_survivors = resume_state.discovered_survivors;
+        if (resume_state.star_boundary_size != boundary.size()) {
+            std::cerr << "Error: checkpoint Star boundary mismatch.\n";
+            return 1;
+        }
+        if (resume_state.phase == star_sweep::CheckpointPhase::LayerBoundary) {
+            current_frontier.clear();
+            star_sweep::replay_frontier_delta(
+                checkpoint_manager->generation_directory(active_generation) +
+                    "/" + delta_filename,
+                current_frontier);
+            resume_component = true;
+        }
+        std::cout << "Resuming checkpoint generation " << active_generation
+                  << ".\n";
+    }
     constexpr std::uint64_t progress_interval = 1'000'000;
     std::uint64_t next_progress = progress_interval;
     bool direction_message_printed = false;
@@ -119,14 +190,25 @@ int main(int argc, char **argv) {
 
     graph.for_each_valid_code([&](const packed_code_t start) {
         const std::size_t start_rank = graph.rank_code(start);
-        if (visited.test(start_rank))
+        const bool restoring = resume_component;
+        if (restoring) {
+            if (start_rank != resume_state.component_anchor)
+                return;
+        } else if (visited.test(start_rank)) {
             return;
+        }
 
-        std::uint64_t size = 0;
-        std::size_t bfs_layer = 0;
-        std::vector<bool> bottom_up_by_layer;
-        visited.set_atomic(start_rank);
-        current_frontier.set_atomic(start_rank);
+        std::uint64_t size = restoring ? resume_state.component_size : 0;
+        std::size_t bfs_layer =
+            restoring ? static_cast<std::size_t>(resume_state.layer) : 0;
+        std::vector<bool> bottom_up_by_layer =
+            restoring ? resume_state.direction_history : std::vector<bool>{};
+        if (restoring) {
+            resume_component = false;
+        } else {
+            visited.set_atomic(start_rank);
+            current_frontier.set_atomic(start_rank);
+        }
         while (true) {
             std::uint64_t current_frontier_size = 0;
             for (std::size_t block = 0; block < current_frontier.num_blocks();
@@ -298,6 +380,32 @@ int main(int argc, char **argv) {
                                 progress_interval;
             }
 
+            if (disk_backed) {
+                star_sweep::CheckpointState state;
+                state.signature = expected_signature;
+                state.generation = ++active_generation;
+                state.phase = star_sweep::CheckpointPhase::LayerBoundary;
+                state.layer = bfs_layer;
+                state.component_anchor = start_rank;
+                state.component_size = size;
+                state.discovered_survivors = discovered_survivors;
+                state.star_boundary_size = boundary.size();
+                state.active_frontier_size = next_frontier_size;
+                state.component_sizes = component_sizes;
+                state.direction_history = bottom_up_by_layer;
+
+                const std::string generation_dir =
+                    checkpoint_manager->generation_directory(state.generation);
+                std::filesystem::create_directories(generation_dir);
+                const std::string delta_name = "frontier.delta";
+                star_sweep::write_frontier_delta(
+                    next_frontier, generation_dir + "/" + delta_name);
+                checkpoint_manager->publish(state, delta_name);
+                if (interrupt_generation != 0 &&
+                    active_generation >= interrupt_generation)
+                    std::exit(99);
+            }
+
             if (next_frontier_size == 0)
                 break;
             visited.merge_from(next_frontier);
@@ -310,6 +418,29 @@ int main(int argc, char **argv) {
             std::cerr << (layer_bottom_up ? " BU" : " TD");
         std::cerr << ")\n";
         component_sizes.push_back(size);
+
+        if (disk_backed) {
+            star_sweep::CheckpointState state;
+            state.signature = expected_signature;
+            state.generation = ++active_generation;
+            state.phase = star_sweep::CheckpointPhase::ComponentComplete;
+            state.layer = bfs_layer;
+            state.component_anchor = start_rank;
+            state.component_size = size;
+            state.discovered_survivors = discovered_survivors;
+            state.star_boundary_size = boundary.size();
+            state.active_frontier_size = 0;
+            state.component_sizes = component_sizes;
+            state.direction_history = bottom_up_by_layer;
+
+            const std::string generation_dir =
+                checkpoint_manager->generation_directory(state.generation);
+            std::filesystem::create_directories(generation_dir);
+            const std::string delta_name = "frontier.delta";
+            star_sweep::write_frontier_delta(next_frontier,
+                                             generation_dir + "/" + delta_name);
+            checkpoint_manager->publish(state, delta_name);
+        }
     });
 
     report_bfs_progress(discovered_survivors, total_survivors);
