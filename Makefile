@@ -1,5 +1,5 @@
 SHELL:=/bin/bash
-.DEFAULT_GOAL := _help
+.DEFAULT_GOAL := _check/default
 .SHELLFLAGS := -o pipefail -c
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,6 +149,9 @@ format:	##H @Dev Format C++ sources (clang-format)
 	clang-format -i $(LINT_SRCS_CPP)
 	@$(call print_success,Format complete.)
 
+# The default, most useful target (thumb/pinky saver)
+.PHONY: _check/default
+_check/default: format lint
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Test

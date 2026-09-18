@@ -41,10 +41,12 @@ class Xxh64 {
             memory_size_ = 0;
         }
 
-        while (offset + memory_.size() <= length) {
-            std::memcpy(memory_.data(), bytes + offset, memory_.size());
-            consume(memory_.data());
-            offset += memory_.size();
+        if (length >= memory_.size()) {
+            while (offset + memory_.size() <= length) {
+                std::memcpy(memory_.data(), bytes + offset, memory_.size());
+                consume(memory_.data());
+                offset += memory_.size();
+            }
         }
 
         if (offset < length) {
