@@ -27,6 +27,8 @@ BUNDLE_OUT ?= bundle.zip
 SITE_OUT   ?= site.zip
 
 PROFILE_DIRS := src/plain src/openmp src/nauty src/ortools src/z3
+PROFILE_SOURCES := $(foreach dir,$(PROFILE_DIRS),$(wildcard $(dir)/*.cpp))
+PROFILE_BINS := $(patsubst %.cpp,bin/%,$(notdir $(PROFILE_SOURCES)))
 
 # These names are retained as lightweight aliases for scripts and muscle
 # memory.  The actual files live under bin/.
@@ -104,6 +106,16 @@ endef
 .PHONY: build
 build: ##H @Dev Build all source profiles
 	@for dir in $(PROFILE_DIRS); do $(MAKE) -C $$dir; done
+
+.PHONY: bin bin/
+bin bin/: build ##H @Dev Build all source profiles (bin/ alias)
+
+define PROFILE_BIN_alias
+.PHONY: bin/$(basename $(notdir $(1)))
+bin/$(basename $(notdir $(1))):
+	@$(MAKE) -C $(dir $(1)) ../../bin/$(basename $(notdir $(1)))
+endef
+$(foreach source,$(PROFILE_SOURCES),$(eval $(call PROFILE_BIN_alias,$(source))))
 
 SRCS ?= $$(git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 
