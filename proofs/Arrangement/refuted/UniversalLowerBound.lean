@@ -19,4 +19,11 @@ def UniversalLowerBound (R n k : ℕ) : Prop :=
   ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 
+/-- The same false lower bound restricted to the hypercube-embeddable range.
+    The full Star in `A(11,6)` at `R=31` refutes this version. -/
+def RestrictedLowerBound (R n k : ℕ) : Prop :=
+  can_embed_hypercube R n k →
+  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
+
 end Arrangement.refuted

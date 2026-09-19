@@ -1227,7 +1227,7 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     -- RHS closes via  sbl P + P = (d-1)P + 1  and  2E_P = (d-1)P.
     omega
 
-/-- The unconditional arrangement-graph boundary-minimum capstone.
+/-- Conditional arrangement-graph boundary-minimum composition.
     Concludes a statement about `external_neighbors V'` (the external
     vertex-boundary) only — not the graph's extraconnectivity metric κ_g,
     which requires the still-open boundary-to-extraconnectivity reduction
@@ -1236,7 +1236,9 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     The nonempty case uses `hb_cross_collisions_closed`; the empty arrangement
     has the empty Hamming ball as its witness. -/
 theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : RestrictedLowerBound R n k) :
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R →
@@ -1257,7 +1259,9 @@ theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube
 /-- Conditional boundary composition; the lower-bound hypothesis is explicit. -/
 theorem globally_optimal_growth_strategy
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : RestrictedLowerBound R n k) :
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R →
       external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧

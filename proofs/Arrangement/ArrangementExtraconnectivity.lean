@@ -23,7 +23,7 @@ is refuted by the Star counterexample documented below.
 
 The formal development proves the exact boundary identities, the defect bound,
 and the Hamming-ball evaluation. The global minimum-boundary conclusion is
-conditional on the explicitly named `RestrictedLowerBound` interface; no
+conditional on an explicit lower-bound premise; no
 unrestricted isoperimetric theorem is claimed here.
 
 ## Proof Architecture
@@ -1181,67 +1181,6 @@ lemma coordinate_bonferroni_ordered {n k : ℕ}
   unfold total_coord_edges coordinate_ordered_overlap at *
   exact h
 
-/--
-  **Proposition 1 (Universal Boundary Inequality) -- REFUTED as stated**
-
-  This asserts that for ANY R-element subset V' of A(n,k), the external
-  boundary is bounded below by the boundary of the lexicographic Hamming
-  Ball. **This unrestricted claim is false.**
-
-  **Counterexample**: In A(10,8), take the center (0,1,2,3,4,5,6,7) and all
-  sixteen vertices obtained by replacing one coordinate with 8 or 9 (the
-  full Star, R = 17, D = 16, X = 56). Its external boundary has size 168,
-  while the formula (R*k - E_seq R)*(n-k) - C_constant R evaluates to
-  17*8 - 33 = 103, times (10-8) = 206, minus C_constant(17) = 37, i.e. 169.
-  168 < 169, so the inequality fails. Full-Star sets fail more broadly for
-  every m = n-k >= 2 once the branch count is large enough relative to m;
-  see `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure
-  Landscape" section and `scripts/sweep_boundary.py` /
-  `scripts/occupancy_sweep.py` for the mapped failure region. No fixed-R
-  or fixed-(n-k) restriction is currently known to be both sufficient and
-  established.
-
-  Conceptually: the intended argument was that any subset failing to match
-  the optimal defect E_seq(R) suffers an insurmountable dimensional penalty
-  of at least (n-k) per unit of missing defect, dominating any secondary
-  cross-collision savings as dimensions scale. This intuition holds
-  asymptotically in (n-k) for fixed R (Section "sandwich" of the paper) but
-  not as an exact statement at every finite scale, which is what this Prop
-  claims.
-
-  **Prior computational evidence (predates this refutation; bounded, not
-  in tension with it)**:
-  - This is an all-subsets statement: it has no connectedness hypothesis.
-  - `predict.cpp` evaluates the Hamming-ball construction only, and
-    `arrangement.cpp` enumerates connected configurations only; neither
-    verifies this universal quantifier.
-  - `scripts/check_universal_lower_bound.py` exhaustively tests small complete
-    arrangement graphs, including disconnected subsets, but only for very
-    small R (parameter cells with R <= 6-10); it never covered R = 17 in
-    A(10,8), so it is not contradicted by the counterexample above -- it
-    simply never reached the regime where the failure occurs.
-  - See docs/axiom-equivalence.md for the full duality explanation
-  - See docs/lean-proof-status.md and docs/collision-axiom-roadmap.md, both of
-    which already document this refutation, for formalization status
-
-  This definition is retained solely as the named proposition refuted by
-  `UniversalCounterexample.lean`; it is not an active conjecture or a usable
-  theorem. In particular, do not infer that gating the same inequality by
-  `can_embed_hypercube` repairs it: `RestrictedLowerBound` is a separate
-  proposition and has its own counterexamples. No instance of this false
-  proposition is assumed as an axiom anywhere in this file.
--/
-def UniversalLowerBound (R n k : ℕ) : Prop :=
-  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
-
-/-- The restricted lower bound hypothesis, active only within the embeddable range.
-    This naturally avoids the full-Star counterexamples for $m \le 4$. -/
-def RestrictedLowerBound (R n k : ℕ) : Prop :=
-  can_embed_hypercube R n k →
-  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
-
 /-- The fiber of all ArrVertex sharing a given root r at position p. -/
 def root_fiber {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
     Finset (ArrVertex n k) :=
@@ -2285,14 +2224,14 @@ reduces to this) is open and is not addressed anywhere in this file; see
   of a constructive witness (the Hamming ball), we establish the
   **conditional** boundary profile of A(n,k) within the embeddable range.
   The embedding condition makes the Hamming-ball witness available, but does
-  not prove the universal lower bound: that remains the explicit
-  `RestrictedLowerBound` hypothesis. This is a statement about
+  not prove a universal lower bound: that remains an explicit per-instance
+  premise, which is not established in general. This is a statement about
   `external_neighbors`, not extraconnectivity itself (see the naming note above).
-  The lower bound hypothesis is `RestrictedLowerBound`, gated by the
-  hypercube embedding conditions.
 -/
 theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : RestrictedLowerBound R n k)
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
@@ -2303,14 +2242,16 @@ theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_
 /--
   CONDITIONAL GROWTH-STRATEGY COROLLARY.
 
-  Under the supplied per-instance RestrictedLowerBound hypothesis, this
+  Under the supplied per-instance lower-bound premise, this
   composition returns the conditional boundary profile and Hamming-ball
   witness. It does not establish an unconditional growth strategy or exclude
   competing cliques, paths, Stars, or other topologies.
 -/
 theorem globally_optimal_growth_strategy_of_cross
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : RestrictedLowerBound R n k)
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
@@ -2380,18 +2321,20 @@ def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
 /--
   CONDITIONAL CONNECTED ISOPERIMETRIC SANDWICH
 
-  The lower side is conditional on RestrictedLowerBound. The proposed sparse
+  The lower side is conditional on a per-instance lower-bound premise. The proposed sparse
   upper side is retained only as a testable conjecture and is not used by the
   capstone.
 
   HALF 1: CONDITIONAL.
-  The lower bound follows only from the explicit `RestrictedLowerBound`
-  hypothesis for this instance; the Hamming Ball does not universally bound
+  The lower bound follows only from the supplied premise for this instance;
+  the Hamming Ball does not universally bound
   all subsets.
 -/
 theorem sandwich_lower_bound_conditional (R n k : ℕ) (h_embed : can_embed_hypercube R n k)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (_hConn : is_connected_subgraph V')
-    (h_lower : RestrictedLowerBound R n k) :
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (W : Finset (ArrVertex n k)), W.card = R → k ≤ n →
+        external_neighbors W ≥ (R * k - E_seq R) * (n - k) - C_constant R) :
     (R * k - E_seq R) * (n - k) - C_constant R ≤ external_neighbors V' := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_embed; omega
   exact h_lower h_embed V' hR hnk

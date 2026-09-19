@@ -1,9 +1,11 @@
 import Arrangement.ArrangementExtraconnectivity
+import Arrangement.refuted.UniversalLowerBound
 
 /-!
 # The embedding-gated hypothesis is not globally true
 
-`RestrictedLowerBound R n k` is gated only by `can_embed_hypercube R n k`.
+`Arrangement.refuted.RestrictedLowerBound R n k` is gated only by
+`can_embed_hypercube R n k`.
 The full Star in `A(11,6)` (the closed neighborhood of one vertex:
 center plus all `6 * 5 = 30` neighbors) has `R = 31`, satisfies the gate
 (`bit_length 30 = 5`, `6 + 5 ≤ 11`, `5 ≤ 6`), and has external boundary
@@ -38,7 +40,7 @@ theorem embeddable_31_11_6 : can_embed_hypercube 31 11 6 := by
 
 /-- The gated lower bound is false at `(R, n, k) = (31, 11, 6)`. -/
 theorem full_star_11_6_refutes_restricted_lower_bound :
-    ¬ RestrictedLowerBound 31 11 6 := by
+    ¬ refuted.RestrictedLowerBound 31 11 6 := by
   intro h
   have hbound := h embeddable_31_11_6 full_star_11_6 full_star_11_6_card (by decide)
   have hviolate :
@@ -49,7 +51,7 @@ theorem full_star_11_6_refutes_restricted_lower_bound :
 
 /-- The capstone hypothesis may only ever be supplied per instance. -/
 theorem not_forall_restricted_lower_bound :
-    ¬ ∀ R n k : ℕ, RestrictedLowerBound R n k :=
+    ¬ ∀ R n k : ℕ, refuted.RestrictedLowerBound R n k :=
   fun h => full_star_11_6_refutes_restricted_lower_bound (h 31 11 6)
 
 end Arrangement
