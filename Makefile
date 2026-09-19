@@ -92,7 +92,7 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: build
-build: $(filter-out $(SKIP),$(BINS)) ##H @Dev Build all tools (optional solver tools when configured)
+build: $(filter-out $(SKIP),$(BINS)) ##H @Dev Build all tools
 	@if [ -n "$(strip $(SKIP))" ]; then \
 		echo "Skipping unavailable solver tools: $(notdir $(SKIP))"; \
 	fi
@@ -228,19 +228,19 @@ _lean/cache:	##H @Lean Download pre-built Mathlib cache
 	@$(call print_success,Mathlib cache downloaded.)
 
 .PHONY: _lean/docs-setup
-_lean/docs/setup:	##H @Lean Fetch doc-gen4 dependency (run once)
+_lean/docs/setup:	##H @Lean Fetch doc-gen4 dep (run once)
 	@$(call print_info,Fetching doc-gen4)
 	cd proofs/docbuild && MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4
 	@$(call print_success,doc-gen4 ready.)
 
 .PHONY: _lean/docs
-_lean/docs:	##H @Lean Generate Lean documentation
+_lean/docs:	##H @Lean Generate Lean docs
 	@$(call print_info,Generating Lean docs)
 	cd proofs/docbuild && lake build Proofs:docs
 	@$(call print_success,Lean docs generated in proofs/docbuild/.lake/build/doc/)
 
 .PHONY: _lean/docs-clean
-_lean/docs-clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
+_lean/docs-clean:	##H @Lean Clean project doc cache (SLOW)
 	@$(call print_info,Cleaning project doc artifacts)
 	rm -rf proofs/docbuild/.lake/build/doc/Arrangement \
 	       proofs/docbuild/.lake/build/doc/index.html \
@@ -273,7 +273,7 @@ paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 	@$(call print_success,Paper built: docs/paper/paper.pdf)
 
 .PHONY: _paper/docs
-_paper/docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
+_paper/docs: $(DOCS_PDF)	##H @General Generate PDF docs from .md files
 
 
 PDF_ENGINE ?= xelatex
@@ -292,14 +292,14 @@ PDF_ENGINE ?= xelatex
 
 
 .PHONY: _bundle/default
-_bundle/default: clean ##H @General Create a zip archive of the project sources
+_bundle/default: clean ##H @General Create a zip bundle
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
 	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/Arrangement/*.lean scripts/*.py assets/* Makefile
 	@$(call print_success,Bundle created.)
 
 .PHONY: _bundle/site
-_bundle/site:	##H @General Create site.zip of Lean HTML documentation
+_bundle/site:	##H @General Create site.zip of Lean docs
 	@$(call print_info,Creating $(SITE_OUT))
 	rm -f $(SITE_OUT)
 	cd proofs/docbuild/.lake/build/doc && zip -r9 ../../../../../$(SITE_OUT) .
@@ -307,8 +307,9 @@ _bundle/site:	##H @General Create site.zip of Lean HTML documentation
 
 
 .PHONY: _csv/base
-_csv/base: bin/predict	##H @General Generate docs/predictions.csv (R=2..1024)
+_csv/base: bin/predict	##H @General Generate docs/predictions.csv (R: 2..2^16)
 	@$(call print_info,Generating predictions CSV)
+	# NOTE: can use $$((2**16)) here, too.
 	./bin/predict --csv 1024 | tee docs/predictions.csv
 	@$(call print_success,docs/predictions.csv written.)
 
