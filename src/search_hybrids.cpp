@@ -17,7 +17,6 @@
 #include <random>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace {
@@ -183,66 +182,170 @@ struct VertexHash {
 
 class BoundaryTracker {
   public:
+    BoundaryTracker() : keys_(capacity_, Vertex{0}), counts_(capacity_, 0) {}
+
     void build(const PackedArrangementGraph &graph,
                const std::vector<Vertex> &subset) {
-        counts_.clear();
+        std::fill(keys_.begin(), keys_.end(), Vertex{0});
+        std::fill(counts_.begin(), counts_.end(), Count{0});
+        size_ = 0;
+        tombstones_ = 0;
         for (const Vertex vertex : subset)
-            add_vertex(graph, subset, vertex);
+            add_boundary_contributions(graph, subset, vertex);
     }
 
-    std::size_t size() const { return counts_.size(); }
+    std::size_t size() const { return size_; }
 
     void apply_swap(const PackedArrangementGraph &graph,
                     std::vector<Vertex> &subset, const std::size_t index,
                     const Vertex absorb) {
         const Vertex evict = subset[index];
-        remove_vertex(graph, subset, evict);
+        remove_member(graph, subset, evict);
+        erase_boundary(absorb);
         subset[index] = absorb;
-        add_vertex(graph, subset, absorb);
+        add_member(graph, subset, absorb);
     }
 
     void rollback_swap(const PackedArrangementGraph &graph,
                        std::vector<Vertex> &subset, const std::size_t index,
                        const Vertex evict, const Vertex absorb) {
-        remove_vertex(graph, subset, absorb);
+        remove_member(graph, subset, absorb);
         subset[index] = evict;
-        add_vertex(graph, subset, evict);
+        add_member(graph, subset, evict);
     }
 
   private:
     using Count = std::uint16_t;
-    std::unordered_map<Vertex, Count, VertexHash> counts_;
+    static constexpr std::size_t capacity_ = 1U << 16;
+    static constexpr std::size_t mask_ = capacity_ - 1;
+    static constexpr std::size_t max_entries_ = capacity_ * 3 / 4;
+    static constexpr Count tombstone_ = std::numeric_limits<Count>::max();
+    std::vector<Vertex> keys_;
+    std::vector<Count> counts_;
+    std::size_t size_ = 0;
+    std::size_t tombstones_ = 0;
+    VertexHash hasher_;
 
     void increment(const Vertex vertex) {
-        auto [entry, inserted] = counts_.try_emplace(vertex, Count{0});
-        (void)inserted;
-        entry->second = static_cast<Count>(entry->second + Count{1});
+        const std::size_t start = hasher_(vertex) & mask_;
+        std::size_t position = start;
+        std::size_t first_tombstone = capacity_;
+        while (counts_[position] != 0) {
+            if (counts_[position] == tombstone_) {
+                if (first_tombstone == capacity_)
+                    first_tombstone = position;
+            } else if (keys_[position] == vertex) {
+                counts_[position] =
+                    static_cast<Count>(counts_[position] + Count{1});
+                return;
+            }
+            position = (position + 1) & mask_;
+            if (position == start)
+                throw std::length_error(
+                    "hybrid boundary tracker has no empty slot");
+        }
+        if (first_tombstone != capacity_)
+            position = first_tombstone;
+        else if (size_ + tombstones_ >= max_entries_) {
+            rehash();
+            increment(vertex);
+            return;
+        }
+        keys_[position] = vertex;
+        counts_[position] = Count{1};
+        ++size_;
+        if (first_tombstone != capacity_)
+            --tombstones_;
     }
 
     void decrement(const Vertex vertex) {
-        const auto entry = counts_.find(vertex);
-        if (entry == counts_.end())
+        const std::size_t start = hasher_(vertex) & mask_;
+        std::size_t position = start;
+        while (counts_[position] != 0) {
+            if (counts_[position] != tombstone_ && keys_[position] == vertex)
+                break;
+            position = (position + 1) & mask_;
+            if (position == start)
+                break;
+        }
+        if (counts_[position] == 0 || counts_[position] == tombstone_)
             throw std::logic_error("boundary incidence underflow");
-        if (entry->second == Count{1})
-            counts_.erase(entry);
-        else
-            entry->second = static_cast<Count>(entry->second - Count{1});
+        if (counts_[position] > Count{1}) {
+            counts_[position] =
+                static_cast<Count>(counts_[position] - Count{1});
+            return;
+        }
+
+        counts_[position] = tombstone_;
+        keys_[position] = Vertex{0};
+        --size_;
+        ++tombstones_;
+        if (tombstones_ > capacity_ / 4)
+            rehash();
     }
 
-    void add_vertex(const PackedArrangementGraph &graph,
-                    const std::vector<Vertex> &subset, const Vertex vertex) {
+    void erase_boundary(const Vertex vertex) {
+        const std::size_t start = hasher_(vertex) & mask_;
+        std::size_t position = start;
+        while (counts_[position] != 0) {
+            if (counts_[position] != tombstone_ && keys_[position] == vertex)
+                break;
+            position = (position + 1) & mask_;
+            if (position == start)
+                return;
+        }
+        if (counts_[position] == 0 || counts_[position] == tombstone_)
+            return;
+        counts_[position] = tombstone_;
+        keys_[position] = Vertex{0};
+        --size_;
+        ++tombstones_;
+        if (tombstones_ > capacity_ / 4)
+            rehash();
+    }
+
+    void rehash() {
+        const std::vector<Vertex> old_keys = std::move(keys_);
+        const std::vector<Count> old_counts = std::move(counts_);
+        keys_.assign(capacity_, Vertex{0});
+        counts_.assign(capacity_, Count{0});
+        size_ = 0;
+        tombstones_ = 0;
+        for (std::size_t i = 0; i < capacity_; ++i) {
+            if (old_counts[i] == 0 || old_counts[i] == tombstone_)
+                continue;
+            std::size_t position = hasher_(old_keys[i]) & mask_;
+            while (counts_[position] != 0)
+                position = (position + 1) & mask_;
+            keys_[position] = old_keys[i];
+            counts_[position] = old_counts[i];
+            ++size_;
+        }
+    }
+
+    void add_boundary_contributions(const PackedArrangementGraph &graph,
+                                    const std::vector<Vertex> &subset,
+                                    const Vertex vertex) {
         graph.for_each_neighbor(vertex, [&](const Vertex neighbor) {
             if (!contains(subset, neighbor))
                 increment(neighbor);
         });
     }
 
-    void remove_vertex(const PackedArrangementGraph &graph,
+    void remove_member(const PackedArrangementGraph &graph,
                        const std::vector<Vertex> &subset, const Vertex vertex) {
         graph.for_each_neighbor(vertex, [&](const Vertex neighbor) {
-            if (!contains(subset, neighbor))
+            if (contains(subset, neighbor))
+                increment(vertex);
+            else
                 decrement(neighbor);
         });
+    }
+
+    void add_member(const PackedArrangementGraph &graph,
+                    const std::vector<Vertex> &subset, const Vertex vertex) {
+        erase_boundary(vertex);
+        add_boundary_contributions(graph, subset, vertex);
     }
 };
 
@@ -281,7 +384,6 @@ std::vector<Vertex> climb(const PackedArrangementGraph &graph,
         Vertex absorb = 0;
         if (!choose_absorb(graph, subset, anchor, rng, absorb))
             continue;
-
         tracker.apply_swap(graph, subset, evict_index, absorb);
         const std::size_t candidate_boundary = tracker.size();
         const bool improves = candidate_boundary < current_boundary;
