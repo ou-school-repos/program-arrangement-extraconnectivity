@@ -831,6 +831,65 @@ lemma coord_overlap_has_two_coordinate_witness {n k : ℕ}
   · intro r hrp hrq
     exact (drop_eq_off hpdrop r hrp).symm.trans (drop_eq_off hqdrop r hrq)
 
+lemma coord_overlap_witness_differs_at_both {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) {p q : Fin k} (hpq : p ≠ q)
+    {w : ArrVertex n k} (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q)
+    {v t : ArrVertex n k} (hv : v ∈ V') (ht : t ∈ V')
+    (hvp : drop_pos w p = drop_pos v p)
+    (htq : drop_pos w q = drop_pos t q) :
+    v.val p ≠ t.val p ∧ v.val q ≠ t.val q := by
+  rw [Finset.mem_inter] at hw
+  rcases hw with ⟨hp_mem, _⟩
+  simp only [coord_boundary, Finset.mem_filter, Finset.mem_univ, true_and]
+    at hp_mem
+  obtain ⟨hw_not, _, _, _⟩ := hp_mem
+  constructor
+  · intro hpt
+    have hwv : w = v := by
+      apply Subtype.ext
+      funext r
+      by_cases hr : r = p
+      · rw [hr]
+        exact (drop_eq_off htq p hpq).trans hpt.symm
+      · exact drop_eq_off hvp r hr
+    exact hw_not (hwv ▸ hv)
+  · intro hqt
+    have hwt : w = t := by
+      apply Subtype.ext
+      funext r
+      by_cases hr : r = q
+      · rw [hr]
+        exact (drop_eq_off hvp q (Ne.symm hpq)).trans hqt
+      · exact drop_eq_off htq r hr
+    exact hw_not (hwt ▸ ht)
+
+/-- Given the two member witnesses and the ordered coordinates, the overlap
+    vertex is uniquely determined. This is the injectivity ingredient for the
+    eventual charging map. -/
+lemma coord_overlap_vertex_unique {n k : ℕ}
+    {p q : Fin k} (hpq : p ≠ q)
+    {v t w₁ w₂ : ArrVertex n k}
+    (h₁p : drop_pos w₁ p = drop_pos v p)
+    (h₁q : drop_pos w₁ q = drop_pos t q)
+    (h₂p : drop_pos w₂ p = drop_pos v p)
+    (h₂q : drop_pos w₂ q = drop_pos t q) :
+    w₁ = w₂ := by
+  apply Subtype.ext
+  funext r
+  by_cases hrp : r = p
+  · rw [hrp]
+    have h₁ := drop_eq_off h₁q p hpq
+    have h₂ := drop_eq_off h₂q p hpq
+    exact h₁.trans h₂.symm
+  · by_cases hrq : r = q
+    · rw [hrq]
+      have h₁ := drop_eq_off h₁p q (Ne.symm hpq)
+      have h₂ := drop_eq_off h₂p q (Ne.symm hpq)
+      exact h₁.trans h₂.symm
+    · have h₁ := drop_eq_off h₁p r hrp
+      have h₂ := drop_eq_off h₂p r hrp
+      exact h₁.trans h₂.symm
+
 lemma external_neighbors_eq_coord_union {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
     external_neighbors V' =
