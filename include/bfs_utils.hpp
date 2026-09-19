@@ -119,6 +119,7 @@ class AtomicBitset {
                 if (bits)
                     fetch_or_word(index, bits);
             }
+            dirty_blocks_[block].store(1, std::memory_order_relaxed);
         }
     }
 

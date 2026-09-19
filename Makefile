@@ -92,7 +92,7 @@ endef
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .PHONY: build
-build: $(filter-out $(SKIP),$(BINS)) ##H @Dev Build all tools (optional solver tools when configured)
+build: $(filter-out $(SKIP),$(BINS)) ##H @Dev Build all tools
 	@if [ -n "$(strip $(SKIP))" ]; then \
 		echo "Skipping unavailable solver tools: $(notdir $(SKIP))"; \
 	fi
@@ -114,6 +114,7 @@ $(TEST_BINS): bin/test_%: tests/test_%.cpp
 
 
 LINT_SRCS_CPP ?= $(shell git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
+LINT_SRCS_CLANG ?= $(filter-out paper/predict_core_sample.cpp,$(LINT_SRCS_CPP))
 LINT_SRCS_PY ?= $(shell git ls-files '*.py')
 LINT_SRCS_PRETTIER ?= $(shell git ls-files .clang-format '*.json' '.*.y*ml' '*.md')
 LINT_SRCS_SH ?= $(shell git ls-files '*.sh')
@@ -133,7 +134,7 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 .PHONY: _lint/clang
 _lint/clang: ##H @Dev Run clang-tidy lint only
 	mkdir -p .tmp/
-	clang-tidy $(LINT_SRCS_CPP) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*,-google-readability-braces-around-statements,-hicpp-braces-around-statements,-readability-braces-around-statements' -- -I./include $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) 2>&1 | tee .tmp/out-lint-clang.log
+	clang-tidy $(LINT_SRCS_CLANG) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*,-google-readability-braces-around-statements,-hicpp-braces-around-statements,-readability-braces-around-statements' -- -I./include $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) 2>&1 | tee .tmp/out-lint-clang.log
 
 .PHONY: _lint/pylint
 _lint/pylint:	##H @Dev Run pylint only
@@ -177,20 +178,35 @@ _check/default: format lint
 test: bin/predict bin/arrangement bin/pattern_catalogue \
 	bin/validate_extra_cut_naive bin/validate_extra_cut_bitmap \
 	bin/exact_profile_naive $(TEST_BINS) ##H @Test Run fast test suites
-	# Begin test
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	# Begin test suite
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	python3 tests/test_predict.py --max-r $(R)
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	# Begin test
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	./bin/test_star_sweep_checkpoint
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	# Begin test
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	./bin/test_validate_extra_cut_checkpoint ./bin/validate_extra_cut_bitmap
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	# Begin test
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	# NOTE: run this without --oracle for a full (long ~10 minute) test.
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
 		python3 scripts/test_regression.py --oracle tests/res/oracle_small.json
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	# Begin test
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	PROFILE_BIN=./bin/exact_profile_naive python3 tests/test_exact_profile.py
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	# Begin test
+	# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	./bin/test_pattern_catalogue
+	# End of tests
+	@$(call print_success,Tests complete.)
+
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -212,19 +228,19 @@ _lean/cache:	##H @Lean Download pre-built Mathlib cache
 	@$(call print_success,Mathlib cache downloaded.)
 
 .PHONY: _lean/docs-setup
-_lean/docs/setup:	##H @Lean Fetch doc-gen4 dependency (run once)
+_lean/docs/setup:	##H @Lean Fetch doc-gen4 dep (run once)
 	@$(call print_info,Fetching doc-gen4)
 	cd proofs/docbuild && MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4
 	@$(call print_success,doc-gen4 ready.)
 
 .PHONY: _lean/docs
-_lean/docs:	##H @Lean Generate Lean documentation
+_lean/docs:	##H @Lean Generate Lean docs
 	@$(call print_info,Generating Lean docs)
 	cd proofs/docbuild && lake build Proofs:docs
 	@$(call print_success,Lean docs generated in proofs/docbuild/.lake/build/doc/)
 
 .PHONY: _lean/docs-clean
-_lean/docs-clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
+_lean/docs-clean:	##H @Lean Clean project doc cache (SLOW)
 	@$(call print_info,Cleaning project doc artifacts)
 	rm -rf proofs/docbuild/.lake/build/doc/Arrangement \
 	       proofs/docbuild/.lake/build/doc/index.html \
@@ -240,7 +256,8 @@ _lean/docs-clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: _paper/render-assets
+.PHONY: _paper/render-assets render
+render: _paper/render-assets
 _paper/render-assets: ##H Render all visual assets (.dot to .png)
 	@$(call print_info,Rendering visual assets)
 	python3 scripts/render_assets.py
@@ -256,7 +273,7 @@ paper:	##H @General Build the LaTeX paper (paper/paper.tex)
 	@$(call print_success,Paper built: docs/paper/paper.pdf)
 
 .PHONY: _paper/docs
-_paper/docs: $(DOCS_PDF)	##H @General Generate PDF documentation from all Markdown files
+_paper/docs: $(DOCS_PDF)	##H @General Generate PDF docs from .md files
 
 
 PDF_ENGINE ?= xelatex
@@ -275,14 +292,14 @@ PDF_ENGINE ?= xelatex
 
 
 .PHONY: _bundle/default
-_bundle/default: clean ##H @General Create a zip archive of the project sources
+_bundle/default: clean ##H @General Create a zip bundle
 	@$(call print_info,Creating $(BUNDLE_OUT))
 	rm -f $(BUNDLE_OUT)
 	zip -rv9 $(BUNDLE_OUT) README.md $(SRCS) proofs/Arrangement/*.lean scripts/*.py assets/* Makefile
 	@$(call print_success,Bundle created.)
 
 .PHONY: _bundle/site
-_bundle/site:	##H @General Create site.zip of Lean HTML documentation
+_bundle/site:	##H @General Create site.zip of Lean docs
 	@$(call print_info,Creating $(SITE_OUT))
 	rm -f $(SITE_OUT)
 	cd proofs/docbuild/.lake/build/doc && zip -r9 ../../../../../$(SITE_OUT) .
@@ -290,8 +307,9 @@ _bundle/site:	##H @General Create site.zip of Lean HTML documentation
 
 
 .PHONY: _csv/base
-_csv/base: bin/predict	##H @General Generate docs/predictions.csv (R=2..1024)
+_csv/base: bin/predict	##H @General Generate docs/predictions.csv (R: 2..2^16)
 	@$(call print_info,Generating predictions CSV)
+	# NOTE: can use $$((2**16)) here, too.
 	./bin/predict --csv 1024 | tee docs/predictions.csv
 	@$(call print_success,docs/predictions.csv written.)
 

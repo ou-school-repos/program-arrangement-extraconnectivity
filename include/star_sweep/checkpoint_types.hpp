@@ -1,6 +1,7 @@
 #ifndef STAR_SWEEP_CHECKPOINT_TYPES_HPP
 #define STAR_SWEEP_CHECKPOINT_TYPES_HPP
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
@@ -76,6 +77,34 @@ struct CheckpointState {
         if (component_sizes.empty() || direction_history.size() != layer)
             throw std::invalid_argument(
                 "invalid star-sweep checkpoint history");
+        if (std::any_of(component_sizes.begin(), component_sizes.end(),
+                        [this](const std::uint64_t size) {
+                            return size == 0 || size > signature.valid_count;
+                        }))
+            throw std::invalid_argument("invalid checkpoint component size");
+        if (component_anchor >= signature.valid_count)
+            throw std::invalid_argument(
+                "checkpoint component anchor out of range");
+        if (component_size > signature.valid_count)
+            throw std::invalid_argument(
+                "checkpoint component size exceeds valid count");
+        if (discovered_survivors > signature.valid_count)
+            throw std::invalid_argument(
+                "checkpoint discovered survivors exceeds valid count");
+        if (star_boundary_size > signature.valid_count)
+            throw std::invalid_argument(
+                "checkpoint star boundary exceeds valid count");
+        if (active_frontier_size > signature.valid_count)
+            throw std::invalid_argument(
+                "checkpoint active frontier size exceeds valid count");
+        if (phase == CheckpointPhase::ComponentComplete &&
+            active_frontier_size != 0)
+            throw std::invalid_argument(
+                "completed component must have zero active frontier");
+        if (phase == CheckpointPhase::LayerBoundary &&
+            active_frontier_size == 0)
+            throw std::invalid_argument(
+                "layer boundary must have non-zero active frontier");
     }
 };
 

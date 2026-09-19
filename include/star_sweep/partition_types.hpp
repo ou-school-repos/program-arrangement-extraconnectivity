@@ -24,12 +24,12 @@ struct PartitionSpec {
 
     std::pair<std::size_t, std::size_t> range(std::size_t total_items) const {
         validate();
-        // Use proportional bounds so every partition is a valid half-open
-        // interval, including when count exceeds total_items.  The previous
-        // ceil(total/count) scheme could produce (first > last), e.g.
-        // total=5, count=4, index=3 -> (6,5).
-        const std::size_t first = (index * total_items) / count;
-        const std::size_t last = ((index + 1) * total_items) / count;
+        const std::size_t items_per_partition = total_items / count;
+        const std::size_t extra_items = total_items % count;
+        const std::size_t first =
+            items_per_partition * index + std::min(index, extra_items);
+        const std::size_t last = first + items_per_partition +
+                                 static_cast<std::size_t>(index < extra_items);
         return {first, last};
     }
 };

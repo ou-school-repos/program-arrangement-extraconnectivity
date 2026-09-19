@@ -8,8 +8,17 @@ check() { # n k maxR
 	local table
 	table=$("$BIN_DIR/fdp_certificate" "$m" "$k" "$maxr" --detail | grep "^  k=$k ")
 	for R in $(seq 1 "$maxr"); do
-		local line F q
-		line=$("$BIN_DIR/max_q_oracle" "$n" "$k" "$R" 2>/dev/null) || continue
+		local line F q rc
+		line=$("$BIN_DIR/max_q_oracle" "$n" "$k" "$R" 2>/dev/null) && rc=0 || rc=$?
+		if ((rc == 2)); then
+			echo "UNSOUND(infeasible) A($n,$k) R=$R"
+			fail=1
+			continue
+		elif ((rc != 0)); then
+			echo "FAIL A($n,$k) R=$R oracle failed"
+			fail=1
+			continue
+		fi
 		q=$(sed -E 's/.*maxQ=(-?[0-9]+).*/\1/' <<<"$line")
 		F=$(grep -E " R=$R F=" <<<"$table" | sed -E 's/.*F=(-?[0-9]+).*/\1/' || true)
 		if [[ -z "$F" ]]; then
