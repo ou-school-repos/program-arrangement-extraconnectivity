@@ -907,6 +907,32 @@ lemma prescribed_common_neighbors_card_le_one {n k : ℕ}
     Finset.mem_univ, true_and] at hw hz
   exact coord_overlap_vertex_unique hpq hw.1 hw.2 hz.1 hz.2
 
+lemma diff_pair_eq_or_swap {n k : ℕ} {s t : ArrVertex n k}
+    {p q p' q' : Fin k} (hpq : p ≠ q)
+    (hp : s.val p ≠ t.val p) (hq : s.val q ≠ t.val q)
+    (hout : ∀ r, r ≠ p' → r ≠ q' → s.val r = t.val r) :
+    (p = p' ∧ q = q') ∨ (p = q' ∧ q = p') := by
+  have h1 : p = p' ∨ p = q' := by
+    by_contra h
+    rw [not_or] at h
+    exact hp (hout p h.1 h.2)
+  have h2 : q = p' ∨ q = q' := by
+    by_contra h
+    rw [not_or] at h
+    exact hq (hout q h.1 h.2)
+  rcases h1 with rfl | rfl <;> rcases h2 with rfl | rfl
+  · exact absurd rfl hpq
+  · exact Or.inl ⟨rfl, rfl⟩
+  · exact Or.inr ⟨rfl, rfl⟩
+  · exact absurd rfl hpq
+
+def tagged_coordinate_overlaps {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    Finset (Σ p : Fin k, Σ q : Fin k, ArrVertex n k) :=
+  (Finset.univ : Finset (Fin k)).sigma (fun p =>
+    ((Finset.univ : Finset (Fin k)).filter (fun q => q ≠ p)).sigma
+      (fun q => coord_boundary V' p ∩ coord_boundary V' q))
+
 lemma external_neighbors_eq_coord_union {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
     external_neighbors V' =
@@ -1021,6 +1047,12 @@ def coordinate_ordered_overlap {n k : ℕ}
     (V' : Finset (ArrVertex n k)) : ℕ :=
   ordered_overlap (Finset.univ : Finset (Fin k))
     (fun p => coord_boundary V' p)
+
+lemma tagged_coordinate_overlaps_card {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    (tagged_coordinate_overlaps V').card = coordinate_ordered_overlap V' := by
+  simp [tagged_coordinate_overlaps, coordinate_ordered_overlap,
+    ordered_overlap, Finset.card_sigma, Finset.mem_filter, Finset.mem_erase]
 
 lemma coordinate_bonferroni_ordered {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
