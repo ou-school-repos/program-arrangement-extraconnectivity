@@ -100,26 +100,38 @@ int main(int argc, char **argv) {
     std::cout << "Build: " << build_version << '\n'
               << "Planning full-Star A(" << n << ',' << k << ")\n"
               << "No graph/BFS state allocated; this is an arithmetic plan.\n"
-              << "m = " << m << "\n"
-              << "degree = " << degree << "\n"
-              << "|V| = nP_k = " << vertices << '\n'
-              << "n^k = " << flat_slots << '\n'
-              << "|E| = |V|*degree/2 = " << edges << '\n'
-              << "R = " << volume << ", g = " << g << '\n'
-              << "d = ceil(log2(R)) = " << d << '\n'
-              << "|N(S)| = " << star_boundary << '\n'
-              << "Hamming baseline = " << hamming << '\n'
-              << "Delta = Hamming - Star = " << delta << '\n'
+              << std::left << std::setw(26) << "m = " << std::right << m << '\n'
+              << std::left << std::setw(26) << "degree = " << std::right
+              << degree << '\n'
+              << std::left << std::setw(26) << "|V| = nP_k = " << std::right
+              << vertices << '\n'
+              << std::left << std::setw(26) << "n^k = " << std::right
+              << flat_slots << '\n'
+              << std::left << std::setw(26)
+              << "|E| = |V|*degree/2 = " << std::right << edges << '\n'
+              << std::left << std::setw(26) << "R = " << std::right << volume
+              << ", g = " << g << '\n'
+              << std::left << std::setw(26)
+              << "d = ceil(log2(R)) = " << std::right << d << '\n'
+              << std::left << std::setw(26) << "|N(S)| = " << std::right
+              << star_boundary << '\n'
+              << std::left << std::setw(26)
+              << "Hamming baseline = " << std::right << hamming << '\n'
+              << std::left << std::setw(26)
+              << "Delta = Hamming - Star = " << std::right << delta << '\n'
               << "Embedding gate: " << (gate ? "open" : "closed") << '\n'
               << "Ranked uint32 frontier: "
               << (rank32 ? "fits" : "does not fit") << '\n'
               << "Ranked uint64 frontier: "
               << (rank64 ? "fits" : "does not fit") << '\n'
-              << "One bitset: " << std::setw(16) << bitset_bytes << " bytes ["
+              << std::left << std::setw(21) << "One bitset:" << std::right
+              << std::setw(16) << bitset_bytes << " bytes ["
               << format_bytes(bitset_bytes) << "]\n"
-              << "Three bitmap states: " << std::setw(16) << state_bytes
-              << " bytes [" << format_bytes(state_bytes) << "]\n"
-              << "Flat n^k guard: " << std::setw(16) << flat_slots << " slots\n"
+              << std::left << std::setw(21)
+              << "Three bitmap states:" << std::right << std::setw(16)
+              << state_bytes << " bytes [" << format_bytes(state_bytes) << "]\n"
+              << std::left << std::setw(21) << "Flat n^k guard:" << std::right
+              << std::setw(16) << flat_slots << " slots\n"
               << "Star classification: ";
 
     if (delta > 0 && gate)
