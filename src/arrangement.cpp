@@ -19,6 +19,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "utils.hpp"
@@ -194,9 +195,63 @@ static uint32_t ver_sym_mask[16];
 struct Result {
     int cons = 0;
     int internal_edges = 0;
+    int active_positions = 0;
+    int active_symbols = 0;
     std::string example;
 };
-static std::map<int, Result> results;
+// For each defect retain the budget-aware Pareto frontier: more collisions
+// (cons), fewer active coordinates, and fewer extra active symbols are all
+// favorable. This supports evaluation across the (n,k) parameter plane.
+static std::map<int, std::vector<Result>> results;
+
+static std::pair<int, int> active_budget(const uint64_t *verts, int count) {
+    uint32_t active_positions = 0;
+    for (int p = 0; p < R; ++p) {
+        const int first = get_sym(verts[0], p);
+        for (int i = 1; i < count; ++i) {
+            if (get_sym(verts[i], p) != first) {
+                active_positions |= 1U << p;
+                break;
+            }
+        }
+    }
+
+    uint32_t active_symbols = 0;
+    for (int p = 0; p < R; ++p) {
+        if ((active_positions & (1U << p)) == 0)
+            continue;
+        for (int i = 0; i < count; ++i)
+            active_symbols |= 1U << get_sym(verts[i], p);
+    }
+    return {__builtin_popcount(active_positions),
+            __builtin_popcount(active_symbols)};
+}
+
+static void record_result(int defect, int collisions, int internal_edges,
+                          int active_positions, int active_symbols,
+                          std::string example) {
+    auto &frontier = results[defect];
+    const int candidate_extra = active_symbols - active_positions;
+    for (const Result &old : frontier) {
+        const int old_extra = old.active_symbols - old.active_positions;
+        if (old.cons >= collisions &&
+            old.active_positions <= active_positions &&
+            old_extra <= candidate_extra)
+            return;
+    }
+    frontier.erase(
+        std::remove_if(frontier.begin(), frontier.end(),
+                       [&](const Result &old) {
+                           const int old_extra =
+                               old.active_symbols - old.active_positions;
+                           return collisions >= old.cons &&
+                                  active_positions <= old.active_positions &&
+                                  candidate_extra <= old_extra;
+                       }),
+        frontier.end());
+    frontier.push_back({collisions, internal_edges, active_positions,
+                        active_symbols, std::move(example)});
+}
 
 #define MAX_R 20
 static uint64_t nodes_gen_d[MAX_R] = {0};
@@ -339,7 +394,7 @@ static int count_internal_edges(const uint64_t *verts, int n) {
 // ── Recursive search ───────────────────────────────────────────────────────
 /// Recursively extend the partial vertex set ver[0..point) toward size R,
 /// deduplicating by graph isomorphism (nauty) or exact vertex set as
-/// appropriate, and record the best (nk1, constant) pair seen at each leaf.
+/// appropriate, and record the budget-aware Pareto frontier at each leaf.
 /// Returns the number of leaf evaluations performed in this subtree.
 static uint64_t solve(int point, int nodl, int largchg,
                       uint32_t overall_sym_mask, int current_nk1,
@@ -366,17 +421,15 @@ static uint64_t solve(int point, int nodl, int largchg,
     // Leaf
     if (point == R) {
         nodes_evaluated++;
-        auto it = results.find(current_nk1);
-        if (it == results.end() || it->second.cons < current_cons) {
-            std::string exa;
-            for (int i = 0; i < R; i++) {
-                if (i)
-                    exa += ' ';
-                exa += vertex_to_string(ver[i]);
-            }
-            results[current_nk1] = {current_cons, count_internal_edges(ver, R),
-                                    exa};
+        std::string exa;
+        for (int i = 0; i < R; i++) {
+            if (i)
+                exa += ' ';
+            exa += vertex_to_string(ver[i]);
         }
+        const auto [active_positions, active_symbols] = active_budget(ver, R);
+        record_result(current_nk1, current_cons, count_internal_edges(ver, R),
+                      active_positions, active_symbols, std::move(exa));
         return 1;
     }
 
@@ -639,20 +692,17 @@ int main(int argc, const char *argv[]) {
             .count();
     std::cerr << "\r" << std::string(120, ' ') << "\r";
 
-    int max_nk1_w = 0, max_nk_w = 0;
-    for (const auto &[nk1, res] : results) {
-        max_nk1_w =
-            std::max(max_nk1_w, static_cast<int>(std::to_string(nk1).size()));
-        max_nk_w = std::max(
-            max_nk_w, static_cast<int>(std::to_string(nk1 + res.cons).size()));
-    }
-
-    int best_nk1 = -1;
-    for (const auto &[nk1, res] : results) {
-        std::cout << "(" << R << "nk-" << std::setw(max_nk1_w) << nk1
-                  << ") (n-k)-" << std::setw(max_nk_w) << (nk1 + res.cons)
-                  << ", EX: " << res.example << "\n";
-        best_nk1 = nk1;
+    std::cout << "D  X  p  s_a  s_a-p  boundary(m=R)  witness\n";
+    for (const auto &[defect, frontier] : results) {
+        for (const Result &res : frontier) {
+            const int extra_symbols = res.active_symbols - res.active_positions;
+            const int64_t slope = static_cast<int64_t>(R) * R - defect;
+            const int64_t boundary_at_host = slope * R - defect - res.cons;
+            std::cout << defect << "  " << res.cons << "  "
+                      << res.active_positions << "  " << res.active_symbols
+                      << "  " << extra_symbols << "  " << boundary_at_host
+                      << "  " << res.example << "\n";
+        }
     }
 
     std::cout << "  Done       | " << std::fixed << std::setprecision(3)
@@ -688,43 +738,43 @@ int main(int argc, const char *argv[]) {
     }
     std::cout << "\n\n";
 
-    if (best_nk1 != -1) {
-        // Parse example back into array
-        std::string ex = results[best_nk1].example;
-        uint64_t best_verts[16] = {0};
-        size_t pos = 0;
-        for (int i = 0; i < R; i++) {
-            std::string vstr = ex.substr(pos, R);
-            uint64_t v = 0;
-            for (int p = 0; p < R; p++) {
-                int sym;
-                if (vstr[p] >= 'A' && vstr[p] <= 'Z')
-                    sym = vstr[p] - 'A';
-                else
-                    sym = vstr[p] - 'a' + 26;
-                v = set_sym(v, p, sym);
+    if (!results.empty()) {
+        // Independently recount every retained Pareto witness in A(2R,R).
+        for (const auto &[defect, frontier] : results) {
+            for (const Result &res : frontier) {
+                std::string ex = res.example;
+                uint64_t best_verts[16] = {0};
+                size_t pos = 0;
+                for (int i = 0; i < R; i++) {
+                    std::string vstr = ex.substr(pos, R);
+                    uint64_t v = 0;
+                    for (int p = 0; p < R; p++) {
+                        int sym;
+                        if (vstr[p] >= 'A' && vstr[p] <= 'Z')
+                            sym = vstr[p] - 'A';
+                        else
+                            sym = vstr[p] - 'a' + 26;
+                        v = set_sym(v, p, sym);
+                    }
+                    best_verts[i] = v;
+                    pos += R + 1;
+                }
+
+                int64_t brute_count = count_neighbors(best_verts, 2 * R, R);
+                const int64_t theory_val =
+                    (static_cast<int64_t>(R) * R - defect) * R - defect -
+                    res.cons;
+
+                std::cout << "  [brute-force D=" << defect << ", X=" << res.cons
+                          << "] |N(V')| = " << brute_count;
+                if (brute_count == theory_val) {
+                    std::cout << " \xe2\x9c\x93\n";
+                } else {
+                    std::cout << " \xe2\x9c\x97 MISMATCH (theory gives "
+                              << theory_val << ")\n";
+                }
             }
-            best_verts[i] = v;
-            pos += R + 1;
         }
-
-        int64_t brute_count = count_neighbors(best_verts, 2 * R, R);
-        int64_t theory_nk1 = A000788_fn(R);
-        int64_t theory_const = constant_analytical(R);
-        int64_t coeff = (int64_t)R * R - theory_nk1;
-        int64_t theory_val = coeff * R - theory_const;
-
-        std::cout << "  [brute-force] |N(V')| = " << brute_count;
-        if (brute_count == theory_val) {
-            std::cout << " \xe2\x9c\x93\n";
-        } else {
-            std::cout << " \xe2\x9c\x97 MISMATCH (theory gives " << theory_val
-                      << ")\n";
-        }
-        std::cout << "  formula(n=" << 2 * R << ",k=" << R
-                  << "): |N(V')| = " << (int64_t)R * R - A000788_fn(R) << "·"
-                  << R << " - " << constant_analytical(R) << " = " << theory_val
-                  << "\n";
     }
 
     return 0;
