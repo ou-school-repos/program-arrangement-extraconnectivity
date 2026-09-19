@@ -928,15 +928,14 @@ lemma diff_pair_eq_or_swap {n k : ℕ} {s t : ArrVertex n k}
 
 def tagged_coordinate_overlaps {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
-    Finset (Σ p : Fin k, Σ q : Fin k, ArrVertex n k) :=
+    Finset (Fin k × (Fin k × ArrVertex n k)) :=
   (Finset.univ : Finset (Fin k)).sigma (fun p =>
     ((Finset.univ : Finset (Fin k)).filter (fun q => p ≠ q)).sigma
       (fun q => coord_boundary V' p ∩ coord_boundary V' q))
 
 lemma mem_tagged_coordinate_overlaps {n k : ℕ}
     (V' : Finset (ArrVertex n k)) (p q : Fin k) (w : ArrVertex n k) :
-    (⟨p, ⟨q, w⟩⟩ : Σ p : Fin k, Σ q : Fin k, ArrVertex n k) ∈
-        tagged_coordinate_overlaps V' ↔
+    (p, (q, w)) ∈ tagged_coordinate_overlaps V' ↔
       p ≠ q ∧ w ∈ coord_boundary V' p ∩ coord_boundary V' q := by
   simp [tagged_coordinate_overlaps]
 
@@ -1109,32 +1108,37 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
     (tagged_coordinate_overlaps V').card ≤
       2 * (V'.card * V'.card - V'.card) := by
   classical
-  let source := (tagged_coordinate_overlaps V').attach
   let target := V'.offDiag ×ˢ (Finset.univ : Finset Bool)
-  let charge : source → ArrVertex n k × ArrVertex n k × Bool := fun x =>
+  let charge : {x // x ∈ tagged_coordinate_overlaps V'} →
+      (ArrVertex n k × ArrVertex n k) × Bool := fun x =>
     let p := x.1.1
     let q := x.1.2.1
     let w := x.1.2.2
     let hx := (mem_tagged_coordinate_overlaps V' p q w).mp x.2
     (overlap_witness_pair V' p q hx.1 w hx.2, decide (p < q))
-  have hmaps : ∀ x ∈ source, charge x ∈ target := by
+  have hmaps : ∀ x ∈ (tagged_coordinate_overlaps V').attach,
+      charge x ∈ target := by
     intro x hx
-    obtain ⟨x, hx⟩ := x
-    let p := x.1
-    let q := x.2.1
-    let w := x.2.2
-    have htag := (mem_tagged_coordinate_overlaps V' p q w).mp hx
+    let p := x.1.1
+    let q := x.1.2.1
+    let w := x.1.2.2
+    have htag := (mem_tagged_coordinate_overlaps V' p q w).mp x.2
     let z := overlap_witness_pair V' p q htag.1 w htag.2
     have hz := overlap_witness_pair_spec V' p q htag.1 w htag.2
-    simp only [source, target, Finset.mem_attach, true_and, Finset.mem_product,
-      Finset.mem_offDiag, Finset.mem_univ, and_true]
+    change charge x ∈ target
+    simp only [charge, target, Finset.mem_product, Finset.mem_offDiag,
+      Finset.mem_univ, and_true]
     exact ⟨hz.1, hz.2.1, hz.2.2.1⟩
-  have hinj : Set.InjOn charge ↑source := by
+  have hinj : Set.InjOn charge ↑((tagged_coordinate_overlaps V').attach) := by
     intro x hx y hy hxy
-    obtain ⟨⟨p, ⟨q, w⟩⟩, hx⟩ := x
-    obtain ⟨⟨p', ⟨q', w'⟩⟩, hy⟩ := y
-    have htagx := (mem_tagged_coordinate_overlaps V' p q w).mp hx
-    have htagy := (mem_tagged_coordinate_overlaps V' p' q' w').mp hy
+    let p := x.1.1
+    let q := x.1.2.1
+    let w := x.1.2.2
+    let p' := y.1.1
+    let q' := y.1.2.1
+    let w' := y.1.2.2
+    have htagx := (mem_tagged_coordinate_overlaps V' p q w).mp x.2
+    have htagy := (mem_tagged_coordinate_overlaps V' p' q' w').mp y.2
     let zx := overlap_witness_pair V' p q htagx.1 w htagx.2
     let zy := overlap_witness_pair V' p' q' htagy.1 w' htagy.2
     have hsx := overlap_witness_pair_spec V' p q htagx.1 w htagx.2
@@ -1143,7 +1147,7 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
     have hpair : zx = zy := (Prod.mk.inj hxy).1
     have horientation : decide (p < q) = decide (p' < q') :=
       (Prod.mk.inj hxy).2
-    subst zy
+    cases hpair
     have hdiff := coord_overlap_witness_differs_at_both V' htagx.1 htagx.2
       hsx.1 hsy.2.1 hsx.2.2.2.1 hsy.2.2.2.2.1
     have hcoords := diff_pair_eq_or_swap htagx.1 hdiff.1 hdiff.2
@@ -1154,7 +1158,8 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
       have hw := coord_overlap_vertex_unique htagx.1
         hsx.2.2.2.1 hsx.2.2.2.2.1 hsy.2.2.2.1 hsy.2.2.2.2.1
       subst w'
-      rfl
+      apply Subtype.ext
+      simp [p, q, w]
     · have hbit : decide (p < q) = decide (q < p) := by
         simpa [hp, hq] using horientation
       rcases lt_trichotomy p q with hpq | hpq | hpq
@@ -1165,11 +1170,12 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
         simp [hpq, hnot] at hbit
   have hcard := Finset.card_le_card_of_injOn charge hmaps hinj
   calc
-    (tagged_coordinate_overlaps V').card = source.card := by
-      simp [source]
+    (tagged_coordinate_overlaps V').card =
+        ((tagged_coordinate_overlaps V').attach).card := by
+      simp
     _ ≤ target.card := hcard
     _ = 2 * (V'.card * V'.card - V'.card) := by
-      simp [target, Finset.card_product, Finset.offDiag_card, two_mul,
+      simp [target, Finset.card_product, Finset.offDiag_card, Nat.mul_two,
         Nat.mul_comm]
 
 lemma coordinate_bonferroni_ordered {n k : ℕ}
