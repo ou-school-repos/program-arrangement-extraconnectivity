@@ -26,4 +26,9 @@ lean_lib «Proofs» where
     `Arrangement.PenaltyExact,
     `Arrangement.InternalPairs,
     `Arrangement.CrossTop,
+    `Arrangement.ProofAudit,
   ]
+
+lean_lib Refuted where
+  srcDir := "."
+  globs := #[.submodules `Arrangement.refuted]

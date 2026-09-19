@@ -1227,7 +1227,8 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     -- RHS closes via  sbl P + P = (d-1)P + 1  and  2E_P = (d-1)P.
     omega
 
-/-- Conditional arrangement-graph boundary-minimum composition.
+/-- Legacy conditional arrangement-graph boundary-minimum composition. The
+    premise is not established in general and its universal form is refuted.
     Concludes a statement about `external_neighbors V'` (the external
     vertex-boundary) only — not the graph's extraconnectivity metric κ_g,
     which requires the still-open boundary-to-extraconnectivity reduction
@@ -1235,7 +1236,8 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     surrounding names is legacy naming, not a claim about that reduction.
     The nonempty case uses `hb_cross_collisions_closed`; the empty arrangement
     has the empty Hamming ball as its witness. -/
-theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+theorem arrangement_boundary_minimum_of_lower_bound_premise
+    (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : can_embed_hypercube R n k →
       ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
         external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) :
@@ -1252,12 +1254,13 @@ theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube
     refine ⟨∅, by simp, ?_⟩
     simp [external_neighbors, C_constant, E_seq, sum_bit_length]
   · have hR1 : 1 ≤ R := by omega
-    apply arrangement_boundary_minimum_of_cross R n k h_cond h_lower
+    apply arrangement_boundary_minimum_of_cross_and_lower_bound_premise
+      R n k h_cond h_lower
     intro d hk hnk hd
     exact hb_cross_collisions_closed R hR1 d hd hk hnk
 
-/-- Conditional boundary composition; the lower-bound hypothesis is explicit. -/
-theorem globally_optimal_growth_strategy
+/-- Legacy conditional composition; this does not establish global optimality. -/
+theorem globally_optimal_growth_strategy_of_lower_bound_premise
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : can_embed_hypercube R n k →
       ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
@@ -1266,8 +1269,54 @@ theorem globally_optimal_growth_strategy
       external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) := by
-  let ⟨h_exists, h_univ⟩ := arrangement_boundary_minimum R n k h_cond h_lower
+  let ⟨h_exists, h_univ⟩ :=
+    arrangement_boundary_minimum_of_lower_bound_premise R n k h_cond h_lower
   exact ⟨h_univ, h_exists⟩
+
+/--
+Unconditional boundary sandwich for the arrangement graph. The embedded
+lexicographic Boolean Hamming ball is an explicit size-`R` candidate attaining
+the displayed value `H`. Every size-`R` set has boundary at least `H` minus
+the explicit additive error `E_seq R + 2(R^2-R)`.
+
+This is not an exact isoperimetric theorem: the error can dominate `H`, and
+the Star counterexamples show that the zero-error assertion is false. It is
+also a vertex-boundary statement, not an extra-connectivity theorem.
+-/
+theorem arrangement_boundary_error_sandwich (R n k : ℕ)
+    (h_cond : can_embed_hypercube R n k) :
+    (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
+      external_neighbors V' =
+        (R * k - E_seq R) * (n - k) - C_constant R) ∧
+    (∀ V' : Finset (ArrVertex n k), V'.card = R →
+      (R * k - E_seq R) * (n - k) - C_constant R ≤
+        external_neighbors V' + E_seq R + 2 * (R * R - R)) := by
+  have hnk : k ≤ n := by
+    obtain ⟨hkn, _⟩ := h_cond
+    omega
+  have hlower : ∀ V' : Finset (ArrVertex n k), V'.card = R →
+      (R * k - E_seq R) * (n - k) - C_constant R ≤
+        external_neighbors V' + E_seq R + 2 * (R * R - R) := by
+    intro V' hV
+    have hraw := restricted_lower_bound_up_to_error V' hnk
+    rw [hV] at hraw
+    have hlin :
+        (R * k - E_seq R) * (n - k) - C_constant R ≤
+          (R * k - E_seq R) * (n - k) := Nat.sub_le _ _
+    omega
+  constructor
+  · by_cases hR : R = 0
+    · subst R
+      refine ⟨∅, by simp, ?_⟩
+      simp [external_neighbors, C_constant, E_seq, sum_bit_length]
+    · have hR1 : 1 ≤ R := by omega
+      have hcross : ∀ (d : ℕ) (hk : d ≤ k) (hnk' : k + d ≤ n)
+          (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk' := by
+        intro d hk hnk' hd
+        exact hb_cross_collisions_closed R hR1 d hd hk hnk'
+      exact exists_optimal_embedding R n k h_cond hcross
+  · intro V' hV
+    exact hlower V' hV
 
 end CrossTopMain
 

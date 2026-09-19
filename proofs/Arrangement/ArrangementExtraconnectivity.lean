@@ -2228,7 +2228,8 @@ reduces to this) is open and is not addressed anywhere in this file; see
   premise, which is not established in general. This is a statement about
   `external_neighbors`, not extraconnectivity itself (see the naming note above).
 -/
-theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+theorem arrangement_boundary_minimum_of_cross_and_lower_bound_premise
+    (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : can_embed_hypercube R n k →
       ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
         external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
@@ -2247,7 +2248,7 @@ theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_
   witness. It does not establish an unconditional growth strategy or exclude
   competing cliques, paths, Stars, or other topologies.
 -/
-theorem globally_optimal_growth_strategy_of_cross
+theorem globally_optimal_growth_strategy_of_cross_and_lower_bound_premise
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
     (h_lower : can_embed_hypercube R n k →
       ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
@@ -2256,7 +2257,9 @@ theorem globally_optimal_growth_strategy_of_cross
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
-  let ⟨h_exists, h_univ⟩ := arrangement_boundary_minimum_of_cross R n k h_cond h_lower h_cross
+  let ⟨h_exists, h_univ⟩ :=
+    arrangement_boundary_minimum_of_cross_and_lower_bound_premise
+      R n k h_cond h_lower h_cross
   ⟨h_univ, h_exists⟩
 
 /-!
