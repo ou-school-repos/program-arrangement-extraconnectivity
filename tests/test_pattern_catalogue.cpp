@@ -195,17 +195,13 @@ void compare_case(const int r) {
 } // namespace
 
 int main(int argc, char **argv) {
-    bool include_r6 = false;
-    if (argc == 2 && std::string(argv[1]) == "--include-r6")
-        include_r6 = true;
-    else if (argc != 1) {
-        std::cerr << "Usage: " << argv[0] << " [--include-r6]\n";
+    if (argc != 1) {
+        std::cerr << "Usage: " << argv[0] << '\n';
         return 2;
     }
 
     try {
-        const int last_r = include_r6 ? 6 : 5;
-        for (int r = 2; r <= last_r; ++r)
+        for (int r = 2; r <= 6; ++r)
             compare_case(r);
     } catch (const std::exception &error) {
         std::cerr << "pattern catalogue differential test failed: "
