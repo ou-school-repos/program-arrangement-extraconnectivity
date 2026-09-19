@@ -57,8 +57,6 @@ Legend:
 - `∘` — satisfies the Hamming comparison.
 - `\` — invalid extra cut or outside `k < n`.
 - `/` — not yet run, or presumed thus far intractable.
-- `•` — unknown, but of interest.
-- `?` — unknown, but of interest; previously attempted.
 
 | `n \ k` |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  | 11  | 12  | 13  | 14  | 15  |
 | ------: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
