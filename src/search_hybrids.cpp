@@ -17,6 +17,7 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace {
@@ -172,12 +173,78 @@ bool choose_absorb(const PackedArrangementGraph &graph,
     return found;
 }
 
-std::uint64_t boundary_size(const std::vector<Vertex> &subset, const int degree,
-                            const std::uint64_t edges) {
-    return static_cast<std::uint64_t>(subset.size()) *
-               static_cast<std::uint64_t>(degree) -
-           2U * edges;
-}
+struct VertexHash {
+    std::size_t operator()(const Vertex value) const noexcept {
+        const std::uint64_t low = static_cast<std::uint64_t>(value);
+        const std::uint64_t high = static_cast<std::uint64_t>(value >> 64);
+        return std::hash<std::uint64_t>{}(low ^ (high + (low << 7)));
+    }
+};
+
+class BoundaryTracker {
+  public:
+    void build(const PackedArrangementGraph &graph,
+               const std::vector<Vertex> &subset) {
+        counts_.clear();
+        for (const Vertex vertex : subset)
+            add_vertex(graph, subset, vertex);
+    }
+
+    std::size_t size() const { return counts_.size(); }
+
+    void apply_swap(const PackedArrangementGraph &graph,
+                    std::vector<Vertex> &subset, const std::size_t index,
+                    const Vertex absorb) {
+        const Vertex evict = subset[index];
+        remove_vertex(graph, subset, evict);
+        subset[index] = absorb;
+        add_vertex(graph, subset, absorb);
+    }
+
+    void rollback_swap(const PackedArrangementGraph &graph,
+                       std::vector<Vertex> &subset, const std::size_t index,
+                       const Vertex evict, const Vertex absorb) {
+        remove_vertex(graph, subset, absorb);
+        subset[index] = evict;
+        add_vertex(graph, subset, evict);
+    }
+
+  private:
+    using Count = std::uint16_t;
+    std::unordered_map<Vertex, Count, VertexHash> counts_;
+
+    void increment(const Vertex vertex) {
+        auto [entry, inserted] = counts_.try_emplace(vertex, Count{0});
+        (void)inserted;
+        entry->second = static_cast<Count>(entry->second + Count{1});
+    }
+
+    void decrement(const Vertex vertex) {
+        const auto entry = counts_.find(vertex);
+        if (entry == counts_.end())
+            throw std::logic_error("boundary incidence underflow");
+        if (entry->second == Count{1})
+            counts_.erase(entry);
+        else
+            entry->second = static_cast<Count>(entry->second - Count{1});
+    }
+
+    void add_vertex(const PackedArrangementGraph &graph,
+                    const std::vector<Vertex> &subset, const Vertex vertex) {
+        graph.for_each_neighbor(vertex, [&](const Vertex neighbor) {
+            if (!contains(subset, neighbor))
+                increment(neighbor);
+        });
+    }
+
+    void remove_vertex(const PackedArrangementGraph &graph,
+                       const std::vector<Vertex> &subset, const Vertex vertex) {
+        graph.for_each_neighbor(vertex, [&](const Vertex neighbor) {
+            if (!contains(subset, neighbor))
+                decrement(neighbor);
+        });
+    }
+};
 
 void print_vertex(const Vertex code, const int k) {
     std::cout << "  [";
@@ -198,9 +265,11 @@ void print_witness(const std::vector<Vertex> &subset, const int k) {
 std::vector<Vertex> climb(const PackedArrangementGraph &graph,
                           std::vector<Vertex> subset,
                           const std::uint64_t iterations, std::mt19937 &rng,
-                          std::uint64_t &best_edges) {
-    std::uint64_t current_edges = internal_edges(subset, graph.k);
-    best_edges = current_edges;
+                          std::size_t &best_boundary) {
+    BoundaryTracker tracker;
+    tracker.build(graph, subset);
+    std::size_t current_boundary = tracker.size();
+    best_boundary = current_boundary;
     std::uniform_int_distribution<std::size_t> pick(0, subset.size() - 1);
     constexpr std::uint64_t plateau_limit = 32;
     std::uint64_t plateau_steps = 0;
@@ -213,27 +282,21 @@ std::vector<Vertex> climb(const PackedArrangementGraph &graph,
         if (!choose_absorb(graph, subset, anchor, rng, absorb))
             continue;
 
-        const std::uint64_t lost =
-            edges_to_subset(evict, subset, graph.k, evict_index);
-        const std::uint64_t gained =
-            edges_to_subset(absorb, subset, graph.k, evict_index);
-        const std::uint64_t candidate_edges = current_edges - lost + gained;
-
-        const bool improves = candidate_edges > current_edges;
-        const bool crosses_plateau =
-            candidate_edges == current_edges && plateau_steps < plateau_limit;
+        tracker.apply_swap(graph, subset, evict_index, absorb);
+        const std::size_t candidate_boundary = tracker.size();
+        const bool improves = candidate_boundary < current_boundary;
+        const bool crosses_plateau = candidate_boundary == current_boundary &&
+                                     plateau_steps < plateau_limit;
         if (improves || crosses_plateau) {
-            subset[evict_index] = absorb;
-            current_edges = candidate_edges;
+            current_boundary = candidate_boundary;
             plateau_steps = improves ? 0 : plateau_steps + 1;
-            if (current_edges > best_edges) {
-                best_edges = current_edges;
-                const std::uint64_t boundary = boundary_size(
-                    subset, graph.k * (graph.n - graph.k), best_edges);
+            if (current_boundary < best_boundary) {
+                best_boundary = current_boundary;
                 std::cout << "  improvement at iteration " << iteration
-                          << ": internal edges " << best_edges << ", boundary "
-                          << boundary << '\n';
+                          << ": vertex boundary " << best_boundary << '\n';
             }
+        } else {
+            tracker.rollback_swap(graph, subset, evict_index, evict, absorb);
         }
     }
     return subset;
@@ -262,8 +325,9 @@ int main(int argc, char **argv) {
         const std::size_t target_size = star.size();
         const int degree = k * (n - k);
         const std::uint64_t star_edges = internal_edges(star, k);
-        const std::uint64_t star_boundary =
-            boundary_size(star, degree, star_edges);
+        BoundaryTracker star_tracker;
+        star_tracker.build(graph, star);
+        const std::size_t star_boundary = star_tracker.size();
 
         std::cout << "Build: " << build_version << '\n'
                   << "Local hybrid search for A(" << n << ',' << k << ")\n"
@@ -275,35 +339,30 @@ int main(int argc, char **argv) {
                   << "Restarts: " << restarts << '\n';
 
         std::mt19937 rng(0x51A7U);
-        std::uint64_t global_best_edges = star_edges;
+        std::size_t global_best_boundary = star_boundary;
         std::vector<Vertex> global_best = star;
         for (std::size_t restart = 0; restart < restarts; ++restart) {
             std::vector<Vertex> seed = restart % 2 == 0
                                            ? edge_core(graph, target_size)
                                            : multi_core(graph, target_size);
-            std::uint64_t best_edges = 0;
+            BoundaryTracker seed_tracker;
+            seed_tracker.build(graph, seed);
             std::cout << "Restart " << (restart + 1) << '/' << restarts
-                      << ": initial boundary "
-                      << boundary_size(seed, degree, internal_edges(seed, k))
-                      << '\n';
+                      << ": initial boundary " << seed_tracker.size() << '\n';
+            std::size_t best_boundary = 0;
             std::vector<Vertex> result =
-                climb(graph, std::move(seed), iterations, rng, best_edges);
-            if (best_edges > global_best_edges) {
-                global_best_edges = best_edges;
+                climb(graph, std::move(seed), iterations, rng, best_boundary);
+            if (best_boundary < global_best_boundary) {
+                global_best_boundary = best_boundary;
                 global_best = std::move(result);
-                const std::uint64_t boundary =
-                    boundary_size(global_best, degree, global_best_edges);
-                std::cout << "NEW BEST: internal edges " << global_best_edges
-                          << ", boundary " << boundary << '\n';
+                std::cout << "NEW BEST: vertex boundary "
+                          << global_best_boundary << '\n';
             }
         }
 
-        const std::uint64_t final_boundary =
-            boundary_size(global_best, degree, global_best_edges);
-        std::cout << "Best observed internal edges: " << global_best_edges
-                  << '\n'
-                  << "Best observed boundary: " << final_boundary << '\n';
-        if (final_boundary < star_boundary) {
+        std::cout << "Best observed vertex boundary: " << global_best_boundary
+                  << '\n';
+        if (global_best_boundary < star_boundary) {
             std::cout << "Potential smaller-boundary structure found; this is "
                          "not a proof of optimality.\n";
             print_witness(global_best, k);
