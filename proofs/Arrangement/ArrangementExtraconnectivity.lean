@@ -759,6 +759,64 @@ private lemma adj_implies_drop_pos_eq {n k : ℕ} (v w : ArrVertex n k)
   rw [hp₀] at hmem
   exact hq (Finset.mem_singleton.mp hmem)
 
+private lemma drop_pos_eq_implies_adj {n k : ℕ} (v w : ArrVertex n k)
+    (p : Fin k) (hdrop : drop_pos w p = drop_pos v p) (hne : w ≠ v) :
+    arr_adjacent v w := by
+  have hsame : ∀ q : Fin k, q ≠ p → w.val q = v.val q := by
+    intro q hq
+    let hq' : {x : Fin k // x ≠ p} := ⟨q, hq⟩
+    have hh := congrFun hdrop hq'
+    unfold drop_pos at hh
+    have hqeq : (↑hq' : Fin k) = q := by
+      apply Fin.ext
+      simp [hq']
+    rw [hqeq] at hh
+    exact hh
+  have hp : v.val p ≠ w.val p := by
+    intro heq
+    apply hne
+    apply Subtype.ext
+    funext q
+    by_cases hq : q = p
+    · subst q
+      exact heq.symm
+    · exact hsame q hq
+  unfold arr_adjacent
+  have hfilter :
+      Finset.univ.filter (fun q : Fin k => v.val q ≠ w.val q) = {p} := by
+    ext q
+    by_cases hq : q = p
+    · subst q
+      simp [hp]
+    · simp [hq, hsame q hq]
+  rw [hfilter]
+  simp
+
+lemma external_neighbors_eq_coord_union {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    external_neighbors V' =
+      ((Finset.univ : Finset (Fin k)).biUnion
+        (fun p => coord_boundary V' p)).card := by
+  unfold external_neighbors
+  apply congrArg Finset.card
+  ext w
+  constructor
+  · intro hw
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hw
+    obtain ⟨hw_not, v, hv, hadj⟩ := hw
+    obtain ⟨p, hdrop⟩ := adj_implies_drop_pos_eq v w hadj
+    simp only [Finset.mem_biUnion, Finset.mem_univ, true_and]
+    exact ⟨p, Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩⟩
+  · intro hw
+    simp only [Finset.mem_biUnion, Finset.mem_univ, true_and] at hw
+    obtain ⟨p, hp⟩ := hw
+    simp only [coord_boundary, Finset.mem_filter, Finset.mem_univ, true_and] at hp
+    obtain ⟨hw_not, v, hv, hdrop⟩ := hp
+    refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, ?_⟩
+    apply drop_pos_eq_implies_adj v w p hdrop
+    intro heq
+    exact hw_not (heq ▸ hv)
+
 /-- Every external neighbor belongs to at least one coord_boundary (union bound). -/
 lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)) :
     external_neighbors V' ≤ total_coord_edges V' := by
@@ -774,6 +832,91 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   refine ⟨p₀, ?_⟩
   unfold coord_boundary
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
+
+/-- Ordered pair-overlap count for a finite family of finite sets. -/
+def ordered_overlap {α ι : Type*} [DecidableEq α] [DecidableEq ι]
+    (s : Finset ι)
+    (f : ι → Finset α) : ℕ :=
+  ∑ i ∈ s, ∑ j ∈ s.erase i, (f i ∩ f j).card
+
+lemma ordered_overlap_insert {α ι : Type*} [DecidableEq α] [DecidableEq ι]
+    (s : Finset ι) (f : ι → Finset α) (a : ι) (ha : a ∉ s) :
+    ordered_overlap (insert a s) f =
+      ordered_overlap s f +
+        2 * (∑ b ∈ s, (f a ∩ f b).card) := by
+  unfold ordered_overlap
+  simp only [Finset.sum_insert ha, Finset.erase_insert ha]
+  have h_rows :
+      (∑ i ∈ s, ∑ j ∈ (insert a s).erase i, (f i ∩ f j).card) =
+        ∑ i ∈ s, ((f i ∩ f a).card +
+          ∑ j ∈ s.erase i, (f i ∩ f j).card) := by
+    apply Finset.sum_congr rfl
+    intro i hi
+    have hne : a ≠ i := by
+      intro hai
+      exact ha (hai ▸ hi)
+    simp [Finset.erase_insert_of_ne hne, ha, hi]
+  rw [h_rows, Finset.sum_add_distrib]
+  have h_comm :
+      (∑ i ∈ s, (f i ∩ f a).card) =
+        ∑ b ∈ s, (f a ∩ f b).card := by
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.inter_comm]
+  rw [h_comm]
+  omega
+
+lemma card_biUnion_le_ordered_overlap {α ι : Type*} [Fintype α]
+    [DecidableEq α] [DecidableEq ι] (s : Finset ι) (f : ι → Finset α) :
+    (∑ i ∈ s, (f i).card) ≤
+      (s.biUnion f).card + ordered_overlap s f := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp [ordered_overlap]
+  | @insert a s ha ih =>
+      let u : Finset α := s.biUnion f
+      have h_inter :
+          (f a ∩ u).card ≤ ∑ b ∈ s, (f a ∩ f b).card := by
+        have h_eq : f a ∩ u = s.biUnion (fun b => f a ∩ f b) := by
+          ext x
+          simp [u, and_assoc, and_left_comm, and_comm]
+        rw [h_eq]
+        exact Finset.card_biUnion_le
+      have h_union := Finset.card_union_add_card_inter (f a) u
+      have h_overlap := ordered_overlap_insert s f a ha
+      dsimp [u] at h_inter h_union
+      have h_arith :
+          (f a).card + ∑ i ∈ s, (f i).card ≤
+            (f a ∪ s.biUnion f).card + ordered_overlap s f +
+              2 * (∑ b ∈ s, (f a ∩ f b).card) := by
+        omega
+      have h_arith' :
+          (f a).card + ∑ i ∈ s, (f i).card ≤
+            (f a ∪ s.biUnion f).card + ordered_overlap (insert a s) f := by
+        calc
+          (f a).card + ∑ i ∈ s, (f i).card ≤
+              (f a ∪ s.biUnion f).card + ordered_overlap s f +
+                2 * (∑ b ∈ s, (f a ∩ f b).card) := h_arith
+          _ = (f a ∪ s.biUnion f).card + ordered_overlap (insert a s) f := by
+            rw [h_overlap]
+            omega
+      simpa [u, Finset.sum_insert ha] using h_arith'
+
+def coordinate_ordered_overlap {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) : ℕ :=
+  ordered_overlap (Finset.univ : Finset (Fin k))
+    (fun p => coord_boundary V' p)
+
+lemma coordinate_bonferroni_ordered {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    total_coord_edges V' ≤
+      ((Finset.univ : Finset (Fin k)).biUnion (fun p => coord_boundary V' p)).card +
+        coordinate_ordered_overlap V' := by
+  have h := card_biUnion_le_ordered_overlap
+    (s := (Finset.univ : Finset (Fin k)))
+    (f := fun p => coord_boundary V' p)
+  unfold total_coord_edges coordinate_ordered_overlap at *
+  exact h
 
 /--
   **Proposition 1 (Universal Boundary Inequality) -- REFUTED as stated**
@@ -1153,6 +1296,21 @@ as a conjecture rather than smuggling it in as an axiom.
 /-- The proposed dimension-free collision estimate for an R-element set. -/
 def CrossCollisionBound {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
   cross_collisions V' ≤ V'.card * (V'.card - 1)
+
+/-- Ordered-coordinate charging formulation of the remaining arrangement-specific
+    estimate.  This is a proposition, not an axiom. -/
+def CoordinatePairChargingOrdered {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) : Prop :=
+  coordinate_ordered_overlap V' ≤ V'.card * (V'.card - 1)
+
+lemma cross_collision_bound_of_ordered_charging {n k : ℕ}
+    (V' : Finset (ArrVertex n k))
+    (h : CoordinatePairChargingOrdered V') :
+    CrossCollisionBound V' := by
+  have hboundary := coordinate_bonferroni_ordered V'
+  rw [← external_neighbors_eq_coord_union V'] at hboundary
+  unfold CrossCollisionBound CoordinatePairChargingOrdered cross_collisions at *
+  omega
 
 /--
   Bonferroni overlap proposition for the coordinate boundary family.
