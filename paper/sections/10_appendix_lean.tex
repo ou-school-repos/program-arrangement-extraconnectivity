@@ -1,45 +1,27 @@
-\section{Formal Verification in Lean 4}\label{app:lean}
+\section{Formal verification in Lean 4}\label{app:lean}
 
-The Algebraic Defect Framework and the dimensional scaling bijections are
-mechanically verified in the Lean 4 proof assistant \cite{leanprover}, including
-the subadditivity lemma (\texttt{E\_add\_min\_le}) and the defect bound
-(\texttt{sum\_unique\_roots\_lower\_bound}) underlying Theorem~\ref{thm:defect}.
-The boundary decomposition~\eqref{eq:boundary} and the exact comparative
-identities used in Theorem~\ref{thm:penalty} are likewise mechanized in
-\texttt{Arrangement/PenaltyExact.lean} via \texttt{boundary\_identity},
-\texttt{penalty\_exact}, \texttt{penalty\_defect}, and \texttt{penalty\_ge}; the
-asymptotic-dominance conclusion in the prose is then the immediate large-$(n-k)$
-reading of those exact formulas. The Fracture Gap, Defect Continuity, Secondary
-Fracture Gap, and Partial Defect Classification statements of
-Section~\ref{sec:fracture} are paper-level combinatorial results except for
-continuity and the remaining equality classification; they are not established
-by Harper's theorem and are not in the Lean dependency chain. The entire graph theory of $A(n,k)$ is
-formalized from first principles; rather than declaring the unproved bounds as
-global axioms, we express the remaining capstone dependency by parameterizing
-the final exact boundary-minimum theorem with the explicit
-\texttt{RestrictedLowerBound} hypothesis --- a statement about
-\texttt{external\_neighbors} under the hypercube embedding conditions, i.e.
-Theorem~\ref{thm:main}(i)--(ii), not about
-the graph's extraconnectivity metric itself (Section~\ref{sec:defect}'s
-remark and Section~\ref{sec:funnel} discuss why that further reduction is
-independently open). The direct proof supplies
-\texttt{HBCrossCollisions}. This cleanly isolates the classical extremal set
-theory from the novel algebraic machinery
-while ensuring that the compiled theorems are completely transparent, verified,
-and free of raw, uninstantiated axiom commands.
+The Lean development mechanizes the coordinate-root boundary identity, the
+defect inequality, the ordered Bonferroni overlap estimate, the global
+witness-pair charging bound, and the resulting additive-error boundary
+estimate. The Hamming-ball collision count is proved directly, giving an
+exact evaluation of that construction. These components compose in
+\texttt{Arrangement/Capstone.lean} to prove
+\texttt{Arrangement.arrangement\_boundary\_sandwich} and
+\texttt{Arrangement.boundary\_profile\_first\_order}. The public theorem
+states a boundary-profile sandwich, not exact optimality and not an
+extra-connectivity formula.
 
-The capstone theorem conditionally combines the supplied restricted lower bound
-with the internally verified Hamming-ball construction. \emph{Note:} In the Lean source, the code
-variables \texttt{E\_seq} and \texttt{C\_constant} correspond to $\Eseq(R)$ and
-$\Cconst(R)$ respectively.
+The source modules are \texttt{Arrangement/ArrangementExtraconnectivity.lean}
+(root counts, boundary decomposition, and collision charging),
+\texttt{Arrangement/CrossTop.lean} (Hamming-ball evaluation), and
+\texttt{Arrangement/Capstone.lean} (profile and sandwich). The theorem audit
+in \texttt{Arrangement/ProofAudit.lean} checks the active capstone dependency
+terms for \texttt{sorryAx}. Refuted exact-boundary statements and their
+finite counterexample certificates are kept outside this active dependency
+chain. The general Star-cut connectivity theorem, a classification of
+intermediate extremizers, and the reduction from the boundary profile to
+$\kappa_g$ are not formalized here.
 
-{\small
-\begin{lstlisting}[language={}, breaklines=true]
-theorem arrangement_boundary_minimum (R n k : Nat) (h_cond : can_embed_hypercube R n k)
-    (h_lower : RestrictedLowerBound R n k) :
-  (exists V' : Finset (ArrVertex n k), V'.card = R /\
-    external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) /\
-  (forall V' : Finset (ArrVertex n k), V'.card = R ->
-    external_neighbors V' >= (R * k - E_seq R) * (n - k) - C_constant R)
-\end{lstlisting}
-}
+In the Lean source, \texttt{E\_seq} and \texttt{C\_constant} represent
+$E(R)$ and $C(R)$, respectively. The additive error in the formal theorem is
+$E(R)+2(R^2-R)$.

@@ -93,13 +93,13 @@ Both values are the external-boundary cardinalities of fixed induced subgraphs
 and are therefore independent of the vertex ordering; they are obtained by
 direct enumeration of the two vertex sets (Section~\ref{sec:results}).
 
-Under the per-instance hypothesis~\ref{prop:restricted_lower_bound}, together
-with the independently proved evaluation~\ref{prop:hb-eval}, the
-boundary-minimizing subset is the \emph{lexicographic Hamming Ball}: the first
-$R$ binary strings $0, 1, \ldots, R-1$, embedded as vertices via their binary
-expansions into the coordinate slots of $A(n,k)$. The conditional
-boundary formula (Theorem~\ref{thm:main}) depends on two constants
-that emerge from building this ball vertex by vertex.
+On the Boolean-cube embedding range, the first $R$ binary strings
+$0,1,\ldots,R-1$, embedded into the coordinate slots of $A(n,k)$, form the
+\emph{lexicographic Hamming Ball}. Its boundary is exactly evaluated in
+Proposition~\ref{prop:hb-eval}; it need not be the boundary minimum. The
+unconditional comparison with the minimum profile is the additive-error
+Hamming sandwich (Theorem~\ref{thm:hamming-sandwich}). Its value depends on
+two constants that arise from building the ball vertex by vertex.
 
 \begin{definition}[Hamming Ball and its Constants]\label{def:constants}
 The \emph{lexicographic Hamming Ball} $\mathrm{HB}_R$ consists of the first $R$
@@ -116,8 +116,8 @@ in $\mathrm{HB}_{i}$, creating an internal (defect) link.
 		\Cconst(R) & = (R-1) + \sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil - \Eseq(R) &  & \text{(boundary correction constant)}. \label{eq:cconst-def}
 	\end{align}
 The quantity $\Eseq(R)$ is the maximum defect achievable by any $R$-element
-subset (Theorem~\ref{thm:defect}), and $\Cconst(R)$ is the total waste of the
-boundary-minimizing ball (Proposition~\ref{prop:hb-eval}), satisfying
+subset (Theorem~\ref{thm:defect}), and $\Cconst(R)$ is the correction in the
+boundary of the Hamming-ball candidate (Proposition~\ref{prop:hb-eval}), satisfying
 $\Cconst(R) = \Eseq(R) + X(\mathrm{HB}_R)$ by construction, where $X$ denotes
 the cross-collision count (defined formally in Section~\ref{sec:defect}).
 \end{definition}

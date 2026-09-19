@@ -26,15 +26,15 @@ Sorting and deduplication use the lexicographical comparison operators of
 
 \noindent \emph{Note:} In the C++ source, the struct fields \texttt{nk1} and
 \texttt{constant} correspond to $\Eseq(R)$ and $\Cconst(R)$ respectively. This
-engine checks Proposition~\ref{prop:hb-eval} by verifying \\
+engine checks the candidate evaluation in Proposition~\ref{prop:hb-eval} by verifying \\
 \texttt{brute\_force\_neighbors(verts, 2 * R, R) == (R * R - nk1) * R -
-constant} \\ for all $R \le 160$, giving strong numerical evidence that the
-Hamming Ball achieves the exact boundary predicted by Theorem~\ref{thm:main}.
+constant} \\ for all $R \le 160$, checking the Hamming Ball's boundary
+formula. This does not establish that the Hamming Ball minimizes boundary.
 Because the Algebraic Defect Framework decouples the network dimensions from the
 subset structure, this paper leverages a property of $A(n,k)$, that the
 constants $\Eseq(R)$ and $\Cconst(R)$ are strictly independent of $n$ and $k$;
-thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ is sufficient
-to guarantee the formula's exactness for all valid dimensions.
+thus, verifying the boundary for the dense embedding $n=2R$, $k=R$ checks the
+construction's formula, not its optimality in every valid dimension.
 Proposition~\ref{prop:restricted_lower_bound} quantifies over \emph{all} subsets, whereas
 the \texttt{nauty}-based search tests connected $R$-vertex subsets for
 $R \le 10$; a separate exhaustive checker (\texttt{universal\_check},
