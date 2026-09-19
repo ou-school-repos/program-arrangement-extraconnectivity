@@ -177,21 +177,19 @@ closes the induction. Mechanically verified in Lean~4
 (\texttt{sum\_unique\_roots\_lower\_bound}).
 \end{proof}
 
-Instead of relying on a dimension-independent bound on the combined waste (which
-is sensitive to $n-k$ for sub-optimal topologies), the global boundary
-minimality is isolated as the following explicit open interface. Together with
-the evaluation of the Hamming Ball, it defines the conditional extremal
-framework.
+The exact lower bound proposed in an earlier version is refuted. The label
+below is retained solely for cross-references to historical discussion; it is
+not an open hypothesis and is not assumed by the corrected capstone.
 
-\begin{definition}[Open Restricted Boundary Hypothesis]\label{prop:restricted_lower_bound}
+\begin{definition}[Refuted exact Hamming-boundary hypothesis]\label{prop:restricted_lower_bound}
 	Under the hypercube embedding conditions $k \ge \lceil \log_2 R \rceil$ and
 	$n-k \ge \lceil \log_2 R \rceil$, every subset $V' \subseteq V(A(n,k))$ of
 	cardinality $R$ satisfies
 	\begin{equation}\label{eq:restricted-bound}
 		\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 	\end{equation}
-The embedding conditions guarantee that the candidate Hamming ball exists;
-they do not prove this per-instance hypothesis.
+The full Star in $A(11,6)$ at $R=31$ satisfies the embedding conditions but
+has boundary $450<476$, so this statement is false even in its gated range.
 \end{definition}
 
 \begin{remark}[Scope of the restricted bound]
@@ -422,45 +420,12 @@ in the other $k=3$ rows are supplied by the exhaustive oracle.
 This is a computer-assisted result, not a Lean theorem.
 \end{corollary}
 
-Combining these propositions with the boundary decomposition yields our
-conditional main result:
-
-\begin{theorem}[Conditional Minimum-Boundary Theorem]\label{thm:main}
-\textup{(Conditional only on the per-instance open restricted-boundary
-hypothesis \ref{prop:restricted_lower_bound}.)} Assume the hypercube embedding
-conditions $k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$,
-and assume that per-instance hypothesis.
-Then for all $R \ge 2$:
-	\begin{enumerate}
-\item[\textup{(i)}] \textbf{Lower bound.} Every $R$-element subset $V'
-\subseteq V(A(n,k))$ satisfies
-		      \begin{equation}\label{eq:lower-bound}
-			      \left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
-		      \end{equation}
-\item[\textup{(ii)}] \textbf{Achievability.} The lexicographic Hamming Ball
-$\mathrm{HB}_R$ achieves this bound with equality:
-		      \begin{equation}\label{eq:hb-boundary}
-			      \left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R)
-		      \end{equation}
-where $\Eseq(R)$ and $\Cconst(R)$ are as in Definition~2.5. Writing $d = \lceil
-\log_2 R \rceil$, the correction constant admits the closed form
-		      \begin{equation}\label{eq:cconst}
-			      \Cconst(R) = R(d + 1) - 2^d - \Eseq(R).
-		      \end{equation}
-	\end{enumerate}
-The embedding condition ensures the graph is large enough to fit a
-$d$-dimensional hypercube.
-\end{theorem}
-
-\begin{corollary}[Conditional Extraconnectivity Formula]\label{cor:extraconnectivity}
-\textup{(Conditional on Theorem~\ref{thm:main} and the
-boundary-to-extraconnectivity reduction described in the remark following
-Propositions~\ref{prop:restricted_lower_bound}--\ref{prop:hb-eval}.)} When $n - k \ge \lceil
-\log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$,
-	\begin{equation}\label{eq:extraconnectivity}
-		\kappa_{R-1}(A(n,k)) = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
-	\end{equation}
-\end{corollary}
+The earlier conditional exact-minimum theorem and its proposed
+extra-connectivity corollary are withdrawn. The replacement unconditional
+result is Theorem~\ref{thm:hamming-sandwich} in
+Section~\ref{sec:hamming-sandwich}: it gives an additive-error lower bound
+for every fixed-volume set and an exact Hamming-ball witness on the embedding
+range. It asserts neither exact optimality nor a formula for $\kappa_g$.
 
 \begin{remark}[Closed-form evaluation of $\Cconst$]
 The summation $\sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil$ admits a closed form
