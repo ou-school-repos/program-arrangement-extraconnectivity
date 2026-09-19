@@ -11,6 +11,7 @@
 *.gch
 
 # Compiled binaries
+bin/
 arrangement
 predict
 predict_test
@@ -21,10 +22,16 @@ sweep_deficit
 search_ghosts
 search_triples
 search_single
-profile_telescope_milp
+/profile_*
+/audit_*
+/diagnose_*
 /a10_*_*
 /simulated_annealing*
 /root_state_validator
+/empirical_*
+/transfer_dp_*
+/fiber_ordering
+/fdp_*
 
 # ── Java build artifacts ─────────────────────────────────────
 *.class
@@ -34,6 +41,9 @@ profile_telescope_milp
 build/
 cmake-build-*/
 assets/out/
+!assets/out/
+!assets/out/counterexample_A9_6.svg
+!assets/out/counterexample_A11_6.svg
 
 # ── CMake ────────────────────────────────────────────────────
 CMakeCache.txt
@@ -67,6 +77,13 @@ Thumbs.db
 docs/*.gif
 paper/archive/
 
+# bitmap stores and other disk persistances
+*.bitmap
+*.bin
+CURRENT
+meta
+*.delta
+
 # LaTeX build artifacts
 *.aux
 *.bbl
@@ -83,6 +100,12 @@ paper/archive/
 *.xopp
 *.png
 *.pdf
+
+# images
+*.jp*g
+*.gif
+# *.png
+*.webp
 
 ####################
 ## Python Ignores ##

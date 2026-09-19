@@ -1,62 +1,109 @@
 # The Extraconnectivity of Arrangement Graphs: An Algebraic Defect Framework
 
-This repository contains the high-performance C++ engine, data assets, and an in-progress Lean 4 formalization for the $(R-1)$-extraconnectivity program on Arrangement Graphs $A(n,k)$. The computational side is implemented end to end; the stable Lean proof path verifies the algebraic defect framework and explicit Hamming-ball construction, while the final extremal combinatorics step remains isolated behind explicit hypothesis interfaces.
+This repository contains computational and Lean work on vertex boundaries and
+extra-connectivity in Arrangement Graphs $A(n,k)$. The Lean development proves
+an unconditional fixed-volume Hamming-sandwich bound, not exact optimality or a
+general formula for extra-connectivity. The connected-pattern search and the
+small exact-profile enumerators are distinct computational tools; neither by
+itself determines the full unrestricted $R$-spectrum.
 
 ## The Core Theoretical Breakthroughs
 
 ### The Discovery: OEIS A000788 & The Hamming Ball
 
-Using an exhaustive topological search (powered by **McKay's Nauty** for canonical pruning), we verified that the maximum number of internal edges $E(R)$ for connected subgraphs matches the cumulative binary weight sequence (OEIS A000788). This identifies the optimal fault-isolation topologies as embedded lexicographic Hamming Balls.
+The algebraic defect bound is proved in Lean and matches the cumulative binary
+weight sequence (OEIS A000788). Hamming balls provide exact boundary witnesses
+when the embedding conditions hold. They are not universally optimal in
+arrangement graphs; finite counterexamples and the additive-error sandwich are
+documented below and in `docs/lean-proof-status.md`.
 
 ### The Failure of Geometric Compression
 
-Classical hypercube isoperimetry relies on geometric sequence compression (Harper's Theorem). We formally prove that **geometric compression is inapplicable to partial permutations**. Due to coordinate constraints (vertices possessing mutually exclusive symbol pools), shifting a symbol to compress a set can destroy internal edges and increase the external boundary. We formalize a concrete $A(4,2)$ counterexample where the boundary increases from 5 to 7.
+Classical hypercube isoperimetry relies on geometric sequence compression
+(Harper's Theorem). We formally prove that **geometric compression is
+inapplicable to partial permutations**. Due to coordinate constraints (vertices
+possessing mutually exclusive symbol pools), shifting a symbol to compress a set
+can destroy internal edges and increase the external boundary. We formalize a
+concrete $A(4,2)$ counterexample where the boundary increases from 5 to 7.
 
 ### The Algebraic Defect Framework
 
-To address the limitations of geometric compression, we developed a novel algebraic invariant. Instead of tracing geometric boundaries, we count global algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$ (where $U_p$ are unique roots at coordinate $p$), we established an exact double-counting equivalence that isolates the $(n-k)$ dimensional scaling factor from the finite network topology. This allows our $O(R^4)$ engine to characterize the isoperimetrically optimal frontier for any $R$ in polynomial time.
+To address the limitations of geometric compression, we developed a novel
+algebraic invariant. Instead of tracing geometric boundaries, we count global
+algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$
+(where $U_p$ are unique roots at coordinate $p$), we established an exact
+double-counting equivalence that isolates the $(n-k)$ dimensional scaling factor
+from the finite network topology. The connected-pattern engine searches a finite
+catalogue, but its runtime is exponential in general and its output does not
+prove the unrestricted isoperimetric profile.
 
 ### Asymptotic Penalty Status
 
-The unconditional penalty identities now live in `proofs/Arrangement/PenaltyExact.lean`: `boundary_identity`, `penalty_exact`, `penalty_defect`, and `penalty_ge` are mechanically verified in the stable build. The remaining open gap is not the penalty algebra itself, but the extremal-combinatorics path needed for the full exact minimum-cut capstone theorem; `docs/lean-proof-status.md` remains the source of truth for that boundary.
+The unconditional penalty identities live in
+`proofs/Arrangement/PenaltyExact.lean`. The Lean capstone is the additive-error
+fixed-volume Hamming sandwich in `proofs/Arrangement/Capstone.lean`; it proves
+neither exact optimality nor an extra-connectivity formula. See
+`docs/lean-proof-status.md` for scope and gaps.
 
 ## The Topological Spectrum
 
-The boundary of any connected subgraph is bounded between two topological limits:
+Connected patterns exhibit a trade-off between low-defect, collision-rich
+Star-like shapes and high-defect Hamming/folded-box-like shapes. This is an
+organizing framework, not a theorem that these two families bound or classify
+every profile minimizer:
 
-- **The Sparse Limit (Star Graph):** $E_{int} = R-1$, Collision Factor $C = \binom{R}{2}$.
-- **The Dense Limit (Hamming Ball):** The minimum cut. $E_{int} = \text{A000788}(R)$, Collision Factor matches Harper's Edge-Isoperimetric Theorem.
+- **The Sparse Limit (Star Graph):** $E_{int} = R-1$, Collision Factor
+  $C = \binom{R}{2}$.
+- **High-defect examples:** Hamming balls attain the A000788 defect when
+  embeddable; folded or budget-constrained shapes may be relevant outside that
+  range. None is asserted to be the universal minimum cut.
 
 ### Remark: Structural Convergence at $R=3$
 
-Remarkably, these explicit bounds coincide structurally at exactly $R=3$. For the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$. For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$ and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse into a single isomorphism class because a Star Graph on $3$ vertices is geometrically isomorphic to a path of length $2$, which itself is the optimal Hamming Ball of size 3.
+Remarkably, these explicit bounds coincide structurally at exactly $R=3$. For
+the Dense Limit (Hamming Ball), we have $E_{seq}(3) = 2$ and $C_{const}(3) = 3$.
+For the Sparse Limit (Star Graph), a $K_{1,2}$ structure yields $E_{int} = 2$
+and a collision sum of $\binom{3}{2} = 3$. The limiting configurations collapse
+into a single isomorphism class because a Star Graph on $3$ vertices is
+geometrically isomorphic to a path of length $2$, which itself is the optimal
+Hamming Ball of size 3.
 
 ### Isoperimetric Gap and Rigidity
 
-Perfect hypercubes ($R=2^d$) exhibit structural rigidity, creating mathematically provable "isoperimetric gaps." (e.g., at $R=8$, achieving 11 internal edges is geometrically impossible; the topology transitions directly from 12 edges down to 10).
+Perfect hypercubes ($R=2^d$) exhibit structural rigidity, creating
+mathematically provable "isoperimetric gaps." (e.g., at $R=8$, achieving 11
+internal edges is geometrically impossible; the topology transitions directly
+from 12 edges down to 10).
 
 ### Uniqueness Status
 
-Computational search supports a unique Hamming-ball minimizer in the tested range, but uniqueness is not part of the stable formalized theorem. It remains an explicit open conjecture in the Lean development.
+Computational search supports a unique Hamming-ball minimizer in the tested
+range, but uniqueness is not part of the stable formalized theorem. It remains
+an explicit open conjecture in the Lean development.
 
 ## Lean 4 Formal Verification
 
-The stable Lean 4 build mechanically verifies the algebraic defect framework, the core arithmetic, the root/fiber identities, and the explicit Hamming-ball construction.
+The stable Lean 4 build mechanically verifies the algebraic defect framework,
+the core arithmetic, the root/fiber identities, and the explicit Hamming-ball
+construction.
 
 The capstone extraconnectivity theorem supplies the Hamming-ball collision
 evaluation internally. Its remaining extremal-combinatorics hypothesis is:
 
-- `UniversalLowerBound`: the universal boundary lower bound for all $R$-element subsets.
+- `UniversalLowerBound`: the universal boundary lower bound for all $R$-element
+  subsets.
 
 Current stable status:
 
 - `make lean` succeeds with 0 errors and 0 `sorry`s in the main proof path.
 - The unstable collision work lives under `proofs/Arrangement/unstable/`.
-- `docs/lean-proof-status.md` is the source of truth for what is proven unconditionally versus conditionally.
+- `docs/lean-proof-status.md` is the source of truth for what is proven
+  unconditionally versus conditionally.
 
 ### Open Conjectures (Mechanized as `Prop`s)
 
-To provide a foundation for future combinatorics research, we have formally defined the remaining extremal bounds as rigorous `Prop` declarations in Lean 4:
+To provide a foundation for future combinatorics research, we have formally
+defined the remaining extremal bounds as rigorous `Prop` declarations in Lean 4:
 
 - `uniqueness_conjecture`
 - `sandwich_upper_bound_conjecture`
@@ -67,11 +114,11 @@ To provide a foundation for future combinatorics research, we have formally defi
 ```text
 ├── Makefile                                 # Unified build system (C++, Lean 4, Python, Docs)
 ├── src/
-│   ├── arrangement.cpp                      # Optimized SWAR/Nauty exhaustive search
+│   ├── arrangement.cpp                      # Symmetry-reduced connected-pattern catalogue
 │   └── predict.cpp                          # O(R^4) Extraconnectivity Engine and Pareto Analyzer
 ├── proofs/
 │   ├── Arrangement/
-│   │   ├── ArrangementExtraconnectivity.lean # Stable conditional capstone theorem
+│   │   ├── Capstone.lean                     # Unconditional Hamming-sandwich theorem
 │   │   ├── PenaltyExact.lean                 # Unconditional penalty identities
 │   │   ├── ArrDefs.lean                      # Core graph definitions
 │   │   ├── HypercubeEdges.lean               # OEIS A000788 combinatorics
@@ -109,8 +156,35 @@ make lean/cache
 make lean
 ```
 
+The connected-pattern catalogue accepts optional graph queries after its `R` and
+nauty-depth arguments. For example:
+
+```bash
+./bin/arrangement 5 3 5 3 6 3 5 4 6 4
+```
+
+This reports the connected-pattern envelope at those cells, not the unrestricted
+profile. The following benchmark transcript is retained as historical output
+from the previous CLI; it is not the current output format.
+
+For a simpler exhaustive reference catalogue on the finite host `A(2R-2,R-1)`,
+build and run:
+
+```bash
+make bin/pattern_catalogue
+./bin/pattern_catalogue 5 5 3 6 3 5 4 6 4
+```
+
+This independent enumerator is intended for small-R differential checks. Its
+fixed buffers currently limit `R` to 2–9, and runtime grows rapidly; its
+predictions are still for the connected-pattern envelope, not the unrestricted
+profile or extra-connectivity.
+
+The C++ differential regression is part of `make test` for `R=2..6`; R=6 is
+slow.
+
 <details>
-<summary><strong>Sample Output (arrangement, exhaustive nauty search, <code>make benchmark R=10</code>, R=2 through R=10)</strong></summary>
+<summary><strong>Historical arrangement-search output (previous CLI)</strong></summary>
 
 ```text
 Searching R=2 (nauty limit: 3)
@@ -212,5 +286,6 @@ Pruned | Iso: 2921831 | Exact: 41791746 | Local: 5041435454
 
 ## Reference
 
-_Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of Arrangement Graphs." (2022).
-_Dual Theory:_ E. Cheng, L. Lipták, L. Mazza. "Higher order matching preclusion for regular interconnection networks." (2025).
+_Extending:_ E. Cheng, L. Lipták, D. Tian. "On the Extraconnectivity of
+Arrangement Graphs." (2022). _Dual Theory:_ E. Cheng, L. Lipták, L. Mazza.
+"Higher order matching preclusion for regular interconnection networks." (2025).

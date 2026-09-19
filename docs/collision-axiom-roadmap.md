@@ -19,8 +19,7 @@ This document describes what a complete mechanized proof of each would require.
   `CrossTop.lean`'s `hb_cross_collisions_closed` proves it for every `R ≥ 1`
   with no strong induction, no `CrossDimStable`, and no `CrossRecurrence`, and
   `CrossTop.lean`'s `arrangement_boundary_minimum` /
-  `globally_optimal_growth_strategy` already call
-  `arrangement_extraconnectivity_minimum`'s conditional capstone
+  `globally_optimal_growth_strategy` already call the conditional capstone
   (`arrangement_boundary_minimum_of_cross`) with `hb_cross_collisions_closed`
   discharging its `HBCrossCollisions` hypothesis directly. The conditional
   capstone in `ArrangementExtraconnectivity.lean` is intentionally kept as a
@@ -46,12 +45,13 @@ This document describes what a complete mechanized proof of each would require.
   dimension). `CrossRecurrence` and its driver are archived to
   `docs/archive/CrossRecurrenceDriver.lean` for historical reference only; there
   is nothing left to reconcile.
-- **Formula values verified** via `predict --verify R` (predict.cpp) for
-  `R ≤ 160`; the full sweep through `R = 260` remains pending. Exhaustive
-  `arrangement` nauty-based search covers `R ≤ 10`. (This verifies the
-  Hamming-ball formula's internal arithmetic, i.e. `HBCrossCollisions`-shaped
-  values — not the separate, now-refuted `UniversalLowerBound` universal
-  quantifier below.)
+- **Hamming-ball formula values** were cross-checked via `predict --verify R`
+  for `R ≤ 160`; this evaluates the explicit witness, not the universal lower
+  bound. The finite certificate/oracle bundle covers only its documented cells.
+  Exhaustive `arrangement` nauty-based search covers `R ≤ 10`. (These checks
+  verify the Hamming-ball formula's internal arithmetic, i.e.
+  `HBCrossCollisions`-shaped values — not the separate, now-refuted
+  `UniversalLowerBound` universal quantifier below.)
 - **`UniversalLowerBound` is refuted as an unrestricted statement.** The
   full-Star set in `A(10,8)` (R=17) has external boundary 168 against a required
   169 — see the definition's docstring in `ArrangementExtraconnectivity.lean`
@@ -60,20 +60,21 @@ This document describes what a complete mechanized proof of each would require.
   `scripts/partial_star_sweep.py`, and `scripts/occupancy_sweep.py`. The active
   capstone hypothesis is now `RestrictedLowerBound`, which gates the boundary
   inequality under the hypercube embedding conditions. For m ≤ 4, the embedding
-  condition R ≤ 2^m restricts R to a range where the Hamming Ball is optimal
-  (see "Safe Parameter Regime" in proof-sketch-weighted-potential.md). Four
-  further candidate proof mechanisms have been closed by finite counterexamples:
-  edge-gradient charging overcounts collision mass, single-vertex hole-filling
-  does not preserve its slack, the tested guarded Pinto-style dual-compression
-  pair has no admissible non-worsening branch on finite witnesses, and the
-  additive convex fiber-size Lyapunov ansatz `Psi_f(V') = sum_s N_s(V') w_s` is
-  dead — refuted by both LP infeasibility and a closed-form 4-cycle argument
-  (the R=1,2 anchors lock w_1=0, w_2=m+1, giving Psi=4(m+1) < 8m=Phi for every
-  4-cycle when m>=2). These closures do not alter any Lean interface; a global
-  structural approach (submodular analysis of C(R)+mE(R) directly, rather than
-  vertex-by-vertex or fiber-by-fiber construction) remains to be formalized, but
-  any such approach must now target a **restricted** form of the inequality, not
-  the unrestricted one, since the latter is false.
+  condition R ≤ 2^m restricts the realizable Hamming-ball construction; it does
+  not by itself prove that the Hamming Ball is optimal (see "Safe Parameter
+  Regime" in proof-sketch-weighted-potential.md). Four further candidate proof
+  mechanisms have been closed by finite counterexamples: edge-gradient charging
+  overcounts collision mass, single-vertex hole-filling does not preserve its
+  slack, the tested guarded Pinto-style dual-compression pair has no admissible
+  non-worsening branch on finite witnesses, and the additive convex fiber-size
+  Lyapunov ansatz `Psi_f(V') = sum_s N_s(V') w_s` is dead — refuted by both LP
+  infeasibility and a closed-form 4-cycle argument (the R=1,2 anchors lock
+  w_1=0, w_2=m+1, giving Psi=4(m+1) < 8m=Phi for every 4-cycle when m>=2). These
+  closures do not alter any Lean interface; a global structural approach
+  (submodular analysis of C(R)+mE(R) directly, rather than vertex-by-vertex or
+  fiber-by-fiber construction) remains to be formalized, but any such approach
+  must now target a **restricted** form of the inequality, not the unrestricted
+  one, since the latter is false.
 
 ## Immediate Lean Work Queue
 
@@ -84,10 +85,11 @@ This document describes what a complete mechanized proof of each would require.
 2. The archived recurrence driver remains available for research reference but
    is not a work-queue item.
 
-## The Core Equivalence: Collisions ≡ 4-Cycles
+## External multiplicity excess is not a 4-cycle count
 
-**Claim**: Two distinct vertices u, v ∈ V' produce the same external neighbor w
-if and only if they form a 4-cycle (square) with w and some vertex w'.
+The collision quantity counts multiplicity excess at external vertices. A shared
+external neighbor can be an open-square corner without the fourth corner being
+present, so this quantity is not equal to the number of induced 4-cycles.
 
 **Proof sketch**: If drop_pos(u, p) and drop_pos(v, p) produce the same root r,
 then extending r with the same fresh symbol s at position p yields a single
@@ -96,12 +98,12 @@ fibers), so the "collision" w is simultaneously adjacent to both u and v. The
 fourth vertex w' is obtained by swapping the fresh symbol at p in the other
 direction.
 
-**Implication**: Counting collisions is exactly counting 4-cycles in the
-subgraph induced by V' ∪ N(V').
+Consequently, any 4-cycle interpretation must be stated as a separate special
+case with its additional occupancy hypotheses.
 
 ## Step 1: Kruskal-Katona Shadow Operators in Lean
 
-### What's needed
+### What's needed (1)
 
 The **Kruskal-Katona theorem** states that among all k-element families of
 r-element sets, the initial segment in colex order minimizes the shadow (the
@@ -116,31 +118,34 @@ family of (r-1)-element subsets contained in at least one member).
   exactly the open problem — see "Current Status" above; a previous attempt at
   this connection was abandoned (archived).
 
-### Estimated effort
+### Estimated effort (1)
 
 ~200-300 lines for:
 
 - Colex ordering on `Finset (Fin d → Bool)`
-- Connection between shadow size and 4-cycle count, proven correctly (the
-  archived attempt's version of this connection was refuted)
+- Connection between hypercube shadow size and square count, as a possible
+  future route; it is not an identity for arrangement-graph external
+  multiplicity excess.
 
-## Step 2: Hamming Ball Maximizes Squares
+## Step 2: A separate hypercube square/shadow route
 
-### What's needed
+### What's needed (2)
 
-Prove that among all R-element subsets of the d-dimensional hypercube Q_d, the
-initial segment in binary lexicographic order (the Hamming Ball) maximizes the
-number of 4-cycles.
+This is a possible auxiliary hypercube problem: prove that among all $R$-element
+subsets of the binary cube, the initial segment maximizes the chosen square
+statistic. Even if established, it would not identify the arrangement-graph
+quantity $X$, which is external multiplicity excess/open square-corner overlap
+rather than a 4-cycle count.
 
 ### Proof approach
 
 1. Define the "square count" function:
    `squares(S) = |{(u,v,w) : u,v ∈ S, w ∈ N(S), adj(u,w) ∧ adj(v,w)}|`
 2. Show that square count is monotone under compression (shifting toward the
-   Hamming Ball)
+   Hamming Ball).
 3. Apply KK to conclude the Hamming Ball is optimal
 
-### Estimated effort
+### Estimated effort (2)
 
 ~150-200 lines
 
@@ -188,10 +193,10 @@ route — but the driver itself and `CrossRecurrence` are not the path forward.
 
 ### What remains
 
-Nothing. The direct `CrossTop.lean` route is already wired into the public,
-unconditional capstone (`arrangement_boundary_minimum`,
-`globally_optimal_growth_strategy`), which calls
-`arrangement_extraconnectivity_minimum`'s conditional capstone with
+Nothing remains for the Hamming-ball evaluation. The direct `CrossTop.lean`
+route is wired into the public conditional boundary capstone
+(`arrangement_boundary_minimum`, `globally_optimal_growth_strategy`), which
+calls `arrangement_boundary_minimum`'s conditional capstone with
 `hb_cross_collisions_closed` discharging `HBCrossCollisions` directly. The
 recurrence driver and its scaffold obligations are archived and superseded, not
 pending. `UniversalLowerBound` remains the separate, still-open
@@ -201,18 +206,19 @@ Status" above).
 ## Total Remaining Estimated Effort
 
 **`HBCrossCollisions`**: done. It is discharged unconditionally by
-`CrossTop.lean`'s `hb_cross_collisions_closed` and is no longer a live
-hypothesis of the public, unconditional capstone theorems.
+`CrossTop.lean`'s `hb_cross_collisions_closed`; only the separate
+`RestrictedLowerBound` remains a live capstone hypothesis.
 
 **`RestrictedLowerBound`**: The active capstone hypothesis, gated by the
-hypercube embedding conditions. For m ≤ 4, the embedding condition R ≤ 2^m
-restricts R to a range where the Hamming Ball is optimal (verified
-computationally). The proof for general m remains open.
+hypercube embedding conditions. The embedding condition R ≤ 2^m is only a
+realizability condition, and does not establish the boundary inequality. The
+proof for general m remains open.
 
 ## Uniqueness (Open Problem)
 
-The current proof establishes that the Hamming Ball **achieves** the minimum
-external boundary, but does not prove it is the **unique** minimizer.
+The current proof establishes that the Hamming Ball achieves the candidate
+boundary value; minimum status is conditional on `RestrictedLowerBound`, and
+uniqueness is not proved in general.
 
 ### What uniqueness would require
 
@@ -220,8 +226,9 @@ external boundary, but does not prove it is the **unique** minimizer.
   isomorphic to a Hamming Ball
 - This is equivalent to showing that E_seq is **strictly** subadditive for
   non-Hamming-Ball partitions
-- The computational search confirms uniqueness for small R (one minimum-cut
-  topology class per R); formula values verified via `predict --verify`
+- Finite orbit searches report one equality orbit in the checked small cells;
+  this is evidence only. Formula values are separately verified by
+  `predict --verify`.
 - Formalized as `uniqueness_conjecture` using the full automorphism group S_n ×
   S_k (symbol permutation σ + coordinate permutation τ)
 

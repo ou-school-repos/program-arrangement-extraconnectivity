@@ -1,8 +1,8 @@
 # Universal Lower Bound and Hamming-ball Evaluation
 
 `UniversalLowerBound` remains an explicit Lean `Prop` parameter rather than a
-raw `axiom` declaration. The direct `CrossTop` proof supplies the
-Hamming-ball collision evaluation used by the public capstone theorem.
+raw `axiom` declaration. The direct `CrossTop` proof supplies the Hamming-ball
+collision evaluation used by the public capstone theorem.
 
 ## The Two Hypothesis Interfaces
 
@@ -14,10 +14,10 @@ def UniversalLowerBound (R n k : ℕ) : Prop :=
     external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
 ```
 
-**Role:** Supplies the _universally quantified lower bound_. For **every**
-R-vertex subset V', the external boundary is bounded below by the predicted
-boundary. Still unproven in Lean (no formalization strategy currently active;
-see `docs/collision-axiom-roadmap.md`).
+**Role:** Historical unrestricted lower-bound interface. It is refuted by the
+full-Star examples and is not used by the live capstone. The active interface is
+the per-instance `RestrictedLowerBound R n k`, which is also an open hypothesis
+and is false when universally quantified over all parameters.
 
 ### Lemma: `hamming_ball_eval` (Upper Bound Witness)
 
@@ -36,30 +36,41 @@ remains external.
 
 ## The Mathematical Correction and Duality
 
-In previous versions of the framework, `UniversalLowerBound` was formulated as a dimension-independent bound on the combined waste: `cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`. However, this statement is **provably false** for sub-optimal topologies.
-TODO(review): keep this historical note, but do not let later prose drift back
-into the same combined-waste formulation.
+In previous versions of the framework, `UniversalLowerBound` was formulated as a
+dimension-independent bound on the combined waste:
+`cross_collisions V' + (R * k - sum_unique_roots V') ≤ C_constant R`. However,
+this statement is **provably false** for sub-optimal topologies. TODO(review):
+keep this historical note, but do not let later prose drift back into the same
+combined-waste formulation.
 
 ### The Star Graph Counterexample
 
-For the Star Graph $K_{1, R-1}$ at $R=8$ in $A(15, 7)$ (where $n-k = 8$), the defect is $D = 7$ (shortfall of 5 from the optimal $E(8) = 12$). Since the star graph leaves are placed along coordinates with distinct symbols, they can share an external neighbor across every pair, yielding:
-$$X = \binom{7}{2} = 21 \text{ cross-collisions}$$
-$$X + D = 21 + 7 = 28$$
-But $C_{constant}(8) = 12$. Since $28 \not\le 12$, the combined waste bound is violated.
-TODO(review): this counterexample is the reason the support-projection and
-collision-adjusted bridge should stay marked as abandoned until repaired.
+For the Star Graph $K_{1, R-1}$ at $R=8$ in $A(15, 7)$ (where $n-k = 8$), the
+defect is $D = 7$ (shortfall of 5 from the optimal $E(8) = 12$). Since the star
+graph leaves are placed along coordinates with distinct symbols, they can share
+an external neighbor across every pair, yielding:
+$$X = \binom{7}{2} = 21 \text{ cross-collisions}$$ $$X + D = 21 + 7 = 28$$ But
+$C_{constant}(8) = 12$. Since $28 \not\le 12$, the combined waste bound is
+violated. TODO(review): this counterexample is the reason the support-projection
+and collision-adjusted bridge should stay marked as abandoned until repaired.
 
 ### Why the Hamming Ball Still Wins ("Tug-of-War" Scaling)
 
-Although the Star Graph can achieve higher collision savings, it requires a larger $n-k$ dimension factor. The penalty for missing 5 defect links is:
-$$\Delta D \cdot (n-k) = 5 \cdot 7 = 35$$
-This linear dimensional penalty of 35 easily outpaces the 16 additional cross-collisions ($28 - 12 = 16$). As $n-k \to \infty$, the dimensional penalty completely crushes any non-standard collision savings.
+Although the Star Graph can achieve higher collision savings, it requires a
+larger $n-k$ dimension factor. The penalty for missing 5 defect links is:
+$$\Delta D \cdot (n-k) = 5 \cdot 8 = 40$$ This linear dimensional penalty of 40
+easily outpaces the 16 additional cross-collisions ($28 - 12 = 16$). As
+$n-k \to \infty$, the dimensional penalty completely crushes any non-standard
+collision savings.
 
-Therefore, the true universal bound must be stated as the final boundary inequality directly.
+Therefore, any replacement must state and prove a genuinely restricted boundary
+inequality directly; the unrestricted final boundary inequality is already
+refuted by the Star examples.
 
-Together, these two hypothesis interfaces form the "sandwich" that pins the isoperimetric profile to a single value:
+Together, these two hypothesis interfaces form the "sandwich" that pins the
+isoperimetric profile to a single value:
 
-```
+```text
 ∀ V', |N(V')| ≥ formula(R)      ← from UniversalLowerBound
 ∃ V*, |N(V*)| = formula(R)      ← from hamming_ball_eval
 ────────────────────────────────
@@ -68,7 +79,7 @@ Together, these two hypothesis interfaces form the "sandwich" that pins the isop
 
 ### The Information Flow
 
-```
+```text
 Kruskal-Katona Shadow Theorem + Tug-of-War Scaling
   │
   ├──► "Hamming Ball maximizes internal shielding/minimizes boundary"
@@ -98,8 +109,8 @@ The predictor computes (for any R):
 - `C_constant(R) = (R-1) + Σ bit_length(x) - E_seq(R)` — the collision constant
 - `formula(R) = (R·k - E_seq(R))·(n-k) - C_constant(R)` — the predicted boundary
 
-The formula is cross-validated against brute-force neighbor enumeration over
-the recorded finite range, confirming exact agreement on those instances.
+The formula is cross-validated against brute-force neighbor enumeration over the
+recorded finite range, confirming exact agreement on those instances.
 
 ### Level 2: Exhaustive Topology Search (`arrangement.cpp`)
 
@@ -108,7 +119,8 @@ For small R, the search engine:
 1. Generates ALL R-vertex subsets of A(n,k) up to `nauty` automorphism
 2. Computes `external_neighbors(V')` for each canonical representative
 3. Confirms the **minimum** equals the formula value
-4. Records the **unique** minimizer topology (Hamming Ball)
+4. Records minimizer topologies in the tested cells; it does not establish
+   uniqueness in general.
 
 This provides bounded finite-instance evidence that:
 
@@ -119,7 +131,10 @@ This provides bounded finite-instance evidence that:
 ## C_constant(R) and cross_collisions(HB(R)) Values
 
 `C_constant(R)` is defined in Lean as `(R - 1) + sum_bit_length R - E_seq R`.
-The Hamming Ball's cross-collision count is `cross_collisions(HB(R)) = C_constant(R) - E_seq(R)`.
+The Hamming Ball's cross-collision count is
+`cross_collisions(HB(R)) = C_constant(R) - E_seq(R)`.
+
+<!-- markdownlint-disable MD013 -->
 
 | R   | E_seq(R) | C_constant(R) | cross_collisions(HB(R)) | Meaning                                     |
 | --- | -------- | ------------- | ----------------------- | ------------------------------------------- |
@@ -131,30 +146,32 @@ The Hamming Ball's cross-collision count is `cross_collisions(HB(R)) = C_constan
 | 7   | 9        | 11            | 2                       | Two rectangles plus one extra leaf          |
 | 8   | 12       | 12            | 0                       | Full Q₃: all boundary shared internally     |
 
-**Note:** Powers of two (`R = 2^d`) always have `cross_collisions(HB(R)) = 0`,
-because the full hypercube `Q_d` has no external rectangles — every
-distance-2 pair in `Q_d` has both completions inside `Q_d`.
+<!-- markdownlint-enable MD013 -->
 
-The pattern: `C_constant(R)` equals `E_seq(R)` at each power of two.
-Between powers, `cross_collisions(HB(R)) = C_constant(R) - E_seq(R) ≥ 0`
-counts the shielding 4-cycles: each eliminates one external neighbor
-that would otherwise be counted twice.
+**Note:** Powers of two (`R = 2^d`) always have `cross_collisions(HB(R)) = 0`,
+because the full hypercube `Q_d` has no external rectangles — every distance-2
+pair in `Q_d` has both completions inside `Q_d`.
+
+The pattern: `C_constant(R)` equals `E_seq(R)` at each power of two. Between
+powers, `cross_collisions(HB(R)) = C_constant(R) - E_seq(R) ≥ 0` counts external
+multiplicity excess (open-square corner overlap), not the number of 4-cycles
+themselves.
 
 ## Why They Cannot Be Merged
 
-Although a future proof may connect both hypothesis interfaces to KK and Tug-of-War scaling, they serve structurally different roles
-in the proof:
+Although a future proof may connect both hypothesis interfaces to KK and
+Tug-of-War scaling, they serve structurally different roles in the proof:
 
-1. **`UniversalLowerBound`** is a ∀-statement over all V'.
-   It provides the universal lower bound.
+1. **`UniversalLowerBound`** is a ∀-statement over all V'. It provides the
+   universal lower bound.
 
-2. **`hamming_ball_eval`** is an ∃-statement about a specific V\*.
-   It flows into `exists_optimal_embedding`.
+2. **`hamming_ball_eval`** is an ∃-statement about a specific V\*. It flows into
+   `exists_optimal_embedding`.
 
-The public capstone theorem takes `h_lower : ∀ R n k, UniversalLowerBound R n k`
-and supplies the Hamming-ball evaluation internally. Its internal
-`..._of_cross` composition lemma remains available when a caller already has a
-fixed-size collision evaluation.
+The public capstone theorem takes a fixed per-instance
+`h_lower : RestrictedLowerBound R n k` and supplies the Hamming-ball evaluation
+internally. Its internal `..._of_cross` composition lemma remains available when
+a caller already has a fixed-size collision evaluation.
 
 Merging them into a single hypothesis would obscure the proof architecture and
 lose the clean separation between the universal bound and the constructive
@@ -163,14 +180,13 @@ witness.
 ## Formalization Path (if pursued)
 
 The remaining live formalization effort is `UniversalLowerBound`. An earlier
-attempt via support-projection into the Boolean hypercube (to reuse
-Mathlib's `Mathlib.Combinatorics.SetFamily.KruskalKatona`, which does
-exist in Mathlib) was abandoned after a counterexample refuted its central
-inequality; see
+attempt via support-projection into the Boolean hypercube (to reuse Mathlib's
+`Mathlib.Combinatorics.SetFamily.KruskalKatona`, which does exist in Mathlib)
+was abandoned after a counterexample refuted its central inequality; see
 `docs/archive/collision-axiom-support-projection-abandoned.md`. A working
-approach would need, at minimum, a corrected shadow-count inequality, a
-proven colex correspondence, and a proven pullback to
+approach would need, at minimum, a corrected shadow-count inequality, a proven
+colex correspondence, and a proven pullback to
 `sum_unique_roots`/`external_neighbors` — none of which currently exist.
 
-See [collision-axiom-roadmap.md](collision-axiom-roadmap.md) for the
-detailed step-by-step plan.
+See [collision-axiom-roadmap.md](collision-axiom-roadmap.md) for the detailed
+step-by-step plan.

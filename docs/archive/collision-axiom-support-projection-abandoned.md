@@ -2,9 +2,9 @@
 
 **Status: ABANDONED, NOT VALIDATED.** This document preserves a formalization
 strategy that was explored for closing `UniversalLowerBound` via Mathlib's
-Kruskal-Katona theorem, kept here for historical record only. It is **not**
-part of the active roadmap (see `docs/collision-axiom-roadmap.md`), and none
-of the claims below should be cited as established results.
+Kruskal-Katona theorem, kept here for historical record only. It is **not** part
+of the active roadmap (see `docs/collision-axiom-roadmap.md`), and none of the
+claims below should be cited as established results.
 
 The core inequality this approach depended on,
 
@@ -12,25 +12,25 @@ The core inequality this approach depended on,
 sum_unique_roots(V') ≤ k · |φ(V')| − |∂(φ(V'))|
 ```
 
-has a known **singleton counterexample** that refutes it in its stated form
-(see the note originally attached to this section). The colex correspondence
-between the support-projection family and the Kruskal-Katona initial segment
-was never established, and the final "pullback" step from the projected
-hypercube bound back to the arrangement-graph bound was never derived. The
-closing claim that this strategy "completely eliminates the factorial trap
-... allowing us to mechanize the complete proof of `lower_bound_all_embeddings`
-and `external_neighbors_collision_bound`" was an overclaim that contradicted
-the unresolved status of the steps immediately preceding it, and should not
-have stood as the section's conclusion. (Those two identifiers are also
-themselves stale: the current hypothesis interfaces in
-`ArrangementExtraconnectivity.lean` are `UniversalLowerBound` and
-`HBCrossCollisions`, not raw axioms of those names.)
+has a known **singleton counterexample** that refutes it in its stated form (see
+the note originally attached to this section). The colex correspondence between
+the support-projection family and the Kruskal-Katona initial segment was never
+established, and the final "pullback" step from the projected hypercube bound
+back to the arrangement-graph bound was never derived. The closing claim that
+this strategy "completely eliminates the factorial trap ... allowing us to
+mechanize the complete proof of `lower_bound_all_embeddings` and
+`external_neighbors_collision_bound`" was an overclaim that contradicted the
+unresolved status of the steps immediately preceding it, and should not have
+stood as the section's conclusion. (Those two identifiers are also themselves
+stale: the current hypothesis interfaces in `ArrangementExtraconnectivity.lean`
+are `UniversalLowerBound` and `HBCrossCollisions`, not raw axioms of those
+names.)
 
-If this direction is revisited, it needs, at minimum: a corrected/proven
-version of the shadow-count inequality above (or a replacement), an explicit
-proof of the colex correspondence between `φ(V')` and Kruskal-Katona initial
-segments, and an explicit pullback lemma from the hypercube shadow bound back
-to `sum_unique_roots`. None of that work has been done.
+If this direction is revisited, it needs, at minimum: a corrected/proven version
+of the shadow-count inequality above (or a replacement), an explicit proof of
+the colex correspondence between `φ(V')` and Kruskal-Katona initial segments,
+and an explicit pullback lemma from the hypercube shadow bound back to
+`sum_unique_roots`. None of that work has been done.
 
 ## Step 3 (archived): Transfer to Arrangement Graphs
 
@@ -52,26 +52,26 @@ A(n,k) ⊆ H(k,n)  as graphs (isometric embedding)
 ⟹ |N_A(S)| ≥ |N_H(S)|
 ```
 
-This chain was never rederived after being flagged as invalid; do not treat
-it as a completed reduction.
+This chain was never rederived after being flagged as invalid; do not treat it
+as a completed reduction.
 
 ## Future Work (archived): Bypassing Custom Compressions via Boolean Cube Injection
 
 ### The claimed breakthrough
 
-Previously, it was assumed that formalizing the Kruskal-Katona shadow bounds
-in $A(n,k)$ would require developing custom, coordinate-aware compression
-operators on the ordered, injective sequences of $A(n,k)$ from scratch. The
-idea explored here was to bypass this by projecting subsets of $A(n,k)$
-directly into the Boolean hypercube, where Mathlib's standard, built-in
-Kruskal-Katona theorem (`Mathlib.Combinatorics.SetFamily.KruskalKatona`)
-could in principle be applied as-is.
+Previously, it was assumed that formalizing the Kruskal-Katona shadow bounds in
+$A(n,k)$ would require developing custom, coordinate-aware compression operators
+on the ordered, injective sequences of $A(n,k)$ from scratch. The idea explored
+here was to bypass this by projecting subsets of $A(n,k)$ directly into the
+Boolean hypercube, where Mathlib's standard, built-in Kruskal-Katona theorem
+(`Mathlib.Combinatorics.SetFamily.KruskalKatona`) could in principle be applied
+as-is.
 
 ### 1. The Support Projection to k-Subsets
 
-Every vertex $v \in A(n,k)$ is an injective sequence of length $k$ using
-symbols from $[n]$. The image of $v$ (its set of active symbols) is therefore
-a subset of $[n]$ of size exactly $k$. Define the support projection $\phi$:
+Every vertex $v \in A(n,k)$ is an injective sequence of length $k$ using symbols
+from $[n]$. The image of $v$ (its set of active symbols) is therefore a subset
+of $[n]$ of size exactly $k$. Define the support projection $\phi$:
 
 $$\phi(V') = \{ \text{image}(v) \mid v \in V' \} \subseteq \mathcal{P}_k([n])$$
 
@@ -81,10 +81,9 @@ constraint: `Set.Sized k ↑(\phi V')`.
 
 ### 2. Standard Shadows and Arrangement Graph Collisions
 
-Mathlib's standard shadow of $\phi(V')$, denoted $\partial(\phi(V'))$,
-consists of all $(k-1)$-element subsets obtained by removing one element
-from a subset in $\phi(V')$. The claimed (refuted) identity linking the two
-universes was:
+Mathlib's standard shadow of $\phi(V')$, denoted $\partial(\phi(V'))$, consists
+of all $(k-1)$-element subsets obtained by removing one element from a subset in
+$\phi(V')$. The claimed (refuted) identity linking the two universes was:
 
 $$\text{sum\_unique\_roots}(V') \le k \cdot |\phi(V')| - |\partial(\phi(V'))|$$
 
@@ -104,6 +103,6 @@ theorem Finset.kruskal_katona {n r : ℕ} {𝒜 𝒞 : Finset (Finset (Fin n))}
 But: the colex correspondence between $\phi(V')$ and a Kruskal-Katona initial
 segment was never established, and the pullback from the shadow bound back to
 `sum_unique_roots`/`external_neighbors_collision_bound` was never derived.
-Neither the shadow inequality above nor this connection should be presented
-as proven or in-progress; if pursued again, it needs to be redone from
-scratch with the counterexample in hand.
+Neither the shadow inequality above nor this connection should be presented as
+proven or in-progress; if pursued again, it needs to be redone from scratch with
+the counterexample in hand.
