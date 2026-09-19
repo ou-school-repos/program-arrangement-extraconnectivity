@@ -930,8 +930,49 @@ def tagged_coordinate_overlaps {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
     Finset (Σ p : Fin k, Σ q : Fin k, ArrVertex n k) :=
   (Finset.univ : Finset (Fin k)).sigma (fun p =>
-    ((Finset.univ : Finset (Fin k)).filter (fun q => q ≠ p)).sigma
+    ((Finset.univ : Finset (Fin k)).filter (fun q => p ≠ q)).sigma
       (fun q => coord_boundary V' p ∩ coord_boundary V' q))
+
+lemma mem_tagged_coordinate_overlaps {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (w : ArrVertex n k) :
+    (⟨p, ⟨q, w⟩⟩ : Σ p : Fin k, Σ q : Fin k, ArrVertex n k) ∈
+        tagged_coordinate_overlaps V' ↔
+      p ≠ q ∧ w ∈ coord_boundary V' p ∩ coord_boundary V' q := by
+  simp [tagged_coordinate_overlaps]
+
+lemma exists_overlap_witness_pair {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k)
+    (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ∃ z : ArrVertex n k × ArrVertex n k,
+      z.1 ∈ V' ∧ z.2 ∈ V' ∧ z.1 ≠ z.2 ∧
+        drop_pos w p = drop_pos z.1 p ∧ drop_pos w q = drop_pos z.2 q ∧
+          (∀ r : Fin k, r ≠ p → r ≠ q → z.1.val r = z.2.val r) := by
+  obtain ⟨v, hv, t, ht, hvt, hp, hq, hagree⟩ :=
+    coord_overlap_has_two_coordinate_witness V' hpq hw
+  exact ⟨(v, t), hv, ht, hvt, hp, hq, hagree⟩
+
+noncomputable def overlap_witness_pair {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k)
+    (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ArrVertex n k × ArrVertex n k :=
+  Classical.choose (exists_overlap_witness_pair V' p q hpq w hw)
+
+lemma overlap_witness_pair_spec {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k)
+    (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    (overlap_witness_pair V' p q hpq w hw).1 ∈ V' ∧
+      (overlap_witness_pair V' p q hpq w hw).2 ∈ V' ∧
+      (overlap_witness_pair V' p q hpq w hw).1 ≠
+        (overlap_witness_pair V' p q hpq w hw).2 ∧
+      drop_pos w p = drop_pos (overlap_witness_pair V' p q hpq w hw).1 p ∧
+      drop_pos w q = drop_pos (overlap_witness_pair V' p q hpq w hw).2 q ∧
+      (∀ r : Fin k, r ≠ p → r ≠ q →
+        (overlap_witness_pair V' p q hpq w hw).1.val r =
+          (overlap_witness_pair V' p q hpq w hw).2.val r) := by
+  exact Classical.choose_spec (exists_overlap_witness_pair V' p q hpq w hw)
 
 lemma external_neighbors_eq_coord_union {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
@@ -1051,8 +1092,85 @@ def coordinate_ordered_overlap {n k : ℕ}
 lemma tagged_coordinate_overlaps_card {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
     (tagged_coordinate_overlaps V').card = coordinate_ordered_overlap V' := by
-  simp [tagged_coordinate_overlaps, coordinate_ordered_overlap,
-    ordered_overlap, Finset.card_sigma, Finset.mem_filter, Finset.mem_erase]
+  have hfilter (p : Fin k) :
+      (Finset.univ : Finset (Fin k)).filter (fun q => p ≠ q) =
+        (Finset.univ : Finset (Fin k)).erase p := by
+    ext q
+    simp [eq_comm]
+  simp only [tagged_coordinate_overlaps, coordinate_ordered_overlap,
+    ordered_overlap, Finset.card_sigma]
+  simp_rw [hfilter]
+
+/-- A global charge for every tagged ordered coordinate-overlap vertex.
+    The Boolean remembers the orientation of the two disagreement coordinates;
+    the witness pair alone determines only their unordered set. -/
+lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    (tagged_coordinate_overlaps V').card ≤
+      2 * (V'.card * V'.card - V'.card) := by
+  classical
+  let source := (tagged_coordinate_overlaps V').attach
+  let target := V'.offDiag ×ˢ (Finset.univ : Finset Bool)
+  let charge : source → ArrVertex n k × ArrVertex n k × Bool := fun x =>
+    let p := x.1.1
+    let q := x.1.2.1
+    let w := x.1.2.2
+    let hx := (mem_tagged_coordinate_overlaps V' p q w).mp x.2
+    (overlap_witness_pair V' p q hx.1 w hx.2, decide (p < q))
+  have hmaps : ∀ x ∈ source, charge x ∈ target := by
+    intro x hx
+    obtain ⟨x, hx⟩ := x
+    let p := x.1
+    let q := x.2.1
+    let w := x.2.2
+    have htag := (mem_tagged_coordinate_overlaps V' p q w).mp hx
+    let z := overlap_witness_pair V' p q htag.1 w htag.2
+    have hz := overlap_witness_pair_spec V' p q htag.1 w htag.2
+    simp only [source, target, Finset.mem_attach, true_and, Finset.mem_product,
+      Finset.mem_offDiag, Finset.mem_univ, and_true]
+    exact ⟨hz.1, hz.2.1, hz.2.2.1⟩
+  have hinj : Set.InjOn charge ↑source := by
+    intro x hx y hy hxy
+    obtain ⟨⟨p, ⟨q, w⟩⟩, hx⟩ := x
+    obtain ⟨⟨p', ⟨q', w'⟩⟩, hy⟩ := y
+    have htagx := (mem_tagged_coordinate_overlaps V' p q w).mp hx
+    have htagy := (mem_tagged_coordinate_overlaps V' p' q' w').mp hy
+    let zx := overlap_witness_pair V' p q htagx.1 w htagx.2
+    let zy := overlap_witness_pair V' p' q' htagy.1 w' htagy.2
+    have hsx := overlap_witness_pair_spec V' p q htagx.1 w htagx.2
+    have hsy := overlap_witness_pair_spec V' p' q' htagy.1 w' htagy.2
+    change (zx, decide (p < q)) = (zy, decide (p' < q')) at hxy
+    have hpair : zx = zy := (Prod.mk.inj hxy).1
+    have horientation : decide (p < q) = decide (p' < q') :=
+      (Prod.mk.inj hxy).2
+    subst zy
+    have hdiff := coord_overlap_witness_differs_at_both V' htagx.1 htagx.2
+      hsx.1 hsy.2.1 hsx.2.2.2.1 hsy.2.2.2.2.1
+    have hcoords := diff_pair_eq_or_swap htagx.1 hdiff.1 hdiff.2
+      hsy.2.2.2.2.2
+    rcases hcoords with ⟨hp, hq⟩ | ⟨hp, hq⟩
+    · subst p'
+      subst q'
+      have hw := coord_overlap_vertex_unique htagx.1
+        hsx.2.2.2.1 hsx.2.2.2.2.1 hsy.2.2.2.1 hsy.2.2.2.2.1
+      subst w'
+      rfl
+    · have hbit : decide (p < q) = decide (q < p) := by
+        simpa [hp, hq] using horientation
+      rcases lt_trichotomy p q with hpq | hpq | hpq
+      · have hnot : ¬ q < p := not_lt_of_ge (le_of_lt hpq)
+        simp [hpq, hnot] at hbit
+      · exact (htagx.1 hpq) rfl
+      · have hnot : ¬ p < q := not_lt_of_ge (le_of_lt hpq)
+        simp [hpq, hnot] at hbit
+  have hcard := Finset.card_le_card_of_injOn charge hmaps hinj
+  calc
+    (tagged_coordinate_overlaps V').card = source.card := by
+      simp [source]
+    _ ≤ target.card := hcard
+    _ = 2 * (V'.card * V'.card - V'.card) := by
+      simp [target, Finset.card_product, Finset.offDiag_card, two_mul,
+        Nat.mul_comm]
 
 lemma coordinate_bonferroni_ordered {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
