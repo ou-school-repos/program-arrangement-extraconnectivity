@@ -6,7 +6,7 @@
 // The level-by-level deduplication is slower than a tuned ESU implementation,
 // but is easy to audit and is useful as an oracle for future optimizations.
 //
-// Usage: exact_profile n k max_size [max_states_per_level]
+// Usage: exact_profile_naive n k max_size [max_states_per_level]
 
 #include "arrangement_utils.hpp"
 
@@ -132,7 +132,7 @@ std::string tuple_string(const Code code, const int k) {
 
 int main(int argc, char **argv) {
     if (argc < 4 || argc > 5) {
-        std::cerr << "Usage: exact_profile n k max_size "
+        std::cerr << "Usage: exact_profile_naive n k max_size "
                      "[max_states_per_level]\n";
         return 1;
     }
@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
                 break;
         }
     } catch (const std::exception &error) {
-        std::cerr << "exact_profile: " << error.what() << '\n';
+        std::cerr << "exact_profile_naive: " << error.what() << '\n';
         return 1;
     }
     return 0;

@@ -190,8 +190,8 @@ _test/validate_extra_cut/full: bin/validate_extra_cut_naive	##H @Test Run the fu
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
 		python3 scripts/test_regression.py
 
-_test/exact_profile: bin/exact_profile tests/test_exact_profile.py	##H @Test Run exact small-profile regression oracle
-	PROFILE_BIN=./bin/exact_profile python3 tests/test_exact_profile.py
+_test/exact_profile: bin/exact_profile_naive tests/test_exact_profile.py	##H @Test Run exact connected-profile regression oracle
+	PROFILE_BIN=./bin/exact_profile_naive python3 tests/test_exact_profile.py
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

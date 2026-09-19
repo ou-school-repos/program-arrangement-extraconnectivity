@@ -23,7 +23,7 @@ def profile(binary, n, k, max_size):
 
 
 def main():
-    binary = os.environ.get("PROFILE_BIN", "./bin/exact_profile")
+    binary = os.environ.get("PROFILE_BIN", "./bin/exact_profile_naive")
     a53 = profile(binary, 5, 3, 7)
     assert a53[7] == (70182, 17), a53.get(7)
 
