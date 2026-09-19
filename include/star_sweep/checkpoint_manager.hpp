@@ -90,16 +90,26 @@ class CheckpointManager {
         if (!input)
             throw std::runtime_error("cannot open checkpoint metadata: " +
                                      metadata_path);
+        std::error_code file_size_error;
+        const std::uintmax_t metadata_bytes =
+            std::filesystem::file_size(metadata_path, file_size_error);
+        if (file_size_error)
+            throw std::runtime_error("cannot inspect checkpoint metadata: " +
+                                     metadata_path);
 
         CheckpointState state;
-        input >> state.signature.n >> state.signature.k >>
-            state.signature.valid_count >> state.signature.bitmap_bytes;
+        if (!(input >> state.signature.n >> state.signature.k >>
+              state.signature.valid_count >> state.signature.bitmap_bytes))
+            throw std::runtime_error("invalid checkpoint metadata: " +
+                                     metadata_path);
         std::uint64_t metadata_version = 0;
         int phase = -1;
-        input >> metadata_version >> state.generation >> phase >> state.layer >>
-            state.component_anchor >> state.component_size >>
-            state.discovered_survivors >> state.star_boundary_size >>
-            state.active_frontier_size;
+        if (!(input >> metadata_version >> state.generation >> phase >>
+              state.layer >> state.component_anchor >> state.component_size >>
+              state.discovered_survivors >> state.star_boundary_size >>
+              state.active_frontier_size))
+            throw std::runtime_error("invalid checkpoint metadata: " +
+                                     metadata_path);
         if (metadata_version != checkpoint_metadata_version ||
             phase < static_cast<int>(CheckpointPhase::LayerBoundary) ||
             phase > static_cast<int>(CheckpointPhase::ComponentComplete))
@@ -108,28 +118,40 @@ class CheckpointManager {
         state.phase = static_cast<CheckpointPhase>(phase);
 
         std::size_t component_count = 0;
-        input >> component_count;
+        if (!(input >> component_count) ||
+            component_count > expected.valid_count ||
+            component_count > metadata_bytes)
+            throw std::runtime_error("invalid checkpoint metadata: " +
+                                     metadata_path);
         state.component_sizes.resize(component_count);
         for (std::uint64_t &size : state.component_sizes)
-            input >> size;
+            if (!(input >> size))
+                throw std::runtime_error("invalid checkpoint metadata: " +
+                                         metadata_path);
 
         std::size_t direction_count = 0;
-        input >> direction_count;
+        if (!(input >> direction_count) || direction_count != state.layer ||
+            direction_count > expected.valid_count ||
+            direction_count > metadata_bytes)
+            throw std::runtime_error("invalid checkpoint metadata: " +
+                                     metadata_path);
         state.direction_history.resize(direction_count);
         for (std::size_t index = 0; index < direction_count; ++index) {
             int value = 0;
-            input >> value;
-            if (value != 0 && value != 1)
+            if (!(input >> value) || (value != 0 && value != 1))
                 throw std::runtime_error("invalid checkpoint direction: " +
                                          metadata_path);
             state.direction_history[index] = value != 0;
         }
-        input >> delta_filename;
-        if (!input || state.generation != generation ||
+        if (!(input >> delta_filename) || state.generation != generation ||
             !signature_matches(expected, state.signature) ||
             delta_filename.empty() ||
             delta_filename.find('/') != std::string::npos ||
             delta_filename == "." || delta_filename == "..")
+            throw std::runtime_error("invalid checkpoint metadata: " +
+                                     metadata_path);
+        std::string extra_field;
+        if (input >> extra_field)
             throw std::runtime_error("invalid checkpoint metadata: " +
                                      metadata_path);
         state.validate();

@@ -311,10 +311,11 @@ int main(int argc, char **argv) {
                     if (found == state.envelope.end() || found->incidence == 0)
                         new_vertices.push_back(vertex);
                 }
-                if (new_vertices.size() >= 64) {
+                constexpr std::size_t max_new_vertices = 20;
+                if (new_vertices.size() > max_new_vertices) {
                     std::cerr << "fiber has " << new_vertices.size()
-                              << " new vertices (>=64); cannot represent its "
-                                 "subset mask\n";
+                              << " new vertices; exact transition limit is "
+                              << max_new_vertices << '\n';
                     return 1;
                 }
                 const std::uint64_t patterns = std::uint64_t{1}

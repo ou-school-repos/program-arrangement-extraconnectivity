@@ -10,7 +10,10 @@
 #include <unordered_map>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 using Count = unsigned __int128;
+#pragma GCC diagnostic pop
 
 std::string to_string(Count value) {
     if (value == 0)

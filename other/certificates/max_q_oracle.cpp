@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <limits>
 #include <vector>
 using i64 = std::int64_t;
 static i64 E(int r) {
@@ -23,7 +24,8 @@ static i64 C(int r) {
 }
 int n, k, R;
 std::vector<std::vector<int>> verts, adj;
-std::vector<int> mark, chosen, best;
+std::vector<std::uint64_t> mark;
+std::vector<int> chosen, best;
 std::uint64_t stamp = 0;
 i64 bestQ = -1;
 std::uint64_t leaves = 0;
@@ -43,16 +45,19 @@ static void gen(std::vector<int> &p, std::vector<char> &used) {
 }
 static void evaluate() {
     ++leaves;
-    ++stamp;
-    int inside = stamp;
+    if (stamp > std::numeric_limits<std::uint64_t>::max() - 2) {
+        std::fill(mark.begin(), mark.end(), 0);
+        stamp = 0;
+    }
+    const std::uint64_t inside = ++stamp;
     for (int v : chosen)
         mark[v] = inside;
-    ++stamp;
+    const std::uint64_t border = ++stamp;
     int bnd = 0;
     for (int v : chosen)
         for (int w : adj[v])
-            if (mark[w] != inside && mark[w] != stamp) {
-                mark[w] = stamp;
+            if (mark[w] != inside && mark[w] != border) {
+                mark[w] = border;
                 ++bnd;
             }
     i64 q = i64(n - k) * k * R - bnd;
@@ -92,9 +97,12 @@ int main(int argc, char **argv) {
         std::fprintf(stderr, "R exceeds |A(n,k)|\n");
         return 2;
     }
-    if ((std::uint64_t)verts.size() * verts.size() > 500'000'000'000ULL) {
-        std::fprintf(stderr, "adjacency too large: |A(n,k)|=%zu\n",
-                     verts.size());
+    const std::uint64_t vertex_count = static_cast<std::uint64_t>(verts.size());
+    const std::uint64_t degree = static_cast<std::uint64_t>(k) * (n - k);
+    constexpr std::uint64_t max_adjacency_entries = 100'000'000;
+    if (degree != 0 && vertex_count > max_adjacency_entries / degree) {
+        std::fprintf(stderr, "adjacency too large: |A(n,k)|=%zu, degree=%llu\n",
+                     verts.size(), static_cast<unsigned long long>(degree));
         return 2;
     }
     // adjacency: differ in exactly one coordinate

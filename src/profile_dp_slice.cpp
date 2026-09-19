@@ -16,6 +16,17 @@ namespace {
 
 std::vector<Automorphism> layer_stabilizer(const Instance &instance,
                                            const int processed_slices) {
+    constexpr std::size_t max_stabilizer_size = 100'000;
+    std::size_t stabilizer_size = 1;
+    for (const int degree : {instance.k - 1, instance.n - processed_slices}) {
+        for (int factor = 2; factor <= degree; ++factor) {
+            const auto value = static_cast<std::size_t>(factor);
+            if (stabilizer_size > max_stabilizer_size / value)
+                return {};
+            stabilizer_size *= value;
+        }
+    }
+
     std::vector<Automorphism> group;
     std::vector<int> coordinates(instance.k);
     std::iota(coordinates.begin(), coordinates.end(), 0);
@@ -41,8 +52,8 @@ std::vector<Automorphism> layer_stabilizer(const Instance &instance,
 std::vector<int>
 canonical_residual(const std::vector<int> &subset, const Instance &instance,
                    const std::vector<Automorphism> &stabilizer) {
-    if (subset.empty())
-        return {};
+    if (subset.empty() || stabilizer.empty())
+        return subset;
 
     std::vector<int> best;
     bool initialized = false;
@@ -102,11 +113,7 @@ int main(int argc, char **argv) {
                 slice_vertices.push_back(vertex);
         }
 
-        if (slice_vertices.size() > 25) {
-            std::cerr << "slice " << slice << " has " << slice_vertices.size()
-                      << " vertices (>25), aborting\n";
-            return 1;
-        }
+        constexpr std::size_t max_slice_subsets = 500'000;
         std::vector<std::vector<int>> slice_subsets(1);
         for (const int vertex : slice_vertices) {
             const std::size_t current_size = slice_subsets.size();
@@ -117,11 +124,21 @@ int main(int argc, char **argv) {
                 auto expanded = slice_subsets[i];
                 expanded.push_back(vertex);
                 slice_subsets.push_back(std::move(expanded));
+                if (slice_subsets.size() >= max_slice_subsets) {
+                    std::cerr << "slice " << slice << " exceeds the subset "
+                              << "limit of " << max_slice_subsets << '\n';
+                    return 1;
+                }
             }
         }
 
         const auto stabilizer = layer_stabilizer(instance, slice + 1);
+        if (stabilizer.empty())
+            std::cerr << "slice " << slice
+                      << ": stabilizer exceeds 100000; using identity only\n";
         std::vector<std::set<std::vector<int>>> next(max_volume + 1);
+        constexpr std::size_t max_total_states = 1'000'000;
+        std::size_t total_states = 0;
         for (int volume = 0; volume <= max_volume; ++volume) {
             for (const auto &prefix : layers[volume]) {
                 for (const auto &suffix : slice_subsets) {
@@ -130,8 +147,15 @@ int main(int argc, char **argv) {
                     auto merged = prefix;
                     merged.insert(merged.end(), suffix.begin(), suffix.end());
                     std::sort(merged.begin(), merged.end());
-                    next[volume + suffix.size()].insert(
-                        canonical_residual(merged, instance, stabilizer));
+                    const auto [unused, inserted] =
+                        next[volume + static_cast<int>(suffix.size())].insert(
+                            canonical_residual(merged, instance, stabilizer));
+                    (void)unused;
+                    if (inserted && ++total_states > max_total_states) {
+                        std::cerr << "slice DP exceeds the state limit of "
+                                  << max_total_states << '\n';
+                        return 1;
+                    }
                 }
             }
         }

@@ -44,6 +44,10 @@ def arrangement_graph(
 
 def solve_profile(n: int, k: int, max_volume: int) -> list[float]:
     """Solve the fractional vertex-boundary LP for each requested volume."""
+    if n < 1 or k < 1 or k > n:
+        raise SystemExit("require n >= 1 and 1 <= k <= n")
+    if max_volume < 0:
+        raise SystemExit("require max_volume >= 0")
     try:
         # Keep SciPy optional so the rest of the repository does not require it.
         # pylint: disable=import-outside-toplevel
@@ -55,10 +59,12 @@ def solve_profile(n: int, k: int, max_volume: int) -> list[float]:
 
     vertices, edges, roots = arrangement_graph(n, k)
     vertex_count = len(vertices)
+    if max_volume > vertex_count:
+        raise SystemExit(f"max_volume={max_volume} exceeds vertex count {vertex_count}")
     root_count = len(roots)
     z_offset = 2 * vertex_count
     variable_count = z_offset + root_count
-    rows = vertex_count + 2 * len(edges) + 2 * root_count
+    rows = vertex_count + 2 * len(edges) + k * vertex_count + 2 * root_count
     matrix = lil_matrix((rows, variable_count), dtype=float)
     upper = np.zeros(rows)
     row = 0
