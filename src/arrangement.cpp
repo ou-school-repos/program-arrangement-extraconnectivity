@@ -1,4 +1,4 @@
-// Extraconnectivity of Arrangement Graphs — v5 Clean Enumerator (POC)
+// Connected-pattern catalogue for arrangement-graph boundary candidates.
 //
 // Based on ideas-12: streamlined single-threaded architecture with:
 //   1. Hardware-accelerated chunk_idx SWAR bit-scan (no O(R) diff loops)
@@ -7,7 +7,7 @@
 //   4. Parameterized calc_step (explicit array passing)
 //   5. Global hash dedup sharing symmetry across all branches
 //
-// Usage: ./arrangementv5 [R] [nauty_limit]
+// Usage: ./arrangement R [nauty_limit] [n k]...
 
 #include <algorithm>
 #include <chrono>
@@ -599,48 +599,17 @@ static uint64_t solve(int point, int nodl, int largchg,
     return total_evals;
 }
 
-// ── A000788: cumulative popcount — O(log R) ──────────────────────────
-/// Number of set bits in n.
-static uint64_t popcount_u(uint64_t n) {
-    return static_cast<uint64_t>(__builtin_popcountll(n));
-}
-
-/// Bit length of n (0 for n == 0).
-static uint64_t bit_length_u(uint64_t n) {
-    return n == 0 ? 0 : 64 - static_cast<uint64_t>(__builtin_clzll(n));
-}
-
-/// Cumulative binary weight sum_{i<n} popcount(i) (OEIS A000788), via radix-2
-/// recursion.
-static int64_t A000788_fn(int64_t n) {
-    if (n <= 0)
-        return 0;
-    int64_t m = n / 2;
-    if (n % 2 == 0)
-        return 2 * A000788_fn(m) + m;
-    else
-        return 2 * A000788_fn(m) + m +
-               static_cast<int64_t>(popcount_u(static_cast<uint64_t>(m)));
-}
-
-/// The correction constant C(R) = (R-1) + sum of bit_length(1..R-1) -
-/// A000788(R).
-static int64_t constant_analytical(int64_t R_val) {
-    int64_t nk1 = A000788_fn(R_val);
-    int64_t L = 0;
-    for (int64_t x = 1; x < R_val; x++)
-        L += static_cast<int64_t>(bit_length_u(static_cast<uint64_t>(x)));
-    return (R_val - 1) + L - nk1;
-}
-
 // ── Brute-force verification — O(R³ log R) ───────────────────────────
 /// Brute-force |N(V')| for the first R vertices of verts by explicit neighbor
 /// enumeration and dedup, over an n-symbol alphabet with k-symbol vertices.
 static int64_t count_neighbors(const uint64_t *verts, int n, int k) {
-    std::vector<uint64_t> sorted_verts(verts, verts + R);
+    // Reuse scratch storage: this oracle is called for every canonical leaf.
+    static std::vector<uint64_t> sorted_verts;
+    static std::vector<uint64_t> nbrs;
+    sorted_verts.assign(verts, verts + R);
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
-    std::vector<uint64_t> nbrs;
+    nbrs.clear();
     nbrs.reserve(R * k * n);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < k; p++) {
@@ -660,8 +629,8 @@ static int64_t count_neighbors(const uint64_t *verts, int n, int k) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
-/// CLI entry point: exhaustively search A(2R, R) for the maximum-nk1
-/// extraconnectivity constant at the given R.
+/// CLI entry point: enumerate connected R-patterns and evaluate their
+/// budget-feasible boundary envelope at optional (n,k) queries.
 int main(int argc, const char *argv[]) {
     nauty_check(WORDSIZE, MAX_NAUTY_M, MAX_NAUTY_N, NAUTYVERSIONID);
     if (argc >= 2)
@@ -680,6 +649,10 @@ int main(int argc, const char *argv[]) {
     if (argc >= 3)
         global_nauty_limit =
             static_cast<int>(std::strtol(argv[2], nullptr, 10));
+    if (argc > 3 && (argc - 3) % 2 != 0) {
+        std::cerr << "Usage: " << argv[0] << " R [nauty_limit] [n k]...\n";
+        return 1;
+    }
 
     seen_nauty.resize(R + 1);
     seen_sorted.resize(R + 1);
@@ -717,6 +690,45 @@ int main(int argc, const char *argv[]) {
                       << "  " << extra_symbols << "  " << boundary_at_host
                       << "  " << res.example << "\n";
         }
+    }
+
+    for (int arg = 3; arg + 1 < argc; arg += 2) {
+        const int n = static_cast<int>(std::strtol(argv[arg], nullptr, 10));
+        const int k = static_cast<int>(std::strtol(argv[arg + 1], nullptr, 10));
+        if (n < k || k < 1) {
+            std::cerr << "Ignoring invalid query A(" << n << ',' << k << ")\n";
+            continue;
+        }
+        const int m = n - k;
+        bool found = false;
+        int64_t best = INT64_MAX;
+        int best_defect = 0, best_x = 0, best_p = 0, best_sa = 0;
+        for (const auto &[defect, frontier] : results)
+            for (const Result &res : frontier) {
+                const int extra_symbols =
+                    res.active_symbols - res.active_positions;
+                if (res.active_positions > k || extra_symbols > m)
+                    continue;
+                const int64_t candidate =
+                    (static_cast<int64_t>(R) * k - defect) * m - defect -
+                    res.cons;
+                if (!found || candidate < best) {
+                    found = true;
+                    best = candidate;
+                    best_defect = defect;
+                    best_x = res.cons;
+                    best_p = res.active_positions;
+                    best_sa = res.active_symbols;
+                }
+            }
+        if (found)
+            std::cout << "connected-pattern envelope A(" << n << ',' << k
+                      << "), R=" << R << ": " << best << " via (D,X,p,s_a)=("
+                      << best_defect << ',' << best_x << ',' << best_p << ','
+                      << best_sa << ")\n";
+        else
+            std::cout << "connected-pattern envelope A(" << n << ',' << k
+                      << "), R=" << R << ": no feasible catalogued pattern\n";
     }
 
     std::cout << "  Done       | " << std::fixed << std::setprecision(3)
