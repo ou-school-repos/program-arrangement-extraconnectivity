@@ -26,6 +26,7 @@ lean_lib «Proofs» where
     `Arrangement.PenaltyExact,
     `Arrangement.InternalPairs,
     `Arrangement.CrossTop,
+    `Arrangement.Capstone,
     `Arrangement.ProofAudit,
   ]
 

@@ -1,0 +1,87 @@
+\section{An unconditional Hamming sandwich}\label{sec:hamming-sandwich}
+
+Write $m=n-k$, and let $\Phi_{n,k}(R)$ denote the minimum external
+vertex-boundary size among all $R$-element subsets of $A(n,k)$. Set
+\[
+ E(R)=\sum_{i=0}^{R-1}\operatorname{popcount}(i),\qquad
+ C(R)=(R-1)+\sum_{i=1}^{R-1}\lceil\log_2(i+1)\rceil-E(R),
+\]
+and $H(R,n,k)=(Rk-E(R))m-C(R)$. When
+$d=\lceil\log_2 R\rceil\leq k,m$, the Boolean Hamming ball embeds in
+$A(n,k)$ and has external boundary $H(R,n,k)$; the exact evaluation is
+formalized in Lean as \texttt{hamming\_ball\_eval} and
+\texttt{hb\_cross\_collisions\_closed}.
+
+The former exact-minimum claim $\Phi_{n,k}(R)=H(R,n,k)$ is withdrawn.
+The embedding conditions ensure that the Hamming-ball candidate exists;
+they do not make it optimal. The full-Star certificate in
+$A(11,6)$ at $R=31$ has boundary $450$, whereas $H(31,11,6)=476$.
+
+\begin{theorem}[Unconditional boundary sandwich]\label{thm:hamming-sandwich}
+For every $S\subseteq A(n,k)$ of size $R$ and $k\leq n$,
+\begin{equation}\label{eq:hamming-linear-lower}
+ (Rk-E(R))(n-k)\leq |N(S)|+E(R)+2(R^2-R).
+\end{equation}
+If the Boolean Hamming ball embeds, then
+\begin{equation}\label{eq:hamming-profile-sandwich}
+ \Phi_{n,k}(R)\leq H(R,n,k)
+ \leq \Phi_{n,k}(R)+E(R)+2(R^2-R),
+\end{equation}
+and the upper comparison is witnessed by that ball. This theorem concerns
+the fixed-volume vertex-boundary profile, not $g$-extra connectivity.
+\end{theorem}
+
+\begin{proof}
+For each coordinate $p$, let $\partial_pS$ be the external vertices on a
+$p$-line meeting $S$, and let $U(S)$ count all distinct coordinate roots
+occupied by $S$. The proved root-count inequality gives
+$U(S)\geq Rk-E(R)$. Counting the $m+1$ vertices on each such line and
+subtracting the $Rk$ incidences from vertices of $S$ yields
+\[
+ |N(S)|=U(S)(m+1)-Rk-X(S),\qquad
+ X(S)=\sum_p|\partial_pS|-\left|\bigcup_p\partial_pS\right|.
+\]
+Bonferroni's inequality bounds $X(S)$ by the sum of ordered pairwise
+overlaps. The global witness-pair charging injection proves
+$X(S)\leq2(R^2-R)$. Substitution gives
+\[
+ |N(S)|\geq(Rk-E(R))(m+1)-Rk-2(R^2-R),
+\]
+which is \eqref{eq:hamming-linear-lower}. The Hamming-ball witness gives
+$\Phi_{n,k}(R)\leq H$. Applying \eqref{eq:hamming-linear-lower} to a
+minimizer and using $H\leq(Rk-E(R))m$ gives the other side of
+\eqref{eq:hamming-profile-sandwich}. The Lean development is in
+\texttt{Arrangement/ArrangementExtraconnectivity.lean},
+\texttt{Arrangement/CrossTop.lean}, and
+\texttt{Arrangement/Capstone.lean}; the public theorem is
+\texttt{Arrangement.arrangement\_boundary\_sandwich}.
+\end{proof}
+
+The additive error depends on $R$ alone and is independent of $n$ and $k$.
+Consequently, for fixed $R,k$ with $Rk>E(R)$, the profile has the first-order
+asymptotic slope
+\[
+ \lim_{n\to\infty}\frac{\Phi_{n,k}(R)}{n-k}=Rk-E(R),
+\]
+provided the embedding condition holds (which it does for all sufficiently
+large $n$ when $k\geq d$). More generally, the displayed sandwich yields a
+first-order approximation whenever its explicit error is negligible relative
+to $(Rk-E(R))(n-k)$. It does not classify minimizers or imply a uniform
+convergence statement when $R,k$ vary with $n$.
+
+\begin{proposition}[The zero-error claim fails]\label{prop:hamming-sandwich-sharp}
+For $A(11,6)$ and $R=31$, a full radius-one Star has external boundary
+$450<476=H(31,11,6)$. Thus the additive allowance in
+\eqref{eq:hamming-profile-sandwich} cannot simply be deleted as a universal
+claim.
+\end{proposition}
+
+This example lies at $R=km+1$, outside the small-volume regime in which a
+volume-only error can be negligible relative to the leading term. It shows
+that the relevant extremal geometry need not be a Hamming ball at every
+volume. Determining the lower envelope of Hamming-like, Star-like, and
+intermediate configurations remains open. The result above is a boundary
+profile estimate only: deriving $\kappa_g$ additionally requires proving
+that deleting a candidate boundary gives the required component sizes and
+that every admissible extra cut is controlled by such a component. No such
+reduction is asserted here.
