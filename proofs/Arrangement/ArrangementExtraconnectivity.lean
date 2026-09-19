@@ -792,6 +792,45 @@ private lemma drop_pos_eq_implies_adj {n k : ℕ} (v w : ArrVertex n k)
   rw [hfilter]
   simp
 
+private lemma drop_eq_off {n k : ℕ} {v w : ArrVertex n k} {p : Fin k}
+    (h : drop_pos w p = drop_pos v p) :
+    ∀ r : Fin k, r ≠ p → w.val r = v.val r := by
+  intro r hr
+  let r' : {x : Fin k // x ≠ p} := ⟨r, hr⟩
+  have hh := congrFun h r'
+  unfold drop_pos at hh
+  have hre : (↑r' : Fin k) = r := by
+    apply Fin.ext
+    simp [r']
+  rw [hre] at hh
+  exact hh
+
+lemma coord_overlap_has_two_coordinate_witness {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) {p q : Fin k} (hpq : p ≠ q)
+    {w : ArrVertex n k} (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ∃ v ∈ V', ∃ t ∈ V', v ≠ t ∧
+      (∀ r : Fin k, r ≠ p → r ≠ q → v.val r = t.val r) := by
+  rw [Finset.mem_inter] at hw
+  rcases hw with ⟨hp_mem, hq_mem⟩
+  simp only [coord_boundary, Finset.mem_filter, Finset.mem_univ, true_and]
+    at hp_mem hq_mem
+  obtain ⟨hw_not, v, hv, hpdrop⟩ := hp_mem
+  obtain ⟨_, t, ht, hqdrop⟩ := hq_mem
+  refine ⟨v, hv, t, ht, ?_, ?_⟩
+  · intro hvt
+    apply hw_not
+    have hwv : w = v := by
+      apply Subtype.ext
+      funext r
+      by_cases hrp : r = p
+      · rw [hrp]
+        exact (drop_eq_off hqdrop p hpq).trans
+          (congrArg (fun z : ArrVertex n k => z.val p) hvt.symm)
+      · exact drop_eq_off hpdrop r hrp
+    exact hwv ▸ hv
+  · intro r hrp hrq
+    exact (drop_eq_off hpdrop r hrp).symm.trans (drop_eq_off hqdrop r hrq)
+
 lemma external_neighbors_eq_coord_union {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
     external_neighbors V' =
