@@ -173,10 +173,25 @@ bool choose_absorb(const PackedArrangementGraph &graph,
 }
 
 struct VertexHash {
+    static std::uint64_t splitmix64(std::uint64_t value) noexcept {
+        value += 0x9e3779b97f4a7c15ULL;
+        value = (value ^ (value >> 30)) * 0xbf58476d1ce4e5b9ULL;
+        value = (value ^ (value >> 27)) * 0x94d049bb133111ebULL;
+        return value ^ (value >> 31);
+    }
+
+    static std::uint64_t rotate_left(std::uint64_t value,
+                                     const unsigned amount) noexcept {
+        return (value << amount) | (value >> (64U - amount));
+    }
+
     std::size_t operator()(const Vertex value) const noexcept {
         const std::uint64_t low = static_cast<std::uint64_t>(value);
         const std::uint64_t high = static_cast<std::uint64_t>(value >> 64);
-        return std::hash<std::uint64_t>{}(low ^ (high + (low << 7)));
+        const std::uint64_t mixed_low = splitmix64(low);
+        const std::uint64_t mixed_high = splitmix64(high);
+        return static_cast<std::size_t>(mixed_low ^
+                                        rotate_left(mixed_high, 29));
     }
 };
 
