@@ -225,10 +225,11 @@ static void record_result(int defect, int collisions, int edges, int p, int sa,
                           const std::string &example) {
     auto &frontier = results[defect];
     const int extra = sa - p;
-    for (const Result &old : frontier)
-        if (old.cons >= collisions && old.active_positions <= p &&
-            old.active_symbols - old.active_positions <= extra)
-            return;
+    if (std::any_of(frontier.begin(), frontier.end(), [&](const Result &old) {
+            return old.cons >= collisions && old.active_positions <= p &&
+                   old.active_symbols - old.active_positions <= extra;
+        }))
+        return;
     frontier.erase(std::remove_if(frontier.begin(), frontier.end(),
                                   [&](const Result &r) {
                                       return collisions >= r.cons &&
@@ -679,16 +680,18 @@ int main(int argc, const char *argv[]) {
             .count();
     std::cerr << "\r" << std::string(120, ' ') << "\r";
 
-    std::cout << "D  X  p  s_a  s_a-p  boundary(m=R)  witness\n";
+    std::cout << " D  X  p  s_a  s_a-p  boundary(m=R)  witness\n";
     for (const auto &[defect, frontier] : results) {
         for (const Result &res : frontier) {
             const int extra_symbols = res.active_symbols - res.active_positions;
             const int64_t slope = static_cast<int64_t>(R) * R - defect;
             const int64_t boundary_at_host = slope * R - defect - res.cons;
-            std::cout << defect << "  " << res.cons << "  "
-                      << res.active_positions << "  " << res.active_symbols
-                      << "  " << extra_symbols << "  " << boundary_at_host
-                      << "  " << res.example << "\n";
+            std::cout << std::right << std::setw(2) << defect << "  "
+                      << std::setw(2) << res.cons << "  " << std::setw(2)
+                      << res.active_positions << "  " << std::setw(3)
+                      << res.active_symbols << "  " << std::setw(5)
+                      << extra_symbols << "  " << std::setw(14)
+                      << boundary_at_host << "  " << res.example << "\n";
         }
     }
 
@@ -791,8 +794,9 @@ int main(int argc, const char *argv[]) {
                     (static_cast<int64_t>(R) * R - defect) * R - defect -
                     res.cons;
 
-                std::cout << "  [brute-force D=" << defect << ", X=" << res.cons
-                          << "] |N(V')| = " << brute_count;
+                std::cout << "  [brute-force D=" << std::setw(2) << defect
+                          << ", X=" << std::setw(2) << res.cons
+                          << "] |N(V')| = " << std::setw(4) << brute_count;
                 if (brute_count == theory_val) {
                     std::cout << " \xe2\x9c\x93\n";
                 } else {

@@ -1,21 +1,21 @@
 # The Extraconnectivity of Arrangement Graphs: An Algebraic Defect Framework
 
-This repository contains the high-performance C++ engine, data assets, and an
-in-progress Lean 4 formalization for the $(R-1)$-extraconnectivity program on
-Arrangement Graphs $A(n,k)$. The computational side is implemented end to end;
-the stable Lean proof path verifies the algebraic defect framework and explicit
-Hamming-ball construction, while the final extremal combinatorics step remains
-isolated behind explicit hypothesis interfaces.
+This repository contains computational and Lean work on vertex boundaries and
+extra-connectivity in Arrangement Graphs $A(n,k)$. The Lean development proves
+an unconditional fixed-volume Hamming-sandwich bound, not exact optimality or a
+general formula for extra-connectivity. The connected-pattern search and the
+small exact-profile enumerators are distinct computational tools; neither by
+itself determines the full unrestricted $R$-spectrum.
 
 ## The Core Theoretical Breakthroughs
 
 ### The Discovery: OEIS A000788 & The Hamming Ball
 
-Using an exhaustive topological search (powered by **McKay's Nauty** for
-canonical pruning), we verified that the maximum number of internal edges $E(R)$
-for connected subgraphs matches the cumulative binary weight sequence (OEIS
-A000788). This identifies the optimal fault-isolation topologies as embedded
-lexicographic Hamming Balls.
+The algebraic defect bound is proved in Lean and matches the cumulative binary
+weight sequence (OEIS A000788). Hamming balls provide exact boundary witnesses
+when the embedding conditions hold. They are not universally optimal in
+arrangement graphs; finite counterexamples and the additive-error sandwich are
+documented below and in `docs/lean-proof-status.md`.
 
 ### The Failure of Geometric Compression
 
@@ -114,11 +114,11 @@ defined the remaining extremal bounds as rigorous `Prop` declarations in Lean 4:
 ```text
 ├── Makefile                                 # Unified build system (C++, Lean 4, Python, Docs)
 ├── src/
-│   ├── arrangement.cpp                      # Optimized SWAR/Nauty exhaustive search
+│   ├── arrangement.cpp                      # Symmetry-reduced connected-pattern catalogue
 │   └── predict.cpp                          # O(R^4) Extraconnectivity Engine and Pareto Analyzer
 ├── proofs/
 │   ├── Arrangement/
-│   │   ├── ArrangementExtraconnectivity.lean # Stable conditional capstone theorem
+│   │   ├── Capstone.lean                     # Unconditional Hamming-sandwich theorem
 │   │   ├── PenaltyExact.lean                 # Unconditional penalty identities
 │   │   ├── ArrDefs.lean                      # Core graph definitions
 │   │   ├── HypercubeEdges.lean               # OEIS A000788 combinatorics
