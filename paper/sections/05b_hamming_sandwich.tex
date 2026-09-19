@@ -12,6 +12,13 @@ $A(n,k)$ and has external boundary $H(R,n,k)$; the exact evaluation is
 formalized in Lean as \texttt{hamming\_ball\_eval} and
 \texttt{hb\_cross\_collisions\_closed}.
 
+For $R\geq1$, grouping the summands in $C(R)$ by binary length gives the
+equivalent closed form
+\begin{equation}\label{eq:cconst}
+ C(R)=R\bigl(\lceil\log_2 R\rceil+1\bigr)
+      -2^{\lceil\log_2 R\rceil}-E(R).
+\end{equation}
+
 The identity $\Phi_{n,k}(R)=H(R,n,k)$ does not hold in general. The embedding
 conditions ensure that the Hamming-ball candidate exists; they do not make it
 optimal. The full-Star certificate in
@@ -48,13 +55,11 @@ $X(S)\leq2(R^2-R)$. Substitution gives
  |N(S)|\geq(Rk-E(R))(m+1)-Rk-2(R^2-R),
 \]
 which is \eqref{eq:hamming-linear-lower}. The Hamming-ball witness gives
-$\Phi_{n,k}(R)\leq H$. Applying \eqref{eq:hamming-linear-lower} to a
-minimizer and using $H\leq(Rk-E(R))m$ gives the other side of
-\eqref{eq:hamming-profile-sandwich}. The Lean development is in
-\texttt{Arrangement/ArrangementExtraconnectivity.lean},
-\texttt{Arrangement/CrossTop.lean}, and
-\texttt{Arrangement/Capstone.lean}; the public theorem is
-\texttt{Arrangement.arrangement\_boundary\_sandwich}.
+$\Phi_{n,k}(R)\leq H$. Applying the lower bound to a minimizer and using
+$H\leq(Rk-E(R))m$ gives the other side of
+\eqref{eq:hamming-profile-sandwich}. These counting and comparison steps are
+formalized in Lean, including the global collision estimate and the capstone
+profile theorem.
 \end{proof}
 
 The additive error depends on $R$ alone and is independent of $n$ and $k$.

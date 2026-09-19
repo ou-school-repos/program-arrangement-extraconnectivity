@@ -4,19 +4,15 @@ The Lean development mechanizes the coordinate-root boundary identity, the
 defect inequality, the ordered Bonferroni overlap estimate, the global
 witness-pair charging bound, and the resulting additive-error boundary
 estimate. The Hamming-ball collision count is proved directly, giving an
-exact evaluation of that construction. These components compose in
-\texttt{Arrangement/Capstone.lean} to prove
-\texttt{Arrangement.arrangement\_boundary\_sandwich} and
-\texttt{Arrangement.boundary\_profile\_first\_order}. The public theorem
-states a boundary-profile sandwich, not exact optimality and not an
-extra-connectivity formula.
+exact evaluation of that construction. These components compose in the
+capstone module to prove the boundary-profile sandwich and the first-order
+profile estimate. The public theorem states a boundary-profile sandwich, not
+exact optimality and not an extra-connectivity formula.
 
-The source modules are \texttt{Arrangement/ArrangementExtraconnectivity.lean}
-(root counts, boundary decomposition, and collision charging),
-\texttt{Arrangement/CrossTop.lean} (Hamming-ball evaluation), and
-\texttt{Arrangement/Capstone.lean} (profile and sandwich). The theorem audit
-in \texttt{Arrangement/ProofAudit.lean} checks the active capstone dependency
-terms for \texttt{sorryAx}. Refuted exact-boundary statements and their
+The source modules implement root counts, boundary decomposition, collision
+charging, Hamming-ball evaluation, and the profile capstone. The theorem audit
+checks the active capstone dependency terms for \texttt{sorryAx}. Refuted
+exact-boundary statements and their
 finite counterexample certificates are kept outside this active dependency
 chain. The general Star-cut connectivity theorem, a classification of
 intermediate extremizers, and the reduction from the boundary profile to
