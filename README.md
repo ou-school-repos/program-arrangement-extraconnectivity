@@ -167,6 +167,19 @@ This reports the connected-pattern envelope at those cells, not the unrestricted
 profile. The following benchmark transcript is retained as historical output
 from the previous CLI; it is not the current output format.
 
+For a simpler exhaustive reference catalogue on the finite host `A(2R-2,R-1)`,
+build and run:
+
+```bash
+make bin/pattern_catalogue
+./bin/pattern_catalogue 5 5 3 6 3 5 4 6 4
+```
+
+This independent enumerator is intended for small-R differential checks. Its
+fixed buffers currently limit `R` to 1–9, and runtime grows rapidly; its
+predictions are still for the connected-pattern envelope, not the unrestricted
+profile or extra-connectivity.
+
 <details>
 <summary><strong>Historical arrangement-search output (previous CLI)</strong></summary>
 
