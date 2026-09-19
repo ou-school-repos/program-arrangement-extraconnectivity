@@ -59,6 +59,8 @@ class CheckpointManager {
         namespace fs = std::filesystem;
         std::error_code error;
         if (!fs::is_directory(directory_, error)) {
+            if (error == std::errc::no_such_file_or_directory)
+                return false;
             if (error)
                 throw std::runtime_error(
                     "cannot inspect checkpoint directory: " + directory_);

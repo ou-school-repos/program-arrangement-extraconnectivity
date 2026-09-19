@@ -180,7 +180,7 @@ test: 	##H @Test Run fast test suites
 	./.tmp/test_validate_extra_cut_checkpoint ./bin/validate_extra_cut_bitmap
 	# Begin test
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
-		python3 scripts/test_regression.py --oracle tests/oracle_small.json
+		python3 scripts/test_regression.py --oracle tests/res/oracle_small.json
 	# Begin test
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
 		python3 scripts/test_regression.py
