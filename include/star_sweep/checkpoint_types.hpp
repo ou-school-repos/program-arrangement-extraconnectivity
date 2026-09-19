@@ -1,6 +1,7 @@
 #ifndef STAR_SWEEP_CHECKPOINT_TYPES_HPP
 #define STAR_SWEEP_CHECKPOINT_TYPES_HPP
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
@@ -76,11 +77,11 @@ struct CheckpointState {
         if (component_sizes.empty() || direction_history.size() != layer)
             throw std::invalid_argument(
                 "invalid star-sweep checkpoint history");
-        for (const std::uint64_t size : component_sizes) {
-            if (size == 0 || size > signature.valid_count)
-                throw std::invalid_argument(
-                    "invalid checkpoint component size");
-        }
+        if (std::any_of(component_sizes.begin(), component_sizes.end(),
+                        [this](const std::uint64_t size) {
+                            return size == 0 || size > signature.valid_count;
+                        }))
+            throw std::invalid_argument("invalid checkpoint component size");
         if (component_anchor >= signature.valid_count)
             throw std::invalid_argument(
                 "checkpoint component anchor out of range");
