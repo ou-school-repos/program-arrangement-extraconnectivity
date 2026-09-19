@@ -260,10 +260,29 @@ int main(int argc, char **argv) {
             return 2;
         }
     }
+    if (n < 1 || k < 1 || k > n || max_volume_arg < -1) {
+        std::cerr << "require n >= 1, 1 <= k <= n, max_R >= 0\n";
+        return 2;
+    }
+    constexpr std::size_t max_vertices = 500'000;
+    std::size_t vertex_count = 1;
+    for (int i = 0; i < k; ++i) {
+        const auto factor = static_cast<std::size_t>(n - i);
+        if (vertex_count > max_vertices / factor) {
+            std::cerr << "graph exceeds " << max_vertices << " vertices\n";
+            return 2;
+        }
+        vertex_count *= factor;
+    }
     const Instance instance(n, k);
     const int max_volume = max_volume_arg >= 0
                                ? max_volume_arg
                                : static_cast<int>(instance.vertices.size());
+    if (static_cast<std::size_t>(max_volume) > instance.vertices.size()) {
+        std::cerr << "max_R exceeds vertex count " << instance.vertices.size()
+                  << '\n';
+        return 2;
+    }
 
     std::vector<std::vector<int>> fibers;
     const auto order = greedy_fiber_order(instance, fibers);

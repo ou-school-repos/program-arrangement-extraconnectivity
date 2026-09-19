@@ -93,11 +93,34 @@ int boundary_size(const std::vector<int> &subset, const Instance &instance) {
 } // namespace
 
 int main(int argc, char **argv) {
+    if (argc > 4) {
+        std::cerr << "usage: " << argv[0] << " [n] [k] [max_R]\n";
+        return 2;
+    }
     const int n = argc > 1 ? std::stoi(argv[1]) : 5;
     const int k = argc > 2 ? std::stoi(argv[2]) : 3;
     const int max_volume = argc > 3 ? std::stoi(argv[3]) : 6;
+    if (n < 1 || k < 1 || k > n || max_volume < 0) {
+        std::cerr << "require n >= 1, 1 <= k <= n, max_R >= 0\n";
+        return 2;
+    }
+    constexpr std::size_t max_vertices = 500'000;
+    std::size_t vertex_count = 1;
+    for (int i = 0; i < k; ++i) {
+        const auto factor = static_cast<std::size_t>(n - i);
+        if (vertex_count > max_vertices / factor) {
+            std::cerr << "graph exceeds " << max_vertices << " vertices\n";
+            return 2;
+        }
+        vertex_count *= factor;
+    }
 
     const Instance instance(n, k);
+    if (static_cast<std::size_t>(max_volume) > instance.vertices.size()) {
+        std::cerr << "max_R exceeds vertex count " << instance.vertices.size()
+                  << '\n';
+        return 2;
+    }
     std::cout << "Transfer-DP slice audit for A(" << n << ',' << k
               << ") max_R=" << max_volume << "\n"
               << "vertices=" << instance.vertices.size() << "\n\n";
@@ -124,7 +147,7 @@ int main(int argc, char **argv) {
                 auto expanded = slice_subsets[i];
                 expanded.push_back(vertex);
                 slice_subsets.push_back(std::move(expanded));
-                if (slice_subsets.size() >= max_slice_subsets) {
+                if (slice_subsets.size() > max_slice_subsets) {
                     std::cerr << "slice " << slice << " exceeds the subset "
                               << "limit of " << max_slice_subsets << '\n';
                     return 1;

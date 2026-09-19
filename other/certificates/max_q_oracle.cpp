@@ -97,6 +97,20 @@ int main(int argc, char **argv) {
         std::fprintf(stderr, "R exceeds |A(n,k)|\n");
         return 2;
     }
+    constexpr std::uint64_t max_search_leaves = 50'000'000;
+    const std::uint64_t available =
+        static_cast<std::uint64_t>(verts.size() - 1);
+    std::uint64_t choose = static_cast<std::uint64_t>(R - 1);
+    choose = std::min(choose, available - choose);
+    unsigned __int128 search_leaves = 1;
+    for (std::uint64_t i = 1; i <= choose; ++i) {
+        search_leaves = search_leaves * (available - choose + i) / i;
+        if (search_leaves > max_search_leaves) {
+            std::fprintf(stderr, "search exceeds %llu origin-pinned subsets\n",
+                         static_cast<unsigned long long>(max_search_leaves));
+            return 2;
+        }
+    }
     const std::uint64_t vertex_count = static_cast<std::uint64_t>(verts.size());
     const std::uint64_t degree = static_cast<std::uint64_t>(k) * (n - k);
     constexpr std::uint64_t max_adjacency_entries = 100'000'000;

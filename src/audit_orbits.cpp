@@ -10,10 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-using Count = unsigned __int128;
-#pragma GCC diagnostic pop
+__extension__ using Count = unsigned __int128;
 
 std::string to_string(Count value) {
     if (value == 0)
@@ -122,9 +119,27 @@ int main(int argc, char **argv) {
         std::cerr << "unsupported audit range\n";
         return 1;
     }
+    constexpr std::uint64_t max_group_size = 50'000'000;
+    std::uint64_t group_size = 1;
+    for (const int degree : {n, k}) {
+        for (int factor = 2; factor <= degree; ++factor) {
+            const auto value = static_cast<std::uint64_t>(factor);
+            if (group_size > max_group_size / value) {
+                std::cerr << "automorphism group exceeds work limit\n";
+                return 1;
+            }
+            group_size *= value;
+        }
+    }
     double vertex_count = 1;
     for (int i = 0; i < k; ++i)
         vertex_count *= n - i;
+    constexpr std::uint64_t max_vertex_visits = 100'000'000;
+    if (group_size >
+        max_vertex_visits / static_cast<std::uint64_t>(vertex_count)) {
+        std::cerr << "Burnside enumeration exceeds work limit\n";
+        return 1;
+    }
     if (maximum > static_cast<int>(vertex_count)) {
         std::cerr << "max_R exceeds vertex count |A(n,k)|\n";
         return 1;

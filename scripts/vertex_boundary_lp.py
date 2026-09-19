@@ -6,7 +6,7 @@ Usage: ./scripts/vertex_boundary_lp.py [n] [k] [max_volume]
 The LP uses x_v for selected mass and y_v for boundary mass:
     sum(x_v) = volume
     x_u + y_u <= 1
-    x_v - y_u <= 0 for every edge (u, v)
+    x_u - x_v - y_v <= 0 for every directed edge (u, v)
     0 <= x_v, y_v <= 1
 """
 
@@ -48,6 +48,17 @@ def solve_profile(n: int, k: int, max_volume: int) -> list[float]:
         raise SystemExit("require n >= 1 and 1 <= k <= n")
     if max_volume < 0:
         raise SystemExit("require max_volume >= 0")
+    max_vertices = 100_000
+    vertex_count_bound = 1
+    for i in range(k):
+        factor = n - i
+        if vertex_count_bound > max_vertices // factor:
+            raise SystemExit(f"graph exceeds {max_vertices} vertices")
+        vertex_count_bound *= factor
+    if max_volume > vertex_count_bound:
+        raise SystemExit(
+            f"max_volume={max_volume} exceeds vertex count {vertex_count_bound}"
+        )
     try:
         # Keep SciPy optional so the rest of the repository does not require it.
         # pylint: disable=import-outside-toplevel
@@ -59,8 +70,6 @@ def solve_profile(n: int, k: int, max_volume: int) -> list[float]:
 
     vertices, edges, roots = arrangement_graph(n, k)
     vertex_count = len(vertices)
-    if max_volume > vertex_count:
-        raise SystemExit(f"max_volume={max_volume} exceeds vertex count {vertex_count}")
     root_count = len(roots)
     z_offset = 2 * vertex_count
     variable_count = z_offset + root_count
