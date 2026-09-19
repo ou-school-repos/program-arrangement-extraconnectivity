@@ -15,7 +15,7 @@
 // Also records (D,X,s) of minimizers.
 #include <bits/stdc++.h>
 using namespace std;
-typedef unsigned __int128 B;
+__extension__ typedef unsigned __int128 B;
 int n, k, R, NV;
 vector<vector<int>> W;
 vector<B> A1, A2;
@@ -52,6 +52,10 @@ void rec(int sz, B Sset, B ext, B NS2, B N1) {
     }
 }
 int main(int argc, char **argv) {
+    if (argc != 4) {
+        fprintf(stderr, "Usage: exact_profile_d2 n k R\n");
+        return 1;
+    }
     n = atoi(argv[1]);
     k = atoi(argv[2]);
     R = atoi(argv[3]);
@@ -72,11 +76,11 @@ int main(int argc, char **argv) {
     };
     vector<int> c;
     gen(c);
-    NV = W.size();
-    if (NV > 128) {
+    if (W.size() > 128) {
         puts("too big");
         return 1;
     }
+    NV = static_cast<int>(W.size());
     map<vector<int>, int> id;
     for (int i = 0; i < NV; i++)
         id[W[i]] = i;
@@ -109,7 +113,7 @@ int main(int argc, char **argv) {
             v.erase(v.begin() + q);
             r.insert(v);
         }
-        U += r.size();
+        U += static_cast<int>(r.size());
     }
     set<int> sym;
     for (int t = 0; t < R; t++)
