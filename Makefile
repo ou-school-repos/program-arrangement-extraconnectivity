@@ -104,10 +104,10 @@ $(BINS): bin/%: src/%.cpp
 
 -include $(BINS:=.d)
 
-TEST_BINS := .tmp/test_star_sweep_checkpoint \
-	.tmp/test_validate_extra_cut_checkpoint .tmp/test_pattern_catalogue
-.tmp/test_star_sweep_checkpoint: CXXFLAGS += -fopenmp
-$(TEST_BINS): .tmp/test_%: tests/test_%.cpp
+TEST_BINS := bin/test_star_sweep_checkpoint \
+	bin/test_validate_extra_cut_checkpoint bin/test_pattern_catalogue
+bin/test_star_sweep_checkpoint: CXXFLAGS += -fopenmp
+$(TEST_BINS): bin/test_%: tests/test_%.cpp
 	@mkdir -p $(@D)
 	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -MF $@.d -o $@ $<
 -include $(TEST_BINS:=.d)
@@ -180,9 +180,9 @@ test: bin/predict bin/arrangement bin/pattern_catalogue \
 	# Begin test
 	python3 tests/test_predict.py --max-r $(R)
 	# Begin test
-	./.tmp/test_star_sweep_checkpoint
+	./bin/test_star_sweep_checkpoint
 	# Begin test
-	./.tmp/test_validate_extra_cut_checkpoint ./bin/validate_extra_cut_bitmap
+	./bin/test_validate_extra_cut_checkpoint ./bin/validate_extra_cut_bitmap
 	# Begin test
 	# NOTE: run this without --oracle for a full (long ~10 minute) test.
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
@@ -190,7 +190,7 @@ test: bin/predict bin/arrangement bin/pattern_catalogue \
 	# Begin test
 	PROFILE_BIN=./bin/exact_profile_naive python3 tests/test_exact_profile.py
 	# Begin test
-	./.tmp/test_pattern_catalogue
+	./bin/test_pattern_catalogue
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
