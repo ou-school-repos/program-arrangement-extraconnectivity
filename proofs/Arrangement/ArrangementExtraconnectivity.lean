@@ -1132,14 +1132,10 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
     exact ⟨hz.1, hz.2.1, hz.2.2.1⟩
   have hinj : Set.InjOn charge ↑((tagged_coordinate_overlaps V').attach) := by
     intro x hx y hy hxy
-    let p := x.1.1
-    let q := x.1.2.1
-    let w := x.1.2.2
-    let p' := y.1.1
-    let q' := y.1.2.1
-    let w' := y.1.2.2
-    have htagx := (mem_tagged_coordinate_overlaps V' p q w).mp x.2
-    have htagy := (mem_tagged_coordinate_overlaps V' p' q' w').mp y.2
+    rcases x with ⟨⟨p, ⟨q, w⟩⟩, htagx_raw⟩
+    rcases y with ⟨⟨p', ⟨q', w'⟩⟩, htagy_raw⟩
+    have htagx := (mem_tagged_coordinate_overlaps V' p q w).mp htagx_raw
+    have htagy := (mem_tagged_coordinate_overlaps V' p' q' w').mp htagy_raw
     let zx := overlap_witness_pair V' p q htagx.1 w htagx.2
     let zy := overlap_witness_pair V' p' q' htagy.1 w' htagy.2
     have hsx := overlap_witness_pair_spec V' p q htagx.1 w htagx.2
@@ -1164,8 +1160,6 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
       have hw := coord_overlap_vertex_unique htagx.1
         hsx.2.2.2.1 hsx.2.2.2.2.1 hsy_p hsy_q
       apply Subtype.ext
-      change (⟨p, ⟨q, w⟩⟩ : Σ p : Fin k, Σ q : Fin k, ArrVertex n k) =
-        ⟨p', ⟨q', w'⟩⟩
       cases hp
       cases hq
       simpa using hw
