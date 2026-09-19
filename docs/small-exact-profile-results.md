@@ -90,12 +90,12 @@ requested volume.
 
 Reported runs include:
 
-| Case          | Enumerated distance-two-connected sets |                                          Runtime | Minimum boundary |
-| ------------- | -------------------------------------: | -----------------------------------------------: | ---------------: |
-| (A(5,3), R=7) |                             30,372,391 |                                     about 0.21 s |               17 |
-| (A(6,4), R=5) |                              5,832,295 |                                     about 0.91 s |               24 |
-| (A(6,4), R=6) |                            299,133,660 |                                     about 44.7 s |               27 |
-| (A(6,3), R=7) |                      about 1.9 billion | reported as completed; runtime not recorded here |               25 |
+| Case          | Enumerated distance-two-connected sets |        Runtime | Minimum boundary |
+| ------------- | -------------------------------------: | -------------: | ---------------: |
+| (A(5,3), R=7) |                             30,372,391 |        1.471 s |               17 |
+| (A(6,4), R=5) |                              5,832,295 |        0.884 s |               24 |
+| (A(6,4), R=6) |                            299,133,660 |       41.851 s |               27 |
+| (A(6,3), R=7) |                          1,903,137,054 |      134.642 s |               25 |
 
 Representative commands:
 
