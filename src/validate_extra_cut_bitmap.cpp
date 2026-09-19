@@ -530,6 +530,9 @@ int main(int argc, char **argv) {
                 return;
             }
 
+            if (next_frontier_size == 0)
+                break;
+
             if (disk_backed) {
                 star_sweep::CheckpointState state;
                 state.signature = expected_signature;
@@ -556,8 +559,6 @@ int main(int argc, char **argv) {
                     std::exit(99);
             }
 
-            if (next_frontier_size == 0)
-                break;
             visited.merge_from(next_frontier);
             current_frontier.swap(next_frontier);
             next_frontier.clear();
