@@ -855,7 +855,7 @@ lemma ordered_overlap_insert {α ι : Type*} [DecidableEq α] [DecidableEq ι]
     have hne : a ≠ i := by
       intro hai
       exact ha (hai ▸ hi)
-    simp [Finset.erase_insert_of_ne hne, ha, hi]
+    simp [Finset.erase_insert_of_ne hne, ha]
   rw [h_rows, Finset.sum_add_distrib]
   have h_comm :
       (∑ i ∈ s, (f i ∩ f a).card) =
@@ -879,7 +879,7 @@ lemma card_biUnion_le_ordered_overlap {α ι : Type*} [Fintype α]
           (f a ∩ u).card ≤ ∑ b ∈ s, (f a ∩ f b).card := by
         have h_eq : f a ∩ u = s.biUnion (fun b => f a ∩ f b) := by
           ext x
-          simp [u, and_assoc, and_left_comm, and_comm]
+          simp [u, and_assoc, and_comm]
         rw [h_eq]
         exact Finset.card_biUnion_le
       have h_union := Finset.card_union_add_card_inter (f a) u
