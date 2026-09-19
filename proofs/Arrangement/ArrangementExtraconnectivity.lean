@@ -45,30 +45,17 @@ unrestricted isoperimetric theorem is claimed here.
    counterexample and has been removed; see `docs/lean-proof-status.md`'s "Superseded"
    note.)
 
-5. **The Capstone** — Sandwich of lower bound (∀ V') and upper bound (∃ Hamming Ball).
+5. **Conditional boundary composition** — the legacy Hamming-ball composition
+   statements below are explicitly conditional; they are not unconditional
+   isoperimetric results. The refuted unrestricted inequality is kept outside
+   the active source tree under `Arrangement/refuted/`.
 
-## Remaining Hypothesis Interfaces (2, not raw axioms)
-
-| Interface | Role | Status |
-|-------|------|--------|
-| `UniversalLowerBound` | Universal boundary inequality (∀ V') | **False as stated**; see below |
-| `HBCrossCollisions` | Hamming Ball's exact cross-collision equality | Proved by `CrossTop.hb_cross_collisions_closed` |
-
-Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
-the boundary-minimum composition theorem, not raw `axiom` declarations.
-**`UniversalLowerBound` is refuted**: the full-Star set in `A(10,8)` (center
-plus all sixteen single-coordinate replacements by symbol 8 or 9) has R = 17,
-external boundary 168, while the formula demands ≥ 169. See the definition's
-docstring below for the exact witness and `docs/proof-sketch-weighted-potential.md`'s
-"Full-Star Failure Landscape" section for how far the failure extends. No
-instance of `UniversalLowerBound` is proved or axiomatized anywhere in this
-development, so `arrangement_boundary_minimum_of_cross` and
-`globally_optimal_growth_strategy_of_cross` remain correct, unconditionally
-verified conditional theorems -- they simply await a restricted replacement
-hypothesis under which the antecedent is actually true, which is open. See
-`docs/lean-proof-status.md` for full status and
-`docs/collision-axiom-roadmap.md` for the formalization path (both already
-document this refutation).
+The active development proves boundary identities, defect bounds, the global
+factor-two collision estimate, and an unconditional small-volume lower bound.
+It does not prove a universal Hamming-ball minimum-boundary theorem. The
+Hamming-ball cross-collision evaluation is proved by
+`CrossTop.hb_cross_collisions_closed`. See `docs/lean-proof-status.md` for the
+current theorem status.
 
 ## References
 
@@ -1237,11 +1224,12 @@ lemma coordinate_bonferroni_ordered {n k : ℕ}
   - See docs/lean-proof-status.md and docs/collision-axiom-roadmap.md, both of
     which already document this refutation, for formalization status
 
-  This definition is retained, unproved and unrefuted-as-a-restricted-claim,
-  solely to name the hypothesis that `UniversalCounterexample.lean` refutes.
-  The active capstone hypothesis is `RestrictedLowerBound`, which gates the
-  boundary inequality under the hypercube embedding conditions.
-  No instance of `UniversalLowerBound` is assumed as an axiom anywhere in this file.
+  This definition is retained solely as the named proposition refuted by
+  `UniversalCounterexample.lean`; it is not an active conjecture or a usable
+  theorem. In particular, do not infer that gating the same inequality by
+  `can_embed_hypercube` repairs it: `RestrictedLowerBound` is a separate
+  proposition and has its own counterexamples. No instance of this false
+  proposition is assumed as an axiom anywhere in this file.
 -/
 def UniversalLowerBound (R n k : ℕ) : Prop :=
   ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
@@ -1571,12 +1559,6 @@ The factor-one *ordered-overlap* claim is refuted: in `A(5,3)`, the pair
 coordinate pair `{0,1}`, giving ordered overlap 4 although `R(R-1)=2`.
 -/
 
-/-- The factor-one cross-collision estimate. It is not proved by the global
-    ordered-overlap injection below; that argument establishes the factor-two
-    version. -/
-def CrossCollisionBound {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
-  cross_collisions V' ≤ V'.card * (V'.card - 1)
-
 /-- The unconditional collision estimate proved by global ordered charging. -/
 def CrossCollisionBoundTwice {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
   cross_collisions V' ≤ 2 * (V'.card * V'.card - V'.card)
@@ -1594,42 +1576,6 @@ lemma cross_collision_bound_global {n k : ℕ}
   rw [← external_neighbors_eq_coord_union V'] at hbonf
   have hoverlap := coordinate_ordered_overlap_le_global_bound V'
   unfold CrossCollisionBoundTwice cross_collisions
-  omega
-
-/--
-  Bonferroni overlap proposition for the coordinate boundary family.
-
-  The right-hand side is the union cardinality plus all pairwise coordinate
-  overlaps.  Proving this is a generic finite-set argument; it does not use
-  injectivity of arrangement vertices.
--/
-def CoordinateBonferroni (V' : Finset (ArrVertex n k)) : Prop :=
-  total_coord_edges V' ≤ external_neighbors V' +
-    (Finset.univ : Finset (Fin k)).sum (fun p =>
-      ((Finset.univ : Finset (Fin k)).filter (fun q => p < q)).sum (fun q =>
-        (coord_boundary V' p ∩ coord_boundary V' q).card))
-
-/--
-  Pair-charging proposition.  Every pairwise coordinate overlap is charged to
-  an ordered pair of distinct members of `V'`, with the total charge bounded by
-  `|V'| (|V'|-1)`.  This is the arrangement-specific common-neighbor step.
--/
-def CoordinatePairCharging (V' : Finset (ArrVertex n k)) : Prop :=
-  (Finset.univ : Finset (Fin k)).sum (fun p =>
-      ((Finset.univ : Finset (Fin k)).filter (fun q => p < q)).sum (fun q =>
-        (coord_boundary V' p ∩ coord_boundary V' q).card)) ≤
-    V'.card * (V'.card - 1)
-
-/-- The explicit conjectural bridge from the two finite-set propositions. -/
-def CrossCollisionChargingConjecture (V' : Finset (ArrVertex n k)) : Prop :=
-  CoordinateBonferroni V' ∧ CoordinatePairCharging V'
-
-lemma cross_collisions_of_charging {n k : ℕ}
-    (V' : Finset (ArrVertex n k))
-    (h : CrossCollisionChargingConjecture V') :
-    CrossCollisionBound V' := by
-  unfold CrossCollisionChargingConjecture CoordinateBonferroni
-    CoordinatePairCharging CrossCollisionBound cross_collisions at *
   omega
 
 /-- Algebraic consequence of the factor-two collision estimate. -/
@@ -1787,9 +1733,12 @@ theorem defect_eq_popcount_of_small_error {n k : ℕ}
   omega
 
 /-!
-The global charging argument above proves `CrossCollisionBoundTwice`; in
-particular, the factor-two version of the small-volume lower bound is
-unconditional. The factor-one `CrossCollisionBound` remains unproved here.
+The global charging argument above proves the factor-two collision estimate,
+so the small-volume lower bound derived from it is unconditional. The
+factor-one interface and its proposed Bonferroni/charging hypotheses are
+archived in `Arrangement.unused.CollisionCharging`; they are not used by the
+active development. The ordered factor-one overlap claim is false (see that
+module's warning).
 -/
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/

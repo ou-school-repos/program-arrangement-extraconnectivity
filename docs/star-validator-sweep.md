@@ -22,7 +22,7 @@ m &= n-k,\\
 \\
 R &= \lvert S\rvert = 1+km,\\
 g &= R-1=km,\\
-d &= \operatorname{BitLength}(R-1).
+d &= \text{BitLength}(R-1).
 \end{aligned}
 $$
 
