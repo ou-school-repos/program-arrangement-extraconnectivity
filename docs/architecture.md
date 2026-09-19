@@ -12,8 +12,8 @@ profile, or by itself compute extra-connectivity.
 `src/pattern_catalogue.cpp` is a separate, deliberately straightforward ESU
 reference enumerator. It uses the finite host `A(2R-2,R-1)` and direct boundary
 recounting to produce connected-pattern signatures for small-R differential
-checks against the symmetry-reduced engine. Its fixed buffers limit R to 9; this
-is a storage limit, not a practical runtime promise.
+checks against the symmetry-reduced engine. It accepts 2 <= R <= 9 due to fixed
+buffers; this is a storage limit, not a practical runtime promise.
 
 **Key result:** the Lean development proves an unconditional fixed-volume
 Hamming-sandwich theorem with an explicit volume-only additive error and an

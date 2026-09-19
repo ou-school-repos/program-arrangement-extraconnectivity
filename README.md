@@ -176,7 +176,7 @@ make bin/pattern_catalogue
 ```
 
 This independent enumerator is intended for small-R differential checks. Its
-fixed buffers currently limit `R` to 1–9, and runtime grows rapidly; its
+fixed buffers currently limit `R` to 2–9, and runtime grows rapidly; its
 predictions are still for the connected-pattern envelope, not the unrestricted
 profile or extra-connectivity.
 

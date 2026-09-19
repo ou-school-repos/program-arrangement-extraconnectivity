@@ -209,8 +209,8 @@ int main(int argc, char **argv) {
         std::fprintf(stderr, "Usage: %s R [n k]...\n", argv[0]);
         return 1;
     }
-    if (!parse_int(argv[1], R) || R < 1 || R > max_r) {
-        std::fprintf(stderr, "R must be in 1..%d (fixed pattern buffers).\n",
+    if (!parse_int(argv[1], R) || R < 2 || R > max_r) {
+        std::fprintf(stderr, "R must be in 2..%d (fixed pattern buffers).\n",
                      max_r);
         return 1;
     }
@@ -246,10 +246,7 @@ int main(int argc, char **argv) {
     for (const int neighbor : adjacency[0])
         ++set_neighbor_count[static_cast<std::size_t>(neighbor)];
     std::vector<int> initial_extension = adjacency[0];
-    if (R == 1)
-        evaluate_leaf();
-    else
-        enumerate_connected(1, std::move(initial_extension));
+    enumerate_connected(1, std::move(initial_extension));
 
     std::printf(
         "R=%d host=A(%d,%d) connected sets through root=%llu signatures=%zu\n",
