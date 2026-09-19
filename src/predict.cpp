@@ -37,6 +37,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -538,7 +539,12 @@ int main(int argc, const char *argv[]) {
             return 1;
         }
         const int m = n - k;
-        R = 1 + k * m;
+        const int64_t R64 = 1 + static_cast<int64_t>(k) * m;
+        if (R64 > static_cast<int64_t>(std::numeric_limits<int>::max())) {
+            std::cerr << "Error: R exceeds supported analytical range\n";
+            return 1;
+        }
+        R = static_cast<int>(R64);
         const int64_t e = A000788(R);
         const int64_t c = constant_analytical(R);
         const int128_t hamming = (widen(R) * k - e) * m - c;

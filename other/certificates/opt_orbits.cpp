@@ -20,8 +20,16 @@ long long C(int r) {
         s += 32 - __builtin_clz(i);
     return s;
 }
-int main(int, char **v) {
+int main(int argc, char **v) {
+    if (argc != 4) {
+        std::fprintf(stderr, "usage: %s n k R\n", v[0]);
+        return 2;
+    }
     int n = atoi(v[1]), k = atoi(v[2]), R = atoi(v[3]), m = n - k;
+    if (R <= 0) {
+        std::fprintf(stderr, "require R >= 1\n");
+        return 2;
+    }
     Instance I(n, k);
     auto st = origin_stabilizer(I);
     long long G = C(R) + m * E(R);

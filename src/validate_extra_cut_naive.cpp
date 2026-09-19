@@ -92,7 +92,7 @@ struct ArrangementGraph {
 
     template <typename Function>
     void for_each_neighbor(std::uint64_t code, Function function) const {
-        std::array<unsigned char, 256> used{};
+        std::vector<unsigned char> used(n, 0);
         for (int position = 0; position < k; ++position) {
             const int symbol = static_cast<int>((code / place[position]) % n);
             used[symbol] = 1;

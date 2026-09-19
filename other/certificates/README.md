@@ -15,9 +15,9 @@ Example build from the repository root:
 
 ```sh
 mkdir -p /tmp/arrangement-certificates
-g++ -O2 -std=c++17 certificates/fdp_certificate.cpp \
+g++ -O2 -std=c++17 other/certificates/fdp_certificate.cpp \
   -o /tmp/arrangement-certificates/fdp_certificate
-g++ -O2 -std=c++17 certificates/max_q_oracle.cpp \
+g++ -O2 -std=c++17 other/certificates/max_q_oracle.cpp \
   -o /tmp/arrangement-certificates/max_q_oracle
 ```
 
@@ -30,5 +30,6 @@ restricted boundary inequality.
 Run the complete regression with:
 
 ```sh
-make certificates-check
+cd other/certificates
+CERT_BIN_DIR=/tmp/arrangement-certificates ./soundness_check.sh
 ```

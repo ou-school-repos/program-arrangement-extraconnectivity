@@ -351,9 +351,13 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (n <= 0 || k <= 0 || k > n || target < 1) {
+        std::cerr << "invalid n, k, or R\n";
+        return 2;
+    }
+
     const Instance graph(n, k);
-    if (n <= 0 || k <= 0 || k > n || target < 1 ||
-        target > static_cast<int>(graph.vertices.size())) {
+    if (target > static_cast<int>(graph.vertices.size())) {
         std::cerr << "invalid n, k, or R\n";
         return 2;
     }

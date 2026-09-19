@@ -24,7 +24,7 @@ static i64 C(int r) {
 int n, k, R;
 std::vector<std::vector<int>> verts, adj;
 std::vector<int> mark, chosen, best;
-int stamp = 0;
+std::uint64_t stamp = 0;
 i64 bestQ = -1;
 std::uint64_t leaves = 0;
 static void gen(std::vector<int> &p, std::vector<char> &used) {
@@ -90,6 +90,10 @@ int main(int argc, char **argv) {
     gen(p, used);
     if (R > (int)verts.size()) {
         std::fprintf(stderr, "R exceeds |A(n,k)|\n");
+        return 2;
+    }
+    if ((std::uint64_t)verts.size() * verts.size() > 500'000'000'000ULL) {
+        std::fprintf(stderr, "adjacency too large: |A(n,k)|=%zu\n", verts.size());
         return 2;
     }
     // adjacency: differ in exactly one coordinate

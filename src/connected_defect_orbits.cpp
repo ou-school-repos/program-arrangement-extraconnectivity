@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
         origin[i] = i;
     std::set<std::vector<int>> layer{{I.index.at(I.encode(origin))}};
     std::set<int> spectrum;
+    spectrum.insert(defect(origin));
     for (int r = 2; r <= R; ++r) {
         const int threshold = target - k * (R - r);
         std::set<std::vector<int>> next;
@@ -71,7 +72,7 @@ int main(int argc, char **argv) {
         if (r < R)
             layer.swap(next);
     }
-    std::printf("A(%d,%d) R=%d connected defects >= target %d:", n, k, R,
+    std::printf("A(%d,%d) R=%d connected defects near target %d:", n, k, R,
                 target);
     for (int value : spectrum)
         if (value >= target - 2)

@@ -58,7 +58,7 @@ def solve_profile(n: int, k: int, max_volume: int) -> list[float]:
     root_count = len(roots)
     z_offset = 2 * vertex_count
     variable_count = z_offset + root_count
-    rows = vertex_count + 4 * len(edges) + 2 * sum(len(root) for root in roots)
+    rows = vertex_count + 2 * len(edges) + 2 * root_count
     matrix = lil_matrix((rows, variable_count), dtype=float)
     upper = np.zeros(rows)
     row = 0
@@ -74,9 +74,11 @@ def solve_profile(n: int, k: int, max_volume: int) -> list[float]:
     for selected, boundary in edges:
         matrix[row, selected] = 1.0
         matrix[row, vertex_count + boundary] = -1.0
+        matrix[row, boundary] = -1.0
         row += 1
         matrix[row, boundary] = 1.0
         matrix[row, vertex_count + selected] = -1.0
+        matrix[row, selected] = -1.0
         row += 1
 
     # Fiber activation and the remaining-space boundary cut.  For integral

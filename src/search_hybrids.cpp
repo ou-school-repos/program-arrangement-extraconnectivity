@@ -231,9 +231,9 @@ class BoundaryTracker {
 
   private:
     using Count = std::uint16_t;
-    static constexpr std::size_t capacity_ = 1U << 16;
-    static constexpr std::size_t mask_ = capacity_ - 1;
-    static constexpr std::size_t max_entries_ = capacity_ * 3 / 4;
+    std::size_t capacity_ = 1U << 16;
+    std::size_t mask_ = capacity_ - 1;
+    std::size_t max_entries_ = capacity_ * 3 / 4;
     static constexpr Count tombstone_ = std::numeric_limits<Count>::max();
     std::vector<Vertex> keys_;
     std::vector<Count> counts_;
@@ -262,9 +262,11 @@ class BoundaryTracker {
         if (first_tombstone != capacity_)
             position = first_tombstone;
         else if (size_ + tombstones_ >= max_entries_) {
-            if (tombstones_ == 0)
-                throw std::length_error(
-                    "boundary tracker full; raise capacity_ or grow the table");
+            if (tombstones_ == 0) {
+                grow();
+                increment(vertex);
+                return;
+            }
             rehash();
             increment(vertex);
             return;
@@ -330,6 +332,28 @@ class BoundaryTracker {
         size_ = 0;
         tombstones_ = 0;
         for (std::size_t i = 0; i < capacity_; ++i) {
+            if (old_counts[i] == 0 || old_counts[i] == tombstone_)
+                continue;
+            std::size_t position = hasher_(old_keys[i]) & mask_;
+            while (counts_[position] != 0)
+                position = (position + 1) & mask_;
+            keys_[position] = old_keys[i];
+            counts_[position] = old_counts[i];
+            ++size_;
+        }
+    }
+
+    void grow() {
+        capacity_ *= 2;
+        mask_ = capacity_ - 1;
+        max_entries_ = capacity_ * 3 / 4;
+        const std::vector<Vertex> old_keys = std::move(keys_);
+        const std::vector<Count> old_counts = std::move(counts_);
+        keys_.assign(capacity_, Vertex{0});
+        counts_.assign(capacity_, Count{0});
+        size_ = 0;
+        tombstones_ = 0;
+        for (std::size_t i = 0; i < old_keys.size(); ++i) {
             if (old_counts[i] == 0 || old_counts[i] == tombstone_)
                 continue;
             std::size_t position = hasher_(old_keys[i]) & mask_;

@@ -127,10 +127,20 @@ int main(int argc, char **argv) {
         std::cerr << "unsupported audit range\n";
         return 1;
     }
-    // log2(|G| * max_R C(N,R)) must stay below 126 for exact 128-bit sums.
     double vertex_count = 1;
     for (int i = 0; i < k; ++i)
         vertex_count *= n - i;
+    if (maximum > static_cast<int>(vertex_count)) {
+        std::cerr << "max_R exceeds vertex count |A(n,k)|\n";
+        return 1;
+    }
+    const long long group_size_approx =
+        static_cast<long long>(std::tgamma(n + 1.0) * std::tgamma(k + 1.0));
+    if (group_size_approx > 1000000000LL) {
+        std::cerr << "group size too large for practical enumeration\n";
+        return 1;
+    }
+    // log2(|G| * max_R C(N,R)) must stay below 126 for exact 128-bit sums.
     const double log2_group =
         (std::lgamma(n + 1.0) + std::lgamma(k + 1.0)) / std::log(2.0);
     double log2_binom = 0;

@@ -289,7 +289,7 @@ int main(int argc, char **argv) {
 
 done:
     std::cout << "best boundary=" << best.score << " connected="
-              << (connected(best, seed.front()) ? "true" : "false")
+              << (connected(best, best.member_list.front()) ? "true" : "false")
               << " verified="
               << (exact_boundary(best) == best.score ? "true" : "false")
               << "\nvertices:\n";

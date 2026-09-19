@@ -241,7 +241,8 @@ _lean/docs-clean:	##H @Lean Clean project doc cache (fast targeted rebuild)
 # Clean & Misc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.PHONY: _paper/render-assets
+.PHONY: _paper/render-assets render
+render: _paper/render-assets
 _paper/render-assets: ##H Render all visual assets (.dot to .png)
 	@$(call print_info,Rendering visual assets)
 	python3 scripts/render_assets.py

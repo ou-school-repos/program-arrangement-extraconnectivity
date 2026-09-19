@@ -2,13 +2,26 @@
 // Usage: ./audit_orbits n k max_R
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <numeric>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
-using Count = unsigned long long;
+using Count = unsigned __int128;
+
+std::string to_string(Count value) {
+    if (value == 0)
+        return "0";
+    std::string digits;
+    while (value > 0) {
+        digits.push_back(static_cast<char>('0' + static_cast<int>(value % 10)));
+        value /= 10;
+    }
+    return std::string(digits.rbegin(), digits.rend());
+}
 
 std::uint64_t encode(const std::vector<int> &vertex, int n) {
     return std::accumulate(vertex.begin(), vertex.end(), std::uint64_t{0},
@@ -106,9 +119,28 @@ int main(int argc, char **argv) {
         std::cerr << "unsupported audit range\n";
         return 1;
     }
+    double vertex_count = 1;
+    for (int i = 0; i < k; ++i)
+        vertex_count *= n - i;
+    if (maximum > static_cast<int>(vertex_count)) {
+        std::cerr << "max_R exceeds vertex count |A(n,k)|\n";
+        return 1;
+    }
+    const double log2_group =
+        (std::lgamma(n + 1.0) + std::lgamma(k + 1.0)) / std::log(2.0);
+    double log2_binom = 0;
+    for (int r = 0; r <= maximum && r <= static_cast<int>(vertex_count); ++r)
+        log2_binom = std::max(log2_binom, (std::lgamma(vertex_count + 1) -
+                                           std::lgamma(r + 1.0) -
+                                           std::lgamma(vertex_count - r + 1)) /
+                                              std::log(2.0));
+    if (log2_group + log2_binom > 126) {
+        std::cerr << "range too large for exact 128-bit Burnside sums\n";
+        return 1;
+    }
     const auto counts = burnside(n, k, maximum);
     std::cout << "A(" << n << "," << k << ") Burnside subset-orbit counts:\n[";
     for (int r = 0; r <= maximum; ++r)
-        std::cout << (r == 0 ? "" : ", ") << counts[r];
+        std::cout << (r == 0 ? "" : ", ") << to_string(counts[r]);
     std::cout << "]\n";
 }

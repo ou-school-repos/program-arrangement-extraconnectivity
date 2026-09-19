@@ -61,10 +61,18 @@ void rec(int nx) {
         ch.pop_back();
     }
 }
-int main(int, char **a) {
+int main(int argc, char **a) {
+    if (argc != 4) {
+        std::fprintf(stderr, "Usage: defect_spectrum n k R\n");
+        return 2;
+    }
     n = atoi(a[1]);
     k = atoi(a[2]);
     R = atoi(a[3]);
+    if (n < 1 || k < 1 || k > n || R < 1) {
+        std::fprintf(stderr, "Error: require n >= 1, 1 <= k <= n, R >= 1\n");
+        return 2;
+    }
     std::vector<int> p;
     std::vector<char> u(n, 0);
     auto gen = [&](auto &&self) -> void {

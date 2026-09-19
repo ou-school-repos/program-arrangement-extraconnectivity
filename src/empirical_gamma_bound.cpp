@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <set>
 #include <sstream>
 #include <string>
@@ -114,6 +115,15 @@ int main(int argc, char **argv) {
         ++positional;
     }
 
+    if (n < 1 || k < 1 || k >= n) {
+        std::cerr << "Error: require n >= 1, 1 <= k < n\n";
+        return 2;
+    }
+    if (max_r < 2 || max_r > 31) {
+        std::cerr << "Error: require 2 <= max_R <= 31\n";
+        return 2;
+    }
+
     const auto Phi = [&phi](const std::size_t size) {
         return size < phi.size() ? phi[size] : 0.0;
     };
@@ -165,7 +175,7 @@ int main(int argc, char **argv) {
     std::vector<int> witness;
     for (int r = 2; r <= max_r; ++r) {
         for (const auto &subset : layers[r]) {
-            const int split_count = (1 << (r - 1)) - 1;
+            const int split_count = static_cast<int>((1U << (r - 1)) - 1);
             for (int mask = 1; mask <= split_count; ++mask) {
                 std::vector<int> a;
                 std::vector<int> b;
@@ -187,7 +197,10 @@ int main(int argc, char **argv) {
                     Phi(a.size()) + Phi(b.size()) - Phi(subset.size());
                 const double residual = l - delta - j;
                 const double gamma =
-                    k_cross > 0 ? std::max(0.0, residual / k_cross) : 0.0;
+                    k_cross > 0 ? std::max(0.0, residual / k_cross)
+                                : (residual > 0
+                                       ? std::numeric_limits<double>::infinity()
+                                       : 0.0);
                 *out << r << ',' << a.size() << ',' << b.size() << ',' << l
                      << ',' << j << ',' << k_cross << ',' << delta << ','
                      << residual << ',' << gamma << '\n';

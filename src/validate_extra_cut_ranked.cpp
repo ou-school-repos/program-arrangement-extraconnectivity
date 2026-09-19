@@ -53,7 +53,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    const PackedArrangementGraph graph(n, k);
+    PackedArrangementGraph graph(n, k);
+    try {
+        graph = PackedArrangementGraph(n, k);
+    } catch (const std::overflow_error &) {
+        std::cerr
+            << "Error: rank frontier requires fewer than 2^32 vertices.\n";
+        return 1;
+    }
     if (graph.valid_count > std::numeric_limits<std::uint32_t>::max()) {
         std::cerr
             << "Error: rank frontier requires fewer than 2^32 vertices.\n";

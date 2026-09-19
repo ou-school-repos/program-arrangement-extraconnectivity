@@ -562,6 +562,7 @@ int main(int argc, char **argv) {
             current_frontier.swap(next_frontier);
             next_frontier.clear();
         }
+        current_frontier.clear();
         std::cerr << "Component complete: " << bfs_layer
                   << " layers (directions:";
         for (const bool layer_bottom_up : bottom_up_by_layer)

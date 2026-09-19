@@ -123,6 +123,13 @@ def run(args: argparse.Namespace) -> int:
     adjacency = tuple(
         tuple(index[v] for v in neighbors(vertex, args.n)) for vertex in vertices
     )
+    if args.k < 1 or args.k > args.n:
+        raise SystemExit(f"require 1 <= k <= n, got k={args.k}, n={args.n}")
+    max_size = 2 ** min(args.k, args.n - args.k)
+    if args.size < 1 or args.size > max_size:
+        raise SystemExit(
+            f"require 1 <= size <= 2**min(k, n-k) = {max_size}, got size={args.size}"
+        )
     seed = [index[v] for v in hamming_ball(args.k, args.size)]
     initial = State(seed, adjacency)
     verified = exact_boundary(initial.members, adjacency)
@@ -144,6 +151,8 @@ def run(args: argparse.Namespace) -> int:
         )
         temperature = args.temperature
         for step in range(args.steps):
+            if not state.boundary:
+                break
             attempted += 1
             outgoing = rng.choice(tuple(state.members))
             incoming = rng.choice(tuple(state.boundary))

@@ -146,6 +146,7 @@ int main(int argc, char **argv) {
     model.AddLessOrEqual(boundary_expr, cutoff);
     if (start_lb > 0)
         model.AddGreaterOrEqual(boundary_expr, start_lb);
+    model.Minimize(boundary_expr);
 
     // One pinned vertex is symmetry-safe because A(10,5) is vertex-transitive.
     const Vertex origin = {0, 1, 2, 3, 4};
