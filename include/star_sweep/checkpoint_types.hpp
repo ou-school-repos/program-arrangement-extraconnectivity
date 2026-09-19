@@ -76,6 +76,11 @@ struct CheckpointState {
         if (component_sizes.empty() || direction_history.size() != layer)
             throw std::invalid_argument(
                 "invalid star-sweep checkpoint history");
+        for (const std::uint64_t size : component_sizes) {
+            if (size == 0 || size > signature.valid_count)
+                throw std::invalid_argument(
+                    "invalid checkpoint component size");
+        }
         if (component_anchor >= signature.valid_count)
             throw std::invalid_argument(
                 "checkpoint component anchor out of range");
@@ -85,6 +90,9 @@ struct CheckpointState {
         if (discovered_survivors > signature.valid_count)
             throw std::invalid_argument(
                 "checkpoint discovered survivors exceeds valid count");
+        if (star_boundary_size > signature.valid_count)
+            throw std::invalid_argument(
+                "checkpoint star boundary exceeds valid count");
         if (active_frontier_size > signature.valid_count)
             throw std::invalid_argument(
                 "checkpoint active frontier size exceeds valid count");

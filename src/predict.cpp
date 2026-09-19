@@ -41,7 +41,7 @@
 #include <string>
 #include <vector>
 
-// __int128 is a GCC/Clang extension, not ISO C++17.
+// int128_t is a GCC/Clang extension, not ISO C++17.
 // __extension__ suppresses -Wpedantic for this type.
 __extension__ typedef __int128 int128_t;
 static inline int128_t widen(int64_t x) { return x; }

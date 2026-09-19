@@ -1,5 +1,6 @@
 // Exhaustive defect spectrum of connected origin-pinned R-subsets of A(n,k).
 // Usage: defect_spectrum n k R
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -11,6 +12,9 @@ std::vector<std::vector<int>> rootid;
 std::vector<std::vector<int>> cnt;
 std::vector<int> ch;
 int U = 0;
+std::uint64_t leaves = 0;
+bool work_limit_exceeded = false;
+constexpr std::uint64_t max_search_leaves = 20'000'000;
 std::set<int> seen;
 std::map<int, std::vector<int>> wit;
 bool connected() {
@@ -45,7 +49,13 @@ void add(int v, int s) {
     }
 }
 void rec(int nx) {
+    if (work_limit_exceeded)
+        return;
     if ((int)ch.size() == R) {
+        if (++leaves > max_search_leaves) {
+            work_limit_exceeded = true;
+            return;
+        }
         int D = R * k - U;
         if (!seen.count(D) && connected()) {
             seen.insert(D);
@@ -59,6 +69,8 @@ void rec(int nx) {
         rec(v + 1);
         add(v, -1);
         ch.pop_back();
+        if (work_limit_exceeded)
+            return;
     }
 }
 int main(int argc, char **a) {
@@ -69,8 +81,25 @@ int main(int argc, char **a) {
     n = atoi(a[1]);
     k = atoi(a[2]);
     R = atoi(a[3]);
-    if (n < 1 || k < 1 || k > n || R < 1) {
-        std::fprintf(stderr, "Error: require n >= 1, 1 <= k <= n, R >= 1\n");
+    if (n < 1 || k < 1 || k > n || R < 1 || R > 1024) {
+        std::fprintf(stderr,
+                     "Error: require n >= 1, 1 <= k <= n, 1 <= R <= 1024\n");
+        return 2;
+    }
+    constexpr std::size_t max_vertices = 10'000;
+    std::size_t vertex_count = 1;
+    for (int i = 0; i < k; ++i) {
+        const auto factor = static_cast<std::size_t>(n - i);
+        if (vertex_count > max_vertices / factor) {
+            std::fprintf(stderr, "Error: graph exceeds %zu vertices\n",
+                         max_vertices);
+            return 2;
+        }
+        vertex_count *= factor;
+    }
+    if (static_cast<std::size_t>(R) > vertex_count) {
+        std::fprintf(stderr, "Error: R exceeds vertex count %zu\n",
+                     vertex_count);
         return 2;
     }
     std::vector<int> p;
@@ -90,6 +119,12 @@ int main(int argc, char **a) {
             }
     };
     gen(gen);
+    constexpr std::size_t max_adjacency_entries = 10'000'000;
+    const std::size_t degree = static_cast<std::size_t>(k) * (n - k);
+    if (degree != 0 && V.size() > max_adjacency_entries / degree) {
+        std::fprintf(stderr, "Error: adjacency exceeds resource limit\n");
+        return 2;
+    }
     adj.assign(V.size(), {});
     rootid.assign(k, std::vector<int>(V.size()));
     cnt.assign(k, {});
@@ -114,6 +149,11 @@ int main(int argc, char **a) {
     ch.push_back(0);
     add(0, 1);
     rec(1);
+    if (work_limit_exceeded) {
+        std::fprintf(stderr, "Error: search exceeds %llu subsets\n",
+                     static_cast<unsigned long long>(max_search_leaves));
+        return 2;
+    }
     std::printf("A(%d,%d) R=%d connected defects:", n, k, R);
     for (int d : seen)
         std::printf(" %d", d);

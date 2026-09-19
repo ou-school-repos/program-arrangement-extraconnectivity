@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <initializer_list>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -18,6 +19,20 @@ using arrangement::Automorphism;
 using arrangement::Instance;
 
 namespace {
+
+bool origin_stabilizer_exceeds(const int n, const int k,
+                               const std::size_t limit) {
+    std::size_t size = 1;
+    for (const int degree : {k, n - k}) {
+        for (int factor = 2; factor <= degree; ++factor) {
+            const auto value = static_cast<std::size_t>(factor);
+            if (size > limit / value)
+                return true;
+            size *= value;
+        }
+    }
+    return size > limit;
+}
 
 std::vector<int> representative(const std::vector<int> &subset,
                                 const Instance &instance,
@@ -92,7 +107,12 @@ int main(int argc, char **argv) {
                     std::cerr << "empty value in --phi list\n";
                     return 2;
                 }
-                phi.push_back(std::stod(item));
+                const double value = std::stod(item);
+                if (!std::isfinite(value)) {
+                    std::cerr << "--phi values must be finite\n";
+                    return 2;
+                }
+                phi.push_back(value);
             }
             continue;
         }
@@ -119,8 +139,25 @@ int main(int argc, char **argv) {
         std::cerr << "Error: require n >= 1, 1 <= k < n\n";
         return 2;
     }
-    if (max_r < 2 || max_r > 31) {
-        std::cerr << "Error: require 2 <= max_R <= 31\n";
+    if (max_r < 2 || max_r > 21) {
+        std::cerr << "Error: require 2 <= max_R <= 21\n";
+        return 2;
+    }
+    constexpr std::size_t max_vertices = 500'000;
+    std::size_t vertex_count_bound = 1;
+    for (int i = 0; i < k; ++i) {
+        const auto factor = static_cast<std::size_t>(n - i);
+        if (vertex_count_bound > max_vertices / factor) {
+            std::cerr << "Error: graph exceeds " << max_vertices
+                      << " vertices\n";
+            return 2;
+        }
+        vertex_count_bound *= factor;
+    }
+    constexpr std::size_t max_stabilizer_size = 100'000;
+    if (origin_stabilizer_exceeds(n, k, max_stabilizer_size)) {
+        std::cerr << "Error: origin stabilizer exceeds " << max_stabilizer_size
+                  << " automorphisms\n";
         return 2;
     }
 
@@ -129,6 +166,11 @@ int main(int argc, char **argv) {
     };
 
     const Instance instance(n, k);
+    if (static_cast<std::size_t>(max_r) > instance.vertices.size()) {
+        std::cerr << "Error: max_R exceeds vertex count "
+                  << instance.vertices.size() << '\n';
+        return 2;
+    }
     const auto stabilizer = arrangement::origin_stabilizer(instance);
     std::vector<int> origin(k);
     std::iota(origin.begin(), origin.end(), 0);
@@ -136,6 +178,7 @@ int main(int argc, char **argv) {
 
     std::vector<std::vector<std::vector<int>>> layers(max_r + 1);
     layers[1] = {{origin_id}};
+    constexpr std::size_t max_canonical_subsets = 500'000;
     std::cout << "Generating canonical subsets for A(" << n << ',' << k
               << ") through R=" << max_r << "\n";
     for (int r = 2; r <= max_r; ++r) {
@@ -150,7 +193,14 @@ int main(int argc, char **argv) {
                 auto expanded = subset;
                 expanded.push_back(vertex);
                 std::sort(expanded.begin(), expanded.end());
-                next.insert(representative(expanded, instance, stabilizer));
+                const auto [unused, inserted] =
+                    next.insert(representative(expanded, instance, stabilizer));
+                (void)unused;
+                if (inserted && next.size() > max_canonical_subsets) {
+                    std::cerr << "R=" << r << " exceeds the canonical subset "
+                              << "limit of " << max_canonical_subsets << '\n';
+                    return 2;
+                }
             }
         }
         layers[r].assign(next.begin(), next.end());

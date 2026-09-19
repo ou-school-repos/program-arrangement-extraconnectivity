@@ -4,6 +4,7 @@
 #include "arrangement_core.hpp"
 
 #include <algorithm>
+#include <initializer_list>
 #include <iostream>
 #include <set>
 #include <string>
