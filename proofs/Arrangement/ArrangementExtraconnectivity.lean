@@ -809,6 +809,7 @@ lemma coord_overlap_has_two_coordinate_witness {n k : ℕ}
     (V' : Finset (ArrVertex n k)) {p q : Fin k} (hpq : p ≠ q)
     {w : ArrVertex n k} (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
     ∃ v ∈ V', ∃ t ∈ V', v ≠ t ∧
+      drop_pos w p = drop_pos v p ∧ drop_pos w q = drop_pos t q ∧
       (∀ r : Fin k, r ≠ p → r ≠ q → v.val r = t.val r) := by
   rw [Finset.mem_inter] at hw
   rcases hw with ⟨hp_mem, hq_mem⟩
@@ -816,7 +817,7 @@ lemma coord_overlap_has_two_coordinate_witness {n k : ℕ}
     at hp_mem hq_mem
   obtain ⟨hw_not, v, hv, hpdrop⟩ := hp_mem
   obtain ⟨_, t, ht, hqdrop⟩ := hq_mem
-  refine ⟨v, hv, t, ht, ?_, ?_⟩
+  refine ⟨v, hv, t, ht, ?_, hpdrop, hqdrop, ?_⟩
   · intro hvt
     apply hw_not
     have hwv : w = v := by
@@ -830,6 +831,70 @@ lemma coord_overlap_has_two_coordinate_witness {n k : ℕ}
     exact hwv ▸ hv
   · intro r hrp hrq
     exact (drop_eq_off hpdrop r hrp).symm.trans (drop_eq_off hqdrop r hrq)
+
+lemma coord_overlap_exists_witness_pair {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) {p q : Fin k} (hpq : p ≠ q)
+    {w : ArrVertex n k} (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ∃ z : ArrVertex n k × ArrVertex n k,
+      z.1 ∈ V' ∧ z.2 ∈ V' ∧ z.1 ≠ z.2 ∧
+      drop_pos w p = drop_pos z.1 p ∧
+      drop_pos w q = drop_pos z.2 q := by
+  obtain ⟨v, hv, t, ht, hne, hpdrop, hqdrop, _⟩ :=
+    coord_overlap_has_two_coordinate_witness V' hpq hw
+  exact ⟨(v, t), hv, ht, hne, hpdrop, hqdrop⟩
+
+noncomputable def chosen_overlap_pair {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k) (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ArrVertex n k × ArrVertex n k :=
+  Classical.choose (coord_overlap_exists_witness_pair V' hpq hw)
+
+lemma chosen_overlap_pair_spec {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k) (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    let z := chosen_overlap_pair V' p q hpq w hw
+    z.1 ∈ V' ∧ z.2 ∈ V' ∧ z.1 ≠ z.2 ∧
+      drop_pos w p = drop_pos z.1 p ∧
+      drop_pos w q = drop_pos z.2 q := by
+  exact Classical.choose_spec (coord_overlap_exists_witness_pair V' hpq hw)
+
+lemma coord_overlap_card_le_square {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q) :
+    (coord_boundary V' p ∩ coord_boundary V' q).card ≤ V'.card * V'.card := by
+  classical
+  let A := coord_boundary V' p ∩ coord_boundary V' q
+  let P := V' ×ˢ V'
+  let f : ArrVertex n k → ArrVertex n k × ArrVertex n k := fun w =>
+    if hw : w ∈ A then chosen_overlap_pair V' p q hpq w hw else (w, w)
+  have hmaps : Set.MapsTo f (↑A : Set (ArrVertex n k)) (↑P) := by
+    intro w hw
+    have hs := chosen_overlap_pair_spec V' p q hpq w hw
+    change f w ∈ P
+    simp only [f, dif_pos hw, P, Finset.mem_product]
+    exact ⟨hs.1, hs.2.1⟩
+  have hinj : Set.InjOn f (↑A : Set (ArrVertex n k)) := by
+    intro w hw z hz heq
+    have hsw := chosen_overlap_pair_spec V' p q hpq w hw
+    have hsz := chosen_overlap_pair_spec V' p q hpq z hz
+    have heq' : chosen_overlap_pair V' p q hpq w hw =
+        chosen_overlap_pair V' p q hpq z hz := by
+      simpa [f, hw, hz] using heq
+    have hfst : (chosen_overlap_pair V' p q hpq w hw).1 =
+        (chosen_overlap_pair V' p q hpq z hz).1 := congrArg Prod.fst heq'
+    have hsnd : (chosen_overlap_pair V' p q hpq w hw).2 =
+        (chosen_overlap_pair V' p q hpq z hz).2 := congrArg Prod.snd heq'
+    have hroot1 := hsw.2.2.2.2.1
+    have hroot2 := hsw.2.2.2.2.2
+    have hroot3 := hsz.2.2.2.2.1
+    have hroot4 := hsz.2.2.2.2.2
+    apply Subtype.ext
+    funext r
+    by_cases hr : r = p
+    · rw [hr]
+      exact (drop_eq_off hroot2 p hpq).trans (drop_eq_off hroot4 p hpq).symm
+    · exact (drop_eq_off hroot1 r hr).trans (drop_eq_off hroot3 r hr).symm
+  have hcard := Finset.card_le_card_of_injOn f hmaps hinj
+  simpa [A, P, Finset.card_product] using hcard
 
 lemma coord_overlap_witness_differs_at_both {n k : ℕ}
     (V' : Finset (ArrVertex n k)) {p q : Fin k} (hpq : p ≠ q)
@@ -889,6 +954,22 @@ lemma coord_overlap_vertex_unique {n k : ℕ}
     · have h₁ := drop_eq_off h₁p r hrp
       have h₂ := drop_eq_off h₂p r hrp
       exact h₁.trans h₂.symm
+
+/-- For fixed members and fixed distinct coordinates, there is at most one
+    overlap vertex realizing the prescribed two-coordinate swap pattern. -/
+def prescribed_common_neighbors {n k : ℕ} (v t : ArrVertex n k)
+    (p q : Fin k) : Finset (ArrVertex n k) :=
+  Finset.univ.filter (fun w =>
+    drop_pos w p = drop_pos v p ∧ drop_pos w q = drop_pos t q)
+
+lemma prescribed_common_neighbors_card_le_one {n k : ℕ}
+    (v t : ArrVertex n k) (p q : Fin k) (hpq : p ≠ q) :
+    (prescribed_common_neighbors v t p q).card ≤ 1 := by
+  apply Finset.card_le_one.mpr
+  intro w hw z hz
+  simp only [prescribed_common_neighbors, Finset.mem_filter,
+    Finset.mem_univ, true_and] at hw hz
+  exact coord_overlap_vertex_unique hpq hw.1 hw.2 hz.1 hz.2
 
 lemma external_neighbors_eq_coord_union {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
