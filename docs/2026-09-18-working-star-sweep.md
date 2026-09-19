@@ -99,48 +99,72 @@ A(28,7): R=148 (full Star volume)
 
 ```shell
 $ ./bin/validate_extra_cut_plan 26 7
-Build: 0.1.0 (draft-2026-07-21-emailed-laszlo-eddie-466-gfa578f8d6dfa-dirty)
+Build: 0.1.0 (draft-2026-07-21-emailed-laszlo-eddie-476-ge645c49320ce)
 Planning full-Star A(26,7)
 No graph/BFS state allocated; this is an arithmetic plan.
-m = 19
-degree = 133
-|V| = nP_k = 3315312000
-n^k = 8031810176
-|E| = |V|*degree/2 = 220468248000
-R = 134, g = 133
-d = ceil(log2(R)) = 8
-|N(S)| = 7980
-Hamming baseline = 8574
-Delta = Hamming - Star = 594
+m =                       19
+degree =                  133
+|V| = nP_k =              3315312000
+n^k =                     8031810176
+|E| = |V|*degree/2 =      220468248000
+R =                       134, g = 133
+d = ceil(log2(R)) =       8
+|N(S)| =                  7980
+Hamming baseline =        8574
+Delta = Hamming - Star =  594
 Embedding gate: closed
 Ranked uint32 frontier: fits
 Ranked uint64 frontier: fits
-One bitset:        414414000 bytes [395 MiB (binary)]
+One bitset:                 414414000 bytes [395 MiB (binary)]
 Three bitmap states:       1243242000 bytes [1 GiB (binary)]
-Flat n^k guard:       8031810176 slots
+Flat n^k guard:            8031810176 slots
 Star classification: soft-counterexample candidate
 Note: connectivity and extra-cut validity still require the validator.
 
-$ ./bin/validate_extra_cut_plan 28 7
-Build: 0.1.0 (draft-2026-07-21-emailed-laszlo-eddie-466-gfa578f8d6dfa-dirty)
-Planning full-Star A(28,7)
+$ ./bin/validate_extra_cut_plan 27 7
+Build: 0.1.0 (draft-2026-07-21-emailed-laszlo-eddie-476-ge645c49320ce)
+Planning full-Star A(27,7)
 No graph/BFS state allocated; this is an arithmetic plan.
-m = 21
-degree = 147
-|V| = nP_k = 5967561600
-n^k = 13492928512
-|E| = |V|*degree/2 = 438615777600
-R = 148, g = 147
-d = ceil(log2(R)) = 8
-|N(S)| = 9702
-Hamming baseline = 10520
-Delta = Hamming - Star = 818
+m =                       20
+degree =                  140
+|V| = nP_k =              4475671200
+n^k =                     10460353203
+|E| = |V|*degree/2 =      313296984000
+R =                       141, g = 140
+d = ceil(log2(R)) =       8
+|N(S)| =                  8820
+Hamming baseline =        9550
+Delta = Hamming - Star =  730
 Embedding gate: closed
 Ranked uint32 frontier: does not fit
 Ranked uint64 frontier: fits
-One bitset:        745945200 bytes [711 MiB (binary)]
+One bitset:                 559458900 bytes [533 MiB (binary)]
+Three bitmap states:       1678376700 bytes [1 GiB (binary)]
+Flat n^k guard:           10460353203 slots
+Star classification: soft-counterexample candidate
+Note: connectivity and extra-cut validity still require the validator.
+
+
+$ ./bin/validate_extra_cut_plan 28 7
+Build: 0.1.0 (draft-2026-07-21-emailed-laszlo-eddie-476-ge645c49320ce)
+Planning full-Star A(28,7)
+No graph/BFS state allocated; this is an arithmetic plan.
+m =                       21
+degree =                  147
+|V| = nP_k =              5967561600
+n^k =                     13492928512
+|E| = |V|*degree/2 =      438615777600
+R =                       148, g = 147
+d = ceil(log2(R)) =       8
+|N(S)| =                  9702
+Hamming baseline =        10520
+Delta = Hamming - Star =  818
+Embedding gate: closed
+Ranked uint32 frontier: does not fit
+Ranked uint64 frontier: fits
+One bitset:                 745945200 bytes [711 MiB (binary)]
 Three bitmap states:       2237835600 bytes [2 GiB (binary)]
-Flat n^k guard:      13492928512 slots
+Flat n^k guard:           13492928512 slots
 Star classification: soft-counterexample candidate
 Note: connectivity and extra-cut validity still require the validator.
 
