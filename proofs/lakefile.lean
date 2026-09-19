@@ -13,14 +13,8 @@ lean_lib «Proofs» where
   roots := #[
     `Arrangement.ArrDefs,
     `Arrangement.HypercubeEdges,
-    `Arrangement.PredictorComplexity,
     `Arrangement.ArrangementExtraconnectivity,
     `Arrangement.PenaltyExact,
     `Arrangement.InternalPairs,
     `Arrangement.CrossTop,
-    `Arrangement.CapacityBoundExamples,
-    `Arrangement.UniversalCounterexample,
-    `Arrangement.RestrictedCounterexample,
-    `Arrangement.unstable.ArrangementGraphUtils,
-    `Arrangement.unstable.SupportProjection
   ]

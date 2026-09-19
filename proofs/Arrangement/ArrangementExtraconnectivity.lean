@@ -1155,6 +1155,42 @@ def CrossCollisionBound {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
   cross_collisions V' ≤ V'.card * (V'.card - 1)
 
 /--
+  Bonferroni overlap proposition for the coordinate boundary family.
+
+  The right-hand side is the union cardinality plus all pairwise coordinate
+  overlaps.  Proving this is a generic finite-set argument; it does not use
+  injectivity of arrangement vertices.
+-/
+def CoordinateBonferroni (V' : Finset (ArrVertex n k)) : Prop :=
+  total_coord_edges V' ≤ external_neighbors V' +
+    (Finset.univ : Finset (Fin k)).sum (fun p =>
+      ((Finset.univ : Finset (Fin k)).filter (fun q => p < q)).sum (fun q =>
+        (coord_boundary V' p ∩ coord_boundary V' q).card))
+
+/--
+  Pair-charging proposition.  Every pairwise coordinate overlap is charged to
+  an ordered pair of distinct members of `V'`, with the total charge bounded by
+  `|V'| (|V'|-1)`.  This is the arrangement-specific common-neighbor step.
+-/
+def CoordinatePairCharging (V' : Finset (ArrVertex n k)) : Prop :=
+  (Finset.univ : Finset (Fin k)).sum (fun p =>
+      ((Finset.univ : Finset (Fin k)).filter (fun q => p < q)).sum (fun q =>
+        (coord_boundary V' p ∩ coord_boundary V' q).card)) ≤
+    V'.card * (V'.card - 1)
+
+/-- The explicit conjectural bridge from the two finite-set propositions. -/
+def CrossCollisionChargingConjecture (V' : Finset (ArrVertex n k)) : Prop :=
+  CoordinateBonferroni V' ∧ CoordinatePairCharging V'
+
+lemma cross_collisions_of_charging {n k : ℕ}
+    (V' : Finset (ArrVertex n k))
+    (h : CrossCollisionChargingConjecture V') :
+    CrossCollisionBound V' := by
+  unfold CrossCollisionChargingConjecture CoordinateBonferroni
+    CoordinatePairCharging CrossCollisionBound cross_collisions at *
+  omega
+
+/--
   Algebraic consequence of the collision estimate.
 
   This theorem is unconditional once `CrossCollisionBound` is supplied; the
