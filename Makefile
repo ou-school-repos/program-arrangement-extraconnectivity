@@ -104,6 +104,14 @@ $(BINS): bin/%: src/%.cpp
 
 -include $(BINS:=.d)
 
+TEST_BINS := .tmp/test_star_sweep_checkpoint \
+	.tmp/test_validate_extra_cut_checkpoint .tmp/test_pattern_catalogue
+.tmp/test_star_sweep_checkpoint: CXXFLAGS += -fopenmp
+$(TEST_BINS): .tmp/test_%: tests/test_%.cpp
+	@mkdir -p $(@D)
+	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -MF $@.d -o $@ $<
+-include $(TEST_BINS:=.d)
+
 
 LINT_SRCS_CPP ?= $(shell git ls-files '*.cpp' '*.c' '*.cc' '*.h' '*.hpp')
 LINT_SRCS_PY ?= $(shell git ls-files '*.py')
@@ -166,17 +174,14 @@ _check/default: format lint
 # NOTE: run a sanitizer test with:
 # make test CXXFLAGS="-std=c++17 -g -O0 -fsanitize=address,undefined -Wall -Wextra -Wpedantic"
 .PHONY: test
-test: 	##H @Test Run fast test suites
+test: bin/predict bin/arrangement bin/pattern_catalogue \
+	bin/validate_extra_cut_naive bin/validate_extra_cut_bitmap \
+	bin/exact_profile_naive $(TEST_BINS) ##H @Test Run fast test suites
 	# Begin test
 	python3 tests/test_predict.py --max-r $(R)
 	# Begin test
-	@mkdir -p .tmp
-	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -fopenmp \
-		-o .tmp/test_star_sweep_checkpoint tests/test_star_sweep_checkpoint.cpp
 	./.tmp/test_star_sweep_checkpoint
 	# Begin test
-	@mkdir -p .tmp
-	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -o .tmp/test_validate_extra_cut_checkpoint tests/test_validate_extra_cut_checkpoint.cpp
 	./.tmp/test_validate_extra_cut_checkpoint ./bin/validate_extra_cut_bitmap
 	# Begin test
 	# NOTE: run this without --oracle for a full (long ~10 minute) test.
@@ -185,8 +190,6 @@ test: 	##H @Test Run fast test suites
 	# Begin test
 	PROFILE_BIN=./bin/exact_profile_naive python3 tests/test_exact_profile.py
 	# Begin test
-	@mkdir -p .tmp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o .tmp/test_pattern_catalogue tests/test_pattern_catalogue.cpp
 	./.tmp/test_pattern_catalogue
 
 

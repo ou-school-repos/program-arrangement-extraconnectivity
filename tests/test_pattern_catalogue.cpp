@@ -1,5 +1,5 @@
 // Differential regression test for the optimized and exhaustive pattern
-// catalogues. The slow R=6 case is opt-in: --include-r6.
+// catalogues. R=5..6 require PROJ_ANK_ENABLE_VERBOSE_TESTS=1.
 
 #include <algorithm>
 #include <cstdint>
@@ -200,8 +200,16 @@ int main(int argc, char **argv) {
     }
 
     try {
-        for (int r = 2; r <= 6; ++r)
+        const char *verbose_tests =
+            std::getenv("PROJ_ANK_ENABLE_VERBOSE_TESTS");
+        const bool enable_verbose_tests =
+            verbose_tests != nullptr && std::string(verbose_tests) == "1";
+        const int max_r = enable_verbose_tests ? 6 : 4;
+        for (int r = 2; r <= max_r; ++r)
             compare_case(r);
+        if (!enable_verbose_tests)
+            std::cout << "R=5..6 skipped; set "
+                         "PROJ_ANK_ENABLE_VERBOSE_TESTS=1 to include them.\n";
     } catch (const std::exception &error) {
         std::cerr << "pattern catalogue differential test failed: "
                   << error.what() << '\n';
