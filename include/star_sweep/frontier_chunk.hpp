@@ -57,14 +57,14 @@ inline std::uint64_t write_frontier_delta(const AtomicBitset &frontier,
 
     DeltaHeader header;
     header.num_words = frontier.num_words();
-    for (std::size_t block = first_block; block < last_block; ++block)
+    for (std::size_t block = 0; block < frontier.num_blocks(); ++block)
         if (frontier.block_dirty(block))
             ++header.block_count;
     output.write(reinterpret_cast<const char *>(&header), sizeof(header));
 
     Xxh64 checksum;
     std::uint64_t written_blocks = 0;
-    for (std::size_t block = first_block; block < last_block; ++block) {
+    for (std::size_t block = 0; block < frontier.num_blocks(); ++block) {
         if (!frontier.block_dirty(block))
             continue;
         const std::size_t first = block * AtomicBitset::block_size;

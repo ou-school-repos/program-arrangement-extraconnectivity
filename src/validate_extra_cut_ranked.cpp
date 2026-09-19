@@ -53,19 +53,24 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    PackedArrangementGraph graph(n, k);
-    try {
-        graph = PackedArrangementGraph(n, k);
-    } catch (const std::overflow_error &) {
-        std::cerr
-            << "Error: rank frontier requires fewer than 2^32 vertices.\n";
-        return 1;
+    {
+        std::size_t perm_count = 1;
+        for (int i = 0; i < k; ++i) {
+            const std::size_t factor = static_cast<std::size_t>(n - i);
+            if (perm_count > std::numeric_limits<std::size_t>::max() / factor) {
+                std::cerr << "Error: rank frontier requires fewer than 2^32 "
+                             "vertices.\n";
+                return 1;
+            }
+            perm_count *= factor;
+        }
+        if (perm_count > std::numeric_limits<std::uint32_t>::max()) {
+            std::cerr << "Error: rank frontier requires fewer than 2^32 "
+                         "vertices.\n";
+            return 1;
+        }
     }
-    if (graph.valid_count > std::numeric_limits<std::uint32_t>::max()) {
-        std::cerr
-            << "Error: rank frontier requires fewer than 2^32 vertices.\n";
-        return 1;
-    }
+    const PackedArrangementGraph graph(n, k);
     const FullStarParameters parameters = full_star_parameters(n, k);
     std::cout << "Build: " << build_version << "\n"
               << "Building rank-indexed A(" << n << ',' << k << ")...\n"

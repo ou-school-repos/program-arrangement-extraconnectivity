@@ -93,7 +93,8 @@ int main(int argc, char **argv) {
         return 2;
     }
     if ((std::uint64_t)verts.size() * verts.size() > 500'000'000'000ULL) {
-        std::fprintf(stderr, "adjacency too large: |A(n,k)|=%zu\n", verts.size());
+        std::fprintf(stderr, "adjacency too large: |A(n,k)|=%zu\n",
+                     verts.size());
         return 2;
     }
     // adjacency: differ in exactly one coordinate

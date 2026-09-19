@@ -135,8 +135,7 @@ int main(int argc, char **argv) {
     const int origin_id = instance.index.at(instance.encode(origin));
 
     std::vector<std::vector<std::vector<int>>> layers(max_r + 1);
-    if (max_r >= 1)
-        layers[1] = {{origin_id}};
+    layers[1] = {{origin_id}};
     std::cout << "Generating canonical subsets for A(" << n << ',' << k
               << ") through R=" << max_r << "\n";
     for (int r = 2; r <= max_r; ++r) {

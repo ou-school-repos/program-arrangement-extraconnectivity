@@ -22,23 +22,18 @@ std::vector<Automorphism> layer_stabilizer(const Instance &instance,
     do {
         if (coordinates[0] != 0)
             continue;
-        std::vector<int> processed(processed_slices);
-        std::iota(processed.begin(), processed.end(), 0);
+        std::vector<int> unprocessed(instance.n - processed_slices);
+        std::iota(unprocessed.begin(), unprocessed.end(), processed_slices);
         do {
-            std::vector<int> unprocessed(instance.n - processed_slices);
-            std::iota(unprocessed.begin(), unprocessed.end(), processed_slices);
-            do {
-                Automorphism automorphism;
-                automorphism.coordinates = coordinates;
-                automorphism.symbols.resize(instance.n);
-                for (int i = 0; i < processed_slices; ++i)
-                    automorphism.symbols[i] = processed[i];
-                for (int i = 0; i < instance.n - processed_slices; ++i)
-                    automorphism.symbols[processed_slices + i] = unprocessed[i];
-                group.push_back(std::move(automorphism));
-            } while (
-                std::next_permutation(unprocessed.begin(), unprocessed.end()));
-        } while (std::next_permutation(processed.begin(), processed.end()));
+            Automorphism automorphism;
+            automorphism.coordinates = coordinates;
+            automorphism.symbols.resize(instance.n);
+            for (int i = 0; i < processed_slices; ++i)
+                automorphism.symbols[i] = i;
+            for (int i = 0; i < instance.n - processed_slices; ++i)
+                automorphism.symbols[processed_slices + i] = unprocessed[i];
+            group.push_back(std::move(automorphism));
+        } while (std::next_permutation(unprocessed.begin(), unprocessed.end()));
     } while (std::next_permutation(coordinates.begin(), coordinates.end()));
     return group;
 }
@@ -107,6 +102,11 @@ int main(int argc, char **argv) {
                 slice_vertices.push_back(vertex);
         }
 
+        if (slice_vertices.size() > 25) {
+            std::cerr << "slice " << slice << " has " << slice_vertices.size()
+                      << " vertices (>25), aborting\n";
+            return 1;
+        }
         std::vector<std::vector<int>> slice_subsets(1);
         for (const int vertex : slice_vertices) {
             const std::size_t current_size = slice_subsets.size();

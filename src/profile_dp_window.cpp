@@ -81,6 +81,20 @@ std::vector<Automorphism> full_automorphisms(const Instance &instance) {
     return group;
 }
 
+bool full_automorphism_group_exceeds(const Instance &instance,
+                                     const std::size_t limit) {
+    std::size_t group_size = 1;
+    for (const int degree : {instance.k, instance.n}) {
+        for (int factor = 2; factor <= degree; ++factor) {
+            const auto value = static_cast<std::size_t>(factor);
+            if (group_size > limit / value)
+                return true;
+            group_size *= value;
+        }
+    }
+    return group_size > limit;
+}
+
 std::vector<Automorphism> context_automorphisms(
     const Instance &instance, const std::vector<std::vector<int>> &fibers,
     const std::vector<int> &order, const std::size_t next_step,
@@ -253,6 +267,14 @@ int main(int argc, char **argv) {
 
     std::vector<std::vector<int>> fibers;
     const auto order = greedy_fiber_order(instance, fibers);
+    constexpr std::size_t max_full_group_size = 100'000;
+    if (use_canonicalization &&
+        full_automorphism_group_exceeds(instance, max_full_group_size)) {
+        std::cerr << "canonicalization disabled for n=" << n
+                  << " (full automorphism group exceeds " << max_full_group_size
+                  << ")\n";
+        use_canonicalization = false;
+    }
     const auto full_group = use_canonicalization ? full_automorphisms(instance)
                                                  : std::vector<Automorphism>{};
     std::vector<std::unordered_map<WindowState, int, StateHash>> current(
@@ -288,6 +310,12 @@ int main(int argc, char **argv) {
                         });
                     if (found == state.envelope.end() || found->incidence == 0)
                         new_vertices.push_back(vertex);
+                }
+                if (new_vertices.size() >= 64) {
+                    std::cerr << "fiber has " << new_vertices.size()
+                              << " new vertices (>=64); cannot represent its "
+                                 "subset mask\n";
+                    return 1;
                 }
                 const std::uint64_t patterns = std::uint64_t{1}
                                                << new_vertices.size();
