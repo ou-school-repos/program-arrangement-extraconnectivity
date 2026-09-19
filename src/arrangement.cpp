@@ -179,6 +179,7 @@ class FlatHashSet128 {
 
 static std::vector<FlatHashSet128> seen_nauty;
 static std::vector<FlatHashSet128> seen_sorted;
+static int64_t count_neighbors(const uint64_t *verts, int n, int k);
 
 // ── Nauty static buffers ───────────────────────────────────────────────────
 constexpr int MAX_NAUTY_N = 512;
@@ -199,58 +200,44 @@ struct Result {
     int active_symbols = 0;
     std::string example;
 };
-// For each defect retain the budget-aware Pareto frontier: more collisions
-// (cons), fewer active coordinates, and fewer extra active symbols are all
-// favorable. This supports evaluation across the (n,k) parameter plane.
+// Per-defect Pareto frontier: retain patterns with more collisions and/or
+// smaller coordinate and fresh-symbol budgets.
 static std::map<int, std::vector<Result>> results;
 
-static std::pair<int, int> active_budget(const uint64_t *verts, int count) {
-    uint32_t active_positions = 0;
-    for (int p = 0; p < R; ++p) {
-        const int first = get_sym(verts[0], p);
-        for (int i = 1; i < count; ++i) {
-            if (get_sym(verts[i], p) != first) {
-                active_positions |= 1U << p;
+static std::pair<int, int> active_budget(const uint64_t *verts) {
+    uint32_t varying = 0;
+    for (int p = 0; p < R; ++p)
+        for (int i = 1; i < R; ++i)
+            if (get_sym(verts[i], p) != get_sym(verts[0], p)) {
+                varying |= 1U << p;
                 break;
             }
-        }
-    }
 
-    uint32_t active_symbols = 0;
-    for (int p = 0; p < R; ++p) {
-        if ((active_positions & (1U << p)) == 0)
-            continue;
-        for (int i = 0; i < count; ++i)
-            active_symbols |= 1U << get_sym(verts[i], p);
-    }
-    return {__builtin_popcount(active_positions),
-            __builtin_popcount(active_symbols)};
+    uint32_t symbols = 0;
+    for (int p = 0; p < R; ++p)
+        if (varying & (1U << p))
+            for (int i = 0; i < R; ++i)
+                symbols |= 1U << get_sym(verts[i], p);
+    return {__builtin_popcount(varying), __builtin_popcount(symbols)};
 }
 
-static void record_result(int defect, int collisions, int internal_edges,
-                          int active_positions, int active_symbols,
-                          std::string example) {
+static void record_result(int defect, int collisions, int edges, int p, int sa,
+                          const std::string &example) {
     auto &frontier = results[defect];
-    const int candidate_extra = active_symbols - active_positions;
-    for (const Result &old : frontier) {
-        const int old_extra = old.active_symbols - old.active_positions;
-        if (old.cons >= collisions &&
-            old.active_positions <= active_positions &&
-            old_extra <= candidate_extra)
+    const int extra = sa - p;
+    for (const Result &old : frontier)
+        if (old.cons >= collisions && old.active_positions <= p &&
+            old.active_symbols - old.active_positions <= extra)
             return;
-    }
-    frontier.erase(
-        std::remove_if(frontier.begin(), frontier.end(),
-                       [&](const Result &old) {
-                           const int old_extra =
-                               old.active_symbols - old.active_positions;
-                           return collisions >= old.cons &&
-                                  active_positions <= old.active_positions &&
-                                  candidate_extra <= old_extra;
-                       }),
-        frontier.end());
-    frontier.push_back({collisions, internal_edges, active_positions,
-                        active_symbols, std::move(example)});
+    frontier.erase(std::remove_if(frontier.begin(), frontier.end(),
+                                  [&](const Result &r) {
+                                      return collisions >= r.cons &&
+                                             p <= r.active_positions &&
+                                             extra <= r.active_symbols -
+                                                          r.active_positions;
+                                  }),
+                   frontier.end());
+    frontier.push_back({collisions, edges, p, sa, example});
 }
 
 #define MAX_R 20
@@ -394,7 +381,7 @@ static int count_internal_edges(const uint64_t *verts, int n) {
 // ── Recursive search ───────────────────────────────────────────────────────
 /// Recursively extend the partial vertex set ver[0..point) toward size R,
 /// deduplicating by graph isomorphism (nauty) or exact vertex set as
-/// appropriate, and record the budget-aware Pareto frontier at each leaf.
+/// appropriate, and record exact pattern signatures at each leaf.
 /// Returns the number of leaf evaluations performed in this subtree.
 static uint64_t solve(int point, int nodl, int largchg,
                       uint32_t overall_sym_mask, int current_nk1,
@@ -427,9 +414,36 @@ static uint64_t solve(int point, int nodl, int largchg,
                 exa += ' ';
             exa += vertex_to_string(ver[i]);
         }
-        const auto [active_positions, active_symbols] = active_budget(ver, R);
-        record_result(current_nk1, current_cons, count_internal_edges(ver, R),
-                      active_positions, active_symbols, std::move(exa));
+        // Recount projection roots and the boundary in A(2R,R). This finite
+        // host contains the whole pattern; the identity then gives its exact X.
+        int roots = 0;
+        for (int p = 0; p < R; ++p)
+            for (int i = 0; i < R; ++i) {
+                bool duplicate = false;
+                for (int j = 0; j < i && !duplicate; ++j) {
+                    bool same = true;
+                    for (int q = 0; q < R; ++q)
+                        if (q != p &&
+                            get_sym(ver[i], q) != get_sym(ver[j], q)) {
+                            same = false;
+                            break;
+                        }
+                    duplicate = same;
+                }
+                if (!duplicate)
+                    ++roots;
+            }
+        const int defect = R * R - roots;
+        const int64_t boundary = count_neighbors(ver, 2 * R, R);
+        const int64_t x =
+            static_cast<int64_t>(roots) * (R + 1) - R * R - boundary;
+        if (x < 0 || x > INT32_MAX) {
+            std::cerr << "Invalid collision count at leaf\n";
+            std::abort();
+        }
+        const auto [p, sa] = active_budget(ver);
+        record_result(defect, static_cast<int>(x), count_internal_edges(ver, R),
+                      p, sa, exa);
         return 1;
     }
 
