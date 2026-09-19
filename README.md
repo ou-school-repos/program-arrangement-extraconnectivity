@@ -33,30 +33,30 @@ algebraic invariant. Instead of tracing geometric boundaries, we count global
 algebraic roots. By defining the **Defect** $D(V') = R \cdot k - \sum U_p$
 (where $U_p$ are unique roots at coordinate $p$), we established an exact
 double-counting equivalence that isolates the $(n-k)$ dimensional scaling factor
-from the finite network topology. This allows our $O(R^4)$ engine to
-characterize the isoperimetrically optimal frontier for any $R$ in polynomial
-time.
+from the finite network topology. The connected-pattern engine searches a finite
+catalogue, but its runtime is exponential in general and its output does not
+prove the unrestricted isoperimetric profile.
 
 ### Asymptotic Penalty Status
 
-The unconditional penalty identities now live in
-`proofs/Arrangement/PenaltyExact.lean`: `boundary_identity`, `penalty_exact`,
-`penalty_defect`, and `penalty_ge` are mechanically verified in the stable
-build. The remaining open gap is not the penalty algebra itself, but the
-extremal-combinatorics path needed for the full exact minimum-cut capstone
-theorem; `docs/lean-proof-status.md` remains the source of truth for that
-boundary.
+The unconditional penalty identities live in
+`proofs/Arrangement/PenaltyExact.lean`. The Lean capstone is the additive-error
+fixed-volume Hamming sandwich in `proofs/Arrangement/Capstone.lean`; it proves
+neither exact optimality nor an extra-connectivity formula. See
+`docs/lean-proof-status.md` for scope and gaps.
 
 ## The Topological Spectrum
 
-The boundary of any connected subgraph is bounded between two topological
-limits:
+Connected patterns exhibit a trade-off between low-defect, collision-rich
+Star-like shapes and high-defect Hamming/folded-box-like shapes. This is an
+organizing framework, not a theorem that these two families bound or classify
+every profile minimizer:
 
 - **The Sparse Limit (Star Graph):** $E_{int} = R-1$, Collision Factor
   $C = \binom{R}{2}$.
-- **The Dense Limit (Hamming Ball):** The minimum cut.
-  $E_{int} = \text{A000788}(R)$, Collision Factor matches Harper's
-  Edge-Isoperimetric Theorem.
+- **High-defect examples:** Hamming balls attain the A000788 defect when
+  embeddable; folded or budget-constrained shapes may be relevant outside that
+  range. None is asserted to be the universal minimum cut.
 
 ### Remark: Structural Convergence at $R=3$
 
@@ -156,8 +156,19 @@ make lean/cache
 make lean
 ```
 
+The connected-pattern catalogue accepts optional graph queries after its `R` and
+nauty-depth arguments. For example:
+
+```bash
+./bin/arrangement 5 3 5 3 6 3 5 4 6 4
+```
+
+This reports the connected-pattern envelope at those cells, not the unrestricted
+profile. The following benchmark transcript is retained as historical output
+from the previous CLI; it is not the current output format.
+
 <details>
-<summary><strong>Sample Output (arrangement, exhaustive nauty search, <code>make benchmark R=10</code>, R=2 through R=10)</strong></summary>
+<summary><strong>Historical arrangement-search output (previous CLI)</strong></summary>
 
 ```text
 Searching R=2 (nauty limit: 3)

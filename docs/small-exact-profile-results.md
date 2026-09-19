@@ -39,6 +39,19 @@ The radius-one Star has volume (R\_\*=1+k(n-k)) and boundary \[
 | (A(6,4)) |                   9 |     Not computed |            36 | Star optimality at this volume is open computationally           |
 | (A(6,3)) |                  10 |     Not computed |            36 | Star optimality at this volume is open computationally           |
 
+### A(6,3), R=10: a verified non-Star witness
+
+The “not computed” entry means that the exact profile minimum is unknown, not
+that no improved witness is known. The set
+
+\[ S=\{0,3\}\times\{1,4\}\times\{2,5\} \;\cup\;\{(5,1,2),(5,4,2)\} \]
+
+is a connected 10-set in A(6,3), has external boundary 30, and deleting that
+boundary leaves components of sizes 10 and 80. It therefore gives a valid
+9-extra-connectivity upper bound of 30, below the radius-one Star boundary 36.
+This is a checked witness and upper bound only: it does not prove
+\(\Phi\_{6,3}(10)=30\), nor determine \(\kappa_9\) exactly.
+
 Further observed minimizers in (A(6,4)):
 
 | (R) | Boundary | (D) | (X) | Symbol support (s) | Shape note                                                                        |

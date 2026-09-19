@@ -2,18 +2,18 @@
 
 ## Project Overview
 
-This project computationally verifies and extends the extraconnectivity bounds
-for Arrangement Graphs A(n,k), as published by Cheng, Lipták & Tian (2022). The
-program exhaustively enumerates all connected subgraphs of size R within A(n,k)
-to compute exact (R-1)-extraconnectivity formulas, independently verified by
-brute-force neighbor enumeration.
+This project studies fixed-volume vertex boundaries and extra-connectivity in
+Arrangement Graphs A(n,k). `src/arrangement.cpp` enumerates symmetry-reduced
+connected R-patterns in a finite host and records a budget-aware catalogue;
+optional (n,k) queries evaluate the resulting connected-pattern envelope. It
+does not enumerate all subsets of each A(n,k), prove the unrestricted boundary
+profile, or by itself compute extra-connectivity.
 
-**Key result:** The search discovered that the published linear extrapolation
-breaks at R=8, where the optimal vertex cut locks into a 3-dimensional hypercube
-with 12 internal edges instead of the predicted 7. The stable Lean development
-formalizes the supporting algebraic defect machinery and the explicit
-Hamming-ball construction; the final extremal-combinatorics step remains
-conditional on explicit hypothesis interfaces.
+**Key result:** the Lean development proves an unconditional fixed-volume
+Hamming-sandwich theorem with an explicit volume-only additive error and an
+exact Hamming-ball witness when the embedding gate holds. It does not assert
+that the Hamming ball is always optimal. Small exact-profile computations and
+explicit Star/folded-box witnesses show that other shapes can do better.
 
 ## Search Algorithm
 
@@ -38,8 +38,9 @@ The engine performs a depth-first enumeration of connected subgraphs:
    vertices adjacent to any vertex in the current set, subject to bounds on
    symbol index (`nodl`) and position (`largchg`). This local node expansion
    strictly takes **O(R⁴) time** and **O(1) auxiliary space**.
-3. **Leaf evaluation:** At depth R, record the accumulated neighbor-set formula
-   `(Rk - nk1)(n-k) - cons` in **O(1) time and space**.
+3. **Leaf evaluation:** At depth R, recompute projection-root counts and the
+   boundary in the finite host A(2R,R), derive the exact collision invariant,
+   and record the pattern's `(D,X,p,s_a)` signature.
 
 **Global vs. Local Complexity:** While the global search space of connected
 subgraphs grows super-exponentially bounded by Cayley's tree formula
@@ -73,20 +74,24 @@ computes the O(R) delta contributed by the newly-added vertex:
 3. **2-diff (named neighbors):** Vertices differing in exactly two positions may
    create named neighbors that reduce the external boundary.
 
-The accumulated `(nk1, cons)` pair is passed down the recursion, so leaves
-require zero additional computation.
+The incremental `(nk1, cons)` pair is retained for traversal diagnostics, but is
+not trusted as the final pattern signature: direct leaf recounts are used
+because the incremental values disagree with direct boundary counts on some
+patterns. This independent recount adds per-leaf work.
 
 ### Independent Verification
 
-Every result is cross-validated by two independent methods:
+Every retained catalogue signature is cross-validated by two calculations:
 
 1. **`verify_neighbor_set()`** — Recomputes the formula using a completely
    separate algorithm (group-key based counting).
 2. **Brute-force enumeration** — Explicitly generates all neighbors in A(2R, R)
    and counts distinct non-member vertices.
 
-Both must agree with the search output or the program reports a verification
-failure.
+The finite-host boundary and root counts construct each signature; the printed
+witness is then recounted and checked against its affine boundary formula. These
+checks validate retained witnesses, not completeness of the unrestricted profile
+or an extra-connectivity result.
 
 ## Key Optimizations
 

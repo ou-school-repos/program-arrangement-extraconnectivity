@@ -680,7 +680,10 @@ int main(int argc, const char *argv[]) {
             .count();
     std::cerr << "\r" << std::string(120, ' ') << "\r";
 
-    std::cout << " D  X  p  s_a  s_a-p  boundary(m=R)  witness\n";
+    std::cout << std::right << std::setw(2) << "D" << "  " << std::setw(2)
+              << "X" << "  " << std::setw(2) << "p" << "  " << std::setw(3)
+              << "s_a" << "  " << std::setw(5) << "s_a-p" << "  "
+              << std::setw(18) << "boundary(m=R)" << "    witness\n";
     for (const auto &[defect, frontier] : results) {
         for (const Result &res : frontier) {
             const int extra_symbols = res.active_symbols - res.active_positions;
@@ -690,8 +693,8 @@ int main(int argc, const char *argv[]) {
                       << std::setw(2) << res.cons << "  " << std::setw(2)
                       << res.active_positions << "  " << std::setw(3)
                       << res.active_symbols << "  " << std::setw(5)
-                      << extra_symbols << "  " << std::setw(14)
-                      << boundary_at_host << "  " << res.example << "\n";
+                      << extra_symbols << "  " << std::setw(18)
+                      << boundary_at_host << "    " << res.example << "\n";
         }
     }
 
@@ -794,8 +797,8 @@ int main(int argc, const char *argv[]) {
                     (static_cast<int64_t>(R) * R - defect) * R - defect -
                     res.cons;
 
-                std::cout << "  [brute-force D=" << std::setw(2) << defect
-                          << ", X=" << std::setw(2) << res.cons
+                std::cout << std::right << "  [brute-force D=" << std::setw(2)
+                          << defect << ", X=" << std::setw(2) << res.cons
                           << "] |N(V')| = " << std::setw(4) << brute_count;
                 if (brute_count == theory_val) {
                     std::cout << " \xe2\x9c\x93\n";
