@@ -1563,26 +1563,23 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
 
 Ordered coordinate overlaps admit a global injection into an ordered pair of
 distinct members of `V'` together with an orientation bit. This proves the
-factor-two bound below. The stronger factor-one estimate formerly recorded
-here is not used; it is not justified by the ordered-overlap argument.
+factor-two ordered-overlap bound below. The factor-one unordered collision
+bound is believed true but is not proved by this injection.
+
+The factor-one *ordered-overlap* claim is refuted: in `A(5,3)`, the pair
+`(0,1,2)` and `(3,4,2)` has two common vertices in each orientation of the
+coordinate pair `{0,1}`, giving ordered overlap 4 although `R(R-1)=2`.
 -/
 
-/-- Historical factor-one collision estimate. This is not established by the
-    ordered-overlap injection below and remains only an interface for older
-    conditional results. -/
+/-- The factor-one cross-collision estimate. It is not proved by the global
+    ordered-overlap injection below; that argument establishes the factor-two
+    version. -/
 def CrossCollisionBound {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
   cross_collisions V' ≤ V'.card * (V'.card - 1)
 
 /-- The unconditional collision estimate proved by global ordered charging. -/
 def CrossCollisionBoundTwice {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
   cross_collisions V' ≤ 2 * (V'.card * V'.card - V'.card)
-
-/-- Legacy factor-one ordered-coordinate charging target. The proved estimate
-    below has a factor two; this stronger interface is retained for old
-    conditional statements only. -/
-def CoordinatePairChargingOrdered {n k : ℕ}
-    (V' : Finset (ArrVertex n k)) : Prop :=
-  coordinate_ordered_overlap V' ≤ V'.card * (V'.card - 1)
 
 lemma coordinate_ordered_overlap_le_global_bound {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
@@ -1597,15 +1594,6 @@ lemma cross_collision_bound_global {n k : ℕ}
   rw [← external_neighbors_eq_coord_union V'] at hbonf
   have hoverlap := coordinate_ordered_overlap_le_global_bound V'
   unfold CrossCollisionBoundTwice cross_collisions
-  omega
-
-lemma cross_collision_bound_of_ordered_charging {n k : ℕ}
-    (V' : Finset (ArrVertex n k))
-    (h : CoordinatePairChargingOrdered V') :
-    CrossCollisionBound V' := by
-  have hboundary := coordinate_bonferroni_ordered V'
-  rw [← external_neighbors_eq_coord_union V'] at hboundary
-  unfold CrossCollisionBound CoordinatePairChargingOrdered cross_collisions at *
   omega
 
 /--
@@ -1684,10 +1672,124 @@ theorem external_neighbors_lower_bound_global
   exact external_neighbors_lower_bound_of_collision_bound V' hnk
     (cross_collision_bound_global V')
 
+/-- The global lower bound expressed as an error from the Hamming linear term.
+    Unlike the refuted unrestricted Hamming-ball claim, this allows the
+    explicit quadratic error `2(R²-R)`. -/
+theorem restricted_lower_bound_up_to_error {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
+    (V'.card * k - E_seq V'.card) * (n - k) ≤
+      external_neighbors V' + E_seq V'.card +
+        2 * (V'.card * V'.card - V'.card) := by
+  have hglobal := external_neighbors_lower_bound_global V' hnk
+  by_cases hE : E_seq V'.card ≤ V'.card * k
+  · have hsub : V'.card * k - E_seq V'.card + E_seq V'.card =
+        V'.card * k := Nat.sub_add_cancel hE
+    have hfactor :
+        (V'.card * k - E_seq V'.card) * (n - k + 1) =
+          (V'.card * k - E_seq V'.card) * (n - k) +
+            (V'.card * k - E_seq V'.card) := by
+      rw [Nat.mul_add]
+      simp
+    rw [hfactor] at hglobal
+    omega
+  · have hzero : V'.card * k - E_seq V'.card = 0 := by
+      exact Nat.sub_eq_zero_of_le (Nat.le_of_lt (lt_of_not_ge hE))
+    simp [hzero]
+
+/-- Boundary at most the Hamming linear term forces the defect to be close
+    to its cube-isoperimetric maximum. The hypothesis `E_seq R ≤ R*k` is
+    necessary with natural-number subtraction (and holds in the embedded
+    Hamming-ball range). -/
+theorem defect_rigidity {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
+    (hE : E_seq V'.card ≤ V'.card * k)
+    (hH : external_neighbors V' ≤
+      (V'.card * k - E_seq V'.card) * (n - k)) :
+    (E_seq V'.card - (V'.card * k - sum_unique_roots V')) *
+        (n - k + 1) ≤
+      E_seq V'.card + 2 * (V'.card * V'.card - V'.card) := by
+  let R := V'.card
+  let e := E_seq R
+  let U := sum_unique_roots V'
+  let D := R * k - U
+  let gap := e - D
+  let A := R * k - e
+  have hU0 := sum_unique_roots_le_rk V'.card V' rfl
+  have hU : U ≤ R * k := by simpa [U, R] using hU0
+  have hD : D + U = R * k := Nat.sub_add_cancel hU
+  have hA : A + e = R * k := Nat.sub_add_cancel hE
+  have hX := cross_collision_bound_global V'
+  have hX' : cross_collisions V' ≤ 2 * (R * R - R) := by
+    simpa [R, CrossCollisionBoundTwice] using hX
+  have htotal := total_coord_edges_eq V' hnk
+  have hdecomp := external_neighbors_decomp V'
+    (external_neighbors_le_total_coord V')
+  have hfactor : U * (n - k) + U = U * (n - k + 1) := by
+    rw [Nat.mul_add]
+    simp
+  have hXle : cross_collisions V' ≤ total_coord_edges V' := Nat.sub_le _ _
+  have hid : external_neighbors V' + cross_collisions V' + R * k =
+      U * (n - k + 1) := by
+    calc
+      external_neighbors V' + cross_collisions V' + R * k =
+          total_coord_edges V' + R * k := by
+            rw [hdecomp]
+            omega
+      _ = U * (n - k) + U := htotal
+      _ = U * (n - k + 1) := hfactor
+  by_cases hd : D ≤ e
+  · have hgap : gap + D = e := Nat.sub_add_cancel hd
+    have hUA : U = A + gap := by
+      dsimp [U, A, gap, D]
+      omega
+    have hfacA : A * (n - k + 1) = A * (n - k) + A := by
+      rw [Nat.mul_add]
+      simp
+    rw [hUA, Nat.add_mul, hfacA] at hid
+    have hR : R * k = A + e := hA.symm
+    have hfacGap : gap * (n - k + 1) = gap * (n - k) + gap := by
+      rw [Nat.mul_add]
+      simp
+    have hH' : external_neighbors V' ≤ A * (n - k) := by
+      simpa [A, R, e] using hH
+    change gap * (n - k + 1) ≤ e + 2 * (R * R - R)
+    rw [hfacGap]
+    omega
+  · have hgap0 : gap = 0 := by
+      dsimp [gap]
+      exact Nat.sub_eq_zero_of_le (Nat.le_of_lt (lt_of_not_ge hd))
+    have hgoal : gap * (n - k + 1) ≤ e + 2 * (R * R - R) := by
+      rw [hgap0]
+      omega
+    simpa [gap, D, e, R] using hgoal
+
+/-- If the dimension is larger than the total rigidity error, equality with
+    the Hamming defect bound is forced for any set whose boundary is no larger
+    than the Hamming linear term. -/
+theorem defect_eq_popcount_of_small_error {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
+    (hE : E_seq V'.card ≤ V'.card * k)
+    (hlarge : E_seq V'.card +
+      2 * (V'.card * V'.card - V'.card) < n - k + 1)
+    (hH : external_neighbors V' ≤
+      (V'.card * k - E_seq V'.card) * (n - k)) :
+    V'.card * k - sum_unique_roots V' = E_seq V'.card := by
+  have hrigid := defect_rigidity V' hnk hE hH
+  have hdef := sum_unique_roots_lower_bound V'.card V' rfl
+  have hdef_le : V'.card * k - sum_unique_roots V' ≤ E_seq V'.card := by
+    omega
+  by_contra hne
+  have hgap : 1 ≤ E_seq V'.card -
+      (V'.card * k - sum_unique_roots V') := by
+    omega
+  have hmul := Nat.mul_le_mul_right (n - k + 1) hgap
+  simp only [Nat.one_mul] at hmul
+  omega
+
 /-!
 The global charging argument above proves `CrossCollisionBoundTwice`; in
 particular, the factor-two version of the small-volume lower bound is
-unconditional. The historical factor-one `CrossCollisionBound` is not proved.
+unconditional. The factor-one `CrossCollisionBound` remains unproved here.
 -/
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
