@@ -165,8 +165,8 @@ _check/default: format lint
 
 # NOTE: run a sanitizer test with:
 # make test CXXFLAGS="-std=c++17 -g -O0 -fsanitize=address,undefined -Wall -Wextra -Wpedantic"
-.PHONY: test _test/predict _test/checkpoint _test/checkpoint/e2e _test/validate_extra_cut _test/validate_extra_cut/full
-test: _test/checkpoint _test/validate_extra_cut _test/predict	##H @Test Run fast test suites
+.PHONY: test _test/predict _test/checkpoint _test/checkpoint/e2e _test/validate_extra_cut _test/validate_extra_cut/full _test/exact_profile
+test: _test/checkpoint _test/validate_extra_cut _test/predict _test/exact_profile	##H @Test Run fast test suites
 
 _test/predict: bin/predict bin/arrangement	##H @Test Run predictor/search comparison suite for R: 2..$(R)
 	python3 tests/test_predict.py --max-r $(R)
@@ -189,6 +189,9 @@ _test/validate_extra_cut: bin/validate_extra_cut_naive	##H @Test Run small valid
 _test/validate_extra_cut/full: bin/validate_extra_cut_naive	##H @Test Run the full validator oracle regression
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
 		python3 scripts/test_regression.py
+
+_test/exact_profile: bin/exact_profile tests/test_exact_profile.py	##H @Test Run exact small-profile regression oracle
+	PROFILE_BIN=./bin/exact_profile python3 tests/test_exact_profile.py
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -316,6 +319,7 @@ GIT_CLEAN_FLAGS += -n
 endif
 
 GIT_CLEAN_FLAGS += \
+	-e 'proofs/.lake' \
 	-e '*.bitmap' \
 	-e 'state_*/' \
 	-e '.env' \

@@ -262,6 +262,9 @@ class BoundaryTracker {
         if (first_tombstone != capacity_)
             position = first_tombstone;
         else if (size_ + tombstones_ >= max_entries_) {
+            if (tombstones_ == 0)
+                throw std::length_error(
+                    "boundary tracker full; raise capacity_ or grow the table");
             rehash();
             increment(vertex);
             return;

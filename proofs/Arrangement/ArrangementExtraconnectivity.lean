@@ -1139,6 +1139,65 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   rw [h_rhs] at h_sum
   exact h_sum
 
+/-!
+## The collision-count milestone
+
+The remaining obstruction to an unconditional small-volume lower bound is a
+purely combinatorial multiplicity estimate.  Every outside vertex counted with
+multiplicity at least two is a common neighbor of a pair of members of `V'`.
+The intended proof charges each excess multiplicity to one of the at most two
+common neighbors of a distance-two pair.  We record that statement explicitly
+as a conjecture rather than smuggling it in as an axiom.
+-/
+
+/-- The proposed dimension-free collision estimate for an R-element set. -/
+def CrossCollisionBound {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
+  cross_collisions V' ≤ V'.card * (V'.card - 1)
+
+/--
+  Algebraic consequence of the collision estimate.
+
+  This theorem is unconditional once `CrossCollisionBound` is supplied; the
+  proof uses only the already-proved fiber identity, defect bound, and the
+  boundary decomposition.  The common-neighbor charging lemma remains the
+  separate combinatorial target.
+-/
+lemma external_neighbors_lower_bound_of_collision_bound
+    {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
+    (hcollision : CrossCollisionBound V') :
+    (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
+        V'.card * (V'.card - 1) ≤
+      external_neighbors V' := by
+  have htotal := total_coord_edges_eq V' hnk
+  have hdefect := sum_unique_roots_lower_bound V'.card V' rfl
+  have hcoll := hcollision
+  have hdecomp := external_neighbors_decomp V'
+    (external_neighbors_le_total_coord V')
+  have hproduct := Nat.mul_le_mul_right (n - k + 1) hdefect
+  unfold CrossCollisionBound at hcoll
+  have htotalR :
+      total_coord_edges V' + V'.card * k =
+        sum_unique_roots V' * (n - k) + sum_unique_roots V' := by
+    exact htotal
+  have hXle : cross_collisions V' ≤ total_coord_edges V' := by
+    exact Nat.sub_le _ _
+  have hfactor :
+      sum_unique_roots V' * (n - k) + sum_unique_roots V' =
+        sum_unique_roots V' * (n - k + 1) := by
+    rw [Nat.mul_add]
+    simp
+  have hidentity :
+      external_neighbors V' + cross_collisions V' + V'.card * k =
+        sum_unique_roots V' * (n - k + 1) := by
+    omega
+  omega
+
+/-!
+TODO: prove `CrossCollisionBound` by a finite common-neighbor charging
+argument.  This is intentionally a `def`, not an `axiom`, and therefore
+cannot accidentally enter any theorem as an unproved assumption.
+-/
+
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
 def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
   fun p => i.testBit p.val
