@@ -1,5 +1,5 @@
 // exact_profile_d2.cpp — exact unrestricted boundary profile Phi(R) of A(n,k)
-// for |V| = nPk <= 128.
+// for |V| = nPk <= 512.
 //
 // Method: ESU enumeration of all sets that are connected in the distance-<=2
 // graph and contain vertex 0 (complete up to vertex-transitivity). Sets that
@@ -10,30 +10,27 @@
 // Prints the minimum boundary and (D, X, s) of one minimizer.
 // Build:  g++ -O2 -o exact_profile_d2 exact_profile_d2.cpp
 // Usage:  ./exact_profile_d2 n k R
-// Exact unrestricted Phi(R) on A(n,k) (n^k small, |V|<=128) via ESU over
+// Exact unrestricted Phi(R) on A(n,k) (n^k small, |V|<=512) via ESU over
 // distance-<=2-connected sets plus additive splits for parts at distance >=3.
 // Also records (D,X,s) of minimizers.
 #include <bits/stdc++.h>
 using namespace std;
-__extension__ typedef unsigned __int128 B;
+using B = bitset<512>;
 int n, k, R, NV;
 vector<vector<int>> W;
 vector<B> A1, A2;
 long long cnt = 0;
 int best = 1e9;
 vector<int> bestSet;
-static inline int pc(B x) {
-    return __builtin_popcountll((unsigned long long)x) +
-           __builtin_popcountll((unsigned long long)(x >> 64));
+static inline int pc(const B &x) { return static_cast<int>(x.count()); }
+static inline int first_set_bit(const B &x) {
+    for (int i = 0; i < 512; ++i)
+        if (x.test(static_cast<size_t>(i)))
+            return i;
+    return -1;
 }
-static inline int first_set_bit(B x) {
-    const unsigned long long lo = (unsigned long long)x;
-    if (lo != 0)
-        return __builtin_ctzll(lo);
-    return 64 + __builtin_ctzll((unsigned long long)(x >> 64));
-}
-int S[16];
-void rec(int sz, B Sset, B ext, B NS2, B N1) {
+int S[512];
+void rec(int sz, B Sset, B ext, const B &NS2, B N1) {
     if (sz == R) {
         cnt++;
         int b = pc(N1 & ~Sset);
@@ -43,12 +40,15 @@ void rec(int sz, B Sset, B ext, B NS2, B N1) {
         }
         return;
     }
-    while (ext) {
+    while (ext.any()) {
         const int w = first_set_bit(ext);
-        ext &= ~(((B)1) << w);
-        B nb = A2[w] & ~Sset & ~NS2 & ~(B)1; // exclusive, >root(0)
+        ext.reset(static_cast<size_t>(w));
+        B nb = A2[w] & ~Sset & ~NS2;
+        nb.reset(0); // exclusive, >root(0)
         S[sz] = w;
-        rec(sz + 1, Sset | ((B)1 << w), ext | nb, NS2 | A2[w], N1 | A1[w]);
+        Sset.set(static_cast<size_t>(w));
+        rec(sz + 1, Sset, ext | nb, NS2 | A2[w], N1 | A1[w]);
+        Sset.reset(static_cast<size_t>(w));
     }
 }
 int main(int argc, char **argv) {
@@ -59,8 +59,10 @@ int main(int argc, char **argv) {
     n = atoi(argv[1]);
     k = atoi(argv[2]);
     R = atoi(argv[3]);
-    vector<int> p(n);
-    iota(p.begin(), p.end(), 0);
+    if (n < 2 || k < 1 || k >= n || R < 1) {
+        fprintf(stderr, "Require n > k >= 1 and R >= 1\n");
+        return 1;
+    }
     // all injective k-words
     function<void(vector<int> &)> gen = [&](vector<int> &c) {
         if ((int)c.size() == k) {
@@ -76,8 +78,13 @@ int main(int argc, char **argv) {
     };
     vector<int> c;
     gen(c);
-    if (W.size() > 128) {
-        puts("too big");
+    if (W.size() > 512) {
+        fprintf(stderr, "too big: graph has %zu vertices (limit 512)\n",
+                W.size());
+        return 1;
+    }
+    if (static_cast<size_t>(R) > W.size()) {
+        fprintf(stderr, "R exceeds the graph's vertex count\n");
         return 1;
     }
     NV = static_cast<int>(W.size());
@@ -93,17 +100,24 @@ int main(int argc, char **argv) {
                 if (find(v.begin(), v.end(), x) != v.end())
                     continue;
                 v[q] = x;
-                A1[i] |= (B)1 << id[v];
+                A1[i].set(static_cast<size_t>(id.at(v)));
             }
     for (int i = 0; i < NV; i++) {
         B t = A1[i];
         for (int j = 0; j < NV; j++)
-            if (A1[i] >> j & 1)
+            if (A1[i].test(static_cast<size_t>(j)))
                 t |= A1[j];
-        A2[i] = t & ~((B)1 << i);
+        t.reset(static_cast<size_t>(i));
+        A2[i] = t;
     }
     S[0] = 0;
-    rec(1, (B)1, A2[0] & ~(B)1, A2[0] | 1, A1[0]);
+    B initial_members;
+    initial_members.set(0);
+    B initial_ext = A2[0];
+    initial_ext.reset(0);
+    B initial_distance2 = A2[0];
+    initial_distance2.set(0);
+    rec(1, initial_members, initial_ext, initial_distance2, A1[0]);
     // D,X,s of minimizer
     int m = n - k, U = 0;
     for (int q = 0; q < k; q++) {
