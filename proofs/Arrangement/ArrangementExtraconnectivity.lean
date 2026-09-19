@@ -928,14 +928,15 @@ lemma diff_pair_eq_or_swap {n k : ℕ} {s t : ArrVertex n k}
 
 def tagged_coordinate_overlaps {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
-    Finset (Fin k × (Fin k × ArrVertex n k)) :=
+    Finset (Σ p : Fin k, Σ q : Fin k, ArrVertex n k) :=
   (Finset.univ : Finset (Fin k)).sigma (fun p =>
     ((Finset.univ : Finset (Fin k)).filter (fun q => p ≠ q)).sigma
       (fun q => coord_boundary V' p ∩ coord_boundary V' q))
 
 lemma mem_tagged_coordinate_overlaps {n k : ℕ}
     (V' : Finset (ArrVertex n k)) (p q : Fin k) (w : ArrVertex n k) :
-    (p, (q, w)) ∈ tagged_coordinate_overlaps V' ↔
+    (⟨p, ⟨q, w⟩⟩ : Σ p : Fin k, Σ q : Fin k, ArrVertex n k) ∈
+        tagged_coordinate_overlaps V' ↔
       p ≠ q ∧ w ∈ coord_boundary V' p ∩ coord_boundary V' q := by
   simp [tagged_coordinate_overlaps]
 
@@ -1147,25 +1148,33 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
     have hpair : zx = zy := (Prod.mk.inj hxy).1
     have horientation : decide (p < q) = decide (p' < q') :=
       (Prod.mk.inj hxy).2
-    cases hpair
+    have hsy' := hsy
+    have hpair' := hpair
+    dsimp [zx, zy] at hpair'
+    rw [← hpair'] at hsy'
     have hdiff := coord_overlap_witness_differs_at_both V' htagx.1 htagx.2
-      hsx.1 hsy.2.1 hsx.2.2.2.1 hsy.2.2.2.2.1
+      hsx.1 hsx.2.1 hsx.2.2.2.1 hsx.2.2.2.2.1
     have hcoords := diff_pair_eq_or_swap htagx.1 hdiff.1 hdiff.2
-      hsy.2.2.2.2.2
+      hsy'.2.2.2.2.2
     rcases hcoords with ⟨hp, hq⟩ | ⟨hp, hq⟩
-    · subst p'
-      subst q'
+    · have hsy_p := hsy'.2.2.2.1
+      have hsy_q := hsy'.2.2.2.2.1
+      rw [← hp] at hsy_p
+      rw [← hq] at hsy_q
       have hw := coord_overlap_vertex_unique htagx.1
-        hsx.2.2.2.1 hsx.2.2.2.2.1 hsy.2.2.2.1 hsy.2.2.2.2.1
-      subst w'
+        hsx.2.2.2.1 hsx.2.2.2.2.1 hsy_p hsy_q
       apply Subtype.ext
-      simp [p, q, w]
+      change (⟨p, ⟨q, w⟩⟩ : Σ p : Fin k, Σ q : Fin k, ArrVertex n k) =
+        ⟨p', ⟨q', w'⟩⟩
+      cases hp
+      cases hq
+      simpa using hw
     · have hbit : decide (p < q) = decide (q < p) := by
         simpa [hp, hq] using horientation
       rcases lt_trichotomy p q with hpq | hpq | hpq
       · have hnot : ¬ q < p := not_lt_of_ge (le_of_lt hpq)
         simp [hpq, hnot] at hbit
-      · exact (htagx.1 hpq) rfl
+      · exact False.elim (htagx.1 hpq)
       · have hnot : ¬ p < q := not_lt_of_ge (le_of_lt hpq)
         simp [hpq, hnot] at hbit
   have hcard := Finset.card_le_card_of_injOn charge hmaps hinj
