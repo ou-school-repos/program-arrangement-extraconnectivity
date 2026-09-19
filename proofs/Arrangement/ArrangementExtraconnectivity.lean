@@ -928,14 +928,14 @@ lemma diff_pair_eq_or_swap {n k : ℕ} {s t : ArrVertex n k}
 
 def tagged_coordinate_overlaps {n k : ℕ}
     (V' : Finset (ArrVertex n k)) :
-    Finset (Σ p : Fin k, Σ q : Fin k, ArrVertex n k) :=
+    Finset (Σ _ : Fin k, Σ _ : Fin k, ArrVertex n k) :=
   (Finset.univ : Finset (Fin k)).sigma (fun p =>
     ((Finset.univ : Finset (Fin k)).filter (fun q => p ≠ q)).sigma
       (fun q => coord_boundary V' p ∩ coord_boundary V' q))
 
 lemma mem_tagged_coordinate_overlaps {n k : ℕ}
     (V' : Finset (ArrVertex n k)) (p q : Fin k) (w : ArrVertex n k) :
-    (⟨p, ⟨q, w⟩⟩ : Σ p : Fin k, Σ q : Fin k, ArrVertex n k) ∈
+    (⟨p, ⟨q, w⟩⟩ : Σ _ : Fin k, Σ _ : Fin k, ArrVertex n k) ∈
         tagged_coordinate_overlaps V' ↔
       p ≠ q ∧ w ∈ coord_boundary V' p ∩ coord_boundary V' q := by
   simp [tagged_coordinate_overlaps]
@@ -1160,9 +1160,11 @@ lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
       have hw := coord_overlap_vertex_unique htagx.1
         hsx.2.2.2.1 hsx.2.2.2.2.1 hsy_p hsy_q
       apply Subtype.ext
-      cases hp
-      cases hq
-      simpa using hw
+      apply Sigma.ext hp
+      cases hp.symm
+      cases hq.symm
+      cases hw
+      rfl
     · have hbit : decide (p < q) = decide (q < p) := by
         simpa [hp, hq] using horientation
       rcases lt_trichotomy p q with hpq | hpq | hpq
@@ -1557,25 +1559,45 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
   exact h_sum
 
 /-!
-## The collision-count milestone
+## The collision-count bound
 
-The remaining obstruction to an unconditional small-volume lower bound is a
-purely combinatorial multiplicity estimate.  Every outside vertex counted with
-multiplicity at least two is a common neighbor of a pair of members of `V'`.
-The intended proof charges each excess multiplicity to one of the at most two
-common neighbors of a distance-two pair.  We record that statement explicitly
-as a conjecture rather than smuggling it in as an axiom.
+Ordered coordinate overlaps admit a global injection into an ordered pair of
+distinct members of `V'` together with an orientation bit. This proves the
+factor-two bound below. The stronger factor-one estimate formerly recorded
+here is not used; it is not justified by the ordered-overlap argument.
 -/
 
-/-- The proposed dimension-free collision estimate for an R-element set. -/
+/-- Historical factor-one collision estimate. This is not established by the
+    ordered-overlap injection below and remains only an interface for older
+    conditional results. -/
 def CrossCollisionBound {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
   cross_collisions V' ≤ V'.card * (V'.card - 1)
 
-/-- Ordered-coordinate charging formulation of the remaining arrangement-specific
-    estimate.  This is a proposition, not an axiom. -/
+/-- The unconditional collision estimate proved by global ordered charging. -/
+def CrossCollisionBoundTwice {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
+  cross_collisions V' ≤ 2 * (V'.card * V'.card - V'.card)
+
+/-- Legacy factor-one ordered-coordinate charging target. The proved estimate
+    below has a factor two; this stronger interface is retained for old
+    conditional statements only. -/
 def CoordinatePairChargingOrdered {n k : ℕ}
     (V' : Finset (ArrVertex n k)) : Prop :=
   coordinate_ordered_overlap V' ≤ V'.card * (V'.card - 1)
+
+lemma coordinate_ordered_overlap_le_global_bound {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    coordinate_ordered_overlap V' ≤
+      2 * (V'.card * V'.card - V'.card) := by
+  rw [← tagged_coordinate_overlaps_card V']
+  exact tagged_coordinate_overlaps_card_le V'
+
+lemma cross_collision_bound_global {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) : CrossCollisionBoundTwice V' := by
+  have hbonf := coordinate_bonferroni_ordered V'
+  rw [← external_neighbors_eq_coord_union V'] at hbonf
+  have hoverlap := coordinate_ordered_overlap_le_global_bound V'
+  unfold CrossCollisionBoundTwice cross_collisions
+  omega
 
 lemma cross_collision_bound_of_ordered_charging {n k : ℕ}
     (V' : Finset (ArrVertex n k))
@@ -1622,19 +1644,12 @@ lemma cross_collisions_of_charging {n k : ℕ}
     CoordinatePairCharging CrossCollisionBound cross_collisions at *
   omega
 
-/--
-  Algebraic consequence of the collision estimate.
-
-  This theorem is unconditional once `CrossCollisionBound` is supplied; the
-  proof uses only the already-proved fiber identity, defect bound, and the
-  boundary decomposition.  The common-neighbor charging lemma remains the
-  separate combinatorial target.
--/
+/-- Algebraic consequence of the factor-two collision estimate. -/
 lemma external_neighbors_lower_bound_of_collision_bound
     {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
-    (hcollision : CrossCollisionBound V') :
+    (hcollision : CrossCollisionBoundTwice V') :
     (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
-        V'.card * (V'.card - 1) ≤
+        2 * (V'.card * V'.card - V'.card) ≤
       external_neighbors V' := by
   have htotal := total_coord_edges_eq V' hnk
   have hdefect := sum_unique_roots_lower_bound V'.card V' rfl
@@ -1642,7 +1657,7 @@ lemma external_neighbors_lower_bound_of_collision_bound
   have hdecomp := external_neighbors_decomp V'
     (external_neighbors_le_total_coord V')
   have hproduct := Nat.mul_le_mul_right (n - k + 1) hdefect
-  unfold CrossCollisionBound at hcoll
+  unfold CrossCollisionBoundTwice at hcoll
   have htotalR :
       total_coord_edges V' + V'.card * k =
         sum_unique_roots V' * (n - k) + sum_unique_roots V' := by
@@ -1660,10 +1675,19 @@ lemma external_neighbors_lower_bound_of_collision_bound
     omega
   omega
 
+/-- Unconditional small-volume boundary lower bound from global overlap
+    charging. It is deliberately weaker than the former factor-one target. -/
+theorem external_neighbors_lower_bound_global
+    {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
+    (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
+        2 * (V'.card * V'.card - V'.card) ≤ external_neighbors V' := by
+  exact external_neighbors_lower_bound_of_collision_bound V' hnk
+    (cross_collision_bound_global V')
+
 /-!
-TODO: prove `CrossCollisionBound` by a finite common-neighbor charging
-argument.  This is intentionally a `def`, not an `axiom`, and therefore
-cannot accidentally enter any theorem as an unproved assumption.
+The global charging argument above proves `CrossCollisionBoundTwice`; in
+particular, the factor-two version of the small-volume lower bound is
+unconditional. The historical factor-one `CrossCollisionBound` is not proved.
 -/
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
