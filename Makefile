@@ -165,35 +165,28 @@ _check/default: format lint
 
 # NOTE: run a sanitizer test with:
 # make test CXXFLAGS="-std=c++17 -g -O0 -fsanitize=address,undefined -Wall -Wextra -Wpedantic"
-.PHONY: test _test/predict _test/checkpoint _test/checkpoint/e2e _test/validate_extra_cut _test/validate_extra_cut/full _test/exact_profile _test/pattern_catalogue
-test: _test/checkpoint _test/validate_extra_cut _test/predict _test/exact_profile _test/pattern_catalogue	##H @Test Run fast test suites
-
-_test/predict: bin/predict bin/arrangement	##H @Test Run predictor/search comparison suite for R: 2..$(R)
+.PHONY: test
+test: 	##H @Test Run fast test suites
+	# Begin test
 	python3 tests/test_predict.py --max-r $(R)
-
-_test/checkpoint: tests/test_star_sweep_checkpoint.cpp	##H @Test Run fast star-sweep checkpoint smoke test
+	# Begin test
 	@mkdir -p .tmp
 	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -fopenmp \
 		-o .tmp/test_star_sweep_checkpoint tests/test_star_sweep_checkpoint.cpp
 	./.tmp/test_star_sweep_checkpoint
-
-_test/checkpoint/e2e: bin/validate_extra_cut_bitmap tests/test_validate_extra_cut_checkpoint.cpp	##H @Test Run checkpoint interruption/resume test
+	# Begin test
 	@mkdir -p .tmp
 	$(CXX) -I./include $(CPPFLAGS) $(CXXFLAGS) -o .tmp/test_validate_extra_cut_checkpoint tests/test_validate_extra_cut_checkpoint.cpp
 	./.tmp/test_validate_extra_cut_checkpoint ./bin/validate_extra_cut_bitmap
-
-_test/validate_extra_cut: bin/validate_extra_cut_naive	##H @Test Run small validator oracle regression
+	# Begin test
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
 		python3 scripts/test_regression.py --oracle tests/oracle_small.json
-
-_test/validate_extra_cut/full: bin/validate_extra_cut_naive	##H @Test Run the full validator oracle regression
+	# Begin test
 	VALIDATOR_BIN=./bin/validate_extra_cut_naive \
 		python3 scripts/test_regression.py
-
-_test/exact_profile: bin/exact_profile_naive tests/test_exact_profile.py	##H @Test Run exact connected-profile regression oracle
+	# Begin test
 	PROFILE_BIN=./bin/exact_profile_naive python3 tests/test_exact_profile.py
-
-_test/pattern_catalogue: bin/arrangement bin/pattern_catalogue tests/test_pattern_catalogue.cpp
+	# Begin test
 	@mkdir -p .tmp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o .tmp/test_pattern_catalogue tests/test_pattern_catalogue.cpp
 	./.tmp/test_pattern_catalogue

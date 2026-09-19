@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ORACLE = ROOT / "tests" / "oracle_baseline.json"
+ORACLE = ROOT / "tests" / "res/oracle_baseline.json"
 BINARY = Path(os.environ.get("VALIDATOR_BIN", ROOT / "bin" / "validate_extra_cut"))
 
 

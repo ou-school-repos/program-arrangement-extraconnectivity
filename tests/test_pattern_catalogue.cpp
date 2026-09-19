@@ -1,6 +1,7 @@
 // Differential regression test for the optimized and exhaustive pattern
 // catalogues. The slow R=6 case is opt-in: --include-r6.
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -129,13 +130,11 @@ bool dominates(const Signature &left, const Signature &right) {
 SignatureSet pareto_frontier(const SignatureSet &signatures) {
     SignatureSet frontier;
     for (const Signature &candidate : signatures) {
-        bool is_dominated = false;
-        for (const Signature &other : signatures) {
-            if (dominates(other, candidate)) {
-                is_dominated = true;
-                break;
-            }
-        }
+        const bool is_dominated =
+            std::any_of(signatures.begin(), signatures.end(),
+                        [&candidate](const Signature &other) {
+                            return dominates(other, candidate);
+                        });
         if (!is_dominated)
             frontier.insert(candidate);
     }
