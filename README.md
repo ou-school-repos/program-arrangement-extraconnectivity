@@ -180,6 +180,10 @@ fixed buffers currently limit `R` to 2–9, and runtime grows rapidly; its
 predictions are still for the connected-pattern envelope, not the unrestricted
 profile or extra-connectivity.
 
+The C++ differential regression is part of `make test` for `R=2..6`. The R=6
+case is slow; it runs as part of the normal suite because it checks the largest
+currently catalogued reference case.
+
 <details>
 <summary><strong>Historical arrangement-search output (previous CLI)</strong></summary>
 

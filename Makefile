@@ -165,8 +165,8 @@ _check/default: format lint
 
 # NOTE: run a sanitizer test with:
 # make test CXXFLAGS="-std=c++17 -g -O0 -fsanitize=address,undefined -Wall -Wextra -Wpedantic"
-.PHONY: test _test/predict _test/checkpoint _test/checkpoint/e2e _test/validate_extra_cut _test/validate_extra_cut/full _test/exact_profile
-test: _test/checkpoint _test/validate_extra_cut _test/predict _test/exact_profile	##H @Test Run fast test suites
+.PHONY: test _test/predict _test/checkpoint _test/checkpoint/e2e _test/validate_extra_cut _test/validate_extra_cut/full _test/exact_profile _test/pattern_catalogue _test/pattern_catalogue/r6
+test: _test/checkpoint _test/validate_extra_cut _test/predict _test/exact_profile _test/pattern_catalogue	##H @Test Run test suites, including full pattern-catalogue differential check
 
 _test/predict: bin/predict bin/arrangement	##H @Test Run predictor/search comparison suite for R: 2..$(R)
 	python3 tests/test_predict.py --max-r $(R)
@@ -192,6 +192,16 @@ _test/validate_extra_cut/full: bin/validate_extra_cut_naive	##H @Test Run the fu
 
 _test/exact_profile: bin/exact_profile_naive tests/test_exact_profile.py	##H @Test Run exact connected-profile regression oracle
 	PROFILE_BIN=./bin/exact_profile_naive python3 tests/test_exact_profile.py
+
+_test/pattern_catalogue: bin/arrangement bin/pattern_catalogue tests/test_pattern_catalogue.cpp	##H @Test Differential-check pattern frontiers for R=2..6 (R=6 is slow)
+	@mkdir -p .tmp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o .tmp/test_pattern_catalogue tests/test_pattern_catalogue.cpp
+	./.tmp/test_pattern_catalogue --include-r6
+
+_test/pattern_catalogue/r6: bin/arrangement bin/pattern_catalogue tests/test_pattern_catalogue.cpp	##H @Test Slow differential check including R=6
+	@mkdir -p .tmp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o .tmp/test_pattern_catalogue tests/test_pattern_catalogue.cpp
+	./.tmp/test_pattern_catalogue --include-r6
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
