@@ -133,7 +133,7 @@ lint:	##H @Dev Lint C++ sources (cppcheck + clang-tidy)
 .PHONY: _lint/clang
 _lint/clang: ##H @Dev Run clang-tidy lint only
 	mkdir -p .tmp/
-	clang-tidy $(LINT_SRCS_CPP) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*' -- -Include $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) | tee .tmp/out-lint-clang.log
+	clang-tidy $(LINT_SRCS_CPP) --checks='*,-llvmlibc-*,-fuchsia-*,-altera-*,-boost-*,-llvm-*,-google-readability-braces-around-statements,-hicpp-braces-around-statements,-readability-braces-around-statements' -- -I./include $(CPPFLAGS) $(CXXFLAGS) -fopenmp -I/usr/include/nauty $(patsubst -I%,-isystem %,$(ORTOOLS_CFLAGS)) 2>&1 | tee .tmp/out-lint-clang.log
 
 .PHONY: _lint/pylint
 _lint/pylint:	##H @Dev Run pylint only

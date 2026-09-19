@@ -7,6 +7,8 @@ normale = "normale"
 thm = "thm"
 ba = "ba"
 
+-Iinclude = "-Iinclude"
+
 [type.lean.extend-words]
 hpe = "hpe"
 hge = "hge"
