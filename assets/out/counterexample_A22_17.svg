@@ -52,8 +52,8 @@
     <text x="680" y="632" font-size="18">Rook-Star wins by one boundary vertex.</text>
     <line x1="680" y1="653" x2="1070" y2="653" stroke="black"/>
     <text x="680" y="680" font-size="14" font-weight="bold">Scope</text>
-    <text x="680" y="702" font-size="13">This disproves Hamming optimality for the</text>
-    <text x="680" y="720" font-size="13">fixed-volume boundary profile at R=18.</text>
-    <text x="680" y="741" font-size="13">It does not alone certify an extra-connectivity cut.</text>
+    <text x="680" y="702" font-size="13">Deleting this boundary isolates the connected</text>
+    <text x="680" y="720" font-size="13">18-set: it is an ordinary vertex cut.</text>
+    <text x="680" y="741" font-size="13">For a 17-extra cut, other components must be ≥18.</text>
   </g>
 </svg>
