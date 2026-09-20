@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <numeric>
+#include <unordered_map>
 #include <vector>
 using i64 = std::int64_t;
 static i64 E(int r) {
@@ -23,6 +25,13 @@ static i64 C(int r) {
     return s;
 }
 int n, k, R;
+static std::uint64_t encode(const std::vector<int> &vertex) {
+    return std::accumulate(vertex.begin(), vertex.end(), std::uint64_t{0},
+                           [](std::uint64_t code, const int symbol) {
+                               return code * static_cast<std::uint64_t>(n) +
+                                      static_cast<std::uint64_t>(symbol);
+                           });
+}
 std::vector<std::vector<int>> verts, adj;
 std::vector<std::uint64_t> mark;
 std::vector<int> chosen, best;
@@ -119,16 +128,31 @@ int main(int argc, char **argv) {
                      verts.size(), static_cast<unsigned long long>(degree));
         return 2;
     }
-    // adjacency: differ in exactly one coordinate
+    // Build adjacency by generating the k(n-k) legal one-coordinate
+    // replacements for each vertex, instead of comparing every vertex pair.
+    std::unordered_map<std::uint64_t, int> vertex_index;
+    vertex_index.reserve(verts.size());
+    for (int vertex = 0; vertex < static_cast<int>(verts.size()); ++vertex)
+        vertex_index.emplace(encode(verts[vertex]), vertex);
     adj.assign(verts.size(), {});
-    for (size_t a = 0; a < verts.size(); ++a)
-        for (size_t b = 0; b < verts.size(); ++b) {
-            int diff = 0;
-            for (int i = 0; i < k; ++i)
-                diff += verts[a][i] != verts[b][i];
-            if (diff == 1)
-                adj[a].push_back((int)b);
+    std::vector<char> present(n, 0);
+    for (int vertex = 0; vertex < static_cast<int>(verts.size()); ++vertex) {
+        const auto &symbols = verts[vertex];
+        std::fill(present.begin(), present.end(), 0);
+        for (const int symbol : symbols)
+            present[symbol] = 1;
+        auto &neighbors = adj[vertex];
+        neighbors.reserve(static_cast<std::size_t>(k * (n - k)));
+        for (int position = 0; position < k; ++position) {
+            auto neighbor = symbols;
+            for (int symbol = 0; symbol < n; ++symbol) {
+                if (present[symbol])
+                    continue;
+                neighbor[position] = symbol;
+                neighbors.push_back(vertex_index.at(encode(neighbor)));
+            }
         }
+    }
     if (!std::all_of(adj.begin(), adj.end(), [=](const auto &l) {
             return static_cast<int>(l.size()) == k * (n - k);
         })) {
