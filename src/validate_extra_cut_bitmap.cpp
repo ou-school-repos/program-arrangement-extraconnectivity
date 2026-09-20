@@ -4,6 +4,7 @@
 //        [--partition-index P --partition-count C]
 
 #include "bfs_utils.hpp"
+#include "build_info.hpp"
 #include "star_sweep/checkpoint_manager.hpp"
 #include "star_sweep/frontier_chunk.hpp"
 
