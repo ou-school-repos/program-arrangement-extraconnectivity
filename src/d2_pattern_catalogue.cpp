@@ -2,16 +2,17 @@
 // and global-symbol relabelling.  Patterns are stored as small injective word
 // matrices; nauty canonicalizes their four-partite incidence graphs.
 //
-// Usage: ./d2_pattern_catalogue R [--max-states N]
+// Usage: ./d2_pattern_catalogue R [--max-states N] [--all-patterns PATH]
 //
 // The output signatures use active-coordinate defect
 //   D_a = R*p - sum_i |projection_i(S)|,
 // so their boundary line is
-//   (k + (R-1)*p - D_a)*m + (R-1)*(p-k) - D_a - X, m=n-k.
+//   (R*k - D_a)*m - D_a - X, m=n-k.
 
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -55,7 +56,8 @@ struct Signature {
 int target_volume = 0;
 int coordinate_bound = 0;
 int symbol_bound = 0;
-std::size_t max_states = 1'000'000;
+std::size_t max_states = 100'000;
+std::string all_patterns_path;
 std::uint64_t generated_extensions = 0;
 std::uint64_t canonical_rejections = 0;
 std::uint64_t duplicate_children = 0;
@@ -330,6 +332,9 @@ Signature compute_signature(const Matrix &rows) {
         }
         projection_sum += static_cast<int>(roots.size());
     }
+    // A constant coordinate contributes R distinct roots, hence zero defect.
+    // Therefore this active-coordinate defect is already the full defect
+    // R*k - sum_i |projection_i(S)| for every embedding dimension k >= p.
     const int defect =
         volume * static_cast<int>(active.size()) - projection_sum;
 
@@ -379,128 +384,159 @@ std::string describe_rows(const Matrix &rows) {
 
 } // namespace
 
-int main(int argc, char **argv) {
-    try {
-        if (argc < 2) {
-            std::cerr << "Usage: " << argv[0] << " R [--max-states N]\n";
-            return 2;
-        }
-        char *end = nullptr;
-        const long parsed_volume = std::strtol(argv[1], &end, 10);
-        if (end == argv[1] || *end != '\0' || parsed_volume < 1 ||
-            parsed_volume > 30) {
-            std::cerr << "R must be an integer in 1..30\n";
-            return 2;
-        }
-        target_volume = static_cast<int>(parsed_volume);
-        for (int argument = 2; argument < argc; ++argument) {
-            if (std::string(argv[argument]) == "--max-states" &&
-                argument + 1 < argc) {
-                const long long parsed_limit =
-                    std::strtoll(argv[++argument], &end, 10);
-                if (end == argv[argument] || *end != '\0' || parsed_limit < 1) {
-                    std::cerr << "--max-states must be a positive integer\n";
-                    return 2;
-                }
-                max_states = static_cast<std::size_t>(parsed_limit);
-            } else {
-                std::cerr << "Unknown or incomplete option: " << argv[argument]
-                          << '\n';
+int run(int argc, char **argv) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0]
+                  << " R [--max-states N] [--all-patterns PATH]\n";
+        return 2;
+    }
+    char *end = nullptr;
+    const long parsed_volume = std::strtol(argv[1], &end, 10);
+    if (end == argv[1] || *end != '\0' || parsed_volume < 1 ||
+        parsed_volume > 30) {
+        std::cerr << "R must be an integer in 1..30\n";
+        return 2;
+    }
+    target_volume = static_cast<int>(parsed_volume);
+    for (int argument = 2; argument < argc; ++argument) {
+        if (std::string(argv[argument]) == "--max-states" &&
+            argument + 1 < argc) {
+            const long long parsed_limit =
+                std::strtoll(argv[++argument], &end, 10);
+            if (end == argv[argument] || *end != '\0' || parsed_limit < 1) {
+                std::cerr << "--max-states must be a positive integer\n";
                 return 2;
             }
+            max_states = static_cast<std::size_t>(parsed_limit);
+        } else if (std::string(argv[argument]) == "--all-patterns" &&
+                   argument + 1 < argc) {
+            all_patterns_path = argv[++argument];
+            if (all_patterns_path.empty()) {
+                std::cerr << "--all-patterns requires a file path\n";
+                return 2;
+            }
+        } else {
+            std::cerr << "Unknown or incomplete option: " << argv[argument]
+                      << '\n';
+            return 2;
         }
+    }
 
-        coordinate_bound = std::max(1, 2 * (target_volume - 1));
-        symbol_bound = coordinate_bound + 2 * (target_volume - 1);
-        const int max_nodes = target_volume + coordinate_bound + symbol_bound +
-                              target_volume * coordinate_bound;
-        nauty_check(WORDSIZE, SETWORDSNEEDED(max_nodes), max_nodes,
-                    NAUTYVERSIONID);
+    coordinate_bound = std::max(1, 2 * (target_volume - 1));
+    symbol_bound = coordinate_bound + 2 * (target_volume - 1);
+    const int max_nodes = target_volume + coordinate_bound + symbol_bound +
+                          target_volume * coordinate_bound;
+    nauty_check(WORDSIZE, SETWORDSNEEDED(max_nodes), max_nodes, NAUTYVERSIONID);
 
-        Word root(static_cast<std::size_t>(coordinate_bound));
-        for (int coordinate = 0; coordinate < coordinate_bound; ++coordinate)
-            root[static_cast<std::size_t>(coordinate)] = coordinate;
-        Pattern initial{
-            {root}, coordinate_bound, canonical_key(Matrix{root})};
-        std::unordered_map<std::string, Pattern> current;
-        current.emplace(initial.key, std::move(initial));
+    Word root(static_cast<std::size_t>(coordinate_bound));
+    for (int coordinate = 0; coordinate < coordinate_bound; ++coordinate)
+        root[static_cast<std::size_t>(coordinate)] = coordinate;
+    Pattern initial{{root}, coordinate_bound, canonical_key(Matrix{root})};
+    std::unordered_map<std::string, Pattern> current;
+    current.emplace(initial.key, std::move(initial));
 
-        std::cout << "D2CAT R=" << target_volume
-                  << " coordinate_bound=" << coordinate_bound
-                  << " symbol_bound=" << symbol_bound
-                  << " signatures_use=active_defect\n";
-        std::cout << "level patterns extensions canonical_rejections duplicates\n";
-        for (int level = 1; level < target_volume; ++level) {
-            std::unordered_map<std::string, Pattern> next;
-            std::unordered_map<std::string, std::string> child_parent_cache;
-            for (const auto &[parent_key, parent] : current) {
-                const std::set<Word> additions = candidate_rows(parent);
-                for (const Word &addition : additions) {
-                    ++generated_extensions;
-                    Matrix child = parent.rows;
-                    child.push_back(addition);
-                    const int child_symbols = matrix_symbol_count(child);
-                    if (child_symbols > symbol_bound)
-                        throw std::logic_error("symbol bound exceeded");
+    std::cout << "D2CAT R=" << target_volume
+              << " coordinate_bound=" << coordinate_bound
+              << " symbol_bound=" << symbol_bound
+              << " signatures_use=active_defect\n";
+    std::cout << "level patterns extensions canonical_rejections duplicates\n";
+    std::cout.flush();
+    for (int level = 1; level < target_volume; ++level) {
+        std::unordered_map<std::string, Pattern> next;
+        std::unordered_map<std::string, std::string> child_parent_cache;
+        std::size_t processed_parents = 0;
+        for (const auto &[parent_key, parent] : current) {
+            ++processed_parents;
+            if (processed_parents % 100 == 0)
+                std::cerr << "level " << level << " processed "
+                          << processed_parents << '/' << current.size()
+                          << " parents; retained " << next.size()
+                          << " children\n";
+            const std::set<Word> additions = candidate_rows(parent);
+            for (const Word &addition : additions) {
+                ++generated_extensions;
+                Matrix child = parent.rows;
+                child.push_back(addition);
+                const int child_symbols = matrix_symbol_count(child);
+                if (child_symbols > symbol_bound)
+                    throw std::logic_error("symbol bound exceeded");
 
-                    const std::string child_key = canonical_key(child);
-                    auto parent_entry = child_parent_cache.find(child_key);
-                    if (parent_entry == child_parent_cache.end()) {
-                        parent_entry =
-                            child_parent_cache
-                                .emplace(child_key, canonical_parent_key(child))
-                                .first;
-                    }
-                    if (parent_entry->second != parent_key) {
-                        ++canonical_rejections;
-                        continue;
-                    }
-                    if (next.find(child_key) != next.end()) {
-                        ++duplicate_children;
-                        continue;
-                    }
-                    if (next.size() >= max_states) {
-                        std::cerr << "Stopped incomplete at level " << level + 1
-                                  << ": --max-states limit " << max_states
-                                  << " reached.\n";
-                        return 3;
-                    }
-                    next.emplace(
-                        child_key,
-                        Pattern{std::move(child), child_symbols, child_key});
+                const std::string child_key = canonical_key(child);
+                auto parent_entry = child_parent_cache.find(child_key);
+                if (parent_entry == child_parent_cache.end()) {
+                    parent_entry =
+                        child_parent_cache
+                            .emplace(child_key, canonical_parent_key(child))
+                            .first;
                 }
-            }
-            current = std::move(next);
-            std::cout << level + 1 << ' ' << current.size() << ' '
-                      << generated_extensions << ' ' << canonical_rejections
-                      << ' ' << duplicate_children << '\n';
-            if (current.empty()) {
-                std::cerr << "No patterns survived at level " << level + 1
-                          << '\n';
-                return 1;
+                if (parent_entry->second != parent_key) {
+                    ++canonical_rejections;
+                    continue;
+                }
+                if (next.find(child_key) != next.end()) {
+                    ++duplicate_children;
+                    continue;
+                }
+                if (next.size() >= max_states) {
+                    std::cerr << "Stopped incomplete at level " << level + 1
+                              << ": --max-states limit " << max_states
+                              << " reached.\n";
+                    return 3;
+                }
+                next.emplace(child_key, Pattern{std::move(child), child_symbols,
+                                                child_key});
             }
         }
+        current = std::move(next);
+        std::cout << level + 1 << ' ' << current.size() << ' '
+                  << generated_extensions << ' ' << canonical_rejections << ' '
+                  << duplicate_children << '\n';
+        std::cout.flush();
+        if (current.empty()) {
+            std::cerr << "No patterns survived at level " << level + 1 << '\n';
+            return 1;
+        }
+    }
 
-        std::map<Signature, std::pair<std::uint64_t, Matrix>> signatures;
-        for (const auto &[key, pattern] : current) {
-            (void)key;
-            const Signature signature = compute_signature(pattern.rows);
-            auto [entry, inserted] = signatures.emplace(
-                signature, std::make_pair(std::uint64_t{0}, pattern.rows));
-            ++entry->second.first;
-            (void)inserted;
+    std::ofstream all_patterns;
+    if (!all_patterns_path.empty()) {
+        all_patterns.open(all_patterns_path);
+        if (!all_patterns) {
+            std::cerr << "Cannot open pattern output: " << all_patterns_path
+                      << '\n';
+            return 2;
         }
-        std::cout << "# active_defect X p e isomorphism_classes witness_rows\n";
-        for (const auto &[signature, data] : signatures)
-            std::cout << signature.defect << ' ' << signature.collisions << ' '
-                      << signature.active_coordinates << ' '
-                      << signature.extra_symbols << ' ' << data.first << ' '
-                      << describe_rows(data.second) << '\n';
-        std::cerr << "Completed R=" << target_volume << " with "
-                  << current.size()
-                  << " canonical distance-two-connected patterns and "
-                  << signatures.size() << " signatures.\n";
-        return 0;
+        all_patterns << "# active_defect X p e canonical_rows\n";
+    }
+    std::map<Signature, std::pair<std::uint64_t, Matrix>> signatures;
+    for (const auto &[key, pattern] : current) {
+        (void)key;
+        const Signature signature = compute_signature(pattern.rows);
+        if (all_patterns)
+            all_patterns << signature.defect << ' ' << signature.collisions
+                         << ' ' << signature.active_coordinates << ' '
+                         << signature.extra_symbols << ' '
+                         << describe_rows(pattern.rows) << '\n';
+        auto [entry, inserted] = signatures.emplace(
+            signature, std::make_pair(std::uint64_t{0}, pattern.rows));
+        ++entry->second.first;
+        (void)inserted;
+    }
+    std::cout << "# active_defect X p e isomorphism_classes witness_rows\n";
+    for (const auto &[signature, data] : signatures)
+        std::cout << signature.defect << ' ' << signature.collisions << ' '
+                  << signature.active_coordinates << ' '
+                  << signature.extra_symbols << ' ' << data.first << ' '
+                  << describe_rows(data.second) << '\n';
+    std::cerr << "Completed R=" << target_volume << " with " << current.size()
+              << " canonical distance-two-connected patterns and "
+              << signatures.size() << " signatures.\n";
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    try {
+        return run(argc, argv);
     } catch (const std::exception &error) {
         std::cerr << "d2_pattern_catalogue: " << error.what() << '\n';
         return 2;
