@@ -48,7 +48,7 @@ void leaf() {
             roots.insert(r);
             col.insert(W[S[t]][q]);
         }
-        U += roots.size();
+        U += static_cast<int>(roots.size());
         if (col.size() > 1) {
             p++;
             for (int c : col)
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
         if ((int)c.size() == K) {
             array<int8_t, 8> a{};
             for (int i = 0; i < K; i++)
-                a[i] = c[i];
+                a[i] = static_cast<int8_t>(c[i]);
             W.push_back(a);
             return;
         }
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
             }
     };
     gen();
-    NV = W.size();
+    NV = static_cast<int>(W.size());
     map<array<int8_t, 8>, int> id;
     for (int i = 0; i < NV; i++)
         id[W[i]] = i;
@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
                 if (used)
                     continue;
                 auto v = W[i];
-                v[q] = x;
+                v[q] = static_cast<int8_t>(x);
                 adj[i].push_back(id[v]);
             }
     inS.assign(NV, 0);
