@@ -4,9 +4,8 @@ import Arrangement.Phase
 /-!
 # The eventual regime: maximum defect, then maximum collisions
 
-Status: UNCHECKED (written without a Lean toolchain). Place under
-`Arrangement/unstable/` until it builds. One lemma, `hamming_witness_roots`, is
-left as `sorry` with a proof plan; everything else reduces to existing lemmas.
+Status: in active development. The Hamming witness root count follows from
+the existing `hb_sum_unique_roots` theorem.
 
 Setting: volume `R`, graph `A(n,k)`, slack `m = n - k`, Hamming gate open.
 
@@ -30,18 +29,37 @@ namespace Arrangement
 variable {n k : ℕ}
 
 /-- The Hamming witness attains the maximum defect: its root count is
-    `R*k - E(R)`.
-
-    Proof plan: from `hamming_witness`, `external_neighbors W = H`; from
-    `hb_cross_collisions_closed`, `cross_collisions W + E_seq R = C_constant R`
-    (restate `HBCrossCollisions` in this form); substitute both into
-    `total_coord_edges_eq` / `external_neighbors_decomp` and cancel the positive
-    factor `m+1` (`Nat.eq_of_mul_eq_mul_right`). -/
+    `R*k - E(R)`. -/
 lemma hamming_witness_roots (R : ℕ) (h_cond : can_embed_hypercube R n k) :
     ∃ W : Finset (ArrVertex n k), W.card = R ∧
       external_neighbors W = hamming_profile R n k ∧
       sum_unique_roots W = R * k - E_seq R := by
-  sorry
+  obtain ⟨hnk, hk⟩ := h_cond
+  let d := bit_length (R - 1)
+  have hd : d = bit_length (R - 1) := rfl
+  by_cases hR : R = 0
+  · subst R
+    have hcond0 : can_embed_hypercube 0 n k := by
+      unfold can_embed_hypercube
+      exact ⟨hnk, hk⟩
+    obtain ⟨W, hW, hWext⟩ := hamming_witness 0 n k hcond0
+    have hWempty : W = ∅ := Finset.card_eq_zero.mp (by omega)
+    subst W
+    refine ⟨∅, hW, hWext, ?_⟩
+    simp [sum_unique_roots, unique_roots, E_seq]
+  · have hRpos : 1 ≤ R := by omega
+    let W := hamming_ball_subset R n k d hk (by omega)
+    have hW : W.card = R := by
+      exact hamming_ball_card hk (by omega) hd
+    have hcross := hb_cross_collisions_closed R hRpos d hd hk (by omega)
+    have hWext : external_neighbors W = hamming_profile R n k := by
+      unfold W hamming_profile
+      exact hamming_ball_eval hk (by omega) hd hcross
+    have hroots : sum_unique_roots W + E_seq R = R * k := by
+      simpa [W] using hb_sum_unique_roots hk (by omega) hd
+    have hWroots : sum_unique_roots W = R * k - E_seq R := by
+      omega
+    exact ⟨W, hW, hWext, hWroots⟩
 
 /-- **Eventual maximum defect.** Once `2(R²-R) < m+1`, every set that attains
     the profile has defect exactly `E(R)`. -/
@@ -109,7 +127,10 @@ theorem eventual_hamming_exact_iff (R : ℕ) (h_cond : can_embed_hypercube R n k
     by_contra hgt
     push Not at hgt
     -- equal defect and strictly more collisions ⇒ strictly smaller boundary
-    have hpen := penalty_exact W V hW hV hnk (by rw [hVroots, hWroots]; simp)
+    have hU : sum_unique_roots W = sum_unique_roots V + 0 := by
+      rw [hWroots, hVroots]
+      omega
+    have hpen := penalty_exact W V hW hV hnk hU
     have hle := boundary_profile_le (R := R) V hV
     omega
   · -- if collision maximality holds, the minimizer (max defect by
