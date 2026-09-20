@@ -1,6 +1,7 @@
 #ifndef ARRANGEMENT_UTILS_HPP
 #define ARRANGEMENT_UTILS_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -13,6 +14,9 @@ struct PackedArrangementGraph {
     int k;
     std::size_t valid_count{1};
     std::vector<std::size_t> rank_weight;
+
+    static constexpr int bits_per_symbol = 6;
+    static constexpr int bits_per_word = 64;
 
     PackedArrangementGraph(int n_value, int k_value)
         : n(n_value), k(k_value), rank_weight(k_value, 1) {
@@ -31,38 +35,38 @@ struct PackedArrangementGraph {
         }
     }
 
-    [[nodiscard]] packed_code_t encode(const std::vector<int> &vertex) const {
-        constexpr int bits_per_symbol = 6;
+    [[nodiscard]] auto encode(const std::vector<int> &vertex) const
+        -> packed_code_t {
         packed_code_t code = 0;
         for (int position = 0; position < k; ++position)
-            code |= static_cast<packed_code_t>(vertex[position])
+            code |= static_cast<packed_code_t>(
+                        static_cast<unsigned>(vertex[position]))
                     << (bits_per_symbol * position);
         return code;
     }
 
-    [[nodiscard]] std::size_t rank_code(packed_code_t code) const {
-        constexpr int bits_per_symbol = 6;
+    [[nodiscard]] auto rank_code(packed_code_t code) const -> std::size_t {
         std::uint64_t used = 0;
         std::size_t rank = 0;
         for (int position = 0; position < k; ++position) {
             const int symbol =
-                static_cast<int>((code >> (bits_per_symbol * position)) & 63);
+                static_cast<int>((code >> (bits_per_symbol * position)) &
+                                 static_cast<packed_code_t>(bits_per_word - 1));
             const std::uint64_t lower =
                 symbol == 0 ? 0 : (std::uint64_t{1} << symbol) - 1;
             const int smaller_unused = __builtin_popcountll(lower & ~used);
             rank += static_cast<std::size_t>(smaller_unused) *
                     rank_weight[position];
-            used |= std::uint64_t{1} << symbol;
+            used |= std::uint64_t{1} << static_cast<unsigned>(symbol);
         }
         return rank;
     }
 
-    [[nodiscard]] packed_code_t decode_rank(std::size_t rank) const {
-        constexpr int bits_per_symbol = 6;
+    [[nodiscard]] auto decode_rank(std::size_t rank) const -> packed_code_t {
         packed_code_t code = 0;
         const std::uint64_t all_symbols =
-            n == 64 ? std::numeric_limits<std::uint64_t>::max()
-                    : (std::uint64_t{1} << n) - 1;
+            n == bits_per_word ? std::numeric_limits<std::uint64_t>::max()
+                               : (std::uint64_t{1} << n) - 1;
         std::uint64_t unused = all_symbols;
         for (int position = 0; position < k; ++position) {
             const std::size_t weight = rank_weight[position];
@@ -74,7 +78,7 @@ struct PackedArrangementGraph {
             const int symbol = __builtin_ctzll(candidates);
             code |= static_cast<packed_code_t>(symbol)
                     << (bits_per_symbol * position);
-            unused &= ~(std::uint64_t{1} << symbol);
+            unused &= ~(std::uint64_t{1} << static_cast<unsigned>(symbol));
         }
         return code;
     }
@@ -86,9 +90,9 @@ struct PackedArrangementGraph {
             function(code);
             return;
         }
-        constexpr int bits_per_symbol = 6;
         for (int symbol = 0; symbol < n; ++symbol) {
-            const std::uint64_t bit = std::uint64_t{1} << symbol;
+            const std::uint64_t bit = std::uint64_t{1}
+                                      << static_cast<unsigned>(symbol);
             if (used & bit)
                 continue;
             enumerate_valid(depth + 1,
@@ -105,19 +109,20 @@ struct PackedArrangementGraph {
 
     template <typename Function>
     void for_each_neighbor(packed_code_t code, Function function) const {
-        constexpr int bits_per_symbol = 6;
         std::uint64_t used = 0;
         for (int position = 0; position < k; ++position) {
             const int symbol =
-                static_cast<int>((code >> (bits_per_symbol * position)) & 63);
-            used |= std::uint64_t{1} << symbol;
+                static_cast<int>((code >> (bits_per_symbol * position)) &
+                                 static_cast<packed_code_t>(bits_per_word - 1));
+            used |= std::uint64_t{1} << static_cast<unsigned>(symbol);
         }
         for (int position = 0; position < k; ++position) {
-            const packed_code_t mask = ~(static_cast<packed_code_t>(63)
-                                         << (bits_per_symbol * position));
+            const packed_code_t mask =
+                ~(static_cast<packed_code_t>(bits_per_word - 1)
+                  << (bits_per_symbol * position));
             const packed_code_t base = code & mask;
             for (int symbol = 0; symbol < n; ++symbol) {
-                if ((used >> symbol) & 1)
+                if ((used >> static_cast<unsigned>(symbol)) & 1)
                     continue;
                 function(base | (static_cast<packed_code_t>(symbol)
                                  << (bits_per_symbol * position)));
@@ -126,14 +131,14 @@ struct PackedArrangementGraph {
     }
 };
 
-[[nodiscard]] inline std::int64_t arrangement_defect_sum(int count) {
+[[nodiscard]] inline auto arrangement_defect_sum(int count) -> std::int64_t {
     std::int64_t result = 0;
     for (int value = 0; value < count; ++value)
         result += __builtin_popcount(static_cast<unsigned>(value));
     return result;
 }
 
-[[nodiscard]] inline int arrangement_bit_length(int value) {
+[[nodiscard]] inline auto arrangement_bit_length(int value) -> int {
     int result = 0;
     while (value > 0) {
         ++result;
@@ -142,7 +147,8 @@ struct PackedArrangementGraph {
     return result;
 }
 
-[[nodiscard]] inline std::int64_t arrangement_collision_constant(int count) {
+[[nodiscard]] inline auto arrangement_collision_constant(int count)
+    -> std::int64_t {
     if (count == 0)
         return 0;
     std::int64_t result = count - 1 - arrangement_defect_sum(count);
@@ -162,13 +168,15 @@ class FullStarParameters {
           embedding_gate_(embedding_gate_value),
           hamming_boundary_(hamming_boundary_value) {}
 
-    [[nodiscard]] int m() const { return m_; }
-    [[nodiscard]] int volume() const { return volume_; }
-    [[nodiscard]] int g() const { return g_; }
-    [[nodiscard]] std::int64_t boundary() const { return boundary_; }
-    [[nodiscard]] int d() const { return d_; }
-    [[nodiscard]] bool embedding_gate() const { return embedding_gate_; }
-    [[nodiscard]] std::int64_t hamming_boundary() const {
+    [[nodiscard]] auto m() const -> int { return m_; }
+    [[nodiscard]] auto volume() const -> int { return volume_; }
+    [[nodiscard]] auto g() const -> int { return g_; }
+    [[nodiscard]] auto boundary() const -> std::int64_t { return boundary_; }
+    [[nodiscard]] auto d() const -> int { return d_; }
+    [[nodiscard]] auto embedding_gate() const -> bool {
+        return embedding_gate_;
+    }
+    [[nodiscard]] auto hamming_boundary() const -> std::int64_t {
         return hamming_boundary_;
     }
 
@@ -182,7 +190,8 @@ class FullStarParameters {
     std::int64_t hamming_boundary_;
 };
 
-[[nodiscard]] inline FullStarParameters full_star_parameters(int n, int k) {
+[[nodiscard]] inline auto full_star_parameters(int n, int k)
+    -> FullStarParameters {
     const int m = n - k;
     const int degree = k * m;
     const int volume = 1 + degree;

@@ -1,10 +1,13 @@
-#pragma once
+#ifndef UTILS_HPP
+#define UTILS_HPP
 // ── utils.hpp ─────────────────────────────────────────────────────────────
 // Shared utility functions for Arrangement Graph A(n,k) analysis.
 // Vertices are packed as k 5-bit symbols in a uint64_t.
 // ──────────────────────────────────────────────────────────────────────────
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <iomanip>
 #include <sstream>
@@ -15,10 +18,10 @@ inline constexpr const char *PRUNE_SEP = "   ";
 
 /// Format an integer with thousands separators, e.g. 1234567 -> "1,234,567".
 inline auto fcom(uint64_t n) -> std::string {
-    std::string s = std::to_string(n);
-    for (auto i = static_cast<int>(s.length()) - 3; i > 0; i -= 3)
-        s.insert(i, ",");
-    return s;
+    std::string result = std::to_string(n);
+    for (auto i = static_cast<int>(result.length()) - 3; i > 0; i -= 3)
+        result.insert(i, ",");
+    return result;
 }
 
 /// Format a non-negative floating-point value with thousands separators and
@@ -26,21 +29,22 @@ inline auto fcom(uint64_t n) -> std::string {
 inline auto fcom(double n, int precision = 1) -> std::string {
     std::ostringstream out;
     out << std::fixed << std::setprecision(precision) << n;
-    std::string s = out.str();
-    const int start = (!s.empty() && s[0] == '-') ? 1 : 0;
-    auto pos = s.find('.');
+    std::string result = out.str();
+    const int start = (!result.empty() && result[0] == '-') ? 1 : 0;
+    auto pos = result.find('.');
     if (pos == std::string::npos)
-        pos = s.length();
+        pos = result.length();
     for (auto i = static_cast<int>(pos) - 3; i > start; i -= 3)
-        s.insert(i, ",");
-    return s;
+        result.insert(i, ",");
+    return result;
 }
 
 namespace arrangement {
 
 inline constexpr int bits_per_symbol = 5;
+inline constexpr int hamming_limit = 64;
 
-// Bit position → 5-bit chunk index (avoids division by 5)
+// Bit position -> 5-bit chunk index (avoids division by 5)
 inline constexpr std::array<int, 64> chunk_idx = {
     0, 0, 0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  3,
     3, 3, 3,  3,  4,  4,  4,  4,  4,  5,  5,  5,  5,  5,  6,  6,
@@ -50,13 +54,15 @@ inline constexpr std::array<int, 64> chunk_idx = {
 
 /// Count the number of 5-bit chunks (positions) where two packed vertices
 /// differ.  Returns early once `limit` differences are exceeded.
-inline auto hamming_distance(uint64_t lhs, uint64_t rhs, int limit = 64)
-    -> int {
+inline auto hamming_distance(uint64_t lhs, uint64_t rhs,
+                             int limit = hamming_limit) -> int {
     uint64_t xv = lhs ^ rhs;
     int diffs = 0;
     while (xv != 0 && diffs <= limit) {
-        const int chunk = chunk_idx[__builtin_ctzll(xv)];
-        xv &= ~(UINT64_C(0x1F) << (chunk * bits_per_symbol));
+        const int chunk =
+            chunk_idx[static_cast<std::size_t>(__builtin_ctzll(xv))];
+        xv &=
+            ~(UINT64_C(0x1F) << static_cast<unsigned>(chunk * bits_per_symbol));
         diffs++;
     }
     return diffs;
@@ -99,3 +105,5 @@ count_external_neighbors(const uint64_t * /*verts*/, int /*n*/, int /*r_val*/)
 }
 
 } // namespace arrangement
+
+#endif

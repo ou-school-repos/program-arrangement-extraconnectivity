@@ -1,7 +1,9 @@
-#pragma once
+#ifndef ARRANGEMENT_CORE_HPP
+#define ARRANGEMENT_CORE_HPP
 
 #include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <numeric>
 #include <unordered_map>
 #include <vector>
@@ -16,7 +18,7 @@ struct Instance {
     std::vector<std::vector<std::vector<int>>> lines;
     std::vector<std::vector<int>> root_id;
 
-    [[nodiscard]] int encode(const std::vector<int> &vertex) const {
+    [[nodiscard]] auto encode(const std::vector<int> &vertex) const -> int {
         return std::accumulate(vertex.begin(), vertex.end(), 0,
                                [this](const int code, const int symbol) {
                                    return (n * code) + symbol;
@@ -71,7 +73,8 @@ struct Automorphism {
     std::vector<int> coordinates;
     std::vector<int> symbols;
 
-    [[nodiscard]] int apply(const int vertex, const Instance &instance) const {
+    [[nodiscard]] auto apply(const int vertex, const Instance &instance) const
+        -> int {
         return std::accumulate(
             coordinates.begin(), coordinates.begin() + instance.k, 0,
             [this, &instance, vertex](const int value, const int coordinate) {
@@ -81,15 +84,15 @@ struct Automorphism {
     }
 };
 
-[[nodiscard]] inline std::vector<Automorphism>
-origin_stabilizer(const Instance &instance) {
+[[nodiscard]] inline auto origin_stabilizer(const Instance &instance)
+    -> std::vector<Automorphism> {
     std::vector<Automorphism> group;
     std::vector<int> coordinates(instance.k);
     std::iota(coordinates.begin(), coordinates.end(), 0);
     do {
         std::vector<int> free_symbols(instance.n - instance.k);
         std::iota(free_symbols.begin(), free_symbols.end(), instance.k);
-        do {
+        while (true) {
             Automorphism automorphism{coordinates,
                                       std::vector<int>(instance.n)};
             for (int position = 0; position < instance.k; ++position)
@@ -97,15 +100,17 @@ origin_stabilizer(const Instance &instance) {
             for (int i = 0; i < instance.n - instance.k; ++i)
                 automorphism.symbols[instance.k + i] = free_symbols[i];
             group.push_back(std::move(automorphism));
-        } while (
-            std::next_permutation(free_symbols.begin(), free_symbols.end()));
+            if (!std::next_permutation(free_symbols.begin(),
+                                       free_symbols.end()))
+                break;
+        }
     } while (std::next_permutation(coordinates.begin(), coordinates.end()));
     return group;
 }
 
-[[nodiscard]] inline std::vector<int>
+[[nodiscard]] inline auto
 canonical_key(const std::vector<int> &subset, const Instance &instance,
-              const std::vector<Automorphism> &stabilizer) {
+              const std::vector<Automorphism> &stabilizer) -> std::vector<int> {
     if (subset.size() == 1)
         return {-1};
 
@@ -150,11 +155,15 @@ canonical_key(const std::vector<int> &subset, const Instance &instance,
     return best;
 }
 
-[[nodiscard]] inline std::uint64_t bit_mask(const int bit) {
-    return std::uint64_t{1} << (bit % 64);
+inline constexpr int bits_per_word = 64;
+
+[[nodiscard]] inline auto bit_mask(const int bit) -> std::uint64_t {
+    return std::uint64_t{1} << (bit % bits_per_word);
 }
 
-[[nodiscard]] inline int word_index(const int bit) { return bit / 64; }
+[[nodiscard]] inline auto word_index(const int bit) -> int {
+    return bit / bits_per_word;
+}
 
 [[nodiscard]] inline bool
 is_isomorphic(const std::vector<int> &subset, const std::vector<int> &target,
@@ -199,3 +208,5 @@ is_isomorphic(const std::vector<int> &subset, const std::vector<int> &target,
 }
 
 } // namespace arrangement
+
+#endif

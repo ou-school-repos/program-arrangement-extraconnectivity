@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
@@ -24,6 +25,7 @@ class AtomicBitset {
   public:
     static constexpr std::size_t block_size = 512;
     static constexpr int word_bits = 64;
+    static constexpr int file_mode = 0644;
 
     explicit AtomicBitset(std::size_t bits)
         : num_words_((bits + word_bits - 1) / word_bits),
@@ -42,8 +44,8 @@ class AtomicBitset {
               (num_words_ + block_size - 1) / block_size)),
           mapped_bytes_(num_words_ * sizeof(std::uint64_t)),
           mapped_path_(path) {
-        mapped_fd_ =
-            open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+        mapped_fd_ = open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC,
+                          file_mode);
         if (mapped_fd_ < 0)
             throw std::runtime_error("cannot open bitmap file " + path + ": " +
                                      std::strerror(errno));
@@ -78,15 +80,15 @@ class AtomicBitset {
     }
 
     AtomicBitset(const AtomicBitset &) = delete;
-    AtomicBitset &operator=(const AtomicBitset &) = delete;
+    auto operator=(const AtomicBitset &) -> AtomicBitset & = delete;
     AtomicBitset(AtomicBitset &&) = delete;
-    AtomicBitset &operator=(AtomicBitset &&) = delete;
+    auto operator=(AtomicBitset &&) -> AtomicBitset & = delete;
 
-    [[nodiscard]] bool test(std::size_t bit) const {
+    [[nodiscard]] auto test(std::size_t bit) const -> bool {
         return ((load_word(bit / word_bits) >> (bit % word_bits)) & 1) != 0;
     }
 
-    bool set_atomic(std::size_t bit) {
+    auto set_atomic(std::size_t bit) -> bool {
         const std::size_t word_index = bit / word_bits;
         const std::uint64_t mask = std::uint64_t{1} << (bit % word_bits);
         const std::uint64_t old = fetch_or_word(word_index, mask);
@@ -95,7 +97,7 @@ class AtomicBitset {
         return (old & mask) == 0;
     }
 
-    bool set_atomic_check(std::size_t bit) {
+    auto set_atomic_check(std::size_t bit) -> bool {
         const std::size_t word_index = bit / word_bits;
         const std::uint64_t mask = std::uint64_t{1} << (bit % word_bits);
         const std::uint64_t old = fetch_or_word(word_index, mask);
@@ -148,24 +150,24 @@ class AtomicBitset {
         }
     }
 
-    [[nodiscard]] std::size_t num_words() const { return num_words_; }
+    [[nodiscard]] auto num_words() const -> std::size_t { return num_words_; }
 
-    [[nodiscard]] std::size_t num_blocks() const {
+    [[nodiscard]] auto num_blocks() const -> std::size_t {
         return (num_words_ + block_size - 1) / block_size;
     }
 
-    [[nodiscard]] bool block_dirty(std::size_t block) const {
+    [[nodiscard]] auto block_dirty(std::size_t block) const -> bool {
         return dirty_blocks_[block].load(std::memory_order_relaxed) != 0;
     }
 
-    [[nodiscard]] std::uint64_t load_word(std::size_t index) const {
+    [[nodiscard]] auto load_word(std::size_t index) const -> std::uint64_t {
         if (mapped_words_ != nullptr)
             return __atomic_load_n(mapped_words_ + index, __ATOMIC_RELAXED);
         return words_[index].load(std::memory_order_relaxed);
     }
 
   private:
-    std::uint64_t fetch_or_word(std::size_t index, std::uint64_t mask) {
+    auto fetch_or_word(std::size_t index, std::uint64_t mask) -> std::uint64_t {
         if (mapped_words_ != nullptr)
             return __atomic_fetch_or(mapped_words_ + index, mask,
                                      __ATOMIC_RELAXED);
@@ -241,9 +243,9 @@ inline void report_bfs_topdown_progress(std::size_t layer, std::size_t scanned,
               << std::setprecision(1) << scan_percent << "%)" << std::flush;
 }
 
-[[nodiscard]] inline bool
-star_connected(const PackedArrangementGraph &graph,
-               const std::vector<packed_code_t> &star) {
+[[nodiscard]] inline auto star_connected(const PackedArrangementGraph &graph,
+                                         const std::vector<packed_code_t> &star)
+    -> bool {
     if (star.empty())
         return true;
 
