@@ -25,9 +25,7 @@ K = int(sys.argv[2])
 
 def D(s):
     """Defect of a set of K-tuples."""
-    return len(s) * K - sum(
-        len({w[:q] + w[q + 1:] for w in s}) for q in range(K)
-    )
+    return len(s) * K - sum(len({w[:q] + w[q + 1 :] for w in s}) for q in range(K))
 
 
 def X(s):
@@ -40,13 +38,10 @@ def X(s):
         for i in range(K):
             for y in range(N):
                 if y not in u:
-                    w = u[:i] + (y,) + u[i + 1:]
+                    w = u[:i] + (y,) + u[i + 1 :]
                     if w not in s:
                         ext.add(w)
-    U = sum(
-        len({w[:q] + w[q + 1:] for w in s})
-        for q in range(K)
-    )
+    U = sum(len({w[:q] + w[q + 1 :] for w in s}) for q in range(K))
     return U * (m + 1) - len(s) * K - len(ext)
 
 
@@ -62,9 +57,7 @@ def canon(s):
             for x in w:
                 if x not in mp:
                     mp[x] = len(mp)
-        t = tuple(
-            sorted(tuple(mp[x] for x in w) for w in t)
-        )
+        t = tuple(sorted(tuple(mp[x] for x in w) for w in t))
         if best is None or t < best:
             best = t
     return best
@@ -85,7 +78,7 @@ for t in range(1, RMAX):
                 for x in syms + [fresh]:
                     if x in u:
                         continue
-                    v = u[:i] + (x,) + u[i + 1:]
+                    v = u[:i] + (x,) + u[i + 1 :]
                     if v in sset:
                         continue
                     t_val = s + (v,)

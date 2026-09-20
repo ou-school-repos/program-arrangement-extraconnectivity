@@ -18,10 +18,7 @@ V = list(itertools.permutations(range(N), K))
 idx = {v: i for i, v in enumerate(V)}
 adj = [
     set(
-        idx[u[:i] + (x,) + u[i + 1:]]
-        for i in range(K)
-        for x in range(N)
-        if x not in u
+        idx[u[:i] + (x,) + u[i + 1 :]] for i in range(K) for x in range(N) if x not in u
     )
     for u in V
 ]
@@ -30,13 +27,7 @@ adj = [
 def D(s):
     """Defect of a set of vertex indices."""
     w = [V[i] for i in s]
-    return (
-        len(w) * K
-        - sum(
-            len({w2[:q] + w2[q + 1:] for w2 in w})
-            for q in range(K)
-        )
-    )
+    return len(w) * K - sum(len({w2[:q] + w2[q + 1 :] for w2 in w}) for q in range(K))
 
 
 Et = [E(t) for t in range(R + 1)]
@@ -50,16 +41,12 @@ def shellable(s):
     """Return True if the vertex-set s is shellable."""
     if len(s) <= 1:
         return True
-    return any(
-        D(s - {v}) == Et[len(s) - 1]
-        and shellable(s - {v})
-        for v in s
-    )
+    return any(D(s - {v}) == Et[len(s) - 1] and shellable(s - {v}) for v in s)
 
 
-def rec(s, ext, sset, ns):
+def rec(s, ext, sset, ns):  # pylint: disable=global-statement
     """Depth-first growth of connected R-sets through root 0."""
-    global maxd, bad  # pylint: disable=global-statement
+    global maxd, bad
     if len(s) == R:
         fs = frozenset(s)
         if D(fs) == Et[R]:
@@ -74,11 +61,7 @@ def rec(s, ext, sset, ns):
     ext = list(ext)
     while ext:
         w = ext.pop()
-        nb = {
-            x for x in adj[w]
-            if x > 0 and x not in sset
-            and x not in ns
-        }
+        nb = {x for x in adj[w] if x > 0 and x not in sset and x not in ns}
         sset.add(w)
         rec(
             s + [w],
