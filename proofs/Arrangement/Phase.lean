@@ -48,17 +48,15 @@ theorem higher_defect_strictly_wins_global {R ΔD : ℕ}
     (h₁ : V₁.card = R) (h₂ : V₂.card = R) (hnk : k ≤ n)
     (hU : sum_unique_roots V₁ = sum_unique_roots V₂ + ΔD)
     (hpositive : 1 ≤ ΔD)
-    (hlarge : 2 * (R * R - R) < n - k + 1) :
+    (hlarge : R * R - R < n - k + 1) :
     external_neighbors V₂ < external_neighbors V₁ := by
-  have hcollision : cross_collisions V₁ ≤ 2 * (R * R - R) := by
-    have hcollision := cross_collision_bound_global V₁
-    change cross_collisions V₁ ≤
-      2 * (V₁.card * V₁.card - V₁.card) at hcollision
+  have hcollision : cross_collisions V₁ ≤ R * R - R := by
+    have hcollision := cross_collision_bound_factor_one V₁
     rw [h₁] at hcollision
     exact hcollision
   have hfactor : n - k + 1 ≤ ΔD * (n - k + 1) := by
     simpa only [one_mul] using Nat.mul_le_mul_right (n - k + 1) hpositive
-  have hgap : 2 * (R * R - R) < ΔD * (n - k + 1) :=
+  have hgap : R * R - R < ΔD * (n - k + 1) :=
     lt_of_lt_of_le hlarge hfactor
   exact higher_defect_strictly_wins_of_collision_cap V₁ V₂ h₁ h₂ hnk hU
     hcollision hgap

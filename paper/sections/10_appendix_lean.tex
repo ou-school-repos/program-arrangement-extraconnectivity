@@ -1,9 +1,9 @@
 \section{Formal verification in Lean 4}\label{app:lean}
 
 The Lean development mechanizes the coordinate-root boundary identity, the
-defect inequality, the ordered Bonferroni overlap estimate, the global
-witness-pair charging bound, and the resulting additive-error boundary
-estimate. The Hamming-ball collision count is proved directly, giving an
+defect inequality, the multiplicity refinement of the ordered-overlap estimate,
+the global witness-pair charging bound, and the resulting additive-error
+boundary estimate. The Hamming-ball collision count is proved directly, giving an
 exact evaluation of that construction. These components compose in the
 capstone module to prove the boundary-profile sandwich and the first-order
 profile estimate. The public theorem states a boundary-profile sandwich, not
@@ -20,4 +20,4 @@ $\kappa_g$ are not formalized here.
 
 In the Lean source, \texttt{E\_seq} and \texttt{C\_constant} represent
 $E(R)$ and $C(R)$, respectively. The additive error in the formal theorem is
-$E(R)+2(R^2-R)$.
+$E(R)+R(R-1)$.

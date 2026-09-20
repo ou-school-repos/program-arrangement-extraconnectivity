@@ -51,7 +51,7 @@ unrestricted isoperimetric theorem is claimed here.
    the active source tree under `Arrangement/refuted/`.
 
 The active development proves boundary identities, defect bounds, the global
-factor-two collision estimate, and an unconditional small-volume lower bound.
+factor-one collision estimate, and an unconditional small-volume lower bound.
 It does not prove a universal Hamming-ball minimum-boundary theorem. The
 Hamming-ball cross-collision evaluation is proved by
 `CrossTop.hb_cross_collisions_closed`. See `docs/lean-proof-status.md` for the
@@ -1071,6 +1071,44 @@ lemma card_biUnion_le_ordered_overlap {α ι : Type*} [Fintype α]
             omega
       simpa [u, Finset.sum_insert ha] using h_arith'
 
+/-- Twice the excess incidence count of a finite family is bounded by its
+    ordered pair-overlap count. Pointwise, an element lying in `t` family
+    members contributes `2(t-1)` to the left and `t(t-1)` to the right. -/
+lemma card_biUnion_excess_two_le_ordered_overlap {α ι : Type*} [Fintype α]
+    [DecidableEq α] [DecidableEq ι] (s : Finset ι) (f : ι → Finset α) :
+    2 * ((∑ i ∈ s, (f i).card) - (s.biUnion f).card) ≤
+      ordered_overlap s f := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp [ordered_overlap]
+  | @insert a s ha ih =>
+      let u : Finset α := s.biUnion f
+      let total : ℕ := ∑ i ∈ s, (f i).card
+      have hinter : (f a ∩ u).card ≤ ∑ b ∈ s, (f a ∩ f b).card := by
+        have heq : f a ∩ u = s.biUnion (fun b => f a ∩ f b) := by
+          ext x
+          simp [u, and_assoc, and_comm]
+        rw [heq]
+        exact Finset.card_biUnion_le
+      have htotal : u.card ≤ total := by
+        dsimp [u, total]
+        exact Finset.card_biUnion_le
+      have hnew_union : (insert a s).biUnion f = f a ∪ u := by
+        simp [u]
+      have hunion := Finset.card_union_add_card_inter (f a) u
+      have hexcess :
+          ((∑ i ∈ insert a s, (f i).card) -
+              ((insert a s).biUnion f).card) =
+            (total - u.card) + (f a ∩ u).card := by
+        rw [Finset.sum_insert ha, hnew_union]
+        dsimp [total]
+        omega
+      rw [hexcess, ordered_overlap_insert s f a ha]
+      have hprev : 2 * (total - u.card) ≤ ordered_overlap s f := by
+        simpa [total, u] using ih
+      have hnext := Nat.mul_le_mul_left 2 hinter
+      omega
+
 def coordinate_ordered_overlap {n k : ℕ}
     (V' : Finset (ArrVertex n k)) : ℕ :=
   ordered_overlap (Finset.univ : Finset (Fin k))
@@ -1488,14 +1526,13 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
 /-!
 ## The collision-count bound
 
-Ordered coordinate overlaps admit a global injection into an ordered pair of
-distinct members of `V'` together with an orientation bit. This proves the
-factor-two ordered-overlap bound below. The factor-one unordered collision
-bound is believed true but is not proved by this injection.
-
-The factor-one *ordered-overlap* claim is refuted: in `A(5,3)`, the pair
-`(0,1,2)` and `(3,4,2)` has two common vertices in each orientation of the
-coordinate pair `{0,1}`, giving ordered overlap 4 although `R(R-1)=2`.
+The ordered overlap count is at most `2 * (R^2-R)` by a global injection into
+ordered source pairs and an orientation bit. A sharper factor-one bound on
+`cross_collisions` follows by observing that each external vertex of
+multiplicity `t` contributes `t(t-1)` to ordered overlaps but only `t-1` to
+collision excess. Do not confuse this with a factor-one bound on the ordered
+overlap count: that stronger statement is false (the example in `A(5,3)` has
+ordered overlap 4 for `R=2`).
 -/
 
 /-- The unconditional collision estimate proved by global ordered charging. -/
@@ -1517,7 +1554,55 @@ lemma cross_collision_bound_global {n k : ℕ}
   unfold CrossCollisionBoundTwice cross_collisions
   omega
 
-/-- Algebraic consequence of the factor-two collision estimate. -/
+/-- Factor-one collision estimate. The family lemma bounds twice the excess
+    incidence count by ordered overlaps; the existing source-pair injection
+    bounds those overlaps by `2 * (R^2-R)`. -/
+lemma cross_collision_bound_factor_one {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    cross_collisions V' ≤ V'.card * V'.card - V'.card := by
+  have hhalf : 2 * cross_collisions V' ≤ coordinate_ordered_overlap V' := by
+    unfold cross_collisions total_coord_edges coordinate_ordered_overlap
+    rw [external_neighbors_eq_coord_union V']
+    exact card_biUnion_excess_two_le_ordered_overlap
+      (Finset.univ : Finset (Fin k)) (fun p => coord_boundary V' p)
+  have hoverlap := coordinate_ordered_overlap_le_global_bound V'
+  omega
+
+/-- Lower boundary estimate using the factor-one collision bound. -/
+lemma external_neighbors_lower_bound_factor_one
+    {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
+    (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
+        (V'.card * V'.card - V'.card) ≤ external_neighbors V' := by
+  have htotal := total_coord_edges_eq V' hnk
+  have hdefect := sum_unique_roots_lower_bound V'.card V' rfl
+  have hcollision := cross_collision_bound_factor_one V'
+  have hdecomp := external_neighbors_decomp V'
+    (external_neighbors_le_total_coord V')
+  have hproduct := Nat.mul_le_mul_right (n - k + 1) hdefect
+  have htotalR :
+      total_coord_edges V' + V'.card * k =
+        sum_unique_roots V' * (n - k) + sum_unique_roots V' := htotal
+  have hfactor :
+      sum_unique_roots V' * (n - k) + sum_unique_roots V' =
+        sum_unique_roots V' * (n - k + 1) := by
+    have hm : n - k + 1 = (n - k) + 1 := by omega
+    rw [hm, Nat.mul_add, Nat.mul_one]
+  have hincidences :
+      external_neighbors V' + cross_collisions V' = total_coord_edges V' := by
+    rw [hdecomp]
+    unfold cross_collisions
+    omega
+  have hidentity :
+      external_neighbors V' + cross_collisions V' + V'.card * k =
+        sum_unique_roots V' * (n - k + 1) := by
+    calc
+      external_neighbors V' + cross_collisions V' + V'.card * k =
+          total_coord_edges V' + V'.card * k := by rw [hincidences]
+      _ = sum_unique_roots V' * (n - k) + sum_unique_roots V' := htotal
+      _ = sum_unique_roots V' * (n - k + 1) := hfactor
+  omega
+
+/-- Legacy algebraic consequence of the weaker factor-two collision estimate. -/
 lemma external_neighbors_lower_bound_of_collision_bound
     {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
     (hcollision : CrossCollisionBoundTwice V') :
@@ -1548,8 +1633,7 @@ lemma external_neighbors_lower_bound_of_collision_bound
     omega
   omega
 
-/-- Unconditional small-volume boundary lower bound from global overlap
-    charging. It is deliberately weaker than the former factor-one target. -/
+/-- Legacy unconditional lower bound from the factor-two overlap estimate. -/
 theorem external_neighbors_lower_bound_global
     {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
     (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
@@ -1559,13 +1643,13 @@ theorem external_neighbors_lower_bound_global
 
 /-- The global lower bound expressed as an error from the Hamming linear term.
     Unlike the refuted unrestricted Hamming-ball claim, this allows the
-    explicit quadratic error `2(R²-R)`. -/
+    explicit quadratic error `R²-R`. -/
 theorem restricted_lower_bound_up_to_error {n k : ℕ}
     (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
     (V'.card * k - E_seq V'.card) * (n - k) ≤
       external_neighbors V' + E_seq V'.card +
-        2 * (V'.card * V'.card - V'.card) := by
-  have hglobal := external_neighbors_lower_bound_global V' hnk
+        (V'.card * V'.card - V'.card) := by
+  have hglobal := external_neighbors_lower_bound_factor_one V' hnk
   by_cases hE : E_seq V'.card ≤ V'.card * k
   · have hsub : V'.card * k - E_seq V'.card + E_seq V'.card =
         V'.card * k := Nat.sub_add_cancel hE
@@ -1592,7 +1676,7 @@ theorem defect_rigidity {n k : ℕ}
       (V'.card * k - E_seq V'.card) * (n - k)) :
     (E_seq V'.card - (V'.card * k - sum_unique_roots V')) *
         (n - k + 1) ≤
-      E_seq V'.card + 2 * (V'.card * V'.card - V'.card) := by
+      E_seq V'.card + (V'.card * V'.card - V'.card) := by
   let R := V'.card
   let e := E_seq R
   let U := sum_unique_roots V'
@@ -1603,9 +1687,9 @@ theorem defect_rigidity {n k : ℕ}
   have hU : U ≤ R * k := by simpa [U, R] using hU0
   have hD : D + U = R * k := Nat.sub_add_cancel hU
   have hA : A + e = R * k := Nat.sub_add_cancel hE
-  have hX := cross_collision_bound_global V'
-  have hX' : cross_collisions V' ≤ 2 * (R * R - R) := by
-    simpa [R, CrossCollisionBoundTwice] using hX
+  have hX := cross_collision_bound_factor_one V'
+  have hX' : cross_collisions V' ≤ R * R - R := by
+    simpa [R] using hX
   have htotal := total_coord_edges_eq V' hnk
   have hdecomp := external_neighbors_decomp V'
     (external_neighbors_le_total_coord V')
@@ -1637,13 +1721,13 @@ theorem defect_rigidity {n k : ℕ}
       simp
     have hH' : external_neighbors V' ≤ A * (n - k) := by
       simpa [A, R, e] using hH
-    change gap * (n - k + 1) ≤ e + 2 * (R * R - R)
+    change gap * (n - k + 1) ≤ e + (R * R - R)
     rw [hfacGap]
     omega
   · have hgap0 : gap = 0 := by
       dsimp [gap]
       exact Nat.sub_eq_zero_of_le (Nat.le_of_lt (lt_of_not_ge hd))
-    have hgoal : gap * (n - k + 1) ≤ e + 2 * (R * R - R) := by
+    have hgoal : gap * (n - k + 1) ≤ e + (R * R - R) := by
       rw [hgap0]
       omega
     simpa [gap, D, e, R] using hgoal
@@ -1655,7 +1739,7 @@ theorem defect_eq_popcount_of_small_error {n k : ℕ}
     (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
     (hE : E_seq V'.card ≤ V'.card * k)
     (hlarge : E_seq V'.card +
-      2 * (V'.card * V'.card - V'.card) < n - k + 1)
+      (V'.card * V'.card - V'.card) < n - k + 1)
     (hH : external_neighbors V' ≤
       (V'.card * k - E_seq V'.card) * (n - k)) :
     V'.card * k - sum_unique_roots V' = E_seq V'.card := by
@@ -1672,12 +1756,12 @@ theorem defect_eq_popcount_of_small_error {n k : ℕ}
   omega
 
 /-!
-The global charging argument above proves the factor-two collision estimate,
-so the small-volume lower bound derived from it is unconditional. The
-factor-one interface and its proposed Bonferroni/charging hypotheses are
-archived in `Arrangement.unused.CollisionCharging`; they are not used by the
-active development. The ordered factor-one overlap claim is false (see that
-module's warning).
+The ordered source-pair charging bounds the ordered coordinate-overlap count.
+The active factor-one collision estimate follows by combining that bound with
+`card_biUnion_excess_two_le_ordered_overlap`. The older factor-two lower-bound
+lemmas remain available for comparison. The factor-one claim for ordered
+overlaps themselves is false; only the cross-collision excess has the sharper
+bound.
 -/
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/

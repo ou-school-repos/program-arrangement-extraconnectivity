@@ -10,7 +10,7 @@ alphabet extensions remains a separate transport result.
 Setting: volume `R`, graph `A(n,k)`, slack `m = n - k`, Hamming gate open.
 
 Main results
-* `eventual_max_defect`: if `2(R²-R) < m+1`, every profile minimizer has
+* `eventual_max_defect`: if `R²-R < m+1`, every profile minimizer has
   defect exactly `E(R)` (no `E(R)` term in the threshold; this uses
   `higher_defect_strictly_wins_global`).
 * `eventual_minimizer_max_collision`: every profile minimizer maximizes `X`
@@ -65,10 +65,10 @@ lemma hamming_witness_roots (R : ℕ) (h_cond : can_embed_hypercube R n k) :
       omega
     exact ⟨W, hW, hWext, hWroots⟩
 
-/-- **Eventual maximum defect.** Once `2(R²-R) < m+1`, every set that attains
+/-- **Eventual maximum defect.** Once `R²-R < m+1`, every set that attains
     the profile has defect exactly `E(R)`. -/
 theorem eventual_max_defect (R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (hlarge : 2 * (R * R - R) < n - k + 1)
+    (hlarge : R * R - R < n - k + 1)
     (V : Finset (ArrVertex n k)) (hV : V.card = R)
     (hmin : external_neighbors V = boundary_profile R n k) :
     sum_unique_roots V = R * k - E_seq R := by
@@ -93,7 +93,7 @@ excess. This is the second optimization stage after eventual defect rigidity.
 -/
 theorem eventual_minimizer_max_collision (R : ℕ)
     (h_cond : can_embed_hypercube R n k)
-    (hlarge : 2 * (R * R - R) < n - k + 1)
+    (hlarge : R * R - R < n - k + 1)
     (V W : Finset (ArrVertex n k))
     (hV : V.card = R) (hW : W.card = R)
     (hmin : external_neighbors V = boundary_profile R n k)
@@ -113,7 +113,7 @@ theorem eventual_minimizer_max_collision (R : ℕ)
 /-- **Eventual profile formula.** In the eventual regime the profile is the
     Hamming slope term minus the collision excess of a minimizer. -/
 theorem eventual_profile_formula (R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (hlarge : 2 * (R * R - R) < n - k + 1)
+    (hlarge : R * R - R < n - k + 1)
     (V : Finset (ArrVertex n k)) (hV : V.card = R)
     (hmin : external_neighbors V = boundary_profile R n k) :
     boundary_profile R n k + R * k + cross_collisions V =
@@ -135,7 +135,7 @@ theorem eventual_profile_formula (R : ℕ) (h_cond : can_embed_hypercube R n k)
 /-- **Hamming exactness ⇔ collision maximality**, in the eventual regime.
     The right-hand side is a statement about maximum-defect `R`-sets only. -/
 theorem eventual_hamming_exact_iff (R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (hlarge : 2 * (R * R - R) < n - k + 1) :
+    (hlarge : R * R - R < n - k + 1) :
     boundary_profile R n k = hamming_profile R n k ↔
       ∀ V : Finset (ArrVertex n k), V.card = R →
         sum_unique_roots V = R * k - E_seq R →

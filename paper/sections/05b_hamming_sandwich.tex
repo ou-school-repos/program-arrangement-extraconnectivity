@@ -27,12 +27,12 @@ $A(11,6)$ at $R=31$ has boundary $450$, whereas $H(31,11,6)=476$.
 \begin{theorem}[Unconditional boundary sandwich]\label{thm:hamming-sandwich}
 For every $S\subseteq A(n,k)$ of size $R$ and $k\leq n$,
 \begin{equation}\label{eq:hamming-linear-lower}
- (Rk-E(R))(n-k)\leq |N(S)|+E(R)+2(R^2-R).
+ (Rk-E(R))(n-k)\leq |N(S)|+E(R)+R(R-1).
 \end{equation}
 If the Boolean Hamming ball embeds, then
 \begin{equation}\label{eq:hamming-profile-sandwich}
  \Phi_{n,k}(R)\leq H(R,n,k)
- \leq \Phi_{n,k}(R)+E(R)+2(R^2-R),
+ \leq \Phi_{n,k}(R)+E(R)+R(R-1),
 \end{equation}
 and the upper comparison is witnessed by that ball. This theorem concerns
 the fixed-volume vertex-boundary profile, not $g$-extra connectivity.
@@ -48,11 +48,14 @@ subtracting the $Rk$ incidences from vertices of $S$ yields
  |N(S)|=U(S)(m+1)-Rk-X(S),\qquad
  X(S)=\sum_p|\partial_pS|-\left|\bigcup_p\partial_pS\right|.
 \]
-Bonferroni's inequality bounds $X(S)$ by the sum of ordered pairwise
-overlaps. The global witness-pair charging injection proves
-$X(S)\leq2(R^2-R)$. Substitution gives
+For a finite family of sets, twice the excess incidence count is at most the
+ordered pair-overlap count: an element of multiplicity $t$ contributes
+$2(t-1)\leq t(t-1)$. Applied to the coordinate boundaries, this gives
+$2X(S)$ no larger than the ordered overlap count. The global witness-pair
+charging injection bounds that count by $2(R^2-R)$, hence
+$X(S)\leq R(R-1)$. Substitution gives
 \[
- |N(S)|\geq(Rk-E(R))(m+1)-Rk-2(R^2-R),
+ |N(S)|\geq(Rk-E(R))(m+1)-Rk-R(R-1),
 \]
 which is \eqref{eq:hamming-linear-lower}. The Hamming-ball witness gives
 $\Phi_{n,k}(R)\leq H$. Applying the lower bound to a minimizer and using

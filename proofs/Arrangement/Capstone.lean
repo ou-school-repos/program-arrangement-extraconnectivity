@@ -21,7 +21,7 @@ noncomputable def boundary_profile (R n k : ℕ) : ℕ :=
     V'.card = R ∧ external_neighbors V' = b}
 
 /-- An additive error depending only on the volume. -/
-def sandwich_error (R : ℕ) : ℕ := E_seq R + 2 * (R * R - R)
+def sandwich_error (R : ℕ) : ℕ := E_seq R + (R * R - R)
 
 lemma boundary_profile_le {R n k : ℕ} (V' : Finset (ArrVertex n k))
     (hV : V'.card = R) :
