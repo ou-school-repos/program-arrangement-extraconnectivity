@@ -4,6 +4,7 @@
 // Vertices are packed as k 5-bit symbols in a uint64_t.
 // ──────────────────────────────────────────────────────────────────────────
 
+#include <array>
 #include <cstdint>
 #include <iomanip>
 #include <sstream>
@@ -13,32 +14,34 @@
 inline constexpr const char *PRUNE_SEP = "   ";
 
 /// Format an integer with thousands separators, e.g. 1234567 -> "1,234,567".
-inline std::string fcom(uint64_t n) {
+inline auto fcom(uint64_t n) -> std::string {
     std::string s = std::to_string(n);
-    for (int i = (int)s.length() - 3; i > 0; i -= 3)
+    for (auto i = static_cast<int>(s.length()) - 3; i > 0; i -= 3)
         s.insert(i, ",");
     return s;
 }
 
 /// Format a non-negative floating-point value with thousands separators and
 /// fixed precision.
-inline std::string fcom(double n, int precision = 1) {
+inline auto fcom(double n, int precision = 1) -> std::string {
     std::ostringstream out;
     out << std::fixed << std::setprecision(precision) << n;
     std::string s = out.str();
-    int start = (!s.empty() && s[0] == '-') ? 1 : 0;
-    size_t pos = s.find('.');
+    const int start = (!s.empty() && s[0] == '-') ? 1 : 0;
+    auto pos = s.find('.');
     if (pos == std::string::npos)
         pos = s.length();
-    for (int i = (int)pos - 3; i > start; i -= 3)
+    for (auto i = static_cast<int>(pos) - 3; i > start; i -= 3)
         s.insert(i, ",");
     return s;
 }
 
 namespace arrangement {
 
+inline constexpr int bits_per_symbol = 5;
+
 // Bit position → 5-bit chunk index (avoids division by 5)
-inline constexpr int chunk_idx[64] = {
+inline constexpr std::array<int, 64> chunk_idx = {
     0, 0, 0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  3,
     3, 3, 3,  3,  4,  4,  4,  4,  4,  5,  5,  5,  5,  5,  6,  6,
     6, 6, 6,  7,  7,  7,  7,  7,  8,  8,  8,  8,  8,  9,  9,  9,
@@ -47,12 +50,13 @@ inline constexpr int chunk_idx[64] = {
 
 /// Count the number of 5-bit chunks (positions) where two packed vertices
 /// differ.  Returns early once `limit` differences are exceeded.
-inline int hamming_distance(uint64_t a, uint64_t b, int limit = 64) {
-    uint64_t xv = a ^ b;
+inline auto hamming_distance(uint64_t lhs, uint64_t rhs, int limit = 64)
+    -> int {
+    uint64_t xv = lhs ^ rhs;
     int diffs = 0;
-    while (xv && diffs <= limit) {
-        int chunk = chunk_idx[__builtin_ctzll(xv)];
-        xv &= ~(UINT64_C(0x1F) << (chunk * 5));
+    while (xv != 0 && diffs <= limit) {
+        const int chunk = chunk_idx[__builtin_ctzll(xv)];
+        xv &= ~(UINT64_C(0x1F) << (chunk * bits_per_symbol));
         diffs++;
     }
     return diffs;
@@ -60,15 +64,15 @@ inline int hamming_distance(uint64_t a, uint64_t b, int limit = 64) {
 
 /// Two packed vertices are adjacent in A(n,k) iff they differ at exactly 1
 /// position (5-bit chunk).
-inline bool are_adjacent(uint64_t a, uint64_t b) {
-    return hamming_distance(a, b, 1) == 1;
+inline auto are_adjacent(uint64_t lhs, uint64_t rhs) -> bool {
+    return hamming_distance(lhs, rhs, 1) == 1;
 }
 
 /// Count internal edges within a vertex subset: the number of pairs that
 /// differ in exactly 1 position.
 ///   verts: array of packed vertices
 ///   n:     number of vertices in the array
-inline int count_internal_edges(const uint64_t *verts, int n) {
+inline auto count_internal_edges(const uint64_t *verts, int n) -> int {
     int edges = 0;
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
@@ -88,11 +92,9 @@ inline int count_internal_edges(const uint64_t *verts, int n) {
 /// Legacy placeholder retained for callers that still include this header.
 /// The XOR-based implementation was never completed; keep the warning local
 /// until the helper is either implemented or removed with its callers.
-[[maybe_unused]] inline int64_t count_external_neighbors(const uint64_t *verts,
-                                                         int n, int r_val) {
-    (void)verts;
-    (void)n;
-    (void)r_val;
+[[maybe_unused]] inline auto
+count_external_neighbors(const uint64_t * /*verts*/, int /*n*/, int /*r_val*/)
+    -> int64_t {
     return -1;
 }
 
