@@ -4,13 +4,17 @@
 // value is computed by direct external-neighbor enumeration. A found witness
 // is valid evidence; failure to find one is not a lower-bound certificate.
 //
-// Usage: witness_finder R k m seconds seed
+// Usage: witness_finder R k m seconds seed [--min-only]
 
+// NOLINTBEGIN(*-magic-numbers,*-trailing-return-type,*-pointer-arithmetic,
+//             *-easily-swappable-parameters,*-cognitive-complexity,
+//             *-unchecked-container-access)
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <limits>
 #include <numeric>
@@ -105,7 +109,7 @@ std::vector<Vertex> hamming_ball(const int volume, const int dimensions,
             vertex[static_cast<std::size_t>(coordinate)] =
                 static_cast<std::uint8_t>(coordinate);
         for (int bit = 0; bit < dimensions; ++bit) {
-            if ((code & (1 << bit)) != 0)
+            if ((code & (1U << bit)) != 0)
                 vertex[static_cast<std::size_t>(bit)] =
                     static_cast<std::uint8_t>(word_length + bit);
         }
@@ -127,7 +131,7 @@ std::vector<Vertex> rook_star(const int volume, const int word_length,
     for (int arm = 0; arm < volume - 1; ++arm) {
         Vertex vertex = center;
         const int coordinate = arm % word_length;
-        const int symbol = word_length + (arm / word_length) % free_symbols;
+        const int symbol = word_length + ((arm / word_length) % free_symbols);
         vertex[static_cast<std::size_t>(coordinate)] =
             static_cast<std::uint8_t>(symbol);
         result.push_back(std::move(vertex));
@@ -192,12 +196,16 @@ void consider(const std::vector<Vertex> &candidate, const std::size_t value,
 } // namespace
 
 int main(int argc, char **argv) {
-    if (argc != 6) {
-        std::cerr << "Usage: " << argv[0] << " R k m seconds seed\n";
+    if (argc != 6 && argc != 7) {
+        std::cerr << "Usage: " << argv[0]
+                  << " R k m seconds seed [--min-only]\n";
         return 2;
     }
 
     try {
+        const bool min_only = argc == 7 && std::string(argv[6]) == "--min-only";
+        if (argc == 7 && !min_only)
+            throw std::invalid_argument("optional argument must be --min-only");
         const int volume = std::stoi(argv[1]);
         const int word_length = std::stoi(argv[2]);
         const int free_symbols = std::stoi(argv[3]);
@@ -213,28 +221,34 @@ int main(int argc, char **argv) {
         }
         const int dimension =
             32 - __builtin_clz(static_cast<unsigned int>(volume - 1));
-        if (dimension > word_length || dimension > free_symbols) {
+        const bool gate_open =
+            dimension <= word_length && dimension <= free_symbols;
+        if (!gate_open && !min_only) {
             throw std::invalid_argument(
-                "Hamming comparison requires bit_length(R-1) <= k,m");
-        }
-        const std::int64_t hamming_formula =
-            (static_cast<std::int64_t>(volume) * word_length -
-             defect_sum(volume)) *
-                free_symbols -
-            collision_constant(volume);
-        std::vector<Vertex> hamming =
-            hamming_ball(volume, dimension, word_length);
-        const std::size_t hamming_direct =
-            external_boundary(hamming, alphabet_size);
-        if (hamming_formula < 0 ||
-            hamming_direct != static_cast<std::size_t>(hamming_formula)) {
-            throw std::runtime_error(
-                "direct Hamming boundary disagrees with its formula");
+                "Hamming comparison requires bit_length(R-1) <= k,m; "
+                "use --min-only without a Hamming comparison");
         }
 
         std::mt19937 generator(seed);
         std::vector<std::vector<Vertex>> starts;
-        starts.push_back(std::move(hamming));
+        std::int64_t hamming_formula = -1;
+        if (gate_open) {
+            hamming_formula =
+                ((static_cast<std::int64_t>(volume) * word_length -
+                  defect_sum(volume)) *
+                     free_symbols -
+                 collision_constant(volume));
+            std::vector<Vertex> hamming =
+                hamming_ball(volume, dimension, word_length);
+            const std::size_t hamming_direct =
+                external_boundary(hamming, alphabet_size);
+            if (hamming_formula < 0 ||
+                hamming_direct != static_cast<std::size_t>(hamming_formula)) {
+                throw std::runtime_error(
+                    "direct Hamming boundary disagrees with its formula");
+            }
+            starts.push_back(std::move(hamming));
+        }
         if (static_cast<std::int64_t>(volume - 1) <=
             static_cast<std::int64_t>(word_length) * free_symbols) {
             starts.push_back(rook_star(volume, word_length, free_symbols));
@@ -302,20 +316,25 @@ int main(int argc, char **argv) {
             ++run;
         }
 
-        const bool gate_open =
-            dimension <= word_length && dimension <= free_symbols;
         std::cout << "R=" << volume << " A(" << alphabet_size << ","
                   << word_length << ") m=" << free_symbols << " d=" << dimension
                   << " gate=" << (gate_open ? "open" : "closed")
-                  << " Hamming=" << hamming_formula
-                  << " best found=" << best_value
-                  << (best_value < static_cast<std::size_t>(hamming_formula)
+                  << (hamming_formula >= 0
+                          ? " Hamming=" + std::to_string(hamming_formula)
+                          : " Hamming=unavailable")
+                  << (min_only ? " minimum boundary found=" : " best found=")
+                  << best_value
+                  << (hamming_formula >= 0 &&
+                              best_value <
+                                  static_cast<std::size_t>(hamming_formula)
                           ? "  <-- BEATS HAMMING"
                           : "")
                   << " iterations=" << iterations << " seed=" << seed
                   << " (heuristic; no-witness is not a proof)\n";
 
-        if (best_value < static_cast<std::size_t>(hamming_formula)) {
+        if (min_only ||
+            (hamming_formula >= 0 &&
+             best_value < static_cast<std::size_t>(hamming_formula))) {
             for (const Vertex &vertex : best_set) {
                 std::cout << " (";
                 for (std::size_t coordinate = 0; coordinate < vertex.size();
@@ -336,3 +355,4 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
+// NOLINTEND
