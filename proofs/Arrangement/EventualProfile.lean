@@ -4,8 +4,8 @@ import Arrangement.Phase
 /-!
 # The eventual regime: maximum defect, then maximum collisions
 
-Status: in active development. The Hamming witness root count follows from
-the existing `hb_sum_unique_roots` theorem.
+Status: the large-slack lemmas in this file are Lean-proved. Uniformity across
+alphabet extensions remains a separate transport result.
 
 Setting: volume `R`, graph `A(n,k)`, slack `m = n - k`, Hamming gate open.
 
@@ -13,6 +13,8 @@ Main results
 * `eventual_max_defect`: if `2(R²-R) < m+1`, every profile minimizer has
   defect exactly `E(R)` (no `E(R)` term in the threshold; this uses
   `higher_defect_strictly_wins_global`).
+* `eventual_minimizer_max_collision`: every profile minimizer maximizes `X`
+  among maximum-defect sets.
 * `eventual_profile_formula`: in that regime
   `Φ(R) + R·k + X* = (R·k - E(R))·(m+1)`, where `X*` is the collision excess of
   any minimizer, which is the maximum over all maximum-defect sets.
@@ -20,8 +22,10 @@ Main results
   maximum-defect `R`-set has more collisions than the Hamming ball
   (collision maximality).
 
-Together: Hamming optimality for large slack is *equivalent* to a finite,
-`n`-independent extremal statement about maximum-defect sets.
+Together: Hamming optimality for large slack is equivalent to collision
+maximality among maximum-defect sets in the given graph. Proving the collision
+maximum is invariant under alphabet extension requires the separate transport
+lemma; this file does not assume it.
 -/
 
 namespace Arrangement
@@ -83,6 +87,28 @@ theorem eventual_max_defect (R : ℕ) (h_cond : can_embed_hypercube R n k)
   -- W beats V, contradicting minimality of V
   have hle := boundary_profile_le (R := R) W hW
   omega
+
+/-- Among maximum-defect sets, a profile minimizer has maximum collision
+excess. This is the second optimization stage after eventual defect rigidity.
+-/
+theorem eventual_minimizer_max_collision (R : ℕ)
+    (h_cond : can_embed_hypercube R n k)
+    (hlarge : 2 * (R * R - R) < n - k + 1)
+    (V W : Finset (ArrVertex n k))
+    (hV : V.card = R) (hW : W.card = R)
+    (hmin : external_neighbors V = boundary_profile R n k)
+    (hWroots : sum_unique_roots W = R * k - E_seq R) :
+    cross_collisions W ≤ cross_collisions V := by
+  have hVroots := eventual_max_defect R h_cond hlarge V hV hmin
+  have hnk : k ≤ n := by
+    obtain ⟨h1, _⟩ := h_cond
+    omega
+  have hord := equal_defect_collision_order W V hW hV hnk
+    (by rw [hWroots, hVroots])
+  have hboundary : external_neighbors V ≤ external_neighbors W := by
+    rw [hmin]
+    exact boundary_profile_le W hW
+  exact hord.mp hboundary
 
 /-- **Eventual profile formula.** In the eventual regime the profile is the
     Hamming slope term minus the collision excess of a minimizer. -/
