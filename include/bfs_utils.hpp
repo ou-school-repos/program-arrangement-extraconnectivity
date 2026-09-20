@@ -85,7 +85,8 @@ class AtomicBitset {
     auto operator=(AtomicBitset &&) -> AtomicBitset & = delete;
 
     [[nodiscard]] auto test(std::size_t bit) const -> bool {
-        return ((load_word(bit / word_bits) >> (bit % word_bits)) & 1) != 0;
+        return ((load_word(bit / word_bits) >> (bit % word_bits)) &
+                std::uint64_t{1}) != 0;
     }
 
     auto set_atomic(std::size_t bit) -> bool {
@@ -256,18 +257,20 @@ inline void report_bfs_topdown_progress(std::size_t layer, std::size_t scanned,
     while (!pending.empty()) {
         const packed_code_t current = star[pending.back()];
         pending.pop_back();
-        graph.for_each_neighbor(current, [&](const packed_code_t neighbor) {
-            const auto match = std::find(star.begin(), star.end(), neighbor);
-            if (match == star.end())
-                return;
-            const std::size_t index =
-                static_cast<std::size_t>(match - star.begin());
-            if (!seen[index]) {
-                seen[index] = true;
-                pending.push_back(index);
-                ++reached;
-            }
-        });
+        graph.for_each_neighbor(
+            current, [&](const packed_code_t neighbor) -> void {
+                const auto match =
+                    std::find(star.begin(), star.end(), neighbor);
+                if (match == star.end())
+                    return;
+                const std::size_t index =
+                    static_cast<std::size_t>(match - star.begin());
+                if (!seen[index]) {
+                    seen[index] = true;
+                    pending.push_back(index);
+                    ++reached;
+                }
+            });
     }
     return reached == star.size();
 }

@@ -6,6 +6,7 @@
 #include <iterator>
 #include <numeric>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace arrangement {
@@ -20,7 +21,7 @@ struct Instance {
 
     [[nodiscard]] auto encode(const std::vector<int> &vertex) const -> int {
         return std::accumulate(vertex.begin(), vertex.end(), 0,
-                               [this](const int code, const int symbol) {
+                               [this](const int code, const int symbol) -> int {
                                    return (n * code) + symbol;
                                });
     }
@@ -77,7 +78,8 @@ struct Automorphism {
         -> int {
         return std::accumulate(
             coordinates.begin(), coordinates.begin() + instance.k, 0,
-            [this, &instance, vertex](const int value, const int coordinate) {
+            [this, &instance, vertex](const int value,
+                                      const int coordinate) -> int {
                 return (instance.n * value) +
                        symbols[instance.vertices[vertex][coordinate]];
             });
@@ -89,7 +91,7 @@ struct Automorphism {
     std::vector<Automorphism> group;
     std::vector<int> coordinates(instance.k);
     std::iota(coordinates.begin(), coordinates.end(), 0);
-    do {
+    while (true) {
         std::vector<int> free_symbols(instance.n - instance.k);
         std::iota(free_symbols.begin(), free_symbols.end(), instance.k);
         while (true) {
@@ -104,7 +106,9 @@ struct Automorphism {
                                        free_symbols.end()))
                 break;
         }
-    } while (std::next_permutation(coordinates.begin(), coordinates.end()));
+        if (!std::next_permutation(coordinates.begin(), coordinates.end()))
+            break;
+    }
     return group;
 }
 
@@ -142,7 +146,7 @@ canonical_key(const std::vector<int> &subset, const Instance &instance,
             mapped.reserve(shifted.size());
             std::transform(shifted.begin(), shifted.end(),
                            std::back_inserter(mapped),
-                           [&automorphism, &instance](const int vertex) {
+                           [&automorphism, &instance](const int vertex) -> int {
                                return automorphism.apply(vertex, instance);
                            });
             std::sort(mapped.begin(), mapped.end());
@@ -158,53 +162,55 @@ canonical_key(const std::vector<int> &subset, const Instance &instance,
 inline constexpr int bits_per_word = 64;
 
 [[nodiscard]] inline auto bit_mask(const int bit) -> std::uint64_t {
-    return std::uint64_t{1} << (bit % bits_per_word);
+    return std::uint64_t{1} << static_cast<unsigned>(bit % bits_per_word);
 }
 
 [[nodiscard]] inline auto word_index(const int bit) -> int {
     return bit / bits_per_word;
 }
 
-[[nodiscard]] inline bool
+[[nodiscard]] inline auto
 is_isomorphic(const std::vector<int> &subset, const std::vector<int> &target,
               const Instance &instance,
-              const std::vector<Automorphism> &stabilizer) {
+              const std::vector<Automorphism> &stabilizer) -> bool {
     if (target.size() == 1 && target[0] == -1)
         return subset.size() == 1;
-    return std::any_of(subset.begin(), subset.end(), [&](const int anchor) {
-        std::vector<int> shift(instance.n);
-        std::vector<bool> used(instance.n, false);
-        for (int position = 0; position < instance.k; ++position) {
-            shift[instance.vertices[anchor][position]] = position;
-            used[instance.vertices[anchor][position]] = true;
-        }
-        int next_symbol = instance.k;
-        for (int symbol = 0; symbol < instance.n; ++symbol)
-            if (!used[symbol])
-                shift[symbol] = next_symbol++;
-        std::vector<int> shifted;
-        shifted.reserve(subset.size());
-        for (const int vertex : subset) {
-            int code = 0;
-            for (int position = 0; position < instance.k; ++position)
-                code = (instance.n * code) +
-                       shift[instance.vertices[vertex][position]];
-            shifted.push_back(instance.index.at(code));
-        }
-        return std::any_of(stabilizer.begin(), stabilizer.end(),
-                           [&](const Automorphism &automorphism) {
-                               std::vector<int> mapped;
-                               mapped.reserve(shifted.size());
-                               std::transform(shifted.begin(), shifted.end(),
-                                              std::back_inserter(mapped),
-                                              [&](const int vertex) {
-                                                  return automorphism.apply(
-                                                      vertex, instance);
-                                              });
-                               std::sort(mapped.begin(), mapped.end());
-                               return mapped == target;
-                           });
-    });
+    return std::any_of(
+        subset.begin(), subset.end(), [&](const int anchor) -> bool {
+            std::vector<int> shift(instance.n);
+            std::vector<bool> used(instance.n, false);
+            for (int position = 0; position < instance.k; ++position) {
+                shift[instance.vertices[anchor][position]] = position;
+                used[instance.vertices[anchor][position]] = true;
+            }
+            int next_symbol = instance.k;
+            for (int symbol = 0; symbol < instance.n; ++symbol)
+                if (!used[symbol])
+                    shift[symbol] = next_symbol++;
+            std::vector<int> shifted;
+            shifted.reserve(subset.size());
+            for (const int vertex : subset) {
+                int code = 0;
+                for (int position = 0; position < instance.k; ++position)
+                    code = (instance.n * code) +
+                           shift[instance.vertices[vertex][position]];
+                shifted.push_back(instance.index.at(code));
+            }
+            return std::any_of(stabilizer.begin(), stabilizer.end(),
+                               [&](const Automorphism &automorphism) -> bool {
+                                   std::vector<int> mapped;
+                                   mapped.reserve(shifted.size());
+                                   std::transform(shifted.begin(),
+                                                  shifted.end(),
+                                                  std::back_inserter(mapped),
+                                                  [&](const int vertex) -> int {
+                                                      return automorphism.apply(
+                                                          vertex, instance);
+                                                  });
+                                   std::sort(mapped.begin(), mapped.end());
+                                   return mapped == target;
+                               });
+        });
 }
 
 } // namespace arrangement

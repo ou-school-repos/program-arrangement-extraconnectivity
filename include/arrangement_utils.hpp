@@ -41,7 +41,7 @@ struct PackedArrangementGraph {
         for (int position = 0; position < k; ++position)
             code |= static_cast<packed_code_t>(
                         static_cast<unsigned>(vertex[position]))
-                    << (bits_per_symbol * position);
+                    << static_cast<unsigned>(bits_per_symbol * position);
         return code;
     }
 
@@ -49,11 +49,13 @@ struct PackedArrangementGraph {
         std::uint64_t used = 0;
         std::size_t rank = 0;
         for (int position = 0; position < k; ++position) {
-            const int symbol =
-                static_cast<int>((code >> (bits_per_symbol * position)) &
-                                 static_cast<packed_code_t>(bits_per_word - 1));
+            const int symbol = static_cast<int>(
+                (code >> static_cast<unsigned>(bits_per_symbol * position)) &
+                static_cast<packed_code_t>(bits_per_word - 1));
             const std::uint64_t lower =
-                symbol == 0 ? 0 : (std::uint64_t{1} << symbol) - 1;
+                symbol == 0
+                    ? 0
+                    : (std::uint64_t{1} << static_cast<unsigned>(symbol)) - 1;
             const int smaller_unused = __builtin_popcountll(lower & ~used);
             rank += static_cast<std::size_t>(smaller_unused) *
                     rank_weight[position];
@@ -65,8 +67,9 @@ struct PackedArrangementGraph {
     [[nodiscard]] auto decode_rank(std::size_t rank) const -> packed_code_t {
         packed_code_t code = 0;
         const std::uint64_t all_symbols =
-            n == bits_per_word ? std::numeric_limits<std::uint64_t>::max()
-                               : (std::uint64_t{1} << n) - 1;
+            n == bits_per_word
+                ? std::numeric_limits<std::uint64_t>::max()
+                : (std::uint64_t{1} << static_cast<unsigned>(n)) - 1;
         std::uint64_t unused = all_symbols;
         for (int position = 0; position < k; ++position) {
             const std::size_t weight = rank_weight[position];
@@ -77,7 +80,7 @@ struct PackedArrangementGraph {
                 candidates &= candidates - 1;
             const int symbol = __builtin_ctzll(candidates);
             code |= static_cast<packed_code_t>(symbol)
-                    << (bits_per_symbol * position);
+                    << static_cast<unsigned>(bits_per_symbol * position);
             unused &= ~(std::uint64_t{1} << static_cast<unsigned>(symbol));
         }
         return code;
@@ -95,10 +98,11 @@ struct PackedArrangementGraph {
                                       << static_cast<unsigned>(symbol);
             if (used & bit)
                 continue;
-            enumerate_valid(depth + 1,
-                            code | (static_cast<packed_code_t>(symbol)
-                                    << (bits_per_symbol * depth)),
-                            used | bit, function);
+            enumerate_valid(
+                depth + 1,
+                code | (static_cast<packed_code_t>(symbol)
+                        << static_cast<unsigned>(bits_per_symbol * depth)),
+                used | bit, function);
         }
     }
 
@@ -111,21 +115,22 @@ struct PackedArrangementGraph {
     void for_each_neighbor(packed_code_t code, Function function) const {
         std::uint64_t used = 0;
         for (int position = 0; position < k; ++position) {
-            const int symbol =
-                static_cast<int>((code >> (bits_per_symbol * position)) &
-                                 static_cast<packed_code_t>(bits_per_word - 1));
+            const int symbol = static_cast<int>(
+                (code >> static_cast<unsigned>(bits_per_symbol * position)) &
+                static_cast<packed_code_t>(bits_per_word - 1));
             used |= std::uint64_t{1} << static_cast<unsigned>(symbol);
         }
         for (int position = 0; position < k; ++position) {
             const packed_code_t mask =
                 ~(static_cast<packed_code_t>(bits_per_word - 1)
-                  << (bits_per_symbol * position));
+                  << static_cast<unsigned>(bits_per_symbol * position));
             const packed_code_t base = code & mask;
             for (int symbol = 0; symbol < n; ++symbol) {
                 if ((used >> static_cast<unsigned>(symbol)) & 1)
                     continue;
                 function(base | (static_cast<packed_code_t>(symbol)
-                                 << (bits_per_symbol * position)));
+                                 << static_cast<unsigned>(bits_per_symbol *
+                                                          position)));
             }
         }
     }
@@ -142,7 +147,7 @@ struct PackedArrangementGraph {
     int result = 0;
     while (value > 0) {
         ++result;
-        value >>= 1;
+        value /= 2;
     }
     return result;
 }
