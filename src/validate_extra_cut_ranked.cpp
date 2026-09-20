@@ -3,6 +3,7 @@
 // Usage: validate_extra_cut_ranked n k
 
 #include "bfs_utils.hpp"
+#include "build_info.hpp"
 
 #include <omp.h>
 
