@@ -1,6 +1,7 @@
 """Enumerate maximum-defect sets (D=E(R)) by growth through
 maximum-defect prefixes (valid if shellability holds), then compute
 max collisions X* and compare with Hamming X_H = C(R)-E(R)."""
+
 import itertools
 import sys
 import time
@@ -11,11 +12,7 @@ def E(r):
 
 
 def C(r):
-    return (
-        (r - 1)
-        + sum(i.bit_length() for i in range(r))
-        - E(r)
-    )
+    return (r - 1) + sum(i.bit_length() for i in range(r)) - E(r)
 
 
 RMAX = int(sys.argv[1])
@@ -23,13 +20,7 @@ K = int(sys.argv[2])
 
 
 def D(s):
-    return (
-        len(s) * K
-        - sum(
-            len({w[:q] + w[q + 1:] for w in s})
-            for q in range(K)
-        )
-    )
+    return len(s) * K - sum(len({w[:q] + w[q + 1 :] for w in s}) for q in range(K))
 
 
 def X(s):
@@ -41,13 +32,10 @@ def X(s):
         for i in range(K):
             for y in range(N):
                 if y not in u:
-                    w = u[:i] + (y,) + u[i + 1:]
+                    w = u[:i] + (y,) + u[i + 1 :]
                     if w not in s:
                         ext.add(w)
-    U = sum(
-        len({w[:q] + w[q + 1:] for w in s})
-        for q in range(K)
-    )
+    U = sum(len({w[:q] + w[q + 1 :] for w in s}) for q in range(K))
     return U * (m + 1) - len(s) * K - len(ext)
 
 
@@ -63,11 +51,7 @@ def canon(s):
             for x in w:
                 if x not in mp:
                     mp[x] = len(mp)
-        t = tuple(
-            sorted(
-                tuple(mp[x] for x in w) for w in t
-            )
-        )
+        t = tuple(sorted(tuple(mp[x] for x in w) for w in t))
         if best is None or t < best:
             best = t
     return best
@@ -81,16 +65,14 @@ for t in range(1, RMAX):
     target = E(t + 1)
     for s in level:
         sset = set(s)
-        syms = sorted(
-            set(x for w in s for x in w)
-        )
+        syms = sorted(set(x for w in s for x in w))
         fresh = max(syms) + 1
         for u in s:
             for i in range(K):
                 for x in syms + [fresh]:
                     if x in u:
                         continue
-                    v = u[:i] + (x,) + u[i + 1:]
+                    v = u[:i] + (x,) + u[i + 1 :]
                     if v in sset:
                         continue
                     t_val = s + (v,)

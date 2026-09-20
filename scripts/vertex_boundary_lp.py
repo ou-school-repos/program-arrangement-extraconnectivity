@@ -31,7 +31,7 @@ def arrangement_graph(
                 neighbor = list(vertex)
                 neighbor[position] = symbol
                 neighbor_id = index[tuple(neighbor)]
-                edges.add(tuple(sorted((vertex_id, neighbor_id))))
+                edges.add((vertex_id, neighbor_id))
     roots: list[list[int]] = []
     for position in range(k):
         by_root: dict[tuple[int, ...], list[int]] = {}
@@ -129,7 +129,7 @@ def solve_profile(n: int, k: int, max_volume: int) -> list[float]:
     profile = []
     for volume in range(max_volume + 1):
         equality_value = np.array([float(volume)])
-        result = linprog(
+        result = linprog(  # type: ignore[call-overload]
             objective,
             A_ub=matrix.tocsr(),
             b_ub=upper,

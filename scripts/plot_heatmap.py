@@ -51,8 +51,8 @@ def main() -> None:
     figure, axis = plt.subplots(figsize=(8, 5))
     image = axis.imshow(values, cmap=cmap, norm=norm, aspect="auto")
     del image
-    axis.set_xticks(range(10), range(1, 11))
-    axis.set_yticks(range(len(ROWS)), ROWS.keys())
+    axis.set_xticks(range(10), range(1, 11))  # type: ignore[arg-type]
+    axis.set_yticks(range(len(ROWS)), ROWS.keys())  # type: ignore[arg-type]
     axis.set_xlabel("k")
     axis.set_ylabel("n")
     axis.set_title("Full-Star validator regimes")
