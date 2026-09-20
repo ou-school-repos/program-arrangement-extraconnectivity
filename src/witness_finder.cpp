@@ -35,12 +35,12 @@ int boundary(const vector<Vtx> &S) {
             for (int y = 0; y < N; y++)
                 if (!(used >> y & 1)) {
                     Vtx w = u;
-                    w[i] = y;
+                    w[i] = static_cast<int8_t>(y);
                     if (!in.count(w))
                         nb.insert(w);
                 }
     }
-    return nb.size();
+    return static_cast<int>(nb.size());
 }
 long E(int r) {
     long t = 0;
@@ -55,24 +55,41 @@ long Cc(int r) {
     return (r - 1) + s - E(r);
 }
 int main(int argc, char **argv) {
+    if (argc == 2 && (string(argv[1]) == "-h" || string(argv[1]) == "--help")) {
+        cout
+            << "Usage: " << argv[0] << " R k m seconds seed [noseed]\n"
+            << "Search for an R-set in A(k+m,k) with boundary smaller than the "
+               "embedded Hamming ball. Requires the Hamming embedding gate to "
+               "be open.\n";
+        return 0;
+    }
+    if (argc != 6 && argc != 7) {
+        cerr << "Usage: " << argv[0] << " R k m seconds seed [noseed]\n"
+             << "Run with --help for details.\n";
+        return 2;
+    }
     R = atoi(argv[1]);
     K = atoi(argv[2]);
     M = atoi(argv[3]);
     double secs = atof(argv[4]);
     unsigned seed = atoi(argv[5]);
     N = K + M;
-    if (K > 24 || N > 64) {
-        puts("limits");
-        return 1;
+    if (R < 1 || K < 1 || M < 1 || secs <= 0 || K > 24 || N > 64) {
+        cerr << "Error: require R >= 1, k >= 1, m >= 1, seconds > 0, "
+                "k <= 24, and k+m <= 64.\n";
+        return 2;
+    }
+    const int d = 32 - __builtin_clz(static_cast<unsigned>(max(1, R - 1)));
+    if (d > K || d > M) {
+        cerr << "Error: embedded Hamming ball is infeasible (gate closed): "
+             << "bit_length(R-1)=" << d << ", k=" << K << ", m=" << M << ".\n";
+        return 2;
     }
     mt19937 rng(seed);
     Vtx c{};
     for (int i = 0; i < K; i++)
-        c[i] = i;
+        c[i] = static_cast<int8_t>(i);
     long Hval = (long)(R * K - E(R)) * M - Cc(R);
-    int d = 32 - __builtin_clz(max(1, R - 1));
-    if (R == 1)
-        d = 0;
     // starting sets: Hamming ball (binary order on d coords), balanced
     // rook-star, random connected
     vector<vector<Vtx>> starts;
@@ -82,7 +99,7 @@ int main(int argc, char **argv) {
             Vtx v = c;
             for (int j = 0; j < d; j++)
                 if (x >> j & 1)
-                    v[j] = K + j;
+                    v[j] = static_cast<int8_t>(K + j);
             S.push_back(v);
         }
         starts.push_back(S);
@@ -91,13 +108,13 @@ int main(int argc, char **argv) {
         vector<Vtx> S{c};
         for (int a = 0; a < R - 1; a++) {
             Vtx v = c;
-            v[a % K] = K + (a % M);
+            v[a % K] = static_cast<int8_t>(K + (a % M));
             if (find(S.begin(), S.end(), v) == S.end())
                 S.push_back(v);
         }
         while ((int)S.size() < R) {
             Vtx v = S[rng() % S.size()];
-            v[rng() % K] = K + rng() % M;
+            v[rng() % K] = static_cast<int8_t>(K + rng() % M);
             if (inj(v) && find(S.begin(), S.end(), v) == S.end())
                 S.push_back(v);
         }
@@ -116,7 +133,7 @@ int main(int argc, char **argv) {
             S = {c};
             while ((int)S.size() < R) {
                 Vtx v = S[rng() % S.size()];
-                v[rng() % K] = rng() % N;
+                v[rng() % K] = static_cast<int8_t>(rng() % N);
                 if (inj(v) && find(S.begin(), S.end(), v) == S.end())
                     S.push_back(v);
             }
@@ -128,9 +145,9 @@ int main(int argc, char **argv) {
             bestS = S;
         }
         for (int step = 0; step < 4000; step++, iters++) {
-            int ri = rng() % R;
+            int ri = static_cast<int>(rng() % R);
             Vtx v = S[rng() % R];
-            v[rng() % K] = rng() % N;
+            v[rng() % K] = static_cast<int8_t>(rng() % N);
             if (!inj(v) || find(S.begin(), S.end(), v) != S.end())
                 continue;
             Vtx old = S[ri];
