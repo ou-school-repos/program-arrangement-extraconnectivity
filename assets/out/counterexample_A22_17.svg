@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="white"/>
+  <g fill="black" font-family="DejaVu Sans, Arial, sans-serif">
+    <text x="60" y="58" font-size="30" font-weight="bold">Gate-open counterexample: A(22,17), R = 18</text>
+    <text x="60" y="92" font-size="18">A connected 18-set with smaller external boundary than the embedded Hamming ball</text>
+
+    <rect x="55" y="120" width="1090" height="125" fill="none" stroke="black" stroke-width="2"/>
+    <text x="78" y="153" font-size="20" font-weight="bold">Parameters</text>
+    <text x="78" y="184" font-size="18">n = 22,  k = 17,  m = n − k = 5,  R = 18</text>
+    <text x="78" y="215" font-size="18">d = ⌈log₂R⌉ = 5; embedding gate is open: d≤k and d≤m (5≤17 and 5≤5)</text>
+    <text x="78" y="238" font-size="15">Thus the Hamming ball exists here, but is not boundary-minimizing.</text>
+
+    <rect x="55" y="265" width="560" height="490" rx="8" fill="none" stroke="#7a2020" stroke-width="2" stroke-dasharray="2 7"/>
+    <text x="72" y="292" font-size="21" font-weight="bold">Balanced rook-Star S</text>
+    <text x="72" y="322" font-size="15">Center c=(0,1,…,16); each marked cell (i,x) gives arm c[i←x].</text>
+    <text x="72" y="345" font-size="14">One arm per coordinate; the five free symbols are 17,…,21.</text>
+
+    <text x="111" y="378" font-size="13" font-weight="bold">coordinate i</text>
+    <text x="277" y="378" font-size="13" font-weight="bold">free symbol x</text>
+    <g font-size="12" text-anchor="middle">
+      <text x="280" y="398">17</text><text x="330" y="398">18</text><text x="380" y="398">19</text><text x="430" y="398">20</text><text x="480" y="398">21</text>
+    </g>
+    <g stroke="#999" stroke-width="1" fill="white">
+      <rect x="255" y="404" width="250" height="306"/>
+      <path d="M305 404v306 M355 404v306 M405 404v306 M455 404v306"/>
+      <path d="M255 422h250 M255 440h250 M255 458h250 M255 476h250 M255 494h250 M255 512h250 M255 530h250 M255 548h250 M255 566h250 M255 584h250 M255 602h250 M255 620h250 M255 638h250 M255 656h250 M255 674h250 M255 692h250"/>
+    </g>
+    <g font-size="11" text-anchor="end">
+      <text x="240" y="417">0</text><text x="240" y="435">1</text><text x="240" y="453">2</text><text x="240" y="471">3</text><text x="240" y="489">4</text><text x="240" y="507">5</text><text x="240" y="525">6</text><text x="240" y="543">7</text><text x="240" y="561">8</text><text x="240" y="579">9</text><text x="240" y="597">10</text><text x="240" y="615">11</text><text x="240" y="633">12</text><text x="240" y="651">13</text><text x="240" y="669">14</text><text x="240" y="687">15</text><text x="240" y="705">16</text>
+    </g>
+    <g fill="#7a2020" stroke="black" stroke-width="1">
+      <circle cx="280" cy="413" r="6"/><circle cx="330" cy="431" r="6"/><circle cx="380" cy="449" r="6"/><circle cx="430" cy="467" r="6"/><circle cx="480" cy="485" r="6"/>
+      <circle cx="280" cy="503" r="6"/><circle cx="330" cy="521" r="6"/><circle cx="380" cy="539" r="6"/><circle cx="430" cy="557" r="6"/><circle cx="480" cy="575" r="6"/>
+      <circle cx="280" cy="593" r="6"/><circle cx="330" cy="611" r="6"/><circle cx="380" cy="629" r="6"/><circle cx="430" cy="647" r="6"/><circle cx="480" cy="665" r="6"/>
+      <circle cx="280" cy="683" r="6"/><circle cx="330" cy="701" r="6"/>
+    </g>
+    <text x="72" y="730" font-size="14">Symbol counts: (4,4,3,3,3); total arms = 17, plus center = R.</text>
+    <text x="72" y="750" font-size="14">D = R−1 = 17; X = C(17,2)−2C(4,2)−3C(3,2) = 115.</text>
+
+    <rect x="650" y="265" width="450" height="490" fill="none" stroke="black" stroke-width="2"/>
+    <text x="680" y="312" font-size="21" font-weight="bold">Boundary comparison</text>
+    <line x1="680" y1="330" x2="1070" y2="330" stroke="black"/>
+    <text x="680" y="365" font-size="16">Total incidences: R·k·m = 18·17·5 = 1530</text>
+    <text x="680" y="408" font-size="17">Star: Q = (m+1)D + X</text>
+    <text x="700" y="433" font-size="16">= 6·17 + 115 = 217</text>
+    <text x="680" y="470" font-size="18" font-weight="bold">Rook-Star boundary: 1530 − 217 = 1313</text>
+    <line x1="680" y1="492" x2="1070" y2="492" stroke="black"/>
+    <text x="680" y="530" font-size="17">Hamming: E(18)=35, C(18)=41</text>
+    <text x="700" y="555" font-size="15">(18·17−35)·5−41 = 1314</text>
+    <text x="680" y="600" font-size="25" font-weight="bold">1313 &lt; 1314</text>
+    <text x="680" y="632" font-size="18">Rook-Star wins by one boundary vertex.</text>
+    <line x1="680" y1="653" x2="1070" y2="653" stroke="black"/>
+    <text x="680" y="680" font-size="14" font-weight="bold">Scope</text>
+    <text x="680" y="702" font-size="13">This disproves Hamming optimality for the</text>
+    <text x="680" y="720" font-size="13">fixed-volume boundary profile at R=18.</text>
+    <text x="680" y="741" font-size="13">It does not alone certify an extra-connectivity cut.</text>
+  </g>
+</svg>
