@@ -13,16 +13,18 @@ import Mathlib.Data.Fintype.Basic
 import Arrangement.ArrDefs
 
 /-!
-# Arrangement Graph Extraconnectivity
+# Arrangement Graph Boundary Framework
 
-Formal verification of the isoperimetric profile of the arrangement graph A(n,k).
+Formal verification of the boundary identities and conditional isoperimetric
+framework for the arrangement graph A(n,k). The unrestricted lower-bound claim
+is refuted by the Star counterexample documented below.
 
 ## Main Result
 
-`arrangement_extraconnectivity_minimum`: For all R-element subsets V' of A(n,k),
-  min |N(V')| = (R·k − A000788(R))·(n−k) − C_constant(R)
-
-achieved uniquely by the Hamming Ball embedding.
+The formal development proves the exact boundary identities, the defect bound,
+and the Hamming-ball evaluation. The global minimum-boundary conclusion is
+conditional on an explicit lower-bound premise; no
+unrestricted isoperimetric theorem is claimed here.
 
 ## Proof Architecture
 
@@ -43,30 +45,17 @@ achieved uniquely by the Hamming Ball embedding.
    counterexample and has been removed; see `docs/lean-proof-status.md`'s "Superseded"
    note.)
 
-5. **The Capstone** — Sandwich of lower bound (∀ V') and upper bound (∃ Hamming Ball).
+5. **Conditional boundary composition** — the legacy Hamming-ball composition
+   statements below are explicitly conditional; they are not unconditional
+   isoperimetric results. The refuted unrestricted inequality is kept outside
+   the active source tree under `Arrangement/refuted/`.
 
-## Remaining Hypothesis Interfaces (2, not raw axioms)
-
-| Interface | Role | Status |
-|-------|------|--------|
-| `UniversalLowerBound` | Universal boundary inequality (∀ V') | **False as stated**; see below |
-| `HBCrossCollisions` | Hamming Ball's exact cross-collision count (∃ witness) | Supplied by the direct `CrossTop` proof |
-
-Both are Lean `Prop`-valued hypothesis parameters threaded explicitly through
-`arrangement_extraconnectivity_minimum`, not raw `axiom` declarations.
-**`UniversalLowerBound` is refuted**: the full-Star set in `A(10,8)` (center
-plus all sixteen single-coordinate replacements by symbol 8 or 9) has R = 17,
-external boundary 168, while the formula demands ≥ 169. See the definition's
-docstring below for the exact witness and `docs/proof-sketch-weighted-potential.md`'s
-"Full-Star Failure Landscape" section for how far the failure extends. No
-instance of `UniversalLowerBound` is proved or axiomatized anywhere in this
-development, so `arrangement_boundary_minimum_of_cross` and
-`globally_optimal_growth_strategy_of_cross` remain correct, unconditionally
-verified conditional theorems -- they simply await a restricted replacement
-hypothesis under which the antecedent is actually true, which is open. See
-`docs/lean-proof-status.md` for full status and
-`docs/collision-axiom-roadmap.md` for the formalization path (both already
-document this refutation).
+The active development proves boundary identities, defect bounds, the global
+factor-one collision estimate, and an unconditional small-volume lower bound.
+It does not prove a universal Hamming-ball minimum-boundary theorem. The
+Hamming-ball cross-collision evaluation is proved by
+`CrossTop.hb_cross_collisions_closed`. See `docs/lean-proof-status.md` for the
+current theorem status.
 
 ## References
 
@@ -255,8 +244,9 @@ def sum_bit_length : ℕ → ℕ
   | 0 => 0
   | n + 1 => sum_bit_length n + bit_length n
 
-/-- The collision constant: maximum "waste" (collisions + defect) for an
-    R-element subset. Equals the number of 4-cycles in the Hamming Ball. -/
+/-- The collision constant used by the Hamming-ball boundary formula. It records
+    external multiplicity excess/open-square corner overlap, not the number of
+    induced 4-cycles. -/
 def C_constant (R : ℕ) : ℕ :=
   (R - 1) + sum_bit_length R - E_seq R
 
@@ -756,6 +746,246 @@ private lemma adj_implies_drop_pos_eq {n k : ℕ} (v w : ArrVertex n k)
   rw [hp₀] at hmem
   exact hq (Finset.mem_singleton.mp hmem)
 
+private lemma drop_pos_eq_implies_adj {n k : ℕ} (v w : ArrVertex n k)
+    (p : Fin k) (hdrop : drop_pos w p = drop_pos v p) (hne : w ≠ v) :
+    arr_adjacent v w := by
+  have hsame : ∀ q : Fin k, q ≠ p → w.val q = v.val q := by
+    intro q hq
+    let hq' : {x : Fin k // x ≠ p} := ⟨q, hq⟩
+    have hh := congrFun hdrop hq'
+    unfold drop_pos at hh
+    have hqeq : (↑hq' : Fin k) = q := by
+      apply Fin.ext
+      simp [hq']
+    rw [hqeq] at hh
+    exact hh
+  have hp : v.val p ≠ w.val p := by
+    intro heq
+    apply hne
+    apply Subtype.ext
+    funext q
+    by_cases hq : q = p
+    · subst q
+      exact heq.symm
+    · exact hsame q hq
+  unfold arr_adjacent
+  have hfilter :
+      Finset.univ.filter (fun q : Fin k => v.val q ≠ w.val q) = {p} := by
+    ext q
+    by_cases hq : q = p
+    · subst q
+      simp [hp]
+    · simp [hq, hsame q hq]
+  rw [hfilter]
+  simp
+
+private lemma drop_eq_off {n k : ℕ} {v w : ArrVertex n k} {p : Fin k}
+    (h : drop_pos w p = drop_pos v p) :
+    ∀ r : Fin k, r ≠ p → w.val r = v.val r := by
+  intro r hr
+  let r' : {x : Fin k // x ≠ p} := ⟨r, hr⟩
+  have hh := congrFun h r'
+  unfold drop_pos at hh
+  have hre : (↑r' : Fin k) = r := by
+    apply Fin.ext
+    simp [r']
+  rw [hre] at hh
+  exact hh
+
+lemma coord_overlap_has_two_coordinate_witness {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) {p q : Fin k} (hpq : p ≠ q)
+    {w : ArrVertex n k} (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ∃ v ∈ V', ∃ t ∈ V', v ≠ t ∧
+      drop_pos w p = drop_pos v p ∧ drop_pos w q = drop_pos t q ∧
+      (∀ r : Fin k, r ≠ p → r ≠ q → v.val r = t.val r) := by
+  rw [Finset.mem_inter] at hw
+  rcases hw with ⟨hp_mem, hq_mem⟩
+  simp only [coord_boundary, Finset.mem_filter, Finset.mem_univ, true_and]
+    at hp_mem hq_mem
+  obtain ⟨hw_not, v, hv, hpdrop⟩ := hp_mem
+  obtain ⟨_, t, ht, hqdrop⟩ := hq_mem
+  refine ⟨v, hv, t, ht, ?_, hpdrop, hqdrop, ?_⟩
+  · intro hvt
+    apply hw_not
+    have hwv : w = v := by
+      apply Subtype.ext
+      funext r
+      by_cases hrp : r = p
+      · rw [hrp]
+        exact (drop_eq_off hqdrop p hpq).trans
+          (congrArg (fun z : ArrVertex n k => z.val p) hvt.symm)
+      · exact drop_eq_off hpdrop r hrp
+    exact hwv ▸ hv
+  · intro r hrp hrq
+    exact (drop_eq_off hpdrop r hrp).symm.trans (drop_eq_off hqdrop r hrq)
+
+lemma coord_overlap_witness_differs_at_both {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) {p q : Fin k} (hpq : p ≠ q)
+    {w : ArrVertex n k} (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q)
+    {v t : ArrVertex n k} (hv : v ∈ V') (ht : t ∈ V')
+    (hvp : drop_pos w p = drop_pos v p)
+    (htq : drop_pos w q = drop_pos t q) :
+    v.val p ≠ t.val p ∧ v.val q ≠ t.val q := by
+  rw [Finset.mem_inter] at hw
+  rcases hw with ⟨hp_mem, _⟩
+  simp only [coord_boundary, Finset.mem_filter, Finset.mem_univ, true_and]
+    at hp_mem
+  obtain ⟨hw_not, _, _, _⟩ := hp_mem
+  constructor
+  · intro hpt
+    have hwv : w = v := by
+      apply Subtype.ext
+      funext r
+      by_cases hr : r = p
+      · rw [hr]
+        exact (drop_eq_off htq p hpq).trans hpt.symm
+      · exact drop_eq_off hvp r hr
+    exact hw_not (hwv ▸ hv)
+  · intro hqt
+    have hwt : w = t := by
+      apply Subtype.ext
+      funext r
+      by_cases hr : r = q
+      · rw [hr]
+        exact (drop_eq_off hvp q (Ne.symm hpq)).trans hqt
+      · exact drop_eq_off htq r hr
+    exact hw_not (hwt ▸ ht)
+
+/-- Given the two member witnesses and the ordered coordinates, the overlap
+    vertex is uniquely determined. This is the injectivity ingredient for the
+    eventual charging map. -/
+lemma coord_overlap_vertex_unique {n k : ℕ}
+    {p q : Fin k} (hpq : p ≠ q)
+    {v t w₁ w₂ : ArrVertex n k}
+    (h₁p : drop_pos w₁ p = drop_pos v p)
+    (h₁q : drop_pos w₁ q = drop_pos t q)
+    (h₂p : drop_pos w₂ p = drop_pos v p)
+    (h₂q : drop_pos w₂ q = drop_pos t q) :
+    w₁ = w₂ := by
+  apply Subtype.ext
+  funext r
+  by_cases hrp : r = p
+  · rw [hrp]
+    have h₁ := drop_eq_off h₁q p hpq
+    have h₂ := drop_eq_off h₂q p hpq
+    exact h₁.trans h₂.symm
+  · by_cases hrq : r = q
+    · rw [hrq]
+      have h₁ := drop_eq_off h₁p q (Ne.symm hpq)
+      have h₂ := drop_eq_off h₂p q (Ne.symm hpq)
+      exact h₁.trans h₂.symm
+    · have h₁ := drop_eq_off h₁p r hrp
+      have h₂ := drop_eq_off h₂p r hrp
+      exact h₁.trans h₂.symm
+
+/-- For fixed members and fixed distinct coordinates, there is at most one
+    overlap vertex realizing the prescribed two-coordinate swap pattern. -/
+def prescribed_common_neighbors {n k : ℕ} (v t : ArrVertex n k)
+    (p q : Fin k) : Finset (ArrVertex n k) :=
+  Finset.univ.filter (fun w =>
+    drop_pos w p = drop_pos v p ∧ drop_pos w q = drop_pos t q)
+
+lemma prescribed_common_neighbors_card_le_one {n k : ℕ}
+    (v t : ArrVertex n k) (p q : Fin k) (hpq : p ≠ q) :
+    (prescribed_common_neighbors v t p q).card ≤ 1 := by
+  apply Finset.card_le_one.mpr
+  intro w hw z hz
+  simp only [prescribed_common_neighbors, Finset.mem_filter,
+    Finset.mem_univ, true_and] at hw hz
+  exact coord_overlap_vertex_unique hpq hw.1 hw.2 hz.1 hz.2
+
+lemma diff_pair_eq_or_swap {n k : ℕ} {s t : ArrVertex n k}
+    {p q p' q' : Fin k} (hpq : p ≠ q)
+    (hp : s.val p ≠ t.val p) (hq : s.val q ≠ t.val q)
+    (hout : ∀ r, r ≠ p' → r ≠ q' → s.val r = t.val r) :
+    (p = p' ∧ q = q') ∨ (p = q' ∧ q = p') := by
+  have h1 : p = p' ∨ p = q' := by
+    by_contra h
+    rw [not_or] at h
+    exact hp (hout p h.1 h.2)
+  have h2 : q = p' ∨ q = q' := by
+    by_contra h
+    rw [not_or] at h
+    exact hq (hout q h.1 h.2)
+  rcases h1 with rfl | rfl <;> rcases h2 with rfl | rfl
+  · exact absurd rfl hpq
+  · exact Or.inl ⟨rfl, rfl⟩
+  · exact Or.inr ⟨rfl, rfl⟩
+  · exact absurd rfl hpq
+
+def tagged_coordinate_overlaps {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    Finset (Σ _ : Fin k, Σ _ : Fin k, ArrVertex n k) :=
+  (Finset.univ : Finset (Fin k)).sigma (fun p =>
+    ((Finset.univ : Finset (Fin k)).filter (fun q => p ≠ q)).sigma
+      (fun q => coord_boundary V' p ∩ coord_boundary V' q))
+
+lemma mem_tagged_coordinate_overlaps {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (w : ArrVertex n k) :
+    (⟨p, ⟨q, w⟩⟩ : Σ _ : Fin k, Σ _ : Fin k, ArrVertex n k) ∈
+        tagged_coordinate_overlaps V' ↔
+      p ≠ q ∧ w ∈ coord_boundary V' p ∩ coord_boundary V' q := by
+  simp [tagged_coordinate_overlaps]
+
+lemma exists_overlap_witness_pair {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k)
+    (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ∃ z : ArrVertex n k × ArrVertex n k,
+      z.1 ∈ V' ∧ z.2 ∈ V' ∧ z.1 ≠ z.2 ∧
+        drop_pos w p = drop_pos z.1 p ∧ drop_pos w q = drop_pos z.2 q ∧
+          (∀ r : Fin k, r ≠ p → r ≠ q → z.1.val r = z.2.val r) := by
+  obtain ⟨v, hv, t, ht, hvt, hp, hq, hagree⟩ :=
+    coord_overlap_has_two_coordinate_witness V' hpq hw
+  exact ⟨(v, t), hv, ht, hvt, hp, hq, hagree⟩
+
+noncomputable def overlap_witness_pair {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k)
+    (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    ArrVertex n k × ArrVertex n k :=
+  Classical.choose (exists_overlap_witness_pair V' p q hpq w hw)
+
+lemma overlap_witness_pair_spec {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (p q : Fin k) (hpq : p ≠ q)
+    (w : ArrVertex n k)
+    (hw : w ∈ coord_boundary V' p ∩ coord_boundary V' q) :
+    (overlap_witness_pair V' p q hpq w hw).1 ∈ V' ∧
+      (overlap_witness_pair V' p q hpq w hw).2 ∈ V' ∧
+      (overlap_witness_pair V' p q hpq w hw).1 ≠
+        (overlap_witness_pair V' p q hpq w hw).2 ∧
+      drop_pos w p = drop_pos (overlap_witness_pair V' p q hpq w hw).1 p ∧
+      drop_pos w q = drop_pos (overlap_witness_pair V' p q hpq w hw).2 q ∧
+      (∀ r : Fin k, r ≠ p → r ≠ q →
+        (overlap_witness_pair V' p q hpq w hw).1.val r =
+          (overlap_witness_pair V' p q hpq w hw).2.val r) := by
+  exact Classical.choose_spec (exists_overlap_witness_pair V' p q hpq w hw)
+
+lemma external_neighbors_eq_coord_union {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    external_neighbors V' =
+      ((Finset.univ : Finset (Fin k)).biUnion
+        (fun p => coord_boundary V' p)).card := by
+  unfold external_neighbors
+  apply congrArg Finset.card
+  ext w
+  constructor
+  · intro hw
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hw
+    obtain ⟨hw_not, v, hv, hadj⟩ := hw
+    obtain ⟨p, hdrop⟩ := adj_implies_drop_pos_eq v w hadj
+    simp only [Finset.mem_biUnion, Finset.mem_univ, true_and]
+    exact ⟨p, Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩⟩
+  · intro hw
+    simp only [Finset.mem_biUnion, Finset.mem_univ, true_and] at hw
+    obtain ⟨p, hp⟩ := hw
+    simp only [coord_boundary, Finset.mem_filter, Finset.mem_univ, true_and] at hp
+    obtain ⟨hw_not, v, hv, hdrop⟩ := hp
+    refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, ?_⟩
+    apply drop_pos_eq_implies_adj v w p hdrop
+    intro heq
+    exact hw_not (heq ▸ hv)
+
 /-- Every external neighbor belongs to at least one coord_boundary (union bound). -/
 lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)) :
     external_neighbors V' ≤ total_coord_edges V' := by
@@ -772,65 +1002,222 @@ lemma external_neighbors_le_total_coord {n k : ℕ} (V' : Finset (ArrVertex n k)
   unfold coord_boundary
   refine Finset.mem_filter.mpr ⟨Finset.mem_univ w, hw_not, v, hv, hdrop⟩
 
-/--
-  **Proposition 1 (Universal Boundary Inequality) -- REFUTED as stated**
+/-- Ordered pair-overlap count for a finite family of finite sets. -/
+def ordered_overlap {α ι : Type*} [DecidableEq α] [DecidableEq ι]
+    (s : Finset ι)
+    (f : ι → Finset α) : ℕ :=
+  ∑ i ∈ s, ∑ j ∈ s.erase i, (f i ∩ f j).card
 
-  This asserts that for ANY R-element subset V' of A(n,k), the external
-  boundary is bounded below by the boundary of the lexicographic Hamming
-  Ball. **This unrestricted claim is false.**
+lemma ordered_overlap_insert {α ι : Type*} [DecidableEq α] [DecidableEq ι]
+    (s : Finset ι) (f : ι → Finset α) (a : ι) (ha : a ∉ s) :
+    ordered_overlap (insert a s) f =
+      ordered_overlap s f +
+        2 * (∑ b ∈ s, (f a ∩ f b).card) := by
+  unfold ordered_overlap
+  simp only [Finset.sum_insert ha, Finset.erase_insert ha]
+  have h_rows :
+      (∑ i ∈ s, ∑ j ∈ (insert a s).erase i, (f i ∩ f j).card) =
+        ∑ i ∈ s, ((f i ∩ f a).card +
+          ∑ j ∈ s.erase i, (f i ∩ f j).card) := by
+    apply Finset.sum_congr rfl
+    intro i hi
+    have hne : a ≠ i := by
+      intro hai
+      exact ha (hai ▸ hi)
+    simp [Finset.erase_insert_of_ne hne, ha]
+  rw [h_rows, Finset.sum_add_distrib]
+  have h_comm :
+      (∑ i ∈ s, (f i ∩ f a).card) =
+        ∑ b ∈ s, (f a ∩ f b).card := by
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.inter_comm]
+  rw [h_comm]
+  omega
 
-  **Counterexample**: In A(10,8), take the center (0,1,2,3,4,5,6,7) and all
-  sixteen vertices obtained by replacing one coordinate with 8 or 9 (the
-  full Star, R = 17, D = 16, X = 56). Its external boundary has size 168,
-  while the formula (R*k - E_seq R)*(n-k) - C_constant R evaluates to
-  17*8 - 33 = 103, times (10-8) = 206, minus C_constant(17) = 37, i.e. 169.
-  168 < 169, so the inequality fails. Full-Star sets fail more broadly for
-  every m = n-k >= 2 once the branch count is large enough relative to m;
-  see `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure
-  Landscape" section and `scripts/sweep_boundary.py` /
-  `scripts/occupancy_sweep.py` for the mapped failure region. No fixed-R
-  or fixed-(n-k) restriction is currently known to be both sufficient and
-  established.
+lemma card_biUnion_le_ordered_overlap {α ι : Type*} [Fintype α]
+    [DecidableEq α] [DecidableEq ι] (s : Finset ι) (f : ι → Finset α) :
+    (∑ i ∈ s, (f i).card) ≤
+      (s.biUnion f).card + ordered_overlap s f := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp [ordered_overlap]
+  | @insert a s ha ih =>
+      let u : Finset α := s.biUnion f
+      have h_inter :
+          (f a ∩ u).card ≤ ∑ b ∈ s, (f a ∩ f b).card := by
+        have h_eq : f a ∩ u = s.biUnion (fun b => f a ∩ f b) := by
+          ext x
+          simp [u, and_assoc, and_comm]
+        rw [h_eq]
+        exact Finset.card_biUnion_le
+      have h_union := Finset.card_union_add_card_inter (f a) u
+      have h_overlap := ordered_overlap_insert s f a ha
+      dsimp [u] at h_inter h_union
+      have h_arith :
+          (f a).card + ∑ i ∈ s, (f i).card ≤
+            (f a ∪ s.biUnion f).card + ordered_overlap s f +
+              2 * (∑ b ∈ s, (f a ∩ f b).card) := by
+        omega
+      have h_arith' :
+          (f a).card + ∑ i ∈ s, (f i).card ≤
+            (f a ∪ s.biUnion f).card + ordered_overlap (insert a s) f := by
+        calc
+          (f a).card + ∑ i ∈ s, (f i).card ≤
+              (f a ∪ s.biUnion f).card + ordered_overlap s f +
+                2 * (∑ b ∈ s, (f a ∩ f b).card) := h_arith
+          _ = (f a ∪ s.biUnion f).card + ordered_overlap (insert a s) f := by
+            rw [h_overlap]
+            omega
+      simpa [u, Finset.sum_insert ha] using h_arith'
 
-  Conceptually: the intended argument was that any subset failing to match
-  the optimal defect E_seq(R) suffers an insurmountable dimensional penalty
-  of at least (n-k) per unit of missing defect, dominating any secondary
-  cross-collision savings as dimensions scale. This intuition holds
-  asymptotically in (n-k) for fixed R (Section "sandwich" of the paper) but
-  not as an exact statement at every finite scale, which is what this Prop
-  claims.
+/-- Twice the excess incidence count of a finite family is bounded by its
+    ordered pair-overlap count. Pointwise, an element lying in `t` family
+    members contributes `2(t-1)` to the left and `t(t-1)` to the right. -/
+lemma card_biUnion_excess_two_le_ordered_overlap {α ι : Type*} [Fintype α]
+    [DecidableEq α] [DecidableEq ι] (s : Finset ι) (f : ι → Finset α) :
+    2 * ((∑ i ∈ s, (f i).card) - (s.biUnion f).card) ≤
+      ordered_overlap s f := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp [ordered_overlap]
+  | @insert a s ha ih =>
+      let u : Finset α := s.biUnion f
+      let total : ℕ := ∑ i ∈ s, (f i).card
+      have hinter : (f a ∩ u).card ≤ ∑ b ∈ s, (f a ∩ f b).card := by
+        have heq : f a ∩ u = s.biUnion (fun b => f a ∩ f b) := by
+          ext x
+          simp [u, and_assoc, and_comm]
+        rw [heq]
+        exact Finset.card_biUnion_le
+      have htotal : u.card ≤ total := by
+        dsimp [u, total]
+        exact Finset.card_biUnion_le
+      have hnew_union : (insert a s).biUnion f = f a ∪ u := by
+        simp [u]
+      have hunion := Finset.card_union_add_card_inter (f a) u
+      have hexcess :
+          ((∑ i ∈ insert a s, (f i).card) -
+              ((insert a s).biUnion f).card) =
+            (total - u.card) + (f a ∩ u).card := by
+        rw [Finset.sum_insert ha, hnew_union]
+        dsimp [total]
+        omega
+      rw [hexcess, ordered_overlap_insert s f a ha]
+      have hprev : 2 * (total - u.card) ≤ ordered_overlap s f := by
+        simpa [total, u] using ih
+      have hnext := Nat.mul_le_mul_left 2 hinter
+      omega
 
-  **Prior computational evidence (predates this refutation; bounded, not
-  in tension with it)**:
-  - This is an all-subsets statement: it has no connectedness hypothesis.
-  - `predict.cpp` evaluates the Hamming-ball construction only, and
-    `arrangement.cpp` enumerates connected configurations only; neither
-    verifies this universal quantifier.
-  - `scripts/check_universal_lower_bound.py` exhaustively tests small complete
-    arrangement graphs, including disconnected subsets, but only for very
-    small R (parameter cells with R <= 6-10); it never covered R = 17 in
-    A(10,8), so it is not contradicted by the counterexample above -- it
-    simply never reached the regime where the failure occurs.
-  - See docs/axiom-equivalence.md for the full duality explanation
-  - See docs/lean-proof-status.md and docs/collision-axiom-roadmap.md, both of
-    which already document this refutation, for formalization status
+def coordinate_ordered_overlap {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) : ℕ :=
+  ordered_overlap (Finset.univ : Finset (Fin k))
+    (fun p => coord_boundary V' p)
 
-  This definition is retained, unproved and unrefuted-as-a-restricted-claim,
-  solely to name the hypothesis that `UniversalCounterexample.lean` refutes.
-  The active capstone hypothesis is `RestrictedLowerBound`, which gates the
-  boundary inequality under the hypercube embedding conditions.
-  No instance of `UniversalLowerBound` is assumed as an axiom anywhere in this file.
--/
-def UniversalLowerBound (R n k : ℕ) : Prop :=
-  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
+lemma tagged_coordinate_overlaps_card {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    (tagged_coordinate_overlaps V').card = coordinate_ordered_overlap V' := by
+  have hfilter (p : Fin k) :
+      (Finset.univ : Finset (Fin k)).filter (fun q => p ≠ q) =
+        (Finset.univ : Finset (Fin k)).erase p := by
+    ext q
+    simp [eq_comm]
+  simp only [tagged_coordinate_overlaps, coordinate_ordered_overlap,
+    ordered_overlap, Finset.card_sigma]
+  simp_rw [hfilter]
 
-/-- The restricted lower bound hypothesis, active only within the embeddable range.
-    This naturally avoids the full-Star counterexamples for $m \le 4$. -/
-def RestrictedLowerBound (R n k : ℕ) : Prop :=
-  can_embed_hypercube R n k →
-  ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
-    external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R
+/-- A global charge for every tagged ordered coordinate-overlap vertex.
+    The Boolean remembers the orientation of the two disagreement coordinates;
+    the witness pair alone determines only their unordered set. -/
+lemma tagged_coordinate_overlaps_card_le {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    (tagged_coordinate_overlaps V').card ≤
+      2 * (V'.card * V'.card - V'.card) := by
+  classical
+  let target := V'.offDiag ×ˢ (Finset.univ : Finset Bool)
+  let charge : {x // x ∈ tagged_coordinate_overlaps V'} →
+      (ArrVertex n k × ArrVertex n k) × Bool := fun x =>
+    let p := x.1.1
+    let q := x.1.2.1
+    let w := x.1.2.2
+    let hx := (mem_tagged_coordinate_overlaps V' p q w).mp x.2
+    (overlap_witness_pair V' p q hx.1 w hx.2, decide (p < q))
+  have hmaps : ∀ x ∈ (tagged_coordinate_overlaps V').attach,
+      charge x ∈ target := by
+    intro x hx
+    let p := x.1.1
+    let q := x.1.2.1
+    let w := x.1.2.2
+    have htag := (mem_tagged_coordinate_overlaps V' p q w).mp x.2
+    let z := overlap_witness_pair V' p q htag.1 w htag.2
+    have hz := overlap_witness_pair_spec V' p q htag.1 w htag.2
+    change charge x ∈ target
+    simp only [charge, target, Finset.mem_product, Finset.mem_offDiag,
+      Finset.mem_univ, and_true]
+    exact ⟨hz.1, hz.2.1, hz.2.2.1⟩
+  have hinj : Set.InjOn charge ↑((tagged_coordinate_overlaps V').attach) := by
+    intro x hx y hy hxy
+    rcases x with ⟨⟨p, ⟨q, w⟩⟩, htagx_raw⟩
+    rcases y with ⟨⟨p', ⟨q', w'⟩⟩, htagy_raw⟩
+    have htagx := (mem_tagged_coordinate_overlaps V' p q w).mp htagx_raw
+    have htagy := (mem_tagged_coordinate_overlaps V' p' q' w').mp htagy_raw
+    let zx := overlap_witness_pair V' p q htagx.1 w htagx.2
+    let zy := overlap_witness_pair V' p' q' htagy.1 w' htagy.2
+    have hsx := overlap_witness_pair_spec V' p q htagx.1 w htagx.2
+    have hsy := overlap_witness_pair_spec V' p' q' htagy.1 w' htagy.2
+    change (zx, decide (p < q)) = (zy, decide (p' < q')) at hxy
+    have hpair : zx = zy := (Prod.mk.inj hxy).1
+    have horientation : decide (p < q) = decide (p' < q') :=
+      (Prod.mk.inj hxy).2
+    have hsy' := hsy
+    have hpair' := hpair
+    dsimp [zx, zy] at hpair'
+    rw [← hpair'] at hsy'
+    have hdiff := coord_overlap_witness_differs_at_both V' htagx.1 htagx.2
+      hsx.1 hsx.2.1 hsx.2.2.2.1 hsx.2.2.2.2.1
+    have hcoords := diff_pair_eq_or_swap htagx.1 hdiff.1 hdiff.2
+      hsy'.2.2.2.2.2
+    rcases hcoords with ⟨hp, hq⟩ | ⟨hp, hq⟩
+    · have hsy_p := hsy'.2.2.2.1
+      have hsy_q := hsy'.2.2.2.2.1
+      rw [← hp] at hsy_p
+      rw [← hq] at hsy_q
+      have hw := coord_overlap_vertex_unique htagx.1
+        hsx.2.2.2.1 hsx.2.2.2.2.1 hsy_p hsy_q
+      apply Subtype.ext
+      apply Sigma.ext hp
+      cases hp.symm
+      cases hq.symm
+      cases hw
+      rfl
+    · have hbit : decide (p < q) = decide (q < p) := by
+        simpa [hp, hq] using horientation
+      rcases lt_trichotomy p q with hpq | hpq | hpq
+      · have hnot : ¬ q < p := not_lt_of_ge (le_of_lt hpq)
+        simp [hpq, hnot] at hbit
+      · exact False.elim (htagx.1 hpq)
+      · have hnot : ¬ p < q := not_lt_of_ge (le_of_lt hpq)
+        simp [hpq, hnot] at hbit
+  have hcard := Finset.card_le_card_of_injOn charge hmaps hinj
+  calc
+    (tagged_coordinate_overlaps V').card =
+        ((tagged_coordinate_overlaps V').attach).card := by
+      simp
+    _ ≤ target.card := hcard
+    _ = 2 * (V'.card * V'.card - V'.card) := by
+      simp [target, Finset.card_product, Finset.offDiag_card, Nat.mul_two,
+        Nat.mul_comm]
+
+lemma coordinate_bonferroni_ordered {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    total_coord_edges V' ≤
+      ((Finset.univ : Finset (Fin k)).biUnion (fun p => coord_boundary V' p)).card +
+        coordinate_ordered_overlap V' := by
+  have h := card_biUnion_le_ordered_overlap
+    (s := (Finset.univ : Finset (Fin k)))
+    (f := fun p => coord_boundary V' p)
+  unfold total_coord_edges coordinate_ordered_overlap at *
+  exact h
 
 /-- The fiber of all ArrVertex sharing a given root r at position p. -/
 def root_fiber {n k : ℕ} (p : Fin k) (r : {x : Fin k // x ≠ p} → Fin n) :
@@ -1135,6 +1522,247 @@ lemma sum_unique_roots_le_rk {n k : ℕ} (R : ℕ) (V' : Finset (ArrVertex n k))
     simp [Finset.sum_const, Finset.card_univ, Fintype.card_fin, mul_comm]
   rw [h_rhs] at h_sum
   exact h_sum
+
+/-!
+## The collision-count bound
+
+The ordered overlap count is at most `2 * (R^2-R)` by a global injection into
+ordered source pairs and an orientation bit. A sharper factor-one bound on
+`cross_collisions` follows by observing that each external vertex of
+multiplicity `t` contributes `t(t-1)` to ordered overlaps but only `t-1` to
+collision excess. Do not confuse this with a factor-one bound on the ordered
+overlap count: that stronger statement is false (the example in `A(5,3)` has
+ordered overlap 4 for `R=2`).
+-/
+
+/-- The unconditional collision estimate proved by global ordered charging. -/
+def CrossCollisionBoundTwice {n k : ℕ} (V' : Finset (ArrVertex n k)) : Prop :=
+  cross_collisions V' ≤ 2 * (V'.card * V'.card - V'.card)
+
+lemma coordinate_ordered_overlap_le_global_bound {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    coordinate_ordered_overlap V' ≤
+      2 * (V'.card * V'.card - V'.card) := by
+  rw [← tagged_coordinate_overlaps_card V']
+  exact tagged_coordinate_overlaps_card_le V'
+
+lemma cross_collision_bound_global {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) : CrossCollisionBoundTwice V' := by
+  have hbonf := coordinate_bonferroni_ordered V'
+  rw [← external_neighbors_eq_coord_union V'] at hbonf
+  have hoverlap := coordinate_ordered_overlap_le_global_bound V'
+  unfold CrossCollisionBoundTwice cross_collisions
+  omega
+
+/-- Factor-one collision estimate. The family lemma bounds twice the excess
+    incidence count by ordered overlaps; the existing source-pair injection
+    bounds those overlaps by `2 * (R^2-R)`. -/
+lemma cross_collision_bound_factor_one {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) :
+    cross_collisions V' ≤ V'.card * V'.card - V'.card := by
+  have hhalf : 2 * cross_collisions V' ≤ coordinate_ordered_overlap V' := by
+    unfold cross_collisions total_coord_edges coordinate_ordered_overlap
+    rw [external_neighbors_eq_coord_union V']
+    exact card_biUnion_excess_two_le_ordered_overlap
+      (Finset.univ : Finset (Fin k)) (fun p => coord_boundary V' p)
+  have hoverlap := coordinate_ordered_overlap_le_global_bound V'
+  omega
+
+/-- Lower boundary estimate using the factor-one collision bound. -/
+lemma external_neighbors_lower_bound_factor_one
+    {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
+    (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
+        (V'.card * V'.card - V'.card) ≤ external_neighbors V' := by
+  have htotal := total_coord_edges_eq V' hnk
+  have hdefect := sum_unique_roots_lower_bound V'.card V' rfl
+  have hcollision := cross_collision_bound_factor_one V'
+  have hdecomp := external_neighbors_decomp V'
+    (external_neighbors_le_total_coord V')
+  have hproduct := Nat.mul_le_mul_right (n - k + 1) hdefect
+  have htotalR :
+      total_coord_edges V' + V'.card * k =
+        sum_unique_roots V' * (n - k) + sum_unique_roots V' := htotal
+  have hfactor :
+      sum_unique_roots V' * (n - k) + sum_unique_roots V' =
+        sum_unique_roots V' * (n - k + 1) := by
+    have hm : n - k + 1 = (n - k) + 1 := by omega
+    rw [hm, Nat.mul_add, Nat.mul_one]
+  have hincidences :
+      external_neighbors V' + cross_collisions V' = total_coord_edges V' := by
+    rw [hdecomp]
+    unfold cross_collisions
+    omega
+  have hidentity :
+      external_neighbors V' + cross_collisions V' + V'.card * k =
+        sum_unique_roots V' * (n - k + 1) := by
+    calc
+      external_neighbors V' + cross_collisions V' + V'.card * k =
+          total_coord_edges V' + V'.card * k := by rw [hincidences]
+      _ = sum_unique_roots V' * (n - k) + sum_unique_roots V' := htotal
+      _ = sum_unique_roots V' * (n - k + 1) := hfactor
+  omega
+
+/-- Legacy algebraic consequence of the weaker factor-two collision estimate. -/
+lemma external_neighbors_lower_bound_of_collision_bound
+    {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
+    (hcollision : CrossCollisionBoundTwice V') :
+    (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
+        2 * (V'.card * V'.card - V'.card) ≤
+      external_neighbors V' := by
+  have htotal := total_coord_edges_eq V' hnk
+  have hdefect := sum_unique_roots_lower_bound V'.card V' rfl
+  have hcoll := hcollision
+  have hdecomp := external_neighbors_decomp V'
+    (external_neighbors_le_total_coord V')
+  have hproduct := Nat.mul_le_mul_right (n - k + 1) hdefect
+  unfold CrossCollisionBoundTwice at hcoll
+  have htotalR :
+      total_coord_edges V' + V'.card * k =
+        sum_unique_roots V' * (n - k) + sum_unique_roots V' := by
+    exact htotal
+  have hXle : cross_collisions V' ≤ total_coord_edges V' := by
+    exact Nat.sub_le _ _
+  have hfactor :
+      sum_unique_roots V' * (n - k) + sum_unique_roots V' =
+        sum_unique_roots V' * (n - k + 1) := by
+    rw [Nat.mul_add]
+    simp
+  have hidentity :
+      external_neighbors V' + cross_collisions V' + V'.card * k =
+        sum_unique_roots V' * (n - k + 1) := by
+    omega
+  omega
+
+/-- Legacy unconditional lower bound from the factor-two overlap estimate. -/
+theorem external_neighbors_lower_bound_global
+    {n k : ℕ} (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
+    (V'.card * k - E_seq V'.card) * (n - k + 1) - V'.card * k -
+        2 * (V'.card * V'.card - V'.card) ≤ external_neighbors V' := by
+  exact external_neighbors_lower_bound_of_collision_bound V' hnk
+    (cross_collision_bound_global V')
+
+/-- The global lower bound expressed as an error from the Hamming linear term.
+    Unlike the refuted unrestricted Hamming-ball claim, this allows the
+    explicit quadratic error `R²-R`. -/
+theorem restricted_lower_bound_up_to_error {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (hnk : k ≤ n) :
+    (V'.card * k - E_seq V'.card) * (n - k) ≤
+      external_neighbors V' + E_seq V'.card +
+        (V'.card * V'.card - V'.card) := by
+  have hglobal := external_neighbors_lower_bound_factor_one V' hnk
+  by_cases hE : E_seq V'.card ≤ V'.card * k
+  · have hsub : V'.card * k - E_seq V'.card + E_seq V'.card =
+        V'.card * k := Nat.sub_add_cancel hE
+    have hfactor :
+        (V'.card * k - E_seq V'.card) * (n - k + 1) =
+          (V'.card * k - E_seq V'.card) * (n - k) +
+            (V'.card * k - E_seq V'.card) := by
+      rw [Nat.mul_add]
+      simp
+    rw [hfactor] at hglobal
+    omega
+  · have hzero : V'.card * k - E_seq V'.card = 0 := by
+      exact Nat.sub_eq_zero_of_le (Nat.le_of_lt (lt_of_not_ge hE))
+    simp [hzero]
+
+/-- Boundary at most the Hamming linear term forces the defect to be close
+    to its cube-isoperimetric maximum. The hypothesis `E_seq R ≤ R*k` is
+    necessary with natural-number subtraction (and holds in the embedded
+    Hamming-ball range). -/
+theorem defect_rigidity {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
+    (hE : E_seq V'.card ≤ V'.card * k)
+    (hH : external_neighbors V' ≤
+      (V'.card * k - E_seq V'.card) * (n - k)) :
+    (E_seq V'.card - (V'.card * k - sum_unique_roots V')) *
+        (n - k + 1) ≤
+      E_seq V'.card + (V'.card * V'.card - V'.card) := by
+  let R := V'.card
+  let e := E_seq R
+  let U := sum_unique_roots V'
+  let D := R * k - U
+  let gap := e - D
+  let A := R * k - e
+  have hU0 := sum_unique_roots_le_rk V'.card V' rfl
+  have hU : U ≤ R * k := by simpa [U, R] using hU0
+  have hD : D + U = R * k := Nat.sub_add_cancel hU
+  have hA : A + e = R * k := Nat.sub_add_cancel hE
+  have hX := cross_collision_bound_factor_one V'
+  have hX' : cross_collisions V' ≤ R * R - R := by
+    simpa [R] using hX
+  have htotal := total_coord_edges_eq V' hnk
+  have hdecomp := external_neighbors_decomp V'
+    (external_neighbors_le_total_coord V')
+  have hfactor : U * (n - k) + U = U * (n - k + 1) := by
+    rw [Nat.mul_add]
+    simp
+  have hXle : cross_collisions V' ≤ total_coord_edges V' := Nat.sub_le _ _
+  have hid : external_neighbors V' + cross_collisions V' + R * k =
+      U * (n - k + 1) := by
+    calc
+      external_neighbors V' + cross_collisions V' + R * k =
+          total_coord_edges V' + R * k := by
+            rw [hdecomp]
+            omega
+      _ = U * (n - k) + U := htotal
+      _ = U * (n - k + 1) := hfactor
+  by_cases hd : D ≤ e
+  · have hgap : gap + D = e := Nat.sub_add_cancel hd
+    have hUA : U = A + gap := by
+      dsimp [U, A, gap, D]
+      omega
+    have hfacA : A * (n - k + 1) = A * (n - k) + A := by
+      rw [Nat.mul_add]
+      simp
+    rw [hUA, Nat.add_mul, hfacA] at hid
+    have hR : R * k = A + e := hA.symm
+    have hfacGap : gap * (n - k + 1) = gap * (n - k) + gap := by
+      rw [Nat.mul_add]
+      simp
+    have hH' : external_neighbors V' ≤ A * (n - k) := by
+      simpa [A, R, e] using hH
+    change gap * (n - k + 1) ≤ e + (R * R - R)
+    rw [hfacGap]
+    omega
+  · have hgap0 : gap = 0 := by
+      dsimp [gap]
+      exact Nat.sub_eq_zero_of_le (Nat.le_of_lt (lt_of_not_ge hd))
+    have hgoal : gap * (n - k + 1) ≤ e + (R * R - R) := by
+      rw [hgap0]
+      omega
+    simpa [gap, D, e, R] using hgoal
+
+/-- If the dimension is larger than the total rigidity error, equality with
+    the Hamming defect bound is forced for any set whose boundary is no larger
+    than the Hamming linear term. -/
+theorem defect_eq_popcount_of_small_error {n k : ℕ}
+    (V' : Finset (ArrVertex n k)) (hnk : k ≤ n)
+    (hE : E_seq V'.card ≤ V'.card * k)
+    (hlarge : E_seq V'.card +
+      (V'.card * V'.card - V'.card) < n - k + 1)
+    (hH : external_neighbors V' ≤
+      (V'.card * k - E_seq V'.card) * (n - k)) :
+    V'.card * k - sum_unique_roots V' = E_seq V'.card := by
+  have hrigid := defect_rigidity V' hnk hE hH
+  have hdef := sum_unique_roots_lower_bound V'.card V' rfl
+  have hdef_le : V'.card * k - sum_unique_roots V' ≤ E_seq V'.card := by
+    omega
+  by_contra hne
+  have hgap : 1 ≤ E_seq V'.card -
+      (V'.card * k - sum_unique_roots V') := by
+    omega
+  have hmul := Nat.mul_le_mul_right (n - k + 1) hgap
+  simp only [Nat.one_mul] at hmul
+  omega
+
+/-!
+The ordered source-pair charging bounds the ordered coordinate-overlap count.
+The active factor-one collision estimate follows by combining that bound with
+`card_biUnion_excess_two_le_ordered_overlap`. The older factor-two lower-bound
+lemmas remain available for comparison. The factor-one claim for ordered
+overlaps themselves is false; only the cross-collision excess has the sharper
+bound.
+-/
 
 /-- Convert a natural number to a d-dimensional hypercube vertex via testBit -/
 def nat_to_cube (d : ℕ) (i : ℕ) : Cube d :=
@@ -1625,9 +2253,9 @@ lemma hb_total_coord_edges {R n k d : ℕ} (hk : d ≤ k) (hnk : k + d ≤ n)
     via multiple dimensions. In the Hamming Ball, this corresponds exactly to
     swapping two active symbols, yielding C_constant R - E_seq R overlaps.
 
-    This explicitly counts the 4-cycles in the Hamming Ball. It is mathematically
-    equivalent to the existential half of the Kruskal-Katona Theorem and requires
-    extremal set theory shadow operators to prove formally. -/
+    This counts external multiplicity excess in the Hamming Ball. It is not an
+    induced 4-cycle count, and no Kruskal--Katona equivalence is asserted; the
+    closed form is proved directly in CrossTop. -/
 def HBCrossCollisions (R n k d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n) : Prop :=
   cross_collisions (hamming_ball_subset R n k d hk hnk) + E_seq R = C_constant R
 
@@ -1678,41 +2306,44 @@ reduces to this) is open and is not addressed anywhere in this file; see
   The Arrangement Graph Boundary-Minimum Theorem.
   By squeezing the lower bound (via bridge lemmas) against the existence
   of a constructive witness (the Hamming ball), we establish the
-  **Full Isoperimetric Profile** of A(n,k) within the embeddable range
-  R ≤ 2^m — i.e. the exact minimum `external_neighbors` value, not
-  extraconnectivity itself (see the naming note above).
-  The lower bound hypothesis is `RestrictedLowerBound`, gated by the
-  hypercube embedding conditions.
+  **conditional** boundary profile of A(n,k) within the embeddable range.
+  The embedding condition makes the Hamming-ball witness available, but does
+  not prove a universal lower bound: that remains an explicit per-instance
+  premise, which is not established in general. This is a statement about
+  `external_neighbors`, not extraconnectivity itself (see the naming note above).
 -/
-theorem arrangement_boundary_minimum_of_cross (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k)
+theorem arrangement_boundary_minimum_of_cross_and_lower_bound_premise
+    (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_cond; omega
-  exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower R n k h_cond V' hR hnk⟩
+  exact ⟨exists_optimal_embedding R n k h_cond h_cross, fun V' hR => h_lower h_cond V' hR hnk⟩
 
 /--
-  COROLLARY: Globally Optimal Growth Strategy.
+  CONDITIONAL GROWTH-STRATEGY COROLLARY.
 
-  The "Squeeze" proof establishes that the Hamming Ball ordering is the
-  Globally Optimal Growth Strategy for subgraphs in A(n,k).
-  This provides the **Full Isoperimetric Profile** for the graph:
-  - The formula remains tight for every natural number R because the
-    Hamming Ball ordering maintains the maximum possible internal
-    "shielding" (defect minimization) at every step of growth (R → R+1).
-  - IMPLICATION: There is no "hidden" value of R where a non-standard
-    configuration (clique, path, etc.) can outperform the Hamming Ball.
+  Under the supplied per-instance lower-bound premise, this
+  composition returns the conditional boundary profile and Hamming-ball
+  witness. It does not establish an unconditional growth strategy or exclude
+  competing cliques, paths, Stars, or other topologies.
 -/
-theorem globally_optimal_growth_strategy_of_cross
+theorem globally_optimal_growth_strategy_of_cross_and_lower_bound_premise
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k)
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R)
     (h_cross : ∀ (d : ℕ) (hk : d ≤ k) (hnk : k + d ≤ n)
       (_hd : d = bit_length (R - 1)), HBCrossCollisions R n k d hk hnk) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R → external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧ external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) :=
-  let ⟨h_exists, h_univ⟩ := arrangement_boundary_minimum_of_cross R n k h_cond h_lower h_cross
+  let ⟨h_exists, h_univ⟩ :=
+    arrangement_boundary_minimum_of_cross_and_lower_bound_premise
+      R n k h_cond h_lower h_cross
   ⟨h_univ, h_exists⟩
 
 /-!
@@ -1720,7 +2351,7 @@ theorem globally_optimal_growth_strategy_of_cross
 -/
 
 /--
-  CONJECTURE 1: Uniqueness of the Hamming Ball Minimizer.
+  OPEN EQUALITY-CASE CONJECTURE (NOT USED BY THE CAPSTONE).
 
   `penalty_defect` (in `Arrangement/PenaltyExact.lean`) gives the *exact*,
   unconditional identity `|∂V₁| + (X₁+D₁) = |∂V₂| + (X₂+D₂) + ΔD·(n−k)` for any
@@ -1744,16 +2375,17 @@ theorem globally_optimal_growth_strategy_of_cross
   conjecture below remains a stronger, pointwise statement for each fixed
   `(R,n,k)`.
 
-  However, the exact boundary formula is `|N(V')| = U*(n-k) - X(V')`. If two graphs
+  However, the exact boundary formula is `|N(V')| = U*(n-k) - (X(V') + D(V'))`. If two graphs
   tie in unique roots `U`, the one that maximizes cross-collisions `X(V')` wins.
 
-  By the Kruskal-Katona theorem, the Hamming Ball strictly maximizes these 4-cycle
-  shadow overlaps. Thus, the collision constant `C_constant` acts as a
-  **Geometric Tie-Breaker**, mathematically isolating the Hamming Ball as the
-  strictly unique minimizer.
+  Any uniqueness or tie-breaking claim requires a separate extremal theorem;
+  it does not follow from the penalty identity or from Kruskal--Katona alone.
 
-  This conjecture formally states that any set achieving the minimum boundary
-  must be isomorphic to the Hamming Ball under the graph's automorphism group.
+  The blanket uniqueness statement is not established and is false for the
+  defect-maximization problem: a three-vertex triangle in one arrangement line
+  has the same defect as the three-vertex Boolean initial segment but is not
+  isomorphic to that path-shaped segment. Any boundary-minimizer equality
+  theorem needs additional hypotheses and a separate classification.
 -/
 def uniqueness_conjecture (R n k : ℕ) : Prop :=
   ∀ (V₁ V₂ : Finset (ArrVertex n k)),
@@ -1774,29 +2406,31 @@ def is_connected_subgraph (V' : Finset (ArrVertex n k)) : Prop :=
     Relation.ReflTransGen (fun x y => arr_adjacent x y ∧ x ∈ V' ∧ y ∈ V') u v
 
 /--
-  THE CONNECTED ISOPERIMETRIC SANDWICH
+  CONDITIONAL CONNECTED ISOPERIMETRIC SANDWICH
 
-  Computational enumeration reveals that the boundary of any Pareto-optimal
-  connected R-vertex subgraph is perfectly sandwiched between:
-  1. The Dense Limit: The Hamming Ball (Minimum boundary)
-  2. The Sparse Limit: The Star Graph K_{1, R-1} (Maximum boundary for an optimal tree)
+  The lower side is conditional on a per-instance lower-bound premise. The proposed sparse
+  upper side is retained only as a testable conjecture and is not used by the
+  capstone.
 
-  HALF 1: PROVEN.
-  The lower bound is automatically satisfied by our Capstone Theorem,
-  as the Hamming Ball universally bounds ALL subsets.
+  HALF 1: CONDITIONAL.
+  The lower bound follows only from the supplied premise for this instance;
+  the Hamming Ball does not universally bound
+  all subsets.
 -/
-theorem sandwich_lower_bound_proven (R n k : ℕ) (h_embed : can_embed_hypercube R n k)
+theorem sandwich_lower_bound_conditional (R n k : ℕ) (h_embed : can_embed_hypercube R n k)
     (V' : Finset (ArrVertex n k)) (hR : V'.card = R) (_hConn : is_connected_subgraph V')
-    (h_lower : RestrictedLowerBound R n k) :
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (W : Finset (ArrVertex n k)), W.card = R → k ≤ n →
+        external_neighbors W ≥ (R * k - E_seq R) * (n - k) - C_constant R) :
     (R * k - E_seq R) * (n - k) - C_constant R ≤ external_neighbors V' := by
   have hnk : k ≤ n := by obtain ⟨h1, _⟩ := h_embed; omega
   exact h_lower h_embed V' hR hnk
 
 /--
-  HALF 2: CONJECTURE.
-  The Upper Bound for Pareto-optimal sparse graphs. For the Star Graph,
-  the Defect is R-1, and Inclusion-Exclusion on the overlapping 2-paths
-  yields a collision constant exactly equal to the triangular numbers (R choose 2).
+  HALF 2: REFUTED AS STATED.
+  The path on four vertices in A(6,3) has boundary 22, while this proposed
+  right-hand side is 21. The definition is retained only as a historical
+  conjecture interface and must not be cited as a bound.
 -/
 def sandwich_upper_bound_conjecture (R n k : ℕ) : Prop :=
   ∀ V' : Finset (ArrVertex n k),
@@ -1810,8 +2444,10 @@ def sandwich_upper_bound_conjecture (R n k : ℕ) : Prop :=
 
   CONJECTURE 3: The Hypercube Fracture Gap.
 
-  For any connected subgraph of size R=2^d in A(n,k), the maximum internal edges
-  for a non-optimal topology is strictly less than E_opt - (d-2).
+  As encoded below, this conjecture quantifies over every connected
+  R=2^d subset of A(n,k); it has no triangle-free or separately specified
+  shape-class hypothesis. The paper-level fracture theorem is stronger and
+  applies to all subsets, but has not yet been formalized here.
   Specifically for R=8 (d=3), the gap between optimal (E=12) and the next connected
   topology (E=10) is 2, making E=11 mathematically impossible.
 -/

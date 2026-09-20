@@ -137,7 +137,7 @@ sets). These are host-specific computations, not a proof of general shellability
 or of the five-coordinate cap.
 
 Consequently, the Lean eventual-profile theorem gives \(\Phi(R)=H(R,n,k)\) for
-gate-open cells with \(m+1>2(R^2-R)\) unconditionally from the complete small
+gate-open cells with \(m+1>R(R-1)\) unconditionally from the complete small
 catalogues for R≤6. For 7≤R≤17 the same conclusion remains conditional on
 shellability, the active-coordinate cap, and completeness of this audit. This
 says nothing about smaller slack or directly about extra-connectivity.

@@ -1,10 +1,8 @@
 \section{Conclusion and Open Problems}
 \label{sec:conclusion}
 
-For $m = n - k < 5$, the recursive, single-coordinate branch construction of
-the star graph has long served as the presumptive optimal architecture for
-boundary minimization in arrangement graphs.  This paper shows that this
-structural dominance breaks down as the symbol pool grows.  At $A(10,5)$ with
+The recursive, single-coordinate Star is an obstruction family whose boundary
+comparison is controlled by $(m,j)$.  At $A(10,5)$ with
 $R = 26$ we exhibit an exact discrete counterexample: a $5$-dimensional binary
 hypercube slice attains boundary $\SliceBoundary{}$, strictly beating the
 canonical star's $\StarBoundary{}$ (Proposition~\ref{prop:crossover}).  The
@@ -27,12 +25,15 @@ the slice --- the target of $\HuntTarget{}$ --- remains open: we hold no
 feasible witness at or below it, only the certified floor, which is a moving
 record that advances as the core-guided search continues.
 
-These findings complement, rather than replace, the conditional exact-boundary
-framework developed in Sections~\ref{sec:defect}--\ref{sec:sandwich}: the
-algebraic defect framework and its Lean~4 formalization remain conditional on
-the Restricted Boundary Inequality (Proposition~\ref{prop:restricted_lower_bound}),
-valid in the hypercube-embedding regime $R \le 2^m$.  The crossover described
-here characterizes what happens when that regime is abandoned.
+The unconditional boundary result is the Hamming sandwich in
+Section~\ref{sec:hamming-sandwich}. It follows from the root-count estimate and
+collision charging and is formalized in Lean. The embedding condition ensures
+that the Hamming-ball comparison set exists; it does not imply optimality.
+For example, the full Star in $A(11,6)$ with $R=31$ satisfies the embedding
+conditions but has boundary $450$, below the Hamming value $476$. The finite
+crossover results are instances of the broader unresolved profile problem,
+not a universal safe-range criterion. The boundary profile alone does not
+determine extra-connectivity without a separate cut/component reduction.
 
 \textbf{Future work.}
 \begin{itemize}
@@ -42,11 +43,9 @@ reached via core-guided search that archive over a million learned clauses;
 integrating graph-specific symmetry breaking into the branching heuristics and
 deploying distributed solving should push the floor toward the slice, or
 discover an incumbent at or below $\HuntTarget{}$.
-\item \textbf{Generalizing the crossover.} It remains to lift the exact
-$A(10,5)$ observation to a theorem: we conjecture that for every $m \ge 5$ and
-sufficiently large $k$ there is a subset volume $R$ at which an orthogonal
-hypercube embedding (or a generalized fractional Hamming slice) strictly
-outperforms the canonical star.
+\item \textbf{Mapping the shoreline.} It remains to characterize the exact
+$(m,j)$ region in which a full Star beats or loses to the Hamming-ball value,
+and to determine whether other topology families produce earlier obstructions.
 \item \textbf{Interconnection networks.} The arrangement graph is a highly
 symmetric topology used in parallel computing.  The shift from hierarchical to
 distributed optimal packings as the alphabet scales bears directly on fault

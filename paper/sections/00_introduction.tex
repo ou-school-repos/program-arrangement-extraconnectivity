@@ -1,73 +1,50 @@
 \section{Introduction}
 
-The arrangement graph $A(n,k)$, introduced by Day and Tripathi
-\cite{day1992arrangement}, models interconnection networks for multiprocessor
-systems. A vertex of $A(n,k)$ is an injective sequence of $k$ symbols drawn from
-an alphabet of size $n$, and two vertices are adjacent if and only if they
-differ in exactly one coordinate.
+The arrangement graph $A(n,k)$ has as vertices the injective words of length
+$k$ over an alphabet of size $n$; two vertices are adjacent when they differ
+in exactly one coordinate. It is a standard model for interconnection
+networks. We study the fixed-volume external vertex-boundary problem: for a
+given $R$, how small can $|N(S)|$ be among $R$-vertex subsets $S$?
 
-The $g$-extraconnectivity $\kappa_g(G)$ of a graph $G$ is the minimum number of
-vertices whose removal disconnects $G$ into components each containing more than
-$g$ vertices. The ``linearly many faults'' property, established for arrangement
-graphs by Cheng, Lipt\'ak, and Yuan \cite{cheng2013linearly}, shows that under
-sufficiently many faults the graph either remains connected or splits into one
-large component with the remaining components totaling at most $g$ vertices---a
-result that is tight only for small parameters and asymptotically tight
-thereafter. To obtain \emph{exact} $(R{-}1)$-extraconnectivity one must reduce
-the problem to minimizing the external boundary over connected $R$-element
-subsets; this reduction is proposed here but remains open in full generality
-(Section~\ref{sec:defect}). Cheng, Lipt\'ak, and Tian
-\cite{cheng2022extraconnectivity} computed the corresponding small-$(g)$
-extraconnectivity cases of $A(n,k)$ for $g \le 6$, with computer assistance;
-this paper develops a conditional closed-form framework for all $R$, subject to
-the two explicit propositions stated below. This vertex-fault metric serves as a
-natural dual to the edge-fault matching preclusion metrics recently explored for
-regular interconnection networks in \cite{cheng2025higher}.
+This problem is related to, but distinct from, $g$-extraconnectivity
+$\kappa_g(G)$, the minimum size of a vertex cut whose removal leaves every
+component larger than $g$. A small-boundary set supplies a candidate cut only
+when deleting its external boundary has the required component sizes; a
+general converse reduction is also needed. We do not claim that reduction or
+an all-parameter formula for $\kappa_g(A(n,k))$ here. Existing work on
+arrangement-graph extra-connectivity and fault diagnosis provides context for
+these questions~\cite{cheng2022extraconnectivity,cheng2013linearly}.
 
-Under Propositions~\ref{prop:restricted_lower_bound} and~\ref{prop:hb-eval}, we show that for
-all $R \ge 2$ with $n - k \ge \lceil \log_2 R \rceil$ and
-$k \ge \lceil \log_2 R \rceil$, the minimum external boundary of any
-$R$-element subset is bounded below by an explicit function of $R$, $k$, and
-$(n-k)$, and that this bound is achieved by the lexicographic Hamming Ball.
-The full
-statement appears as Theorem~\ref{thm:main}.
+Our main unconditional result is a Hamming comparison with an explicit
+volume-only additive error. The coordinate-root count gives the Hamming
+linear slope, while a global overlap-charging argument controls the loss from
+multiple coordinate descriptions of the same external neighbor. When a
+Boolean Hamming ball embeds, it provides a witness attaining the comparison
+value. Thus the minimum boundary lies in a proved interval, but need not equal
+the Hamming value.
 
-Our approach proceeds in three steps:
+The distinction is essential. A full radius-one Star in $A(11,6)$ has
+volume $31$ and boundary $450$, while the embedded Hamming-ball comparison is
+$476$. Thus the Hamming value is not the exact minimum even under the
+embedding gate. The additive allowance in the sandwich is not a
+technical artifact that can be deleted without further hypotheses.
+
+The paper develops the following components:
 \begin{itemize}
-\item \textbf{Failure of Geometric Compression (Section~\ref{sec:nogo}):} In
-hypercubes, shifting a vertex to use a smaller symbol preserves the boundary. In
-$A(n,k)$, the target symbol may already appear at another coordinate of the same
-vertex, so the shift can either violate injectivity ($1324 \xrightarrow{4\to 1}
-1321$) or sever defect links ($\{13,\,23,\,43\}$ form a clique along root $\_3$;
-shifting $3\!\to\!1$ fixes $13$ and breaks two adjacencies).
-\item \textbf{The Algebraic Defect Framework (Section~\ref{sec:defect}):}
-Instead of moving vertices geometrically, we count the coordinate-aligned lines
-(roots) that the subset touches. Each root extends to exactly $(n-k+1)$
-vertices, so the boundary factors cleanly into a term proportional to $(n-k)$
-minus a correction that depends only on the subset's internal defect and
-cross-collisions---not on $n$ or $k$.
-\item \textbf{The Fixed-Topology Asymptotic Penalty
-(Section~\ref{sec:sandwich}):} For any fixed sub-optimal topology, the defect
-shortfall contributes a linear-in-$(n-k)$ term while the remaining correction
-stays topology-dependent but dimension-independent; consequently no sub-optimal
-topology can catch up once $n-k$ is large enough.
+\item We formalize the coordinate-root boundary identity and prove the
+  hypercube-derived defect bound for arbitrary subsets.
+\item We prove, using Bonferroni and a global witness-pair injection, a
+  dimension-independent collision bound and the resulting unconditional
+  Hamming sandwich (Section~\ref{sec:hamming-sandwich}).
+\item We retain the fixed-topology penalty calculation as an asymptotic
+  comparison tool, while distinguishing it from a classification of all
+  extremizers or a uniform phase diagram.
 \end{itemize}
-The second and third of these are unconditional theorems, proved outright and
-mechanized in Lean; only their combination into the single exact closed form of
-Theorem~\ref{thm:main}, valid at every finite $R$ rather than merely in the
-large-$(n-k)$ limit, depends on the two propositions introduced below.
 
-The conditional exact boundary formula of Theorem~\ref{thm:main} has potential
-consequences for the design and reliability analysis of fault-tolerant
-distributed systems, pending closure of the two open propositions. In
-multiprocessor interconnects and data center network architectures, the
-closed-form boundary formula would provide system designers with the precise
-redundancy requirements needed to guarantee that any $R$-node workgroup survives
-catastrophic link failures, eliminating the wasted capacity inherent to looser
-bounds. Furthermore, within distributed consensus protocols, this exact boundary
-would quantify the minimum threshold of faulty nodes required to partition a
-Byzantine fault-tolerant (BFT) quorum. Beyond these practical systems
-applications, our Algebraic Defect Framework successfully extends Harper's
-classical edge-isoperimetric machinery~\cite{harper1966optimal} into
-permutation-constrained spaces, offering a new analytical baseline for
-combinatorial optimization and coding theory on Cayley graphs.
+The Lean development checks the boundary identity, defect estimate, collision
+charging, and sandwich theorem. The remaining extremal question is to
+characterize the lower envelope of Hamming-like, Star-like, and intermediate
+configurations, especially at volumes comparable to $k(n-k)$. Connecting
+that profile to extra-connectivity is a separate open task. The underlying
+coordinate-root viewpoint is inspired by classical edge-isoperimetric
+methods, including Harper's theorem for the cube~\cite{harper1966optimal}.

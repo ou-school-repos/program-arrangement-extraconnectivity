@@ -177,38 +177,79 @@ closes the induction. Mechanically verified in Lean~4
 (\texttt{sum\_unique\_roots\_lower\_bound}).
 \end{proof}
 
-Instead of relying on a dimension-independent bound on the combined waste (which
-is sensitive to $n-k$ for sub-optimal topologies), the global boundary
-minimality is captured by the following universal boundary inequality. Together
-with the evaluation of the Hamming Ball, these two propositions form our
-extremal framework.
+The exact lower-bound inequality below fails in general, including under its
+embedding conditions.
 
-\begin{proposition}[Restricted Boundary Inequality]\label{prop:restricted_lower_bound}
+\begin{proposition}[Refuted restricted Hamming-boundary inequality]\label{prop:restricted_lower_bound}
 	Under the hypercube embedding conditions $k \ge \lceil \log_2 R \rceil$ and
 	$n-k \ge \lceil \log_2 R \rceil$, every subset $V' \subseteq V(A(n,k))$ of
 	cardinality $R$ satisfies
 	\begin{equation}\label{eq:restricted-bound}
 		\left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
 	\end{equation}
+The full Star in $A(11,6)$ at $R=31$ satisfies the embedding conditions but
+has boundary $450<476$, so this statement is false even in its gated range.
 \end{proposition}
 
 \begin{remark}[Scope of the restricted bound]
-The unrestricted form of this inequality (without the embedding conditions)
-fails: in $A(10,8)$, the full Star with $R=17$ has boundary $168$, below
-the target $169$. However, the embedding conditions $R \le 2^m$ restrict
-$R$ to a range that lies entirely below the failure threshold for $m \le 4$.
-Specifically, $2^m < 1 + j_{\mathrm{fail}} \cdot m$ for $m \le 4$, where
-$j_{\mathrm{fail}}$ is the cumulative-slack failure point of the full
-Star. Computational verification confirms the restricted bound for all
-parameters with $m \le 4$; the proof for general $m$ remains open.
+The unrestricted form fails in $A(10,8)$ at $R=17$. More importantly, the
+embedding conditions themselves are insufficient: the full Star in $A(11,6)$
+at $R=31$ satisfies $\lceil\log_2 31\rceil=5\le6$ and $6+5\le11$, but has
+boundary $450$ while the proposed lower bound is $476$. The full Star in
+$A(12,6)$ at $R=37$ has slack $-57$ as well. Thus the embedding conditions
+motivate the construction but are not a safe-range criterion.
 \end{remark}
 
-\begin{proposition}[Hamming Ball Evaluation]\label{prop:hb-eval}
+\begin{remark}[Full-Star obstruction shoreline]
+The formula-only Star diagnostic gives a sharper obstruction map without
+constructing the factorial-sized arrangement graph.  For the radius-one Star
+with $j$ active branches and $m=n-k$,
+\begin{equation}
+ R=1+jm,\qquad D(S_j)=jm,\qquad
+ X(S_j)=m(m-1)\frac{j(j-1)}{2}.
+\end{equation}
+Consequently,
+\begin{equation}
+ Q_m(S_j)=m(m-1)\frac{j(j-1)}{2}+jm(m+1).
+\end{equation}
+The observed first negative pair margins and first negative boundary slacks are
+shown below.  The values are independent of $k$ when $m$ and $j$ are fixed;
+the volume is $R=1+jm$, while $k$ only constrains the construction through
+$j\le k$.
+
+\begin{center}
+\begin{tabular}{c|c|c}
+ $m$ & first negative pair margin & first negative boundary slack \\
+ \hline
+ 2 & $j=7$, $R=15$ & $j=8$, $R=17$ \\
+ 3 & $j=6$, $R=19$ & $j=6$, $R=19$ \\
+ 4 & $j=4$, $R=17$ & $j=6$, $R=25$ \\
+ 5 & $j=4$, $R=21$ & $j=6$, $R=31$ \\
+ 6 & $j=3$, $R=19$ & $j=6$, $R=37$ \\
+ 8 & $j=4$, $R=33$ & $j=6$, $R=49$ \\
+ 10 & $j=4$, $R=41$ & $j=6$, $R=61$ \\
+ 12 & $j=6$, $R=73$ & $j=6$, $R=73$ \\
+ 15 & $j=5$, $R=76$ & $j=6$, $R=91$ \\
+ 20 & $j=4$, $R=81$ & $j=7$, $R=141$ \\
+\end{tabular}
+\end{center}
+
+This table is an obstruction map, not a proof that the Star thresholds are
+universal thresholds for arbitrary subsets.  In particular, it does not prove
+that every set below the Star threshold satisfies the restricted boundary
+inequality.  A proof of such a safe-region statement still requires a
+compression or extremal argument.  Pair removal also has four Star pair
+orbits: center--leaf, same-branch leaves, and different-branch leaves with
+equal or unequal unused symbols.  Removing a pair need not produce the pure
+Star $S_{j-2}$, so the recurrence must retain these local configurations.
+\end{remark}
+
+\begin{theorem}[Hamming Ball Evaluation]\label{prop:hb-eval}
 	The lexicographic Hamming Ball $\mathrm{HB}_R$ achieves equality:
 	\begin{equation}\label{eq:hb-eval}
 		X(\mathrm{HB}_R) + \Eseq(R) = \Cconst(R).
 	\end{equation}
-\end{proposition}
+\end{theorem}
 
 \begin{lemma}[Deficit-compensated collision reduction]\label{lem:collision-reduction}
 Let $m=n-k$, let $R=|V'|$, and write
@@ -281,7 +322,10 @@ swallowed slots form a subset of $P_i\setminus Q_i$, giving
 $L_{c,i}\le|P_i\setminus Q_i|=|P_i|-|Q_i|=|P_i|-R_i$.
 \end{proof}
 
-The remaining step to resolve Proposition~\ref{prop:restricted_lower_bound} via this route is a coverage-avoidance inequality bounding $L_c$. This inequality remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational} are diagnostic evidence only.
+The remaining step to resolve a genuinely restricted version of this claim via
+this route is a coverage-avoidance inequality bounding $L_c$. This inequality
+remains open; the finite CP-SAT searches reported in Appendix~\ref{app:computational}
+are diagnostic evidence only.
 
 \begin{remark}
 These propositions encode the extremal content of a vertex-isoperimetric
@@ -304,20 +348,20 @@ separately over \emph{all} (including disconnected) $R$-vertex subsets, for
 $R \le 6$ across 26 parameter rows of $A(n,k)$ (up to $3.24\times10^9$ subsets
 in a single row), with no counterexample found in either search. Because
 both searches are bounded in $R$ and in $m$, this remains only partial computational
-evidence; the unrestricted form (without embedding conditions) is
-refuted for general $R$ by the full-Star counterexample, but the restricted form
-under $R \le 2^m$ holds throughout the embeddable range for $m \le 4$.
+evidence. The full-Star counterexamples show that the embedding condition
+$R \le 2^m$ is not sufficient once $m \ge 5$; the restricted form is therefore
+false in general, not an open hypothesis or an established safe-range theorem. The tested cases
+with $m \le 4$ provide evidence only over the explicitly enumerated ranges.
 Conceptually,
 Section~\ref{sec:sandwich}'s asymptotic-dominance argument explains why, once
 $n-k$ is large relative to the fixed cluster size $R$, no sub-optimal topology's
 savings in cross-collisions can outweigh its linear-in-$(n-k)$ penalty for
 missing defect --- an argument that holds regardless of $R$, but which by itself
-does not establish the exact universal bound at every finite scale; that
-stronger, exact statement is exactly the content of
-Proposition~\ref{prop:restricted_lower_bound} above. Why the exact statement resists the
-obvious induction arguments --- and what would actually be needed to close it
---- is discussed in detail in Section~\ref{sec:funnel} and
-Appendix~\ref{app:alt-strategies}. A further gap, independent of these two
+does not establish a stronger exact lower bound at every finite scale; that
+candidate is refuted by Proposition~\ref{prop:restricted_lower_bound}. The
+remaining extremal classification problem and its methods are discussed in
+Section~\ref{sec:funnel} and
+Appendix~\ref{app:alt-strategies}. A further gap, independent of these
 propositions, is the \emph{boundary-to-extraconnectivity reduction}: even with
 an exact minimum-boundary theorem, one must still show that (i)~deleting the
 Hamming ball's external boundary leaves every remaining component with at least
@@ -325,56 +369,52 @@ $R$~vertices, and (ii)~every minimum $(R{-}1)$-extra cut can be reduced to
 isolating one connected component of exactly $R$~vertices---minimizing over
 connected $R$-sets whose boundary deletion is itself a valid $(R{-}1)$-extra
 cut---without increasing the cut. This reduction is not addressed in the Lean
-formalization, whose capstone proves only a statement about external-neighbor
-sets of $R$-element subsets. In the Lean 4 formalization, rather than declaring
-these propositions as global axioms, we express this dependency by
-parameterizing the public capstone theorem with the explicit
-\texttt{RestrictedLowerBound} hypothesis, active under the hypercube embedding conditions.
-The Hamming-ball collision evaluation
-is supplied by the direct Lean proof. This cleanly isolates the classical
-extremal set theory from the novel algebraic machinery
-while ensuring that the compiled theorems are completely transparent, verified,
-and free of raw, uninstantiated axiom commands.
+formalization. The active Lean capstone proves the additive-error boundary
+estimate and exact evaluation of the Hamming-ball candidate; it assumes no
+global exact-boundary hypothesis. No extra-connectivity conclusion follows
+without the separate component-size and converse-cut arguments.
 \end{remark}
 
-Combining these propositions with the boundary decomposition yields our main
-result:
+\begin{proposition}[Finite computer-assisted certificates]\label{prop:finite-certificates}
+The certificate uses the following explicitly stated slice inequalities.  For a
+coordinate split with $U$ occupied projections, defect $d=R-U$, and $s$
+nonempty slices, its interface terms satisfy
+\begin{align}
+ \sum_c L_c &\le U\min(m,s-1)-d, \label{eq:line-slot-capacity}\\
+ Q_m'(S_c)+L_c &\le m(k-1)|S_c|. \label{eq:local-capacity}
+\end{align}
+The first inequality is the line-slot capacity bound; the second is the local
+boundary cap.  Since the same identity holds for every coordinate and
+$\sum_p d_p=D(S)\le \Eseq(R)$, the per-coordinate relaxation is combined using
+the upper concave envelope at average defect $\Eseq(R)/k$.  These are the
+mathematical inputs to the C++ relaxation; they are not currently Lean-checked.
 
-\begin{theorem}[Conditional Minimum-Boundary Theorem]\label{thm:main}
-\textup{(Conditional on Propositions~\ref{prop:restricted_lower_bound}
-and~\ref{prop:hb-eval}.)} Assume the hypercube embedding conditions
-$k \ge \lceil \log_2 R \rceil$ and $n-k \ge \lceil \log_2 R \rceil$.
-Then for all $R \ge 2$:
-	\begin{enumerate}
-\item[\textup{(i)}] \textbf{Lower bound.} Every $R$-element subset $V'
-\subseteq V(A(n,k))$ satisfies
-		      \begin{equation}\label{eq:lower-bound}
-			      \left|\extbd(V')\right| \ge \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
-		      \end{equation}
-\item[\textup{(ii)}] \textbf{Achievability.} The lexicographic Hamming Ball
-$\mathrm{HB}_R$ achieves this bound with equality:
-		      \begin{equation}\label{eq:hb-boundary}
-			      \left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R)
-		      \end{equation}
-where $\Eseq(R)$ and $\Cconst(R)$ are as in Definition~2.5. Writing $d = \lceil
-\log_2 R \rceil$, the correction constant admits the closed form
-		      \begin{equation}\label{eq:cconst}
-			      \Cconst(R) = R(d + 1) - 2^d - \Eseq(R).
-		      \end{equation}
-	\end{enumerate}
-The embedding condition ensures the graph is large enough to fit a
-$d$-dimensional hypercube.
-\end{theorem}
+The C++ slice upper bound and exhaustive origin-pinned oracle establish the
+following finite cases, subject to the stated slice inequalities and the
+independent exhaustive checks. Every tested volume is certified for
+$A(n,2)$ with $n\le14$. For $k=3$, the certificate covers every volume in
+$A(5,3)$ except $R=5,6,7$, every volume in $A(6,3)$, $A(7,3)$, and $A(8,3)$
+except $R=5$; the omitted rows are settled by exhaustive enumeration. In the
+tested cases the exact values satisfy $Q_m(S)\le G_m(|S|)$, with equality in
+the reported tight rows. These are finite computer-assisted results, not a
+proof of the open restricted hypothesis.
+\end{proposition}
 
-\begin{corollary}[Conditional Extraconnectivity Formula]\label{cor:extraconnectivity}
-\textup{(Conditional on Theorem~\ref{thm:main} and the
-boundary-to-extraconnectivity reduction described in the remark following
-Propositions~\ref{prop:restricted_lower_bound}--\ref{prop:hb-eval}.)} When $n - k \ge \lceil
-\log_2 R \rceil$ and $k \ge \lceil \log_2 R \rceil$,
-	\begin{equation}\label{eq:extraconnectivity}
-		\kappa_{R-1}(A(n,k)) = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R).
-	\end{equation}
+\begin{corollary}[Finite unconditional instances]
+For the finite graphs covered by Proposition~\ref{prop:finite-certificates},
+the certified inequality together with the Hamming-ball evaluation gives the
+exact minimum external boundary at every certified volume.  In particular,
+the reported rows include all tested volumes of $A(n,2)$ for $3\le n\le14$,
+all tested volumes of $A(6,3)$, $A(7,3)$, and $A(8,3)$, and the non-exceptional
+volumes of $A(5,3)$; the omitted $R=5,6,7$ cases in $A(5,3)$ and $R=5$ cases
+in the other $k=3$ rows are supplied by the exhaustive oracle.
+This is a computer-assisted result, not a Lean theorem.
 \end{corollary}
+
+The unconditional boundary result is Theorem~\ref{thm:hamming-sandwich} in
+Section~\ref{sec:hamming-sandwich}: it gives an additive-error lower bound
+for every fixed-volume set and an exact Hamming-ball witness on the embedding
+range. It asserts neither exact optimality nor a formula for $\kappa_g$.
 
 \begin{remark}[Closed-form evaluation of $\Cconst$]
 The summation $\sum_{i=1}^{R-1} \lceil \log_2(i+1) \rceil$ admits a closed form
@@ -400,20 +440,19 @@ equation~\eqref{eq:boundary} for $\mathrm{HB}_R$, where $U(\mathrm{HB}_R) = R
 	\begin{equation}
 		\left|\extbd(\mathrm{HB}_R)\right| = \big(R \cdot k - \Eseq(R)\big) \cdot (n - k) - \Cconst(R),
 	\end{equation}
-meaning the lexicographic Hamming Ball achieves the restricted lower bound with
-equality. The embedding condition ensures $A(n,k)$ has a large enough alphabet
-and enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
+meaning the lexicographic Hamming Ball has the displayed boundary. This
+calculation is an exact evaluation of the candidate, not an optimality claim.
+The embedding condition ensures $A(n,k)$ has a large enough alphabet and
+enough positions to realize $\mathrm{HB}_R$ as an induced subgraph.
 \end{proof}
 
 \begin{corollary}[System-Level Diagnosability]\label{cor:diagnosis}
 Under the PMC and MM* models, the $g$-extra diagnosability $t_g(G)$ is derived
 from the $g$-extra connectivity via $t_g(G) = \kappa_g(G) + g + 1$ when $|V(G)|
-\ge 2g + 3$ \cite{cheng2023augmented}. Conditional on Theorem~\ref{thm:main},
-the additional reduction from minimum $R$-set boundary to
-$(R{-}1)$-extraconnectivity, and the standard size hypotheses of the relevant
-PMC/MM* diagnosis theorem, the exact $(R{-}1)$-extra diagnosability of the
-arrangement graph follows, extending recent diagnostic advances (e.g., adaptive
-local diagnosis \cite{zhang2026three}) to arbitrary fault boundaries.
+\ge 2g + 3$ \cite{cheng2023augmented}. The boundary sandwich does not determine
+$\kappa_g$ and therefore gives no exact extra-diagnosability formula without
+an additional boundary-to-connectivity theorem and the hypotheses of the
+diagnosis model.
 \end{corollary}
 
 \begin{figure}[H]

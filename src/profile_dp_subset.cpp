@@ -11,11 +11,14 @@
 #include <iomanip>
 #include <iostream>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "arrangement_core.hpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -23,6 +26,7 @@
 
 namespace {
 
+using namespace arrangement;
 using boost::multiprecision::cpp_int;
 
 cpp_int falling_factorial(const int n, const int k) {
@@ -44,6 +48,7 @@ cpp_int raw_tree_nodes(const int vertices, const int target,
     return total;
 }
 
+#if 0 // Shared geometry is provided by arrangement_core.hpp.
 struct Instance {
     int n;
     int k;
@@ -149,22 +154,6 @@ std::vector<Automorphism> origin_stabilizer(const Instance &instance) {
 std::vector<int> canonical_key(const std::vector<int> &subset,
                                const Instance &instance,
                                const std::vector<Automorphism> &stabilizer) {
-    // Ordered pairs of injective words are classified by their equality
-    // pattern.  After using vertex transitivity to fix the first vertex,
-    // coordinate and symbol permutations can map any pair with the same
-    // number of matching coordinates to one another.  This avoids scanning
-    // the full stabilizer for the R=2 stress test.
-    if (subset.size() == 2) {
-        int matching_coordinates = 0;
-        for (int position = 0; position < instance.k; ++position) {
-            matching_coordinates +=
-                instance.vertices[subset[0]][position] ==
-                        instance.vertices[subset[1]][position]
-                    ? 1
-                    : 0;
-        }
-        return {-2, matching_coordinates};
-    }
     if (subset.size() == 1)
         return {-1};
 
@@ -211,9 +200,54 @@ std::vector<int> canonical_key(const std::vector<int> &subset,
     return best;
 }
 
+bool is_isomorphic(const std::vector<int> &subset,
+                   const std::vector<int> &target, const Instance &instance,
+                   const std::vector<Automorphism> &stabilizer) {
+    if (target.size() == 1 && target[0] == -1)
+        return subset.size() == 1;
+    return std::any_of(subset.begin(), subset.end(), [&](const int anchor) {
+        std::vector<int> shift(instance.n);
+        std::vector<bool> used(instance.n, false);
+        for (int position = 0; position < instance.k; ++position) {
+            shift[instance.vertices[anchor][position]] = position;
+            used[instance.vertices[anchor][position]] = true;
+        }
+        int next_symbol = instance.k;
+        for (int symbol = 0; symbol < instance.n; ++symbol) {
+            if (!used[symbol])
+                shift[symbol] = next_symbol++;
+        }
+
+        std::vector<int> shifted;
+        shifted.reserve(subset.size());
+        for (const int vertex : subset) {
+            int code = 0;
+            for (int position = 0; position < instance.k; ++position)
+                code = instance.n * code +
+                       shift[instance.vertices[vertex][position]];
+            shifted.push_back(instance.index.at(code));
+        }
+
+        return std::any_of(stabilizer.begin(), stabilizer.end(),
+                           [&](const Automorphism &automorphism) {
+                               std::vector<int> mapped;
+                               mapped.reserve(shifted.size());
+                               std::transform(shifted.begin(), shifted.end(),
+                                              std::back_inserter(mapped),
+                                              [&](const int vertex) {
+                                                  return automorphism.apply(
+                                                      vertex, instance);
+                                              });
+                               std::sort(mapped.begin(), mapped.end());
+                               return mapped == target;
+                           });
+    });
+}
+
 std::uint64_t bit_mask(const int bit) { return std::uint64_t{1} << (bit % 64); }
 
 int word_index(const int bit) { return bit / 64; }
+#endif
 
 struct ProfileState {
     const Instance &instance;
@@ -225,6 +259,18 @@ struct ProfileState {
     int selected_count = 0;
     int boundary_size = 0;
     int total_incidences = 0;
+
+    struct Invariant {
+        int boundary = 0;
+        int incidences = 0;
+        std::vector<std::vector<int>> root_signature;
+
+        bool operator==(const Invariant &other) const {
+            return boundary == other.boundary &&
+                   incidences == other.incidences &&
+                   root_signature == other.root_signature;
+        }
+    };
 
     explicit ProfileState(const Instance &graph)
         : instance(graph), selected((graph.vertices.size() + 63) / 64, 0),
@@ -321,21 +367,35 @@ struct ProfileState {
                          coordinate_max, 0});
     }
 
-    std::vector<std::uint64_t> exact_key() const {
-        std::vector<std::uint64_t> key = selected;
-        for (const auto &roots : active_roots)
-            key.insert(key.end(), roots.begin(), roots.end());
-        key.insert(key.end(), boundary.begin(), boundary.end());
-        return key;
+    Invariant invariant() const {
+        Invariant result{boundary_size, total_incidences, {}};
+        result.root_signature.reserve(instance.k);
+        for (const auto &roots : root_count) {
+            std::vector<int> signature;
+            std::copy_if(roots.begin(), roots.end(),
+                         std::back_inserter(signature),
+                         [](const int count) { return count > 0; });
+            std::sort(signature.begin(), signature.end());
+            result.root_signature.push_back(std::move(signature));
+        }
+        std::sort(result.root_signature.begin(), result.root_signature.end());
+        return result;
     }
 };
 
-struct VectorHash {
-    std::size_t operator()(const std::vector<int> &key) const {
+struct InvariantHash {
+    std::size_t operator()(const ProfileState::Invariant &key) const {
         std::size_t hash = 1469598103934665603ULL;
-        for (const int value : key) {
+        const auto combine = [&hash](const int value) {
             hash ^= static_cast<std::size_t>(value);
             hash *= 1099511628211ULL;
+        };
+        combine(key.boundary);
+        combine(key.incidences);
+        for (const auto &signature : key.root_signature) {
+            for (const int value : signature)
+                combine(value);
+            combine(-1);
         }
         return hash;
     }
@@ -345,11 +405,18 @@ struct SearchStats {
     std::uint64_t nodes = 0;
     std::uint64_t bound_prunes = 0;
     std::uint64_t cache_hits = 0;
+    std::vector<std::uint64_t> nodes_by_depth;
+    std::vector<std::uint64_t> bound_prunes_by_depth;
+    std::uint64_t bucket_misses = 0;
+    std::uint64_t bucket_iso_matches = 0;
+    std::uint64_t bucket_iso_misses = 0;
+    double canonical_seconds = 0.0;
+    double isomorphism_seconds = 0.0;
 };
 
 struct ProgressReporter {
     std::atomic<std::uint64_t> nodes{0};
-    std::uint64_t interval = 10'000'000;
+    std::uint64_t interval = 25'000'000;
     long double expected_nodes = 0.0L;
     std::chrono::steady_clock::time_point started =
         std::chrono::steady_clock::now();
@@ -361,7 +428,8 @@ struct ProgressReporter {
         const double seconds = std::chrono::duration<double>(
                                    std::chrono::steady_clock::now() - started)
                                    .count();
-        const double rate = seconds > 0.0 ? count / seconds : 0.0;
+        const double rate =
+            seconds > 0.0 ? static_cast<double>(count) / seconds : 0.0;
         const long double percent =
             expected_nodes > 0.0L ? 100.0L * count / expected_nodes : 0.0L;
 #ifdef _OPENMP
@@ -373,20 +441,50 @@ struct ProgressReporter {
     }
 };
 
-void search(const Instance &instance, ProfileState &state,
-            std::vector<int> &chosen, const int target, int &best,
-            std::unordered_set<std::vector<int>, VectorHash> &seen,
-            SearchStats &stats, const std::vector<Automorphism> &stabilizer,
-            ProgressReporter *progress) {
+void search(
+    const Instance &instance, ProfileState &state, std::vector<int> &chosen,
+    const int target, int &best,
+    std::unordered_map<ProfileState::Invariant, std::vector<std::vector<int>>,
+                       InvariantHash> &seen,
+    SearchStats &stats, const std::vector<Automorphism> &stabilizer,
+    ProgressReporter *progress) {
     if (state.optimistic_bound(target) >= best) {
         ++stats.bound_prunes;
+        ++stats.bound_prunes_by_depth[state.selected_count];
         return;
     }
+    const ProfileState::Invariant signature = state.invariant();
+    auto bucket_it = seen.find(signature);
+    if (bucket_it != seen.end()) {
+        const auto iso_started = std::chrono::steady_clock::now();
+        if (std::any_of(bucket_it->second.begin(), bucket_it->second.end(),
+                        [&](const auto &key) {
+                            return is_isomorphic(chosen, key, instance,
+                                                 stabilizer);
+                        })) {
+            stats.isomorphism_seconds +=
+                std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                              iso_started)
+                    .count();
+            ++stats.bucket_iso_matches;
+            ++stats.cache_hits;
+            return;
+        }
+        stats.isomorphism_seconds +=
+            std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                          iso_started)
+                .count();
+        ++stats.bucket_iso_misses;
+    } else {
+        ++stats.bucket_misses;
+    }
+    const auto canonical_started = std::chrono::steady_clock::now();
     const std::vector<int> key = canonical_key(chosen, instance, stabilizer);
-    if (!seen.insert(key).second) {
-        ++stats.cache_hits;
-        return;
-    }
+    stats.canonical_seconds +=
+        std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                      canonical_started)
+            .count();
+    seen[signature].push_back(key);
     if (state.selected_count == target) {
         best = std::min(best, state.boundary_size);
         return;
@@ -398,6 +496,7 @@ void search(const Instance &instance, ProfileState &state,
         state.add(vertex);
         chosen.push_back(vertex);
         ++stats.nodes;
+        ++stats.nodes_by_depth[state.selected_count];
         if (progress != nullptr)
             progress->record(state.selected_count);
         search(instance, state, chosen, target, best, seen, stats, stabilizer,
@@ -415,11 +514,12 @@ int available_threads() {
 #endif
 }
 
-void search_parallel(const Instance &instance, const int target, int &best,
-                     std::unordered_set<std::vector<int>, VectorHash> &seen,
-                     SearchStats &stats,
-                     const std::vector<Automorphism> &stabilizer,
-                     const int thread_count, ProgressReporter *progress) {
+void search_parallel(
+    const Instance &instance, const int target, int &best,
+    std::unordered_map<ProfileState::Invariant, std::vector<std::vector<int>>,
+                       InvariantHash> &seen,
+    SearchStats &stats, const std::vector<Automorphism> &stabilizer,
+    const int thread_count, ProgressReporter *progress) {
     // Vertex transitivity lets us pin one vertex without changing the
     // optimum, giving independent second-vertex branches to the workers.
     std::vector<int> origin(instance.k);
@@ -448,9 +548,14 @@ void search_parallel(const Instance &instance, const int target, int &best,
         state.add(origin_id);
         state.add(second_vertex);
         SearchStats local_stats;
-        std::unordered_set<std::vector<int>, VectorHash> local_seen;
+        std::unordered_map<ProfileState::Invariant,
+                           std::vector<std::vector<int>>, InvariantHash>
+            local_seen;
         int local_best = INT_MAX;
+        local_stats.nodes_by_depth.assign(target + 1, 0);
+        local_stats.bound_prunes_by_depth.assign(target + 1, 0);
         local_stats.nodes = 1;
+        ++local_stats.nodes_by_depth[2];
         if (progress != nullptr)
             progress->record(2);
         search(instance, state, chosen, target, local_best, local_seen,
@@ -463,7 +568,29 @@ void search_parallel(const Instance &instance, const int target, int &best,
             stats.nodes += local_stats.nodes;
             stats.bound_prunes += local_stats.bound_prunes;
             stats.cache_hits += local_stats.cache_hits;
-            seen.insert(local_seen.begin(), local_seen.end());
+            stats.bucket_misses += local_stats.bucket_misses;
+            stats.bucket_iso_matches += local_stats.bucket_iso_matches;
+            stats.bucket_iso_misses += local_stats.bucket_iso_misses;
+            stats.canonical_seconds += local_stats.canonical_seconds;
+            stats.isomorphism_seconds += local_stats.isomorphism_seconds;
+            for (int depth = 0; depth <= target; ++depth)
+                stats.nodes_by_depth[depth] +=
+                    local_stats.nodes_by_depth[depth];
+            for (int depth = 0; depth <= target; ++depth)
+                stats.bound_prunes_by_depth[depth] +=
+                    local_stats.bound_prunes_by_depth[depth];
+            for (const auto &[signature, keys] : local_seen) {
+                auto &global_keys = seen[signature];
+                std::copy_if(keys.begin(), keys.end(),
+                             std::back_inserter(global_keys),
+                             [&](const auto &key) {
+                                 return std::none_of(global_keys.begin(),
+                                                     global_keys.end(),
+                                                     [&](const auto &existing) {
+                                                         return existing == key;
+                                                     });
+                             });
+            }
         }
     }
 }
@@ -481,7 +608,7 @@ int main(int argc, char **argv) {
     const int k = argc > 2 ? std::stoi(argv[2]) : 2;
     const int target = argc > 3 ? std::stoi(argv[3]) : 5;
     int thread_count = available_threads();
-    std::uint64_t progress_interval = 10'000'000;
+    std::uint64_t progress_interval = 25'000'000;
     for (int argument = 4; argument < argc; ++argument) {
         const std::string option(argv[argument]);
         if (option.rfind("--threads=", 0) == 0)
@@ -510,9 +637,14 @@ int main(int argc, char **argv) {
     progress.expected_nodes = expected_nodes.convert_to<long double>();
     std::cout << "raw ordered-transition nodes=" << expected_nodes << " ("
               << (thread_count > 1 ? "origin-pinned" : "full") << ")\n";
-    std::unordered_set<std::vector<int>, VectorHash> seen;
+    std::unordered_map<ProfileState::Invariant, std::vector<std::vector<int>>,
+                       InvariantHash>
+        seen;
     SearchStats stats;
+    stats.nodes_by_depth.assign(target + 1, 0);
+    stats.bound_prunes_by_depth.assign(target + 1, 0);
     int best = INT_MAX;
+    const auto search_started = std::chrono::steady_clock::now();
     if (thread_count == 1) {
         ProfileState state(instance);
         std::vector<int> chosen;
@@ -522,6 +654,10 @@ int main(int argc, char **argv) {
         search_parallel(instance, target, best, seen, stats, stabilizer,
                         thread_count, &progress);
     }
+    const double elapsed_seconds =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                      search_started)
+            .count();
     const long double raw_nodes = expected_nodes.convert_to<long double>();
     const long double coverage = 100.0L * stats.nodes / raw_nodes;
     const long double reduction = 100.0L * (1.0L - stats.nodes / raw_nodes);
@@ -530,9 +666,61 @@ int main(int argc, char **argv) {
               << " nodes=" << stats.nodes
               << " bound-prunes=" << stats.bound_prunes
               << " exact-cache-hits=" << stats.cache_hits
-              << " threads=" << thread_count << " states=" << seen.size()
-              << '\n'
-              << "raw ordered-transition coverage=  " << coverage << "%\n"
-              << "raw ordered-transition reduction=" << reduction << "%\n";
+              << " threads=" << thread_count << " states=";
+    std::size_t state_count = 0;
+    for (const auto &[signature, keys] : seen)
+        state_count += keys.size();
+    std::ostringstream coverage_stream;
+    coverage_stream << std::fixed << std::setprecision(12) << coverage;
+    std::ostringstream reduction_stream;
+    reduction_stream << std::fixed << std::setprecision(12) << reduction;
+    const std::string coverage_text = coverage_stream.str();
+    const std::string reduction_text = reduction_stream.str();
+    const auto integer_digits = [](const std::string &text) {
+        const std::size_t dot = text.find('.');
+        return dot == std::string::npos ? text.size() : dot;
+    };
+    const std::string coverage_prefix = "raw ordered-transition coverage=";
+    const std::string reduction_prefix = "raw ordered-transition reduction=";
+    const std::size_t decimal_column =
+        std::max(coverage_prefix.size() + integer_digits(coverage_text),
+                 reduction_prefix.size() + integer_digits(reduction_text)) +
+        1;
+    std::cout << state_count << '\n'
+              << coverage_prefix
+              << std::string(decimal_column - coverage_prefix.size() -
+                                 integer_digits(coverage_text),
+                             ' ')
+              << coverage_text << "%\n"
+              << reduction_prefix
+              << std::string(decimal_column - reduction_prefix.size() -
+                                 integer_digits(reduction_text),
+                             ' ')
+              << reduction_text << "%\n";
+    std::cout << "bucket misses=" << stats.bucket_misses
+              << " iso-matches=" << stats.bucket_iso_matches
+              << " iso-misses=" << stats.bucket_iso_misses << '\n'
+              << "canonical-time=" << stats.canonical_seconds
+              << "s isomorphism-time=" << stats.isomorphism_seconds << "s\n"
+              << "bound-prunes-by-depth:";
+    for (int depth = 0; depth <= target; ++depth)
+        std::cout << " " << depth << "=" << stats.bound_prunes_by_depth[depth];
+    std::cout << '\n';
+    if (target >= 2 && stats.nodes_by_depth[target - 1] != 0 &&
+        stats.nodes_by_depth[target] != 0 && stats.nodes != 0) {
+        const long double growth =
+            static_cast<long double>(stats.nodes_by_depth[target]) /
+            stats.nodes_by_depth[target - 1];
+        const long double predicted_next =
+            stats.nodes_by_depth[target] * growth;
+        const long double predicted_total = stats.nodes + predicted_next;
+        const long double rate =
+            static_cast<long double>(stats.nodes) / elapsed_seconds;
+        const long double predicted_seconds =
+            elapsed_seconds + predicted_next / rate;
+        std::cout << "heuristic R=" << target + 1
+                  << " nodes=" << predicted_total << " growth=" << growth
+                  << " estimated-time=" << predicted_seconds << "s\n";
+    }
     return 0;
 }

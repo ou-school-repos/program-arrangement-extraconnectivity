@@ -1,0 +1,95 @@
+{
+  "cases": [
+    {
+      "n": 14,
+      "k": 6,
+      "m": 8,
+      "g": 48,
+      "R": 49,
+      "valid_vertices": 2162160,
+      "boundary": 1080,
+      "components": [49, 2161031],
+      "hamming_boundary": 1163,
+      "embedding_gate": true,
+      "classification": "HARD COUNTEREXAMPLE: RestrictedLowerBound"
+    },
+    {
+      "n": 18,
+      "k": 6,
+      "m": 12,
+      "g": 72,
+      "R": 73,
+      "valid_vertices": 13366080,
+      "boundary": 2340,
+      "components": [73, 13363667],
+      "hamming_boundary": 2446,
+      "embedding_gate": false,
+      "classification": "SOFT COUNTEREXAMPLE: UniversalLowerBound only"
+    },
+    {
+      "n": 14,
+      "k": 7,
+      "m": 7,
+      "g": 49,
+      "R": 50,
+      "valid_vertices": 17297280,
+      "boundary": 1176,
+      "components": [50, 17296054],
+      "hamming_boundary": 1366,
+      "embedding_gate": true,
+      "classification": "HARD COUNTEREXAMPLE: RestrictedLowerBound"
+    },
+    {
+      "n": 15,
+      "k": 7,
+      "m": 8,
+      "g": 56,
+      "R": 57,
+      "valid_vertices": 32432400,
+      "boundary": 1512,
+      "components": [57, 32430831],
+      "hamming_boundary": 1744,
+      "embedding_gate": true,
+      "classification": "HARD COUNTEREXAMPLE: RestrictedLowerBound"
+    },
+    {
+      "n": 16,
+      "k": 7,
+      "m": 9,
+      "g": 63,
+      "R": 64,
+      "valid_vertices": 57657600,
+      "boundary": 1890,
+      "components": [64, 57655646],
+      "hamming_boundary": 2112,
+      "embedding_gate": true,
+      "classification": "HARD COUNTEREXAMPLE: RestrictedLowerBound"
+    },
+    {
+      "n": 18,
+      "k": 7,
+      "m": 11,
+      "g": 77,
+      "R": 78,
+      "valid_vertices": 160392960,
+      "boundary": 2772,
+      "components": [78, 160390110],
+      "hamming_boundary": 3200,
+      "embedding_gate": true,
+      "classification": "HARD COUNTEREXAMPLE: RestrictedLowerBound"
+    },
+    {
+      "n": 19,
+      "k": 7,
+      "m": 12,
+      "g": 84,
+      "R": 85,
+      "valid_vertices": 253955520,
+      "boundary": 3276,
+      "components": [85, 253952159],
+      "hamming_boundary": 3783,
+      "embedding_gate": true,
+      "classification": "HARD COUNTEREXAMPLE: RestrictedLowerBound"
+    }
+  ]
+}

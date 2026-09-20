@@ -118,6 +118,35 @@ class State:  # pylint: disable=too-few-public-methods
 
 def run(args: argparse.Namespace) -> int:
     """Run the requested annealing search and print its best incumbent."""
+    if args.n < 1 or args.k < 1 or args.k > args.n:
+        raise SystemExit(f"require 1 <= k <= n, got k={args.k}, n={args.n}")
+    if args.size < 1:
+        raise SystemExit(f"require size >= 1, got size={args.size}")
+    if args.steps < 0 or args.restarts < 1:
+        raise SystemExit("require steps >= 0 and restarts >= 1")
+    if (
+        not math.isfinite(args.temperature)
+        or args.temperature <= 0
+        or not math.isfinite(args.cooling)
+        or not 0 < args.cooling <= 1
+    ):
+        raise SystemExit("require finite temperature > 0 and 0 < cooling <= 1")
+    max_size = 2 ** min(args.k, args.n - args.k)
+    if args.size > max_size:
+        raise SystemExit(
+            f"require size <= 2**min(k, n-k) = {max_size}, got size={args.size}"
+        )
+
+    vertex_count = 1
+    for offset in range(args.k):
+        factor = args.n - offset
+        if vertex_count > 100_000 // factor:
+            raise SystemExit("arrangement graph exceeds 100000 vertices")
+        vertex_count *= factor
+    degree = args.k * (args.n - args.k)
+    if degree and vertex_count > 10_000_000 // degree:
+        raise SystemExit("arrangement graph exceeds adjacency resource limit")
+
     vertices = all_vertices(args.n, args.k)
     index = {vertex: i for i, vertex in enumerate(vertices)}
     adjacency = tuple(
@@ -144,6 +173,8 @@ def run(args: argparse.Namespace) -> int:
         )
         temperature = args.temperature
         for step in range(args.steps):
+            if not state.boundary:
+                break
             attempted += 1
             outgoing = rng.choice(tuple(state.members))
             incoming = rng.choice(tuple(state.boundary))
@@ -184,7 +215,7 @@ def run(args: argparse.Namespace) -> int:
     ordered = sorted(best_members, key=lambda i: vertices[i])
     print(
         f"best boundary={best_score};",
-        "connected={connected(best_members, adjacency, ordered[0])}",
+        f"connected={connected(best_members, adjacency, ordered[0])}",
     )
     print("vertices:")
     for vertex in ordered:

@@ -56,7 +56,7 @@ for f in "${XOPP_FILES[@]}"; do
 
 	# Create PDF and DJVU (binaries)
 	xournalpp "$f" -p "$fbase.pdf"
-	touch -d @$fmoddate "$fbase.pdf"
+	touch -d @"$fmoddate" "$fbase.pdf"
 	"$SCRIPT_DIR/pdfdet" "$fbase.pdf"
 
 	if ! "$SCRIPT_DIR/pdf2djvudet" "$fbase.pdf"; then
@@ -73,9 +73,9 @@ for f in "${XOPP_FILES[@]}"; do
 	fi
 
 	# Create PNG binaries
-	xournalpp "$f" --export-png-dpi=${PNG_DPI} -i "$fbase".png
+	xournalpp "$f" --export-png-dpi="${PNG_DPI}" -i "$fbase".png
 	mkdir -p out/png/
-	touch -d @$fmoddate "$fbase"*.png
+	touch -d @"$fmoddate" "$fbase"*.png
 	mv "$fbase"*.png out/png/
 
 	# Extract XML from xopp (natively gzipped)

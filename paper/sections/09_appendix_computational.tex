@@ -7,7 +7,7 @@ $\Omega(R^{R-2})$), enabling exact boundary computation for arbitrary $R$.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\textwidth]{../docs/complexity-curves.pdf}
+	\includegraphics[width=0.8\textwidth]{../assets/out/complexity-curves.pdf}
 	\caption{The combinatorial growth of state-space search versus our
 	$O(R^3 \log R)$ engine mapping limits up to and beyond $R=128$.}
 	\label{fig:complexity}
@@ -138,7 +138,9 @@ certified floor on the pinned search is a certified floor over all subsets.
 Core-guided conflict analysis has so far excluded every boundary size below
 $\CertFloor{}$, and no feasible witness at or below $\HuntTarget{}$ has been
 found (best = inf); the run archives more than $1.2$ million learned clauses,
-each a localized geometric dead-end of $A(10,5)$.  The certified containment is
+each a localized geometric dead-end of $A(10,5)$.  This floor is an unverified
+search result from a single-solve diagnostic, not a certified infeasibility
+certificate for boundaries below $\CertFloor{}$.  The certified containment is
 therefore
 \[
 	\CertFloor{} \le \min_{\substack{S \subseteq V\\ |S| = 26}} |\extbd(S)|

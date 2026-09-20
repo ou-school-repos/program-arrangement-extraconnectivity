@@ -6,19 +6,20 @@ enumerates non-isomorphic connected subgraphs up to $R = 10$, computes their
 boundary in $A(n,k)$, and identifies the minimizer. Isomorphic duplicates are
 pruned via McKay's \texttt{nauty} library \cite{mckay2014practical}.
 
-This exhaustive search confirms that the maximum defect for connected subgraphs
-matches $\Eseq(R)$ (Definition~2.5), identifying the boundary-minimizing subsets
-as embedded lexicographic Hamming Balls. From these patterns, we developed an
-$O(R^3 \log R)$ closed-form characterization engine that predicts exact
-boundaries for arbitrary $R$ and dimensions.
+This search compares finite connected-subgraph types and computes their
+boundaries over the parameter ranges recorded with the data. The defect
+maximum alone does not identify boundary minimizers, because collision counts
+also affect the boundary; moreover, the Hamming ball is not always optimal.
+The closed-form engine evaluates the Hamming-ball candidate for arbitrary
+$R$ and dimensions, but does not by itself compute the global minimum.
 
 \begin{table}[ht]
 	\centering
-	\caption{Minimum external boundary for $R$-vertex subsets of $A(n,k)$.}
+\caption{Hamming-ball boundary values and their verification status.}
 	\label{tab:engine}
 	\begin{tabular}{@{}ccccl@{}}
 		\toprule
-		$R$ & $\Eseq(R)$ & $\Cconst(R)$ & Exact Boundary Formula & Verification                                   \\
+$R$ & $\Eseq(R)$ & $\Cconst(R)$ & Hamming-ball boundary & Verification                                   \\
 		\midrule
 		2   & 1          & 1            & $(2k-1)(n-k)-1$        & Cheng et al. \cite{cheng2022extraconnectivity} \\
 		4   & 4          & 4            & $(4k-4)(n-k)-4$        & Cheng et al. \cite{cheng2022extraconnectivity} \\
@@ -28,13 +29,10 @@ boundaries for arbitrary $R$ and dimensions.
 	\end{tabular}
 \end{table}
 	\noindent $^\dagger$\small The listed value is the Hamming ball's own boundary,
-	confirmed by direct construction and enumeration (unconditional, valid to
-	$R \le 260$; Appendix~\ref{app:engine}). That this value is the
-	\emph{global minimum} over all $R$-element subsets --- not merely the
-	Hamming ball's own boundary --- is the content of
-	Proposition~\ref{prop:restricted_lower_bound} (Section~\ref{sec:defect}), which remains
-	open in general; the $R=8$ row falls within this section's exhaustive
-	connected-subgraph search ($R\le10$), but the $R=16$ row does not.
+	confirmed by direct construction and enumeration (Appendix~\ref{app:engine}).
+	It is not asserted to be the global minimum: the full Star in $A(11,6)$ is
+	a counterexample to that general claim. Finite searches establish only the
+	particular graphs and volumes explicitly covered by their certificates.
 
 \noindent \small \textit{Notably, our closed-form evaluation reveals a geometric
 symmetry for perfect hypercubes ($R=2^d$): the defect mirrors the external

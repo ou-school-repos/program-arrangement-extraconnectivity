@@ -9,7 +9,7 @@ from the still-open exact profile and extra-connectivity questions.
 volume `R` and every `(n,k)` satisfying the Boolean-cube embedding gate, it
 states
 
-\[ \Phi*{n,k}(R) \le H(R,n,k) \le \Phi*{n,k}(R)+E(R)+2(R^2-R), \]
+\[ \Phi*{n,k}(R) \le H(R,n,k) \le \Phi*{n,k}(R)+E(R)+R(R-1). \]
 
 and supplies an `R`-vertex set attaining `H`. Here `\Phi` is the minimum
 external vertex boundary over all `R`-subsets, `H` is the exact boundary of the
@@ -23,17 +23,17 @@ The theorem is designed to remain valid in those cases.
 
 ## Main proved components
 
-| Component                          | Lean declaration                                                         | Status                                                                |
-| ---------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| Popcount partition inequality      | `E_add_min_le`, `E_seq_list_sum_le`                                      | Proved                                                                |
-| Arrangement vertices and adjacency | `ArrVertex`, `arr_adjacent`                                              | Proved definitions/instances                                          |
-| Defect bound                       | `sum_unique_roots_lower_bound`                                           | Proved                                                                |
-| Coordinate-fiber identity          | `total_coord_edges_eq`                                                   | Proved                                                                |
-| Collision charging bound           | global overlap charging and `restricted_lower_bound_up_to_error`         | Proved                                                                |
-| Hamming witness and evaluation     | `hamming_ball_subset`, `hamming_ball_eval`, `hb_cross_collisions_closed` | Proved                                                                |
-| Fixed-volume boundary capstone     | `arrangement_boundary_sandwich`                                          | Proved, additive-error sandwich                                       |
-| Exact penalty identities           | `Arrangement/PenaltyExact.lean`                                          | Proved                                                                |
-| Pairwise phase comparisons         | `Arrangement/Phase.lean`                                                 | Proved from exact penalty identity; family signatures remain separate |
+| Component                          | Lean declaration                                                            | Status                                                                |
+| ---------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Popcount partition inequality      | `E_add_min_le`, `E_seq_list_sum_le`                                         | Proved                                                                |
+| Arrangement vertices and adjacency | `ArrVertex`, `arr_adjacent`                                                 | Proved definitions/instances                                          |
+| Defect bound                       | `sum_unique_roots_lower_bound`                                              | Proved                                                                |
+| Coordinate-fiber identity          | `total_coord_edges_eq`                                                      | Proved                                                                |
+| Collision charging bound           | `cross_collision_bound_factor_one` and `restricted_lower_bound_up_to_error` | Proved                                                                |
+| Hamming witness and evaluation     | `hamming_ball_subset`, `hamming_ball_eval`, `hb_cross_collisions_closed`    | Proved                                                                |
+| Fixed-volume boundary capstone     | `arrangement_boundary_sandwich`                                             | Proved, additive-error sandwich                                       |
+| Exact penalty identities           | `Arrangement/PenaltyExact.lean`                                             | Proved                                                                |
+| Pairwise phase comparisons         | `Arrangement/Phase.lean`                                                    | Proved from exact penalty identity; family signatures remain separate |
 
 Build with `make lean` from the repository root. The legacy conditional
 exact-minimum interfaces and the disproved universal/restricted zero-error

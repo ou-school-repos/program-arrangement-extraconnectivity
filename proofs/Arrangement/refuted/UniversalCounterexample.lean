@@ -1,8 +1,8 @@
 /-
   UniversalCounterexample.lean
   ============================
-  Mechanized refutation of `UniversalLowerBound` (see the definition's
-  docstring in `ArrangementExtraconnectivity.lean`, and
+  Mechanized refutation of `Arrangement.refuted.UniversalLowerBound` (defined
+  alongside the refutation files), and
   `docs/proof-sketch-weighted-potential.md`'s "Full-Star Failure Landscape"
   section, for the mathematical context).
 
@@ -32,6 +32,7 @@
 
 import Arrangement.ArrDefs
 import Arrangement.ArrangementExtraconnectivity
+import Arrangement.refuted.UniversalLowerBound
 
 set_option autoImplicit false
 
@@ -81,7 +82,7 @@ theorem full_star_9_6_card : full_star_9_6.card = 19 := by decide
     verified here by the Lean kernel/compiler rather than by the Python
     script or C++ search alone. -/
 theorem full_star_9_6_refutes_universal_lower_bound :
-    ¬ UniversalLowerBound 19 9 6 := by
+    ¬ refuted.UniversalLowerBound 19 9 6 := by
   intro h
   have hbound := h full_star_9_6 full_star_9_6_card (by decide)
   have hviolate :

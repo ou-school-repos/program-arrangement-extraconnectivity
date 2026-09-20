@@ -1,3 +1,9 @@
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
+#include <utility>
+#include <vector>
+
 // -- A000788: cumulative popcount -- O(log R) ------------------------
 
 static uint64_t popcount_u(uint64_t n) {

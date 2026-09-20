@@ -225,11 +225,11 @@ end BitToolbox
 
 section CubeCounting
 
-/-- Number of `Q_D`-neighbours of `j` lying in the initial segment `{0,…,m-1}`. -/
+/-- Number of `Q_D`-neighbors of `j` lying in the initial segment `{0,…,m-1}`. -/
 def ball_deg (m D j : ℕ) : ℕ :=
   ((range D).filter (fun p => j ^^^ 2 ^ p < m)).card
 
-/-- The vertex `m` has exactly `popcount m` neighbours below itself. -/
+/-- The vertex `m` has exactly `popcount m` neighbors below itself. -/
 lemma ball_deg_self {m D : ℕ} (hm : m < 2 ^ D) :
     ball_deg m D m = popcount m := by
   unfold ball_deg
@@ -1227,7 +1227,8 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     -- RHS closes via  sbl P + P = (d-1)P + 1  and  2E_P = (d-1)P.
     omega
 
-/-- The unconditional arrangement-graph boundary-minimum capstone.
+/-- Legacy conditional arrangement-graph boundary-minimum composition. The
+    premise is not established in general and its universal form is refuted.
     Concludes a statement about `external_neighbors V'` (the external
     vertex-boundary) only — not the graph's extraconnectivity metric κ_g,
     which requires the still-open boundary-to-extraconnectivity reduction
@@ -1235,8 +1236,11 @@ theorem hb_cross_collisions_closed (R : ℕ) (hR1 : 1 ≤ R)
     surrounding names is legacy naming, not a claim about that reduction.
     The nonempty case uses `hb_cross_collisions_closed`; the empty arrangement
     has the empty Hamming ball as its witness. -/
-theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k) :
+theorem arrangement_boundary_minimum_of_lower_bound_premise
+    (R n k : ℕ) (h_cond : can_embed_hypercube R n k)
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) :
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∀ V' : Finset (ArrVertex n k), V'.card = R →
@@ -1246,23 +1250,27 @@ theorem arrangement_boundary_minimum (R n k : ℕ) (h_cond : can_embed_hypercube
     have hnk : k ≤ n := by
       obtain ⟨hkn, _⟩ := h_cond
       omega
-    refine ⟨?_, fun V hV => h_lower 0 n k h_cond V hV hnk⟩
+    refine ⟨?_, fun V hV => h_lower h_cond V hV hnk⟩
     refine ⟨∅, by simp, ?_⟩
     simp [external_neighbors, C_constant, E_seq, sum_bit_length]
   · have hR1 : 1 ≤ R := by omega
-    apply arrangement_boundary_minimum_of_cross R n k h_cond h_lower
+    apply arrangement_boundary_minimum_of_cross_and_lower_bound_premise
+      R n k h_cond h_lower
     intro d hk hnk hd
     exact hb_cross_collisions_closed R hR1 d hd hk hnk
 
-/-- The unconditional globally optimal growth-strategy corollary. -/
-theorem globally_optimal_growth_strategy
+/-- Legacy conditional composition; this does not establish global optimality. -/
+theorem globally_optimal_growth_strategy_of_lower_bound_premise
     (n k R : ℕ) (h_cond : can_embed_hypercube R n k)
-    (h_lower : ∀ (R n k : ℕ), RestrictedLowerBound R n k) :
+    (h_lower : can_embed_hypercube R n k →
+      ∀ (V' : Finset (ArrVertex n k)), V'.card = R → k ≤ n →
+        external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) :
     (∀ V' : Finset (ArrVertex n k), V'.card = R →
       external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R) ∧
     (∃ V' : Finset (ArrVertex n k), V'.card = R ∧
       external_neighbors V' = (R * k - E_seq R) * (n - k) - C_constant R) := by
-  let ⟨h_exists, h_univ⟩ := arrangement_boundary_minimum R n k h_cond h_lower
+  let ⟨h_exists, h_univ⟩ :=
+    arrangement_boundary_minimum_of_lower_bound_premise R n k h_cond h_lower
   exact ⟨h_univ, h_exists⟩
 
 end CrossTopMain

@@ -86,8 +86,7 @@ peer reviewed}}}}%
 \newcommand{\CertFloor}{34}
 
 \title{%
-\textbf{A Conditional Exact Boundary Formula and Fixed-Topology Asymptotic
-External-Boundary Dominance for Arrangement Graphs $A(n,k)$:}\\[0.5em]
+\textbf{Boundary Isoperimetry and Hamming Comparisons in Arrangement Graphs $A(n,k)$}\\[0.5em]
   The Algebraic Defect Framework\\[0.5em]
   % \large \textit{Bachelor's thesis}
 }
@@ -110,27 +109,16 @@ External-Boundary Dominance for Arrangement Graphs $A(n,k)$:}\\[0.5em]
 \maketitle
 
 \begin{abstract}
-The vertex isoperimetric problem on the arrangement graph $A(n,k)$ seeks
-$R$-element subsets minimizing the cardinality $|\extbd(S)|$ of the external
-vertex boundary.  For small alphabets ($m = n-k < 5$) hierarchical,
-prefix-ordered star subgraphs are the presumed minimizers; as the number of
-available symbols grows, however, the requirement that vertices use distinct
-symbols imposes an escalating combinatorial penalty on such single-coordinate
-constructions.  We exhibit an exact discrete crossover at $A(10,5)$ and
-$R = 26$: the canonical star graph has boundary $|\extbd(S_{\mathrm{star}})| =
-\StarBoundary{}$, while a binary hypercube slice embedded in the same graph
-attains $|\extbd(\mathcal{C})| = \SliceBoundary{}$, strictly outperforming the
-star.  A vertex-by-vertex boundary trace under lexicographic insertion couples
-this crossover to a mechanism: the star confines its internal adjacencies to
-isolated coordinate fibers, delaying loop closure, whereas the slice spreads
-variation across every coordinate.  Encoding the exact search as a Boolean
-constraint program over the $|V| = 30{,}240$ vertices of $A(10,5)$, we further
-certify $|\extbd(S)| \ge \CertFloor{}$ for every volume-$26$ subset, so the
-true optimum is bracketed as
-$\CertFloor{} \le |\extbd(S)| \le \SliceBoundary{}$ --- the smallest explicit
-counterexample to star optimality known in arrangement graphs, and a concrete
-measure of the gap that any generalized boundary-minimizing construction must
-close.
+The vertex-isoperimetric problem on $A(n,k)$ asks for the minimum external
+vertex boundary of an $R$-element set. A root-count inequality and a global
+collision-charging argument give an unconditional lower bound with additive
+error $E(R)+R(R-1)$, independent of $n$ and $k$. When a Boolean Hamming
+ball embeds, its boundary gives an explicit upper comparison, yielding a
+two-sided sandwich for the minimum profile. The comparison is not in general
+an equality: in $A(11,6)$ at volume $31$, a full radius-one Star has boundary
+$450$, below the Hamming-ball value $476$. Finite computational searches
+also exhibit crossovers and intermediate configurations; these are reported
+as finite evidence and do not constitute a classification of the profile.
 \end{abstract}
 \input{sections/00_introduction}
 
@@ -148,6 +136,9 @@ close.
 
 % ════════════════════════════════════════════════════════════════════════
 \input{sections/05_asymptotic_penalty}
+
+% Corrected unconditional boundary-profile capstone; distinct from extra connectivity.
+\input{sections/05b_hamming_sandwich}
 
 % ════════════════════════════════════════════════════════════════════════
 \input{gf-section}

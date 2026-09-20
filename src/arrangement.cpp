@@ -1,4 +1,4 @@
-// Extraconnectivity of Arrangement Graphs — v5 Clean Enumerator (POC)
+// Connected-pattern catalogue for arrangement-graph boundary candidates.
 //
 // Based on ideas-12: streamlined single-threaded architecture with:
 //   1. Hardware-accelerated chunk_idx SWAR bit-scan (no O(R) diff loops)
@@ -7,7 +7,7 @@
 //   4. Parameterized calc_step (explicit array passing)
 //   5. Global hash dedup sharing symmetry across all branches
 //
-// Usage: ./arrangementv5 [R] [nauty_limit]
+// Usage: ./arrangement R [nauty_limit] [n k]...
 
 #include <algorithm>
 #include <chrono>
@@ -19,9 +19,10 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "utils.h"
+#include "utils.hpp"
 
 extern "C" {
 #include <nauty/nauty.h>
@@ -178,6 +179,7 @@ class FlatHashSet128 {
 
 static std::vector<FlatHashSet128> seen_nauty;
 static std::vector<FlatHashSet128> seen_sorted;
+static int64_t count_neighbors(const uint64_t *verts, int n, int k);
 
 // ── Nauty static buffers ───────────────────────────────────────────────────
 constexpr int MAX_NAUTY_N = 512;
@@ -194,9 +196,50 @@ static uint32_t ver_sym_mask[16];
 struct Result {
     int cons = 0;
     int internal_edges = 0;
+    int active_positions = 0;
+    int active_symbols = 0;
     std::string example;
 };
-static std::map<int, Result> results;
+// Per-defect Pareto frontier: retain patterns with more collisions and/or
+// smaller coordinate and fresh-symbol budgets.
+static std::map<int, std::vector<Result>> results;
+
+static std::pair<int, int> active_budget(const uint64_t *verts) {
+    uint32_t varying = 0;
+    for (int p = 0; p < R; ++p)
+        for (int i = 1; i < R; ++i)
+            if (get_sym(verts[i], p) != get_sym(verts[0], p)) {
+                varying |= 1U << p;
+                break;
+            }
+
+    uint32_t symbols = 0;
+    for (int p = 0; p < R; ++p)
+        if (varying & (1U << p))
+            for (int i = 0; i < R; ++i)
+                symbols |= 1U << get_sym(verts[i], p);
+    return {__builtin_popcount(varying), __builtin_popcount(symbols)};
+}
+
+static void record_result(int defect, int collisions, int edges, int p, int sa,
+                          const std::string &example) {
+    auto &frontier = results[defect];
+    const int extra = sa - p;
+    if (std::any_of(frontier.begin(), frontier.end(), [&](const Result &old) {
+            return old.cons >= collisions && old.active_positions <= p &&
+                   old.active_symbols - old.active_positions <= extra;
+        }))
+        return;
+    frontier.erase(std::remove_if(frontier.begin(), frontier.end(),
+                                  [&](const Result &r) {
+                                      return collisions >= r.cons &&
+                                             p <= r.active_positions &&
+                                             extra <= r.active_symbols -
+                                                          r.active_positions;
+                                  }),
+                   frontier.end());
+    frontier.push_back({collisions, edges, p, sa, example});
+}
 
 #define MAX_R 20
 static uint64_t nodes_gen_d[MAX_R] = {0};
@@ -243,8 +286,8 @@ static inline std::pair<int, int> calc_step(int count) {
         int differs = 0, diff1 = 0, diff2 = 0;
 
         while (xor_val) {
-            int bit = __builtin_ctzll(xor_val);
-            int chunk = chunk_idx[bit];
+            int changed_bit = __builtin_ctzll(xor_val);
+            int chunk = chunk_idx[changed_bit];
             int pos = (R - 1) - chunk;
 
             // ctzll finds lowest bits first → highest pos first.
@@ -329,9 +372,9 @@ static inline std::pair<int, int> calc_step(int count) {
 }
 
 // ── Internal edge count ────────────────────────────────────────────────────
-// Delegates to shared utility (see arrangement_utils.h)
+// Delegates to shared utility (see utils.hpp)
 /// Count internal edges among the first n vertices of verts (delegates to
-/// utils.h).
+/// utils.hpp).
 static int count_internal_edges(const uint64_t *verts, int n) {
     return arrangement::count_internal_edges(verts, n);
 }
@@ -339,7 +382,7 @@ static int count_internal_edges(const uint64_t *verts, int n) {
 // ── Recursive search ───────────────────────────────────────────────────────
 /// Recursively extend the partial vertex set ver[0..point) toward size R,
 /// deduplicating by graph isomorphism (nauty) or exact vertex set as
-/// appropriate, and record the best (nk1, constant) pair seen at each leaf.
+/// appropriate, and record exact pattern signatures at each leaf.
 /// Returns the number of leaf evaluations performed in this subtree.
 static uint64_t solve(int point, int nodl, int largchg,
                       uint32_t overall_sym_mask, int current_nk1,
@@ -366,17 +409,42 @@ static uint64_t solve(int point, int nodl, int largchg,
     // Leaf
     if (point == R) {
         nodes_evaluated++;
-        auto it = results.find(current_nk1);
-        if (it == results.end() || it->second.cons < current_cons) {
-            std::string exa;
-            for (int i = 0; i < R; i++) {
-                if (i)
-                    exa += ' ';
-                exa += vertex_to_string(ver[i]);
-            }
-            results[current_nk1] = {current_cons, count_internal_edges(ver, R),
-                                    exa};
+        std::string exa;
+        for (int i = 0; i < R; i++) {
+            if (i)
+                exa += ' ';
+            exa += vertex_to_string(ver[i]);
         }
+        // Recount projection roots and the boundary in A(2R,R). This finite
+        // host contains the whole pattern; the identity then gives its exact X.
+        int roots = 0;
+        for (int p = 0; p < R; ++p)
+            for (int i = 0; i < R; ++i) {
+                bool duplicate = false;
+                for (int j = 0; j < i && !duplicate; ++j) {
+                    bool same = true;
+                    for (int q = 0; q < R; ++q)
+                        if (q != p &&
+                            get_sym(ver[i], q) != get_sym(ver[j], q)) {
+                            same = false;
+                            break;
+                        }
+                    duplicate = same;
+                }
+                if (!duplicate)
+                    ++roots;
+            }
+        const int defect = R * R - roots;
+        const int64_t boundary = count_neighbors(ver, 2 * R, R);
+        const int64_t x =
+            static_cast<int64_t>(roots) * (R + 1) - R * R - boundary;
+        if (x < 0 || x > INT32_MAX) {
+            std::cerr << "Invalid collision count at leaf\n";
+            std::abort();
+        }
+        const auto [p, sa] = active_budget(ver);
+        record_result(defect, static_cast<int>(x), count_internal_edges(ver, R),
+                      p, sa, exa);
         return 1;
     }
 
@@ -443,8 +511,8 @@ static uint64_t solve(int point, int nodl, int largchg,
             if (point < MAX_R) {
                 nodes_iso_d[point]++;
                 if (count_evals_d[point] > 0)
-                    est_saved_iso +=
-                        (double)sum_evals_d[point] / count_evals_d[point];
+                    est_saved_iso += static_cast<double>(sum_evals_d[point]) /
+                                     static_cast<double>(count_evals_d[point]);
             }
             return 0;
         }
@@ -461,7 +529,8 @@ static uint64_t solve(int point, int nodl, int largchg,
                 nodes_exact_d[point]++;
                 if (count_evals_d[point] > 0)
                     est_saved_exact +=
-                        (double)sum_evals_d[point] / count_evals_d[point];
+                        static_cast<double>(sum_evals_d[point]) /
+                        static_cast<double>(count_evals_d[point]);
             }
             return 0;
         }
@@ -498,8 +567,9 @@ static uint64_t solve(int point, int nodl, int largchg,
                     if (point < MAX_R) {
                         nodes_local_d[point]++;
                         if (point + 1 < MAX_R && count_evals_d[point + 1] > 0)
-                            est_saved_local += (double)sum_evals_d[point + 1] /
-                                               count_evals_d[point + 1];
+                            est_saved_local +=
+                                static_cast<double>(sum_evals_d[point + 1]) /
+                                static_cast<double>(count_evals_d[point + 1]);
                     }
                     continue;
                 }
@@ -530,48 +600,17 @@ static uint64_t solve(int point, int nodl, int largchg,
     return total_evals;
 }
 
-// ── A000788: cumulative popcount — O(log R) ──────────────────────────
-/// Number of set bits in n.
-static uint64_t popcount_u(uint64_t n) {
-    return static_cast<uint64_t>(__builtin_popcountll(n));
-}
-
-/// Bit length of n (0 for n == 0).
-static uint64_t bit_length_u(uint64_t n) {
-    return n == 0 ? 0 : 64 - static_cast<uint64_t>(__builtin_clzll(n));
-}
-
-/// Cumulative binary weight sum_{i<n} popcount(i) (OEIS A000788), via radix-2
-/// recursion.
-static int64_t A000788_fn(int64_t n) {
-    if (n <= 0)
-        return 0;
-    int64_t m = n / 2;
-    if (n % 2 == 0)
-        return 2 * A000788_fn(m) + m;
-    else
-        return 2 * A000788_fn(m) + m +
-               static_cast<int64_t>(popcount_u(static_cast<uint64_t>(m)));
-}
-
-/// The correction constant C(R) = (R-1) + sum of bit_length(1..R-1) -
-/// A000788(R).
-static int64_t constant_analytical(int64_t R_val) {
-    int64_t nk1 = A000788_fn(R_val);
-    int64_t L = 0;
-    for (int64_t x = 1; x < R_val; x++)
-        L += static_cast<int64_t>(bit_length_u(static_cast<uint64_t>(x)));
-    return (R_val - 1) + L - nk1;
-}
-
 // ── Brute-force verification — O(R³ log R) ───────────────────────────
 /// Brute-force |N(V')| for the first R vertices of verts by explicit neighbor
 /// enumeration and dedup, over an n-symbol alphabet with k-symbol vertices.
 static int64_t count_neighbors(const uint64_t *verts, int n, int k) {
-    std::vector<uint64_t> sorted_verts(verts, verts + R);
+    // Reuse scratch storage: this oracle is called for every canonical leaf.
+    static std::vector<uint64_t> sorted_verts;
+    static std::vector<uint64_t> nbrs;
+    sorted_verts.assign(verts, verts + R);
     std::sort(sorted_verts.begin(), sorted_verts.end());
 
-    std::vector<uint64_t> nbrs;
+    nbrs.clear();
     nbrs.reserve(R * k * n);
     for (int i = 0; i < R; i++) {
         for (int p = 0; p < k; p++) {
@@ -591,8 +630,8 @@ static int64_t count_neighbors(const uint64_t *verts, int n, int k) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
-/// CLI entry point: exhaustively search A(2R, R) for the maximum-nk1
-/// extraconnectivity constant at the given R.
+/// CLI entry point: enumerate connected R-patterns and evaluate their
+/// budget-feasible boundary envelope at optional (n,k) queries.
 int main(int argc, const char *argv[]) {
     nauty_check(WORDSIZE, MAX_NAUTY_M, MAX_NAUTY_N, NAUTYVERSIONID);
     if (argc >= 2)
@@ -611,6 +650,10 @@ int main(int argc, const char *argv[]) {
     if (argc >= 3)
         global_nauty_limit =
             static_cast<int>(std::strtol(argv[2], nullptr, 10));
+    if (argc > 3 && (argc - 3) % 2 != 0) {
+        std::cerr << "Usage: " << argv[0] << " R [nauty_limit] [n k]...\n";
+        return 1;
+    }
 
     seen_nauty.resize(R + 1);
     seen_sorted.resize(R + 1);
@@ -637,20 +680,61 @@ int main(int argc, const char *argv[]) {
             .count();
     std::cerr << "\r" << std::string(120, ' ') << "\r";
 
-    int max_nk1_w = 0, max_nk_w = 0;
-    for (const auto &[nk1, res] : results) {
-        max_nk1_w =
-            std::max(max_nk1_w, static_cast<int>(std::to_string(nk1).size()));
-        max_nk_w = std::max(
-            max_nk_w, static_cast<int>(std::to_string(nk1 + res.cons).size()));
+    std::cout << std::right << std::setw(2) << "D" << "  " << std::setw(2)
+              << "X" << "  " << std::setw(2) << "p" << "  " << std::setw(3)
+              << "s_a" << "  " << std::setw(5) << "s_a-p" << "  "
+              << std::setw(18) << "boundary(m=R)" << "    witness\n";
+    for (const auto &[defect, frontier] : results) {
+        for (const Result &res : frontier) {
+            const int extra_symbols = res.active_symbols - res.active_positions;
+            const int64_t slope = static_cast<int64_t>(R) * R - defect;
+            const int64_t boundary_at_host = slope * R - defect - res.cons;
+            std::cout << std::right << std::setw(2) << defect << "  "
+                      << std::setw(2) << res.cons << "  " << std::setw(2)
+                      << res.active_positions << "  " << std::setw(3)
+                      << res.active_symbols << "  " << std::setw(5)
+                      << extra_symbols << "  " << std::setw(18)
+                      << boundary_at_host << "    " << res.example << "\n";
+        }
     }
 
-    int best_nk1 = -1;
-    for (const auto &[nk1, res] : results) {
-        std::cout << "(" << R << "nk-" << std::setw(max_nk1_w) << nk1
-                  << ") (n-k)-" << std::setw(max_nk_w) << (nk1 + res.cons)
-                  << ", EX: " << res.example << "\n";
-        best_nk1 = nk1;
+    for (int arg = 3; arg + 1 < argc; arg += 2) {
+        const int n = static_cast<int>(std::strtol(argv[arg], nullptr, 10));
+        const int k = static_cast<int>(std::strtol(argv[arg + 1], nullptr, 10));
+        if (n < k || k < 1) {
+            std::cerr << "Ignoring invalid query A(" << n << ',' << k << ")\n";
+            continue;
+        }
+        const int m = n - k;
+        bool found = false;
+        int64_t best = INT64_MAX;
+        int best_defect = 0, best_x = 0, best_p = 0, best_sa = 0;
+        for (const auto &[defect, frontier] : results)
+            for (const Result &res : frontier) {
+                const int extra_symbols =
+                    res.active_symbols - res.active_positions;
+                if (res.active_positions > k || extra_symbols > m)
+                    continue;
+                const int64_t candidate =
+                    (static_cast<int64_t>(R) * k - defect) * m - defect -
+                    res.cons;
+                if (!found || candidate < best) {
+                    found = true;
+                    best = candidate;
+                    best_defect = defect;
+                    best_x = res.cons;
+                    best_p = res.active_positions;
+                    best_sa = res.active_symbols;
+                }
+            }
+        if (found)
+            std::cout << "connected-pattern envelope A(" << n << ',' << k
+                      << "), R=" << R << ": " << best << " via (D,X,p,s_a)=("
+                      << best_defect << ',' << best_x << ',' << best_p << ','
+                      << best_sa << ")\n";
+        else
+            std::cout << "connected-pattern envelope A(" << n << ',' << k
+                      << "), R=" << R << ": no feasible catalogued pattern\n";
     }
 
     std::cout << "  Done       | " << std::fixed << std::setprecision(3)
@@ -678,7 +762,7 @@ int main(int argc, const char *argv[]) {
             rate =
                 (static_cast<double>(nodes_iso_d[i] + nodes_exact_d[i] + loc) *
                  100.0) /
-                (nodes_gen_d[i] + loc);
+                static_cast<double>(nodes_gen_d[i] + loc);
         }
         std::cout << " [" << i << (i <= global_nauty_limit ? "-n" : "") << "] "
                   << std::fixed << std::setprecision(1) << rate << "%"
@@ -686,43 +770,44 @@ int main(int argc, const char *argv[]) {
     }
     std::cout << "\n\n";
 
-    if (best_nk1 != -1) {
-        // Parse example back into array
-        std::string ex = results[best_nk1].example;
-        uint64_t best_verts[16] = {0};
-        size_t pos = 0;
-        for (int i = 0; i < R; i++) {
-            std::string vstr = ex.substr(pos, R);
-            uint64_t v = 0;
-            for (int p = 0; p < R; p++) {
-                int sym;
-                if (vstr[p] >= 'A' && vstr[p] <= 'Z')
-                    sym = vstr[p] - 'A';
-                else
-                    sym = vstr[p] - 'a' + 26;
-                v = set_sym(v, p, sym);
+    if (!results.empty()) {
+        // Independently recount every retained Pareto witness in A(2R,R).
+        for (const auto &[defect, frontier] : results) {
+            for (const Result &res : frontier) {
+                std::string ex = res.example;
+                uint64_t best_verts[16] = {0};
+                size_t pos = 0;
+                for (int i = 0; i < R; i++) {
+                    std::string vstr = ex.substr(pos, R);
+                    uint64_t v = 0;
+                    for (int p = 0; p < R; p++) {
+                        int sym;
+                        if (vstr[p] >= 'A' && vstr[p] <= 'Z')
+                            sym = vstr[p] - 'A';
+                        else
+                            sym = vstr[p] - 'a' + 26;
+                        v = set_sym(v, p, sym);
+                    }
+                    best_verts[i] = v;
+                    pos += R + 1;
+                }
+
+                int64_t brute_count = count_neighbors(best_verts, 2 * R, R);
+                const int64_t theory_val =
+                    (static_cast<int64_t>(R) * R - defect) * R - defect -
+                    res.cons;
+
+                std::cout << std::right << "  [brute-force D=" << std::setw(2)
+                          << defect << ", X=" << std::setw(2) << res.cons
+                          << "] |N(V')| = " << std::setw(4) << brute_count;
+                if (brute_count == theory_val) {
+                    std::cout << " \xe2\x9c\x93\n";
+                } else {
+                    std::cout << " \xe2\x9c\x97 MISMATCH (theory gives "
+                              << theory_val << ")\n";
+                }
             }
-            best_verts[i] = v;
-            pos += R + 1;
         }
-
-        int64_t brute_count = count_neighbors(best_verts, 2 * R, R);
-        int64_t theory_nk1 = A000788_fn(R);
-        int64_t theory_const = constant_analytical(R);
-        int64_t coeff = (int64_t)R * R - theory_nk1;
-        int64_t theory_val = coeff * R - theory_const;
-
-        std::cout << "  [brute-force] |N(V')| = " << brute_count;
-        if (brute_count == theory_val) {
-            std::cout << " \xe2\x9c\x93\n";
-        } else {
-            std::cout << " \xe2\x9c\x97 MISMATCH (theory gives " << theory_val
-                      << ")\n";
-        }
-        std::cout << "  formula(n=" << 2 * R << ",k=" << R
-                  << "): |N(V')| = " << (int64_t)R * R - A000788_fn(R) << "·"
-                  << R << " - " << constant_analytical(R) << " = " << theory_val
-                  << "\n";
     }
 
     return 0;
