@@ -26,12 +26,12 @@ int boundary(const vector<Vtx> &S) {
             for (int y = 0; y < N; y++)
                 if (!(used >> y & 1)) {
                     Vtx w = u;
-                    w[i] = y;
+                    w[i] = static_cast<int8_t>(y);
                     if (!in.count(w))
                         nb.insert(w);
                 }
     }
-    return nb.size();
+    return static_cast<int>(nb.size());
 }
 long E(int r) {
     long t = 0;
@@ -45,7 +45,7 @@ long Cc(int r) {
         s += 32 - __builtin_clz(i);
     return (r - 1) + s - E(r);
 }
-int main(int argc, char **argv) {
+int main(int /*argc*/, char **argv) {
     R = atoi(argv[1]);
     K = atoi(argv[2]);
     M = atoi(argv[3]);
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     string bestdesc;
     Vtx c{};
     for (int i = 0; i < K; i++)
-        c[i] = i;
+        c[i] = static_cast<int8_t>(i);
     for (int cd = 0; cd <= 4; cd++)
         for (int a = 0; a <= R - 1; a++) {
             vector<Vtx> S;
@@ -64,14 +64,14 @@ int main(int argc, char **argv) {
                 Vtx v = c;
                 for (int j = 0; j < cd; j++)
                     if (x >> j & 1)
-                        v[j] = K + j;
+                        v[j] = static_cast<int8_t>(K + j);
                 if (in.insert(v).second)
                     S.push_back(v);
             } // cube core on coords 0..cd-1, fresh symbols K..K+cd-1
             for (int t = 0; t < a && (int)S.size() < R; t++) {
                 Vtx v = c;
                 int coord = (cd + t) % K;
-                v[coord] = K + ((cd + t) % M);
+                v[coord] = static_cast<int8_t>(K + ((cd + t) % M));
                 bool ok = true;
                 for (int i = 0; i < K; i++)
                     for (int j = i + 1; j < K; j++)
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
                         for (int y = 0; y < N; y++)
                             if (!(used >> y & 1)) {
                                 Vtx w = u;
-                                w[i] = y;
+                                w[i] = static_cast<int8_t>(y);
                                 if (!in.count(w))
                                     cand.insert(w);
                             }
