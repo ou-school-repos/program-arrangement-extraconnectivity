@@ -2,7 +2,6 @@
 #define BFS_UTILS_HPP
 
 #include "arrangement_utils.hpp"
-#include "build_info.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -24,9 +23,10 @@
 class AtomicBitset {
   public:
     static constexpr std::size_t block_size = 512;
+    static constexpr int word_bits = 64;
 
     explicit AtomicBitset(std::size_t bits)
-        : num_words_((bits + 63) / 64),
+        : num_words_((bits + word_bits - 1) / word_bits),
           words_(std::make_unique<std::atomic<std::uint64_t>[]>(num_words_)),
           dirty_blocks_(std::make_unique<std::atomic<std::uint8_t>[]>(
               (num_words_ + block_size - 1) / block_size)) {
@@ -37,12 +37,13 @@ class AtomicBitset {
     }
 
     AtomicBitset(std::size_t bits, const std::string &path)
-        : num_words_((bits + 63) / 64),
+        : num_words_((bits + word_bits - 1) / word_bits),
           dirty_blocks_(std::make_unique<std::atomic<std::uint8_t>[]>(
               (num_words_ + block_size - 1) / block_size)),
           mapped_bytes_(num_words_ * sizeof(std::uint64_t)),
           mapped_path_(path) {
-        mapped_fd_ = open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0644);
+        mapped_fd_ =
+            open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
         if (mapped_fd_ < 0)
             throw std::runtime_error("cannot open bitmap file " + path + ": " +
                                      std::strerror(errno));
@@ -78,23 +79,25 @@ class AtomicBitset {
 
     AtomicBitset(const AtomicBitset &) = delete;
     AtomicBitset &operator=(const AtomicBitset &) = delete;
+    AtomicBitset(AtomicBitset &&) = delete;
+    AtomicBitset &operator=(AtomicBitset &&) = delete;
 
-    bool test(std::size_t bit) const {
-        return (load_word(bit / 64) >> (bit % 64)) & 1;
+    [[nodiscard]] bool test(std::size_t bit) const {
+        return ((load_word(bit / word_bits) >> (bit % word_bits)) & 1) != 0;
     }
 
     bool set_atomic(std::size_t bit) {
-        const std::size_t word_index = bit / 64;
-        const std::uint64_t mask = std::uint64_t{1} << (bit % 64);
+        const std::size_t word_index = bit / word_bits;
+        const std::uint64_t mask = std::uint64_t{1} << (bit % word_bits);
         const std::uint64_t old = fetch_or_word(word_index, mask);
         dirty_blocks_[word_index / block_size].store(1,
                                                      std::memory_order_relaxed);
-        return !(old & mask);
+        return (old & mask) == 0;
     }
 
     bool set_atomic_check(std::size_t bit) {
-        const std::size_t word_index = bit / 64;
-        const std::uint64_t mask = std::uint64_t{1} << (bit % 64);
+        const std::size_t word_index = bit / word_bits;
+        const std::uint64_t mask = std::uint64_t{1} << (bit % word_bits);
         const std::uint64_t old = fetch_or_word(word_index, mask);
         dirty_blocks_[word_index / block_size].store(1,
                                                      std::memory_order_relaxed);
@@ -116,14 +119,14 @@ class AtomicBitset {
             const std::size_t last = std::min(first + block_size, num_words_);
             for (std::size_t index = first; index < last; ++index) {
                 const std::uint64_t bits = other.load_word(index);
-                if (bits)
+                if (bits != 0)
                     fetch_or_word(index, bits);
             }
             dirty_blocks_[block].store(1, std::memory_order_relaxed);
         }
     }
 
-    void swap(AtomicBitset &other) {
+    void swap(AtomicBitset &other) noexcept {
         std::swap(mapped_words_, other.mapped_words_);
         std::swap(mapped_fd_, other.mapped_fd_);
         std::swap(mapped_bytes_, other.mapped_bytes_);
@@ -145,17 +148,17 @@ class AtomicBitset {
         }
     }
 
-    std::size_t num_words() const { return num_words_; }
+    [[nodiscard]] std::size_t num_words() const { return num_words_; }
 
-    std::size_t num_blocks() const {
+    [[nodiscard]] std::size_t num_blocks() const {
         return (num_words_ + block_size - 1) / block_size;
     }
 
-    bool block_dirty(std::size_t block) const {
+    [[nodiscard]] bool block_dirty(std::size_t block) const {
         return dirty_blocks_[block].load(std::memory_order_relaxed) != 0;
     }
 
-    std::uint64_t load_word(std::size_t index) const {
+    [[nodiscard]] std::uint64_t load_word(std::size_t index) const {
         if (mapped_words_ != nullptr)
             return __atomic_load_n(mapped_words_ + index, __ATOMIC_RELAXED);
         return words_[index].load(std::memory_order_relaxed);
@@ -186,7 +189,9 @@ class AtomicBitset {
     std::string mapped_path_;
 };
 
-struct alignas(64) PaddedScanCounter {
+static constexpr std::size_t cache_line_size = 64;
+
+struct alignas(cache_line_size) PaddedScanCounter {
     std::atomic<std::size_t> value{0};
 };
 
@@ -236,8 +241,9 @@ inline void report_bfs_topdown_progress(std::size_t layer, std::size_t scanned,
               << std::setprecision(1) << scan_percent << "%)" << std::flush;
 }
 
-inline bool star_connected(const PackedArrangementGraph &graph,
-                           const std::vector<packed_code_t> &star) {
+[[nodiscard]] inline bool
+star_connected(const PackedArrangementGraph &graph,
+               const std::vector<packed_code_t> &star) {
     if (star.empty())
         return true;
 

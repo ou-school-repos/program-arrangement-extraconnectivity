@@ -16,10 +16,10 @@ struct Instance {
     std::vector<std::vector<std::vector<int>>> lines;
     std::vector<std::vector<int>> root_id;
 
-    int encode(const std::vector<int> &vertex) const {
+    [[nodiscard]] int encode(const std::vector<int> &vertex) const {
         return std::accumulate(vertex.begin(), vertex.end(), 0,
                                [this](const int code, const int symbol) {
-                                   return n * code + symbol;
+                                   return (n * code) + symbol;
                                });
     }
 
@@ -71,18 +71,18 @@ struct Automorphism {
     std::vector<int> coordinates;
     std::vector<int> symbols;
 
-    int apply(const int vertex, const Instance &instance) const {
-        const int code = std::accumulate(
+    [[nodiscard]] int apply(const int vertex, const Instance &instance) const {
+        return std::accumulate(
             coordinates.begin(), coordinates.begin() + instance.k, 0,
             [this, &instance, vertex](const int value, const int coordinate) {
-                return instance.n * value +
+                return (instance.n * value) +
                        symbols[instance.vertices[vertex][coordinate]];
             });
-        return instance.index.at(code);
     }
 };
 
-inline std::vector<Automorphism> origin_stabilizer(const Instance &instance) {
+[[nodiscard]] inline std::vector<Automorphism>
+origin_stabilizer(const Instance &instance) {
     std::vector<Automorphism> group;
     std::vector<int> coordinates(instance.k);
     std::iota(coordinates.begin(), coordinates.end(), 0);
@@ -103,7 +103,7 @@ inline std::vector<Automorphism> origin_stabilizer(const Instance &instance) {
     return group;
 }
 
-inline std::vector<int>
+[[nodiscard]] inline std::vector<int>
 canonical_key(const std::vector<int> &subset, const Instance &instance,
               const std::vector<Automorphism> &stabilizer) {
     if (subset.size() == 1)
@@ -128,7 +128,7 @@ canonical_key(const std::vector<int> &subset, const Instance &instance,
         for (const int vertex : subset) {
             int code = 0;
             for (int position = 0; position < instance.k; ++position)
-                code = instance.n * code +
+                code = (instance.n * code) +
                        shift[instance.vertices[vertex][position]];
             shifted.push_back(instance.index.at(code));
         }
@@ -150,16 +150,16 @@ canonical_key(const std::vector<int> &subset, const Instance &instance,
     return best;
 }
 
-inline std::uint64_t bit_mask(const int bit) {
+[[nodiscard]] inline std::uint64_t bit_mask(const int bit) {
     return std::uint64_t{1} << (bit % 64);
 }
 
-inline int word_index(const int bit) { return bit / 64; }
+[[nodiscard]] inline int word_index(const int bit) { return bit / 64; }
 
-inline bool is_isomorphic(const std::vector<int> &subset,
-                          const std::vector<int> &target,
-                          const Instance &instance,
-                          const std::vector<Automorphism> &stabilizer) {
+[[nodiscard]] inline bool
+is_isomorphic(const std::vector<int> &subset, const std::vector<int> &target,
+              const Instance &instance,
+              const std::vector<Automorphism> &stabilizer) {
     if (target.size() == 1 && target[0] == -1)
         return subset.size() == 1;
     return std::any_of(subset.begin(), subset.end(), [&](const int anchor) {
@@ -178,7 +178,7 @@ inline bool is_isomorphic(const std::vector<int> &subset,
         for (const int vertex : subset) {
             int code = 0;
             for (int position = 0; position < instance.k; ++position)
-                code = instance.n * code +
+                code = (instance.n * code) +
                        shift[instance.vertices[vertex][position]];
             shifted.push_back(instance.index.at(code));
         }
