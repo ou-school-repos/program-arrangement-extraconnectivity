@@ -1,56 +1,75 @@
-# Enumerate maximum-defect sets (D=E(R)) by growth through maximum-defect prefixes (valid if shellability holds),
-# then compute max collisions X* and compare with Hamming X_H = C(R)-E(R).
+"""Enumerate maximum-defect sets (D=E(R)) by growth through
+maximum-defect prefixes (valid if shellability holds), then compute
+max collisions X* and compare with Hamming X_H = C(R)-E(R)."""
 import itertools
 import sys
 import time
 
 
-def E(R):
-    return sum(bin(i).count("1") for i in range(R))
+def E(r):
+    return sum(bin(i).count("1") for i in range(r))
 
 
-def C(R):
-    return (R - 1) + sum(i.bit_length() for i in range(R)) - E(R)
+def C(r):
+    return (
+        (r - 1)
+        + sum(i.bit_length() for i in range(r))
+        - E(r)
+    )
 
 
 RMAX = int(sys.argv[1])
 K = int(sys.argv[2])
 
 
-def D(S):
-    return len(S) * K - sum(len({w[:q] + w[q + 1 :] for w in S}) for q in range(K))
+def D(s):
+    return (
+        len(s) * K
+        - sum(
+            len({w[:q] + w[q + 1:] for w in s})
+            for q in range(K)
+        )
+    )
 
 
-def X(S):
-    syms = set(x for w in S for x in w)
+def X(s):
+    syms = set(x for w in s for x in w)
     N = max(syms) + 2
     m = N - K
     ext = set()
-    for u in S:
+    for u in s:
         for i in range(K):
             for y in range(N):
                 if y not in u:
-                    w = u[:i] + (y,) + u[i + 1 :]
-                    if w not in S:
+                    w = u[:i] + (y,) + u[i + 1:]
+                    if w not in s:
                         ext.add(w)
-    U = sum(len({w[:q] + w[q + 1 :] for w in S}) for q in range(K))
-    return U * (m + 1) - len(S) * K - len(ext)
+    U = sum(
+        len({w[:q] + w[q + 1:] for w in s})
+        for q in range(K)
+    )
+    return U * (m + 1) - len(s) * K - len(ext)
 
 
-def canon(S):
+def canon(s):
     best = None
     for perm in itertools.permutations(range(K)):
-        T = [tuple(w[p] for p in perm) for w in S]
-        # relabel symbols by first appearance in lexicographically sorted order, iterate to fixpoint-ish
-        T.sort()
+        t = [tuple(w[p] for p in perm) for w in s]
+        # relabel symbols by first appearance
+        # in lexicographic order, iterate to fixpoint
+        t.sort()
         mp = {}
-        for w in T:
+        for w in t:
             for x in w:
                 if x not in mp:
                     mp[x] = len(mp)
-        T = tuple(sorted(tuple(mp[x] for x in w) for w in T))
-        if best is None or T < best:
-            best = T
+        t = tuple(
+            sorted(
+                tuple(mp[x] for x in w) for w in t
+            )
+        )
+        if best is None or t < best:
+            best = t
     return best
 
 
@@ -60,25 +79,30 @@ for t in range(1, RMAX):
     t0 = time.time()
     nxt = set()
     target = E(t + 1)
-    for S in level:
-        Sset = set(S)
-        syms = sorted(set(x for w in S for x in w))
+    for s in level:
+        sset = set(s)
+        syms = sorted(
+            set(x for w in s for x in w)
+        )
         fresh = max(syms) + 1
-        for u in S:
+        for u in s:
             for i in range(K):
                 for x in syms + [fresh]:
                     if x in u:
                         continue
-                    v = u[:i] + (x,) + u[i + 1 :]
-                    if v in Sset:
+                    v = u[:i] + (x,) + u[i + 1:]
+                    if v in sset:
                         continue
-                    T = S + (v,)
-                    if D(T) == target:
-                        nxt.add(canon(T))
+                    t_val = s + (v,)
+                    if D(t_val) == target:
+                        nxt.add(canon(t_val))
     level = nxt
-    R = t + 1
-    xs = [X(S) for S in level]
+    r = t + 1
+    xs = [X(s) for s in level]
     print(
-        f"R={R}: {len(level)} max-defect classes (canonical-ish), max X={max(xs)}, Hamming X=C-E={C(R) - E(R)}, time {time.time() - t0:.1f}s",
+        f"R={r}: {len(level)} max-defect classes, "
+        f"max X={max(xs)}, "
+        f"Hamming X=C-E={C(r) - E(r)}, "
+        f"time {time.time() - t0:.1f}s",
         flush=True,
     )
