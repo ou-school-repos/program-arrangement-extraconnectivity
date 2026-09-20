@@ -2,25 +2,31 @@
 
 ## Project Overview
 
-This project computationally verifies and extends the extraconnectivity bounds
-for Arrangement Graphs A(n,k), as published by Cheng, Lipták & Tian (2022). The
-program exhaustively enumerates all connected subgraphs of size R within A(n,k)
-to compute exact (R-1)-extraconnectivity formulas, independently verified by
-brute-force neighbor enumeration.
+This project studies fixed-volume vertex boundaries and extra-connectivity in
+Arrangement Graphs A(n,k). `src/arrangement.cpp` enumerates symmetry-reduced
+connected R-patterns in a finite host and records a budget-aware catalogue;
+optional (n,k) queries evaluate the resulting connected-pattern envelope. It
+does not enumerate all subsets of each A(n,k), prove the unrestricted boundary
+profile, or by itself compute extra-connectivity.
 
-**Key result:** The search discovered that the published linear extrapolation
-breaks at R=8, where the optimal vertex cut locks into a 3-dimensional hypercube
-with 12 internal edges instead of the predicted 7. The stable Lean development
-formalizes the supporting algebraic defect machinery and the explicit
-Hamming-ball construction; the final extremal-combinatorics step remains
-conditional on explicit hypothesis interfaces.
+`src/pattern_catalogue.cpp` is a separate, deliberately straightforward ESU
+reference enumerator. It uses the finite host `A(2R-2,R-1)` and direct boundary
+recounting to produce connected-pattern signatures for small-R differential
+checks against the symmetry-reduced engine. It accepts 2 <= R <= 9 due to fixed
+buffers; this is a storage limit, not a practical runtime promise.
+
+**Key result:** the Lean development proves an unconditional fixed-volume
+Hamming-sandwich theorem with an explicit volume-only additive error and an
+exact Hamming-ball witness when the embedding gate holds. It does not assert
+that the Hamming ball is always optimal. Small exact-profile computations and
+explicit Star/folded-box witnesses show that other shapes can do better.
 
 ## Search Algorithm
 
 ### Vertex Representation
 
-Each k-permutation is packed into a `uint64_t` using 5-bit fields (supporting
-up to 32 symbols, R ≤ 12). Position 0 occupies the highest bits so integer
+Each k-permutation is packed into a `uint64_t` using 5-bit fields (supporting up
+to 32 symbols, R ≤ 12). Position 0 occupies the highest bits so integer
 comparison equals lexicographic comparison.
 
 ```
@@ -32,11 +38,21 @@ Vertex layout (R=5):  [sym₀|sym₁|sym₂|sym₃|sym₄|unused...]
 
 The engine performs a depth-first enumeration of connected subgraphs:
 
-1. **Root:** Start with two adjacent vertices `ver[0] = identity`, `ver[1]` = identity with position 0 replaced by symbol R.
-2. **Branching (Candidate Generation):** At each depth, generate candidate vertices adjacent to any vertex in the current set, subject to bounds on symbol index (`nodl`) and position (`largchg`). This local node expansion strictly takes **O(R⁴) time** and **O(1) auxiliary space**.
-3. **Leaf evaluation:** At depth R, record the accumulated neighbor-set formula `(Rk - nk1)(n-k) - cons` in **O(1) time and space**.
+1. **Root:** Start with two adjacent vertices `ver[0] = identity`, `ver[1]` =
+   identity with position 0 replaced by symbol R.
+2. **Branching (Candidate Generation):** At each depth, generate candidate
+   vertices adjacent to any vertex in the current set, subject to bounds on
+   symbol index (`nodl`) and position (`largchg`). This local node expansion
+   strictly takes **O(R⁴) time** and **O(1) auxiliary space**.
+3. **Leaf evaluation:** At depth R, recompute projection-root counts and the
+   boundary in the finite host A(2R,R), derive the exact collision invariant,
+   and record the pattern's `(D,X,p,s_a)` signature.
 
-**Global vs. Local Complexity:** While the global search space of connected subgraphs grows super-exponentially bounded by Cayley's tree formula ($\Omega(R^{R-2})$), the architectural design ensures that the work done at any single node to expand the frontier remains strictly polynomial ($O(R^4)$) with zero heap allocation.
+**Global vs. Local Complexity:** While the global search space of connected
+subgraphs grows super-exponentially bounded by Cayley's tree formula
+($\Omega(R^{R-2})$), the architectural design ensures that the work done at any
+single node to expand the frontier remains strictly polynomial ($O(R^4)$) with
+zero heap allocation.
 
 ### Three-Tier Deduplication
 
@@ -57,27 +73,31 @@ capturing the full S_n × S_R symmetry group.
 Instead of recomputing the full neighbor formula at each depth, `calc_step()`
 computes the O(R) delta contributed by the newly-added vertex:
 
-1. **XOR diff detection:** `cur ^ cur2` instantly identifies all differing
-   5-bit fields between the new vertex and each existing vertex.
+1. **XOR diff detection:** `cur ^ cur2` instantly identifies all differing 5-bit
+   fields between the new vertex and each existing vertex.
 2. **1-diff (edge):** If vertices differ in exactly one position, that position
    becomes "shared" — its anonymous neighbors are absorbed.
-3. **2-diff (named neighbors):** Vertices differing in exactly two positions
-   may create named neighbors that reduce the external boundary.
+3. **2-diff (named neighbors):** Vertices differing in exactly two positions may
+   create named neighbors that reduce the external boundary.
 
-The accumulated `(nk1, cons)` pair is passed down the recursion, so leaves
-require zero additional computation.
+The incremental `(nk1, cons)` pair is retained for traversal diagnostics, but is
+not trusted as the final pattern signature: direct leaf recounts are used
+because the incremental values disagree with direct boundary counts on some
+patterns. This independent recount adds per-leaf work.
 
 ### Independent Verification
 
-Every result is cross-validated by two independent methods:
+Every retained catalogue signature is cross-validated by two calculations:
 
 1. **`verify_neighbor_set()`** — Recomputes the formula using a completely
    separate algorithm (group-key based counting).
-2. **Brute-force enumeration** — Explicitly generates all neighbors in
-   A(2R, R) and counts distinct non-member vertices.
+2. **Brute-force enumeration** — Explicitly generates all neighbors in A(2R, R)
+   and counts distinct non-member vertices.
 
-Both must agree with the search output or the program reports a verification
-failure.
+The finite-host boundary and root counts construct each signature; the printed
+witness is then recounted and checked against its affine boundary formula. These
+checks validate retained witnesses, not completeness of the unrestricted profile
+or an extra-connectivity result.
 
 ## Key Optimizations
 
@@ -99,8 +119,8 @@ All targets are in the top-level `Makefile`. Run `make help` for the full list.
 ### Core Targets
 
 ```bash
-make build/opt          # Compile optimized search engine (-O2, links nauty)
-make run/opt R=9        # Build and run for R=9
+make bin/arrangement    # Compile optimized search engine (links nauty)
+make run R=9            # Build and run for R=9
 make benchmark          # Run R=2..8 with timing
 make test               # Verify original output matches expected
 make test/opt           # Cross-validate optimized vs original
@@ -111,8 +131,8 @@ make test/opt           # Cross-validate optimized vs original
 ```bash
 make lean/cache         # Download pre-built Mathlib cache (run first)
 make lean               # Build and verify Lean proofs
-make lean/docs/setup    # Fetch doc-gen4 dependency (one-time)
-make lean/docs          # Generate HTML documentation
+make _lean/docs/setup   # Fetch doc-gen4 dependency (one-time)
+make _lean/docs         # Generate HTML documentation
 ```
 
 ### Documentation & Packaging
@@ -134,17 +154,18 @@ the expected (8k-7) to the actual **(8k-12)**.
 
 ### OEIS A000788 Connection
 
-The true internal edge count E(R) follows [OEIS A000788](https://oeis.org/A000788)
-— the cumulative binary weight (total number of 1-bits in 0, 1, ..., R-1).
-This sequence coincides with the linear prediction at R=5,6,7 but diverges at
-every power of 2 where the vertices form a perfect hypercube.
+The true internal edge count E(R) follows
+[OEIS A000788](https://oeis.org/A000788) — the cumulative binary weight (total
+number of 1-bits in 0, 1, ..., R-1). This sequence coincides with the linear
+prediction at R=5,6,7 but diverges at every power of 2 where the vertices form a
+perfect hypercube.
 
 ### Lean 4 Formalization
 
-The closed-form `E(d) = d · 2^{d-1}` for d-dimensional hypercubes is proven
-by induction in `proofs/HypercubeEdges.lean`. The proof avoids natural number
-subtraction by establishing `E(d) * 2 = d * 2^d`. Machine-verified with
-Lean 4.30.0-rc2 + Mathlib.
+The closed-form `E(d) = d · 2^{d-1}` for d-dimensional hypercubes is proven by
+induction in `proofs/HypercubeEdges.lean`. The proof avoids natural number
+subtraction by establishing `E(d) * 2 = d * 2^d`. Machine-verified with Lean
+4.30.0-rc2 + Mathlib.
 
 ## Dependencies
 

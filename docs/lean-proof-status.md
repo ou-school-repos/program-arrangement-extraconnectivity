@@ -1,152 +1,80 @@
-# Lean 4 Formal Verification Status
+# Lean 4 proof status
 
-Formal verification of the Arrangement Graph extraconnectivity theorem
-using Lean 4 and Mathlib.
+Status reviewed 2026-09-19. This file distinguishes proved boundary statements
+from the still-open exact profile and extra-connectivity questions.
 
-## Build
+## Current capstone
 
-```bash
-make lean          # Build and verify proofs
-make lean/cache    # Download pre-built Mathlib cache (first time)
-```
+`Arrangement/Capstone.lean` proves `arrangement_boundary_sandwich`. For every
+volume `R` and every `(n,k)` satisfying the Boolean-cube embedding gate, it
+states
 
-Current status: **stable build succeeds with 0 errors and 0 sorries in the main proof path**.
-The capstone theorem is intentionally parameterized by the remaining extremal
-combinatorics hypotheses rather than depending on raw global `axiom`
-declarations.
+\[ \Phi*{n,k}(R) \le H(R,n,k) \le \Phi*{n,k}(R)+E(R)+2(R^2-R), \]
 
-## Architecture
+and supplies an `R`-vertex set attaining `H`. Here `\Phi` is the minimum
+external vertex boundary over all `R`-subsets, `H` is the exact boundary of the
+embedded Hamming-ball witness, and `E` is the cumulative-popcount term. The
+per-set lower bound needs only `k ≤ n`; the exact witness requires the embedding
+gate. This is not an exact-isoperimetric theorem and makes no claim about `κ_g`.
 
-| Section                  | Theorem / Definition                                    | Status     |
-| ------------------------ | ------------------------------------------------------- | ---------- |
-| Subadditivity of A000788 | `E_add_min_le`: E(x)+E(y)+min(x,y) <= E(x+y)            | PROVEN     |
-| Defect Bound             | `E_seq_list_sum_le`: generalized partition subaddivity  | PROVEN     |
-| Hypercube Embedding      | `Cube`, `embed_cube`, `embedding_is_injective`          | PROVEN     |
-| Harper's Theorem         | `harpers_edge_isoperimetry`: cubeEdges(S) <= E(\|S\|)   | PROVEN\*   |
-| Graph Definition         | `ArrVertex`, `Fintype`, `DecidableEq`, `arr_adjacent`   | PROVEN     |
-| External Neighbors       | `external_neighbors` (computable definition)            | PROVEN     |
-| Embedding Condition      | `can_embed_hypercube` (dual: `k+d ≤ n ∧ d ≤ k`)         | PROVEN     |
-| Defect Bound             | `sum_unique_roots_lower_bound`                          | PROVEN     |
-| Collision-Adjusted Bound | `CollisionAdjustedBound` / `UniversalLowerBound` bridge | HYPOTHESIS |
-| Fiber Identity           | `total_coord_edges_eq` (fiber counting)                 | PROVEN     |
-| Bitwise Arithmetic       | `nat_popcount_eq_card_filter`                           | PROVEN     |
-| Construction             | `hamming_ball_subset` (named, explicit)                 | PROVEN     |
-| Evaluation               | `hamming_ball_eval` (boundary count)                    | PROVEN     |
-| Evaluation Hypothesis    | `HBCrossCollisions` (KK shadow, existential)            | HYPOTHESIS |
-| Cardinality              | `le_pow_bit_length`, `embed_vertex_injective_cube`      | PROVEN     |
-| Lower Bound              | `UniversalLowerBound` (universal bound)                 | HYPOTHESIS |
-| Asymptotic Penalty       | `sub_optimal_penalty` (penalty for sub-optimality)      | PROVEN\*   |
-| Capstone                 | `arrangement_extraconnectivity_minimum` (composition)   | PROVEN\*   |
+The additive error is not removable as a universal zero-error assertion: Star
+and other finite witnesses beat the Hamming value in some arrangement graphs.
+The theorem is designed to remain valid in those cases.
 
-\*Proven but **conditional on outstanding axioms** (see Axioms section below).
-Harper's Theorem is proven but **not in the dependency chain** of the
-capstone theorem. The defect-based proof bypasses it entirely via algebraic
-subadditivity of E_seq.
-TODO(review): the `sub_optimal_penalty` row and the prose below still advertise
-the stronger linear penalty statement; rewrite this to the weaker conditional
-form once the false theorem is removed.
+## Main proved components
 
-## Dependency Graph
+| Component                          | Lean declaration                                                         | Status                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Popcount partition inequality      | `E_add_min_le`, `E_seq_list_sum_le`                                      | Proved                                                                |
+| Arrangement vertices and adjacency | `ArrVertex`, `arr_adjacent`                                              | Proved definitions/instances                                          |
+| Defect bound                       | `sum_unique_roots_lower_bound`                                           | Proved                                                                |
+| Coordinate-fiber identity          | `total_coord_edges_eq`                                                   | Proved                                                                |
+| Collision charging bound           | global overlap charging and `restricted_lower_bound_up_to_error`         | Proved                                                                |
+| Hamming witness and evaluation     | `hamming_ball_subset`, `hamming_ball_eval`, `hb_cross_collisions_closed` | Proved                                                                |
+| Fixed-volume boundary capstone     | `arrangement_boundary_sandwich`                                          | Proved, additive-error sandwich                                       |
+| Exact penalty identities           | `Arrangement/PenaltyExact.lean`                                          | Proved                                                                |
+| Pairwise phase comparisons         | `Arrangement/Phase.lean`                                                 | Proved from exact penalty identity; family signatures remain separate |
 
-```text
-arrangement_extraconnectivity_minimum
-  ├─ exists_optimal_embedding
-  │    ├─ hamming_ball_subset         (explicit construction)
-  │    │    ├─ embed_vertex           (Cube d → ArrVertex n k)
-  │    │    │    └─ embed_cube        (bit → fresh/base symbol)
-  │    │    └─ nat_to_cube            (ℕ → Cube d via testBit)
-  │    ├─ le_pow_bit_length           (R ≤ 2^d via Nat.lt_size_self)
-  │    ├─ embed_vertex_injective_cube (injectivity of embedding)
-  │    ├─ nat_to_cube_injective       (injectivity of testBit encoding)
-  │    └─ hamming_ball_eval           (exact boundary evaluation)
-  │         ├─ hb_total_coord_edges   (from total_coord_edges_eq)
-  │         └─ hb_cross_collisions [AXIOM]
-  └─ lower_bound_all_embeddings [AXIOM] (universal lower bound)
-```
+Build with `make lean` from the repository root. The legacy conditional
+exact-minimum interfaces and the disproved universal/restricted zero-error
+claims are historical only; they are not premises of
+`arrangement_boundary_sandwich`. Refuted statements belong under
+`proofs/Arrangement/refuted/` and should not be described as active capstone
+hypotheses.
 
-## Remaining Hypothesis Interfaces
+## What is not proved
 
-The remaining mathematical gaps are isolated as explicit theorem parameters in
-`arrangement_extraconnectivity_minimum`, not as raw `axiom` commands.
+- No general exact formula for `\Phi_{n,k}(R)` is known from this development.
+- No theorem says the Hamming ball minimizes boundary for every feasible
+  `(n,k,R)`; computational counterexamples rule out that blanket claim.
+- The connected-pattern catalogue in `src/arrangement.cpp` is computational, and
+  does not certify the unrestricted profile. The small-profile enumerator
+  results are also computational certificates, not Lean theorems.
+- No general formula for `g`-extra-connectivity `κ_g` is proved. A boundary
+  profile theorem alone does not automatically give an extra-connectivity
+  theorem; component-size and valid-cut conditions must also be handled.
+- The Star-cut connectivity theorem and the full characterization of
+  intermediate `(D,X,budget)` phases are not formalized in Lean.
 
-### 1. Universal Boundary Inequality (`UniversalLowerBound`)
+## Remaining research targets
 
-**What it says**: `external_neighbors V' ≥ (R * k - E_seq R) * (n - k) - C_constant R`.
+1. Prove or refute the budgeted pattern-envelope characterization, including
+   completeness of pattern enumeration and the alphabet/coordinate embedding
+   criteria.
+2. Extend exact unrestricted profile computations beyond the current small
+   cells, with reproducible witnesses and disconnected-set split checks.
+3. Classify the phase transitions among Hamming, folded-box, Star, and hybrid
+   patterns. Pairwise crossings are affine in `n-k` once a family's defect and
+   collision counts are known, but these observed families are not exhaustive.
+4. Bridge fixed-volume boundary minima to `g`-extra-connectivity with explicit
+   component-size hypotheses, then determine where the resulting bounds are
+   sharp.
 
-**Justification**:
+## Reproducibility
 
-- Conceptually justified by Section 6's Tug-of-War scaling logic: any sub-optimal defect is penalized by at least (n-k) boundary nodes, which eventually eclipses any cross-collision differences.
-- Computationally verified via `predict --verify R` (predict.cpp) for all $R \le 260$ and exhaustively for $R \le 10$ using `arrangement`.
-  TODO(review): this section still reads as if the universal lower bound were
-  fully validated; keep the hypothesis framing explicit until the Lean proof is
-  actually closed.
-
-### 2. Collision-Adjusted Bound (`CollisionAdjustedBound`)
-
-**What it says**: `external_neighbors V' ≥ sum_unique_roots V' * (n - k) - C_constant R`.
-
-**Justification**:
-
-- Core isoperimetric inequality bounding external neighbors by unique roots and the maximal collision constant.
-  TODO(review): this bridge statement is the one the review flags as false; do
-  not present it as an active theorem until it is either deleted or restated.
-
-### 3. Existential Shadow Bound (`HBCrossCollisions`)
-
-**What it says**: The cross collisions of the Hamming Ball is exactly `C_constant R - E_seq R`.
-
-**Justification**:
-
-- Computationally verified alongside Axiom 1.
-- Evaluates the 4-cycle count for the explicitly constructed Hamming Ball.
-  TODO(review): the current driver uses this as a hypothesis interface, but the
-  doc should make clear that the combinatorial bridge lemmas are still open.
-
-## Embedding Condition
-
-```lean
-can_embed_hypercube (R n k : ℕ) : Prop :=
-  k + bit_length (R - 1) ≤ n ∧ bit_length (R - 1) ≤ k
-```
-
-Dual constraint on the hypercube dimension `d = bit_length(R-1) = Nat.size(R-1)`:
-
-- **`k + d ≤ n`**: need d fresh symbols beyond the k base positions.
-- **`d ≤ k`**: can only flip coordinates that exist in the k-length sequence.
-
-## What IS Fully Proven (No Axioms)
-
-The core algebra, bijections, and isoperimetric defect inequalities of the **Algebraic Defect Framework** are 100% mechanized with zero axioms:
-
-- **E_seq subadditivity** (`E_add_min_le`): The core isoperimetric inequality on A000788.
-- **Generalized partition bound** (`E_seq_list_sum_le`): Extension from binary splits to arbitrary partitions.
-- **Defect fiber bound** (`defect_fiber_bound`): The topological decomposition showing D(V') ≤ Σ D(Fₛ) + R - y.
-- **Universal lower bound** (`sum_unique_roots_lower_bound`): The defect bound D(V') ≤ E_seq(R) for ALL R-element subsets.
-- **Total Coordinate Edges** (`total_coord_edges_eq`): Mechanically double-counting the available $(n-k+1)$ extensions for each unique root via pure Finset bijections.
-- **Bitwise Arithmetic** (`nat_popcount_eq_card_filter`): Mechanically verifying the exact Finset bijection between `Nat.testBit` filters and the recursive `popcount` weight, by induction on the bit width with a partition-and-shift decomposition.
-- **Hamming Ball construction** (`hamming_ball_subset`): Explicit construction with proven cardinality.
-
-The following high-level results are **mechanically proven inside Lean**, but remain conditional on the three axioms above:
-
-- **Asymptotic Penalty** (`sub_optimal_penalty`): Proving that topologies with a defect shortfall $\Delta E$ are unconditionally penalized by at least $\Delta E(n-k)$ boundary nodes (conditional on Axiom 2).
-  TODO(review): this is the false stronger theorem the review calls out; keep it
-  only as a historical note if you need the dependency graph.
-- **Existence of Optimal Embedding** (`exists_optimal_embedding`): Proven constructor showing that the Hamming Ball achieves the exact optimal boundary (conditional on Axiom 3).
-- **Extraconnectivity Capstone** (`arrangement_extraconnectivity_minimum`): Combines existence and lower bound to squeeze the exact minimum cut (conditional on Axiom 1 and Axiom 3).
-
-## Novel Contributions
-
-- **A000788 Discovery**: The maximum internal edges for R vertices in A(n,k) equals the cumulative popcount sequence (OEIS A000788).
-- **Pareto Spectrum**: The full topology-boundary tradeoff between the Star graph and the Hamming Ball.
-- **Compression No-Go Theorem**: The standard Kruskal-Katona/Harper compression technique provably FAILS for arrangement graphs due to "coordinate tangling". Documented in `IsoperimetricPartialPermutation.lean`.
-- **Asymptotic Penalty Theorem**: TODO(review): remove or restate this claim;
-  the current theorem name is misleading if the stronger penalty is not proven.
-- **Sandwich Conjecture & Hypercube Fracture Gap**: Formalized topological phase transitions and bounds.
-
-## Open Conjectures
-
-We have formally stated the remaining extremal bounds as `Prop`s to establish a rigorous bounty board for future Lean 4 contributors:
-
-- `uniqueness_conjecture`
-- `sandwich_upper_bound_conjecture`
-- `hypercube_fracture_gap_conjecture`
+The key public theorem is in `proofs/Arrangement/Capstone.lean`; its imported
+boundary and charging lemmas are in
+`Arrangement/ArrangementExtraconnectivity.lean` and `Arrangement/CrossTop.lean`.
+Refuted historical propositions are isolated in the `refuted` subtree. Do not
+cite a successful build as evidence for any computational profile value: those
+require the enumerator output and its independent witness/boundary checks.

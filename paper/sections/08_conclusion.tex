@@ -1,0 +1,55 @@
+\section{Conclusion and Open Problems}
+\label{sec:conclusion}
+
+For $m = n - k < 5$, the recursive, single-coordinate branch construction of
+the star graph has long served as the presumptive optimal architecture for
+boundary minimization in arrangement graphs.  This paper shows that this
+structural dominance breaks down as the symbol pool grows.  At $A(10,5)$ with
+$R = 26$ we exhibit an exact discrete counterexample: a $5$-dimensional binary
+hypercube slice attains boundary $\SliceBoundary{}$, strictly beating the
+canonical star's $\StarBoundary{}$ (Proposition~\ref{prop:crossover}).  The
+lexicographic increment trace (Figure~\ref{fig:trace}) couples the crossover to
+a mechanism: the star confines its internal adjacencies to isolated coordinate
+fibers, accumulating boundary debt before loops can close, whereas the
+orthogonal slice distributes variation across all $k$ coordinates and closes
+loops early.  The same geometric friction defeats strictly local averaged
+squeezes on star closures --- the exact slack deficit $-8$ on the full Star
+$S_4 \subset A(8,4)$ --- so the mechanism is not an artifact of $A(10,5)$
+alone.
+
+By encoding the exact set-theoretic isoperimetric search as a Boolean
+constraint program over the $30{,}240$ vertices of $A(10,5)$
+(Appendix~\ref{app:computational}), we certify a global floor
+$|\extbd(S)| \ge \CertFloor{}$ for every volume-$26$ subset under a
+vertex-transitivity symmetry pin, bracketing the true optimum as
+$\CertFloor{} \le |\extbd(S)| \le \SliceBoundary{}$.  The search window below
+the slice --- the target of $\HuntTarget{}$ --- remains open: we hold no
+feasible witness at or below it, only the certified floor, which is a moving
+record that advances as the core-guided search continues.
+
+These findings complement, rather than replace, the conditional exact-boundary
+framework developed in Sections~\ref{sec:defect}--\ref{sec:sandwich}: the
+algebraic defect framework and its Lean~4 formalization remain conditional on
+the Restricted Boundary Inequality (Proposition~\ref{prop:restricted_lower_bound}),
+valid in the hypercube-embedding regime $R \le 2^m$.  The crossover described
+here characterizes what happens when that regime is abandoned.
+
+\textbf{Future work.}
+\begin{itemize}
+\item \textbf{Closing the computational interval.} The immediate target is to
+resolve the window $[\CertFloor{}, \SliceBoundary{}]$.  The certified floor was
+reached via core-guided search that archive over a million learned clauses;
+integrating graph-specific symmetry breaking into the branching heuristics and
+deploying distributed solving should push the floor toward the slice, or
+discover an incumbent at or below $\HuntTarget{}$.
+\item \textbf{Generalizing the crossover.} It remains to lift the exact
+$A(10,5)$ observation to a theorem: we conjecture that for every $m \ge 5$ and
+sufficiently large $k$ there is a subset volume $R$ at which an orthogonal
+hypercube embedding (or a generalized fractional Hamming slice) strictly
+outperforms the canonical star.
+\item \textbf{Interconnection networks.} The arrangement graph is a highly
+symmetric topology used in parallel computing.  The shift from hierarchical to
+distributed optimal packings as the alphabet scales bears directly on fault
+tolerance, bisection bandwidth, and routing in $A(n,k)$; quantifying the
+crossover's effect on these metrics is the applied follow-up.
+\end{itemize}

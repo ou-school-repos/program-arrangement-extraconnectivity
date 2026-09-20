@@ -1,3 +1,4 @@
+---
 name: Build Artifacts (Self-Hosted)
 
 on:
@@ -12,16 +13,25 @@ jobs:
     runs-on: [self-hosted, dev, ubuntu22, skylake]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Required Local Dependencies (pre-installed on the runner):
-      # - System: texlive-latex-recommended, texlive-pictures, texlive-latex-extra, texlive-xetex, lmodern, texlive-fonts-recommended, graphviz, pandoc
+      # - System: texlive-latex-recommended, texlive-pictures,
+      #           texlive-latex-extra, texlive-xetex, lmodern,
+      #           texlive-fonts-recommended, graphviz, pandoc,
+      #           libimage-exiftool-perl, qpdf, xournalpp
       # - Python: matplotlib, pandas, scipy
 
       - name: Generate Assets (Conditional/Optional)
         run: |
           make render
           python3 scripts/gen_complexity_curves.py
+
+      - name: Unarchive Xournalpp handwritten notes
+        run: |
+          cd paper/journal-pads
+          make unarchive loc=out/xml/handwritten-defense-2026-05-01-Note-22-41.xml
+          make archive
 
       - name: Build Paper and Documentation
         run: |
@@ -34,5 +44,6 @@ jobs:
           name: all-pdfs
           path: |
             paper/paper.pdf
+            paper/journal-pads/out/pdf/*.pdf
             README.pdf
             docs/*.pdf

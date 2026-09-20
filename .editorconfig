@@ -8,12 +8,16 @@ indent_size = 2
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.{cpp,h,java}]
+[*.{cpp,h,java,py}]
 indent_size = 4
 
 [*.md]
 trim_trailing_whitespace = true
 
 [Makefile]
+indent_size = 4
+indent_style = tab
+
+[*.sh]
 indent_size = 4
 indent_style = tab

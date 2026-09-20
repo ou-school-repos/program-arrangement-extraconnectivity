@@ -39,6 +39,7 @@ def verify(R: int, vertices: list[str], expected_nk1: int, expected_const: int) 
 
     # Check connectivity via BFS
     def adjacent(a: str, b: str) -> bool:
+        """Two vertices are adjacent iff they differ in exactly one position."""
         return sum(1 for x, y in zip(a, b) if x != y) == 1
 
     visited = {vertices[0]}
@@ -73,15 +74,16 @@ def verify(R: int, vertices: list[str], expected_nk1: int, expected_const: int) 
     print(f"R={R}: |N(V')| = {nbr_count}")
     print(f"  nk1 coeff: A000788={expected_nk1}, Cheng={cheng_nk1} ({nk1_cmp})")
     print(f"  constant:  A000788={expected_const}, Cheng={cheng_const} ({const_cmp})")
-    print(f"  A000788: ({coeff})({R}) - {expected_const}" f" = {predicted}  {a_match}")
+    print(f"  A000788: ({coeff})({R}) - {expected_const} = {predicted}  {a_match}")
     print(
         f"  Cheng:   ({cheng_coeff})({R}) - {cheng_const}"
         f" = {cheng_predicted}  {c_match}"
     )
 
-    assert (
-        nbr_count == predicted
-    ), f"A000788 prediction failed: expected {predicted}, got {nbr_count}"
+    failure_message = (
+        f"A000788 prediction failed: expected {predicted}, got {nbr_count}"
+    )
+    assert nbr_count == predicted, failure_message
 
 
 # All minimum-cut vertex sets from exhaustive search (R=2..9)
@@ -131,6 +133,6 @@ CASES = [
 ]
 
 if __name__ == "__main__":
-    for R, vertices, nk1, const in CASES:
-        verify(R, vertices, nk1, const)
+    for case_r, case_vertices, case_nk1, case_const in CASES:
+        verify(case_r, case_vertices, case_nk1, case_const)
     print(f"\nAll {len(CASES)} cases verified (R=2..9).")

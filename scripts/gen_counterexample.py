@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Generate compression counterexample side-by-side diagram for A(4,2)."""
 
+import io
 import itertools
 import math
+import os
 
 import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
+from matplotlib.patches import Patch
+from PIL import Image
 
 matplotlib.use("Agg")
 
@@ -14,7 +18,7 @@ matplotlib.use("Agg")
 def make_graph():
     """Build A(4,2): vertices are injective 2-tuples from {1,2,3,4}."""
     G = nx.Graph()
-    verts = [(a, b) for a, b in itertools.permutations(range(1, 5), 2)]
+    verts = list(itertools.permutations(range(1, 5), 2))
     G.add_nodes_from(verts)
     for u in verts:
         for v in verts:
@@ -24,11 +28,15 @@ def make_graph():
 
 
 def boundary(G, S):
+    """Return the external boundary of vertex set S: nodes outside S adjacent to it."""
     S_set = set(S)
     return {v for v in G.nodes if v not in S_set and any(u in S_set for u in G[v])}
 
 
 def draw_panel(ax, G, pos, S, bnd, title, bnd_color, legend_label, notes):
+    """
+    Draw one before/after panel: graph G with set S, boundary bnd, and annotations.
+    """
     S_set, bnd_set = set(S), set(bnd)
     gray = [v for v in G.nodes if v not in S_set and v not in bnd_set]
 
@@ -116,8 +124,6 @@ def draw_panel(ax, G, pos, S, bnd, title, bnd_color, legend_label, notes):
             color="#555",
         )
 
-    from matplotlib.patches import Patch
-
     legend_items = [
         Patch(facecolor="#4a90d9", edgecolor="#1a3a6a", label=f"Set ({len(S)})"),
         Patch(
@@ -134,6 +140,7 @@ def draw_panel(ax, G, pos, S, bnd, title, bnd_color, legend_label, notes):
 
 
 def main():
+    """Build the before/after compression panels and save the counterexample GIF."""
     G = make_graph()
     verts_sorted = sorted(G.nodes)
     pos = {}
@@ -216,15 +223,14 @@ def main():
         fontsize=8,
         color="#333",
         linespacing=1.5,
-        bbox=dict(
-            boxstyle="round,pad=0.4", facecolor="#f5f5f5", edgecolor="#ccc", alpha=0.9
-        ),
+        bbox={
+            "boxstyle": "round,pad=0.4",
+            "facecolor": "#f5f5f5",
+            "edgecolor": "#ccc",
+            "alpha": 0.9,
+        },
         transform=fig.transFigure,
     )
-
-    import io
-
-    from PIL import Image
 
     out = "assets/out/compression_counterexample.gif"
     buf = io.BytesIO()
@@ -240,8 +246,6 @@ def main():
     img = Image.open(buf)
     img.save(out, format="GIF")
     plt.close(fig)
-
-    import os
 
     size_kb = os.path.getsize(out) // 1024
     print(f"Saved {out} ({size_kb}KB)")

@@ -54,13 +54,9 @@ template <typename SymT> static std::vector<Vertex<SymT>> build_hamming_ball() {
 
 // -- Formula computation via construction -- O(R^3) --------------------
 
-struct FormulaResult {
-    int64_t nk1;
-    int64_t constant;
-};
-
 template <typename SymT>
-static FormulaResult compute_formula(const std::vector<Vertex<SymT>> &verts) {
+static std::pair<int64_t, int64_t>
+compute_formula(const std::vector<Vertex<SymT>> &verts) {
     // Collect used symbols
     std::vector<SymT> used_syms;
     for (const auto &v : verts) {

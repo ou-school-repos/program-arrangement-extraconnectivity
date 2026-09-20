@@ -1,0 +1,14 @@
+[default.extend-words]
+somme = "somme"
+classe = "classe"
+sur = "sur"
+fonction = "fonction"
+normale = "normale"
+thm = "thm"
+ba = "ba"
+
+-Iinclude = "-Iinclude"
+
+[type.lean.extend-words]
+hpe = "hpe"
+hge = "hge"
