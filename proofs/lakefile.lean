@@ -28,6 +28,7 @@ lean_lib «Proofs» where
     `Arrangement.InternalPairs,
     `Arrangement.CrossTop,
     `Arrangement.Capstone,
+    `Arrangement.EventualProfile,
     `Arrangement.ProofAudit,
   ]
 
