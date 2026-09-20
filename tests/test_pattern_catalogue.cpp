@@ -204,12 +204,12 @@ int main(int argc, char **argv) {
             std::getenv("PROJ_ANK_ENABLE_VERBOSE_TESTS");
         const bool enable_verbose_tests =
             verbose_tests != nullptr && std::string(verbose_tests) == "1";
-        const int max_r = enable_verbose_tests ? 6 : 4;
+        const int max_r = enable_verbose_tests ? 6 : 5;
         for (int r = 2; r <= max_r; ++r)
             compare_case(r);
         if (!enable_verbose_tests)
-            std::cout << "R=5..6 skipped; set "
-                         "PROJ_ANK_ENABLE_VERBOSE_TESTS=1 to include them.\n";
+            std::cout << "R=6 skipped; set "
+                         "PROJ_ANK_ENABLE_VERBOSE_TESTS=1 to include it.\n";
     } catch (const std::exception &error) {
         std::cerr << "pattern catalogue differential test failed: "
                   << error.what() << '\n';
