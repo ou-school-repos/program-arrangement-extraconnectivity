@@ -33,7 +33,7 @@ The theorem is designed to remain valid in those cases.
 | Hamming witness and evaluation     | `hamming_ball_subset`, `hamming_ball_eval`, `hb_cross_collisions_closed` | Proved                                                                |
 | Fixed-volume boundary capstone     | `arrangement_boundary_sandwich`                                          | Proved, additive-error sandwich                                       |
 | Exact penalty identities           | `Arrangement/PenaltyExact.lean`                                          | Proved                                                                |
-| Pairwise phase comparisons         | `Arrangement/Phase.lean`                                                 | Proof added; pending Lean build; family signatures remain separate     |
+| Pairwise phase comparisons         | `Arrangement/Phase.lean`                                                 | Proved from exact penalty identity; family signatures remain separate |
 
 Build with `make lean` from the repository root. The legacy conditional
 exact-minimum interfaces and the disproved universal/restricted zero-error

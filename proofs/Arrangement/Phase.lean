@@ -34,7 +34,8 @@ theorem equal_defect_collision_order {R : ℕ}
     (hU : sum_unique_roots V₁ = sum_unique_roots V₂) :
     external_neighbors V₂ ≤ external_neighbors V₁ ↔
       cross_collisions V₁ ≤ cross_collisions V₂ := by
-  have hpenalty := penalty_exact V₁ V₂ h₁ h₂ hnk hU
+  have hU' : sum_unique_roots V₁ = sum_unique_roots V₂ + 0 := by omega
+  have hpenalty := penalty_exact V₁ V₂ h₁ h₂ hnk hU'
   omega
 
 end Arrangement
