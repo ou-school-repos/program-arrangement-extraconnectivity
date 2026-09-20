@@ -6,12 +6,16 @@ import itertools
 import sys
 import time
 
+# pylint: disable=redefined-outer-name
+
 
 def E(r):
+    """Binary digit sum (popcount sum) for R."""
     return sum(bin(i).count("1") for i in range(r))
 
 
 def C(r):
+    """Hamming capacity for R."""
     return (r - 1) + sum(i.bit_length() for i in range(r)) - E(r)
 
 
@@ -20,10 +24,14 @@ K = int(sys.argv[2])
 
 
 def D(s):
-    return len(s) * K - sum(len({w[:q] + w[q + 1 :] for w in s}) for q in range(K))
+    """Defect of a set of K-tuples."""
+    return len(s) * K - sum(
+        len({w[:q] + w[q + 1:] for w in s}) for q in range(K)
+    )
 
 
 def X(s):
+    """Collision count for a set of K-tuples."""
     syms = set(x for w in s for x in w)
     N = max(syms) + 2
     m = N - K
@@ -32,26 +40,31 @@ def X(s):
         for i in range(K):
             for y in range(N):
                 if y not in u:
-                    w = u[:i] + (y,) + u[i + 1 :]
+                    w = u[:i] + (y,) + u[i + 1:]
                     if w not in s:
                         ext.add(w)
-    U = sum(len({w[:q] + w[q + 1 :] for w in s}) for q in range(K))
+    U = sum(
+        len({w[:q] + w[q + 1:] for w in s})
+        for q in range(K)
+    )
     return U * (m + 1) - len(s) * K - len(ext)
 
 
 def canon(s):
+    """Canonical representative under coordinate permutation
+    and symbol relabelling."""
     best = None
     for perm in itertools.permutations(range(K)):
         t = [tuple(w[p] for p in perm) for w in s]
-        # relabel symbols by first appearance
-        # in lexicographic order, iterate to fixpoint
         t.sort()
         mp = {}
         for w in t:
             for x in w:
                 if x not in mp:
                     mp[x] = len(mp)
-        t = tuple(sorted(tuple(mp[x] for x in w) for w in t))
+        t = tuple(
+            sorted(tuple(mp[x] for x in w) for w in t)
+        )
         if best is None or t < best:
             best = t
     return best
@@ -72,7 +85,7 @@ for t in range(1, RMAX):
                 for x in syms + [fresh]:
                     if x in u:
                         continue
-                    v = u[:i] + (x,) + u[i + 1 :]
+                    v = u[:i] + (x,) + u[i + 1:]
                     if v in sset:
                         continue
                     t_val = s + (v,)
