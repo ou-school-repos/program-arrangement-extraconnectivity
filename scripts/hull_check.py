@@ -30,7 +30,7 @@ def upper_hull(points: list[Point]) -> list[tuple[Point, Fraction, Fraction | No
     for defect, collisions in points:
         best_by_defect[defect] = max(best_by_defect.get(defect, -1), collisions)
 
-    nondominated = []
+    nondominated: list[Point] = []
     for point in reversed(sorted(best_by_defect.items())):
         if not nondominated or point[1] > nondominated[-1][1]:
             nondominated.append(point)

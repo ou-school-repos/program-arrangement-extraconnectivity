@@ -8,6 +8,7 @@ import sys
 
 
 def profile(binary, n, k, max_size):
+    """Return the state count and connected profile for each size."""
     output = subprocess.check_output(
         [binary, str(n), str(k), str(max_size), "200000"], text=True
     )
@@ -23,6 +24,7 @@ def profile(binary, n, k, max_size):
 
 
 def main():
+    """Check known exact connected-profile values against the executable."""
     binary = os.environ.get("PROFILE_BIN", "./bin/exact_profile_naive")
     a53 = profile(binary, 5, 3, 7)
     assert a53[7] == (70182, 17), a53.get(7)

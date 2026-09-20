@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run validator outputs against the checked-in golden oracle."""
 
+import argparse
 import json
 import os
 import subprocess
@@ -14,8 +15,6 @@ BINARY = Path(os.environ.get("VALIDATOR_BIN", ROOT / "bin" / "validate_extra_cut
 
 def main() -> int:
     """Run every recorded validator case and compare its JSON output."""
-    import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--oracle", type=Path, default=ORACLE)
     parser.add_argument(
