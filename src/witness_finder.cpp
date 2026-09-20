@@ -9,9 +9,10 @@ using Vtx = array<int8_t, 24>;
 int R, K, M, N;
 struct H {
     size_t operator()(const Vtx &v) const {
-        size_t h = 0;
-        for (int i = 0; i < K; i++)
-            h = h * 31 + (uint8_t)v[i];
+        size_t h = accumulate(v.begin(), v.begin() + K, size_t{0},
+                              [](size_t acc, int8_t vi) {
+                                  return acc * 31 + static_cast<uint8_t>(vi);
+                              });
         return h;
     }
 };
@@ -26,10 +27,10 @@ bool inj(const Vtx &v) {
 }
 int boundary(const vector<Vtx> &S) {
     unordered_set<Vtx, H> in(S.begin(), S.end()), nb;
-    for (auto &u : S) {
-        uint64_t used = 0;
-        for (int i = 0; i < K; i++)
-            used |= 1ULL << u[i];
+    for (const auto &u : S) {
+        uint64_t used = accumulate(
+            u.begin(), u.begin() + K, uint64_t{0},
+            [](uint64_t acc, int8_t ui) { return acc | (1ULL << ui); });
         for (int i = 0; i < K; i++)
             for (int y = 0; y < N; y++)
                 if (!(used >> y & 1)) {
@@ -155,7 +156,7 @@ int main(int argc, char **argv) {
            R, N, K, M, d, (d <= K && d <= M) ? "open" : "closed", Hval, best,
            best < Hval ? "<-- BEATS HAMMING" : "", iters);
     if (best < Hval) {
-        for (auto &v : bestS) {
+        for (const auto &v : bestS) {
             printf(" (");
             for (int i = 0; i < K; i++)
                 printf("%d%s", v[i], i + 1 < K ? "," : "");

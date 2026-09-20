@@ -18,10 +18,10 @@ struct Hh {
 };
 int boundary(const vector<Vtx> &S) {
     unordered_set<Vtx, Hh> in(S.begin(), S.end()), nb;
-    for (auto &u : S) {
-        uint64_t used = 0;
-        for (int i = 0; i < K; i++)
-            used |= 1ULL << u[i];
+    for (const auto &u : S) {
+        uint64_t used = accumulate(
+            u.begin(), u.begin() + K, uint64_t{0},
+            [](uint64_t acc, int8_t ui) { return acc | (1ULL << ui); });
         for (int i = 0; i < K; i++)
             for (int y = 0; y < N; y++)
                 if (!(used >> y & 1)) {
@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
     long Hval = (long)(R * K - E(R)) * M - Cc(R);
     int best = INT_MAX;
     string bestdesc;
-    vector<Vtx> bestS;
     Vtx c{};
     for (int i = 0; i < K; i++)
         c[i] = i;
@@ -89,10 +88,12 @@ int main(int argc, char **argv) {
                 int bb = INT_MAX;
                 Vtx bv{};
                 set<Vtx> cand;
-                for (auto &u : S) {
-                    uint64_t used = 0;
-                    for (int i = 0; i < K; i++)
-                        used |= 1ULL << u[i];
+                for (const auto &u : S) {
+                    uint64_t used =
+                        accumulate(u.begin(), u.begin() + K, uint64_t{0},
+                                   [](uint64_t acc, int8_t ui) {
+                                       return acc | (1ULL << ui);
+                                   });
                     for (int i = 0; i < K; i++)
                         for (int y = 0; y < N; y++)
                             if (!(used >> y & 1)) {
@@ -102,7 +103,7 @@ int main(int argc, char **argv) {
                                     cand.insert(w);
                             }
                 }
-                for (auto &w : cand) {
+                for (const auto &w : cand) {
                     S.push_back(w);
                     int b = boundary(S);
                     S.pop_back();
@@ -117,7 +118,6 @@ int main(int argc, char **argv) {
             int b = boundary(S);
             if (b < best) {
                 best = b;
-                bestS = S;
                 bestdesc = "cube dim " + to_string(cd) + " + " + to_string(a) +
                            " arms, greedy fill";
             }
