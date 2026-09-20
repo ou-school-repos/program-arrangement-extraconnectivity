@@ -24,6 +24,7 @@ lean_lib «Proofs» where
     `Arrangement.HypercubeEdges,
     `Arrangement.ArrangementExtraconnectivity,
     `Arrangement.PenaltyExact,
+    `Arrangement.Phase,
     `Arrangement.InternalPairs,
     `Arrangement.CrossTop,
     `Arrangement.Capstone,

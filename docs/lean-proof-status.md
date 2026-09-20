@@ -23,16 +23,17 @@ The theorem is designed to remain valid in those cases.
 
 ## Main proved components
 
-| Component                          | Lean declaration                                                         | Status                          |
-| ---------------------------------- | ------------------------------------------------------------------------ | ------------------------------- |
-| Popcount partition inequality      | `E_add_min_le`, `E_seq_list_sum_le`                                      | Proved                          |
-| Arrangement vertices and adjacency | `ArrVertex`, `arr_adjacent`                                              | Proved definitions/instances    |
-| Defect bound                       | `sum_unique_roots_lower_bound`                                           | Proved                          |
-| Coordinate-fiber identity          | `total_coord_edges_eq`                                                   | Proved                          |
-| Collision charging bound           | global overlap charging and `restricted_lower_bound_up_to_error`         | Proved                          |
-| Hamming witness and evaluation     | `hamming_ball_subset`, `hamming_ball_eval`, `hb_cross_collisions_closed` | Proved                          |
-| Fixed-volume boundary capstone     | `arrangement_boundary_sandwich`                                          | Proved, additive-error sandwich |
-| Exact penalty identities           | `Arrangement/PenaltyExact.lean`                                          | Proved                          |
+| Component                          | Lean declaration                                                         | Status                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Popcount partition inequality      | `E_add_min_le`, `E_seq_list_sum_le`                                      | Proved                                                                |
+| Arrangement vertices and adjacency | `ArrVertex`, `arr_adjacent`                                              | Proved definitions/instances                                          |
+| Defect bound                       | `sum_unique_roots_lower_bound`                                           | Proved                                                                |
+| Coordinate-fiber identity          | `total_coord_edges_eq`                                                   | Proved                                                                |
+| Collision charging bound           | global overlap charging and `restricted_lower_bound_up_to_error`         | Proved                                                                |
+| Hamming witness and evaluation     | `hamming_ball_subset`, `hamming_ball_eval`, `hb_cross_collisions_closed` | Proved                                                                |
+| Fixed-volume boundary capstone     | `arrangement_boundary_sandwich`                                          | Proved, additive-error sandwich                                       |
+| Exact penalty identities           | `Arrangement/PenaltyExact.lean`                                          | Proved                                                                |
+| Pairwise phase comparisons         | `Arrangement/Phase.lean`                                                 | Proof added; pending Lean build; family signatures remain separate     |
 
 Build with `make lean` from the repository root. The legacy conditional
 exact-minimum interfaces and the disproved universal/restricted zero-error
@@ -63,7 +64,8 @@ hypotheses.
 2. Extend exact unrestricted profile computations beyond the current small
    cells, with reproducible witnesses and disconnected-set split checks.
 3. Classify the phase transitions among Hamming, folded-box, Star, and hybrid
-   patterns; these observed families are not an exhaustive classification.
+   patterns. Pairwise crossings are affine in `n-k` once a family's defect and
+   collision counts are known, but these observed families are not exhaustive.
 4. Bridge fixed-volume boundary minima to `g`-extra-connectivity with explicit
    component-size hypotheses, then determine where the resulting bounds are
    sharp.
