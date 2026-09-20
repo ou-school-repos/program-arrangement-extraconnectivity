@@ -2,7 +2,7 @@ import sys
 
 
 def load(fn):
-    return [tuple(map(int, l.split()[:4])) for l in open(fn) if l[0].isdigit()]
+    return [tuple(map(int, line.split()[:4])) for line in open(fn) if line[0].isdigit()]
 
 
 def test(R, fn, K, M):
@@ -15,7 +15,10 @@ def test(R, fn, K, M):
             if not F:
                 continue
             cells += 1
-            cost = lambda t: (R * k - t[0]) * m - t[0] - t[1]
+
+            def cost(t):
+                return (R * k - t[0]) * m - t[0] - t[1]
+
             best = min(map(cost, F))
             B = max(F, key=lambda t: (t[1], t[0]))
             Dm = max(t[0] for t in F)

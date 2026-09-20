@@ -69,9 +69,8 @@ void rec(int sz, vector<int> ext) {
         int w = ext.back();
         ext.pop_back();
         vector<int> nb;
-        for (int x : adj[w])
-            if (x > 0 && !inS[x] && nsCnt[x] == 0)
-                nb.push_back(x);
+        copy_if(adj[w].begin(), adj[w].end(), back_inserter(nb),
+                [&](int x) { return x > 0 && !inS[x] && nsCnt[x] == 0; });
         S[sz] = w;
         inS[w] = 1;
         nsCnt[w]++;
@@ -158,8 +157,7 @@ int main(int argc, char **argv) {
     for (int x : adj[0])
         nsCnt[x]++;
     vector<int> e0;
-    for (int x : adj[0])
-        e0.push_back(x);
+    copy(adj[0].begin(), adj[0].end(), back_inserter(e0));
     if (R == 1)
         leaf();
     else
@@ -168,7 +166,7 @@ int main(int argc, char **argv) {
            "sets through root=%lld signatures=%zu\n",
            R, N, K, leaves, sigs.size());
     printf("D X p s_a  example\n");
-    for (auto &s : sigs) {
+    for (const auto &s : sigs) {
         printf("%d %d %d %d  ", s[0], s[1], s[2], s[3]);
         for (int v : ex[s]) {
             printf("(");
@@ -186,7 +184,7 @@ int main(int argc, char **argv) {
         }
         long best = LONG_MAX;
         array<int, 4> arg{};
-        for (auto &s : sigs)
+        for (const auto &s : sigs)
             if (s[2] <= k && s[3] - s[2] <= n - k) {
                 long v = (long)(R * k - s[0]) * (n - k) - s[0] - s[1];
                 if (v < best) {
