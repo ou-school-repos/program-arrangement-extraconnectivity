@@ -67,7 +67,7 @@ struct CheckpointState {
     std::vector<bool> direction_history;
 
     void validate() const {
-        if (signature.n <= 0 || signature.k <= 0 ||
+        if (signature.n <= 0 || signature.k <= 0 || signature.k > signature.n ||
             signature.valid_count == 0 || signature.bitmap_bytes == 0)
             throw std::invalid_argument(
                 "invalid star-sweep checkpoint signature");
@@ -85,26 +85,43 @@ struct CheckpointState {
         if (component_anchor >= signature.valid_count)
             throw std::invalid_argument(
                 "checkpoint component anchor out of range");
-        if (component_size > signature.valid_count)
+        if (component_size == 0 || component_size > signature.valid_count)
             throw std::invalid_argument(
                 "checkpoint component size exceeds valid count");
-        if (discovered_survivors > signature.valid_count)
+        const std::uint64_t star_size = component_sizes.front();
+        if (star_size > signature.valid_count ||
+            star_boundary_size > signature.valid_count - star_size)
             throw std::invalid_argument(
-                "checkpoint discovered survivors exceeds valid count");
-        if (star_boundary_size > signature.valid_count)
+                "checkpoint Star and boundary exceed valid count");
+        const std::uint64_t survivor_limit =
+            signature.valid_count - star_size - star_boundary_size;
+        if (discovered_survivors > survivor_limit)
             throw std::invalid_argument(
-                "checkpoint star boundary exceeds valid count");
+                "checkpoint discovered survivors exceed survivor count");
         if (active_frontier_size > signature.valid_count)
             throw std::invalid_argument(
                 "checkpoint active frontier size exceeds valid count");
-        if (phase == CheckpointPhase::ComponentComplete &&
-            active_frontier_size != 0)
-            throw std::invalid_argument(
-                "completed component must have zero active frontier");
-        if (phase == CheckpointPhase::LayerBoundary &&
-            active_frontier_size == 0)
-            throw std::invalid_argument(
-                "layer boundary must have non-zero active frontier");
+        std::uint64_t completed_survivors = 0;
+        for (std::size_t index = 1; index < component_sizes.size(); ++index) {
+            const std::uint64_t size = component_sizes[index];
+            if (size > survivor_limit - completed_survivors)
+                throw std::invalid_argument(
+                    "checkpoint component history exceeds survivor count");
+            completed_survivors += size;
+        }
+        if (phase == CheckpointPhase::ComponentComplete) {
+            if (active_frontier_size != 0 || component_sizes.size() < 2 ||
+                component_size != component_sizes.back() ||
+                completed_survivors != discovered_survivors)
+                throw std::invalid_argument(
+                    "inconsistent completed-component checkpoint");
+        } else if (layer == 0 || active_frontier_size == 0 ||
+                   component_size > survivor_limit ||
+                   completed_survivors > survivor_limit - component_size ||
+                   completed_survivors + component_size !=
+                       discovered_survivors) {
+            throw std::invalid_argument("inconsistent active checkpoint");
+        }
     }
 };
 

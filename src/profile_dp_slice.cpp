@@ -19,7 +19,9 @@ std::vector<Automorphism> layer_stabilizer(const Instance &instance,
                                            const int processed_slices) {
     constexpr std::size_t max_stabilizer_size = 100'000;
     std::size_t stabilizer_size = 1;
-    for (const int degree : {instance.k - 1, instance.n - processed_slices}) {
+    const int unprocessed_after_next =
+        std::max(0, instance.n - processed_slices - 1);
+    for (const int degree : {instance.k - 1, unprocessed_after_next}) {
         for (int factor = 2; factor <= degree; ++factor) {
             const auto value = static_cast<std::size_t>(factor);
             if (stabilizer_size > max_stabilizer_size / value)
@@ -34,16 +36,20 @@ std::vector<Automorphism> layer_stabilizer(const Instance &instance,
     do {
         if (coordinates[0] != 0)
             continue;
-        std::vector<int> unprocessed(instance.n - processed_slices);
-        std::iota(unprocessed.begin(), unprocessed.end(), processed_slices);
+        std::vector<int> unprocessed(unprocessed_after_next);
+        std::iota(unprocessed.begin(), unprocessed.end(), processed_slices + 1);
         do {
             Automorphism automorphism;
             automorphism.coordinates = coordinates;
             automorphism.symbols.resize(instance.n);
+            std::iota(automorphism.symbols.begin(), automorphism.symbols.end(),
+                      0);
             for (int i = 0; i < processed_slices; ++i)
                 automorphism.symbols[i] = i;
-            for (int i = 0; i < instance.n - processed_slices; ++i)
-                automorphism.symbols[processed_slices + i] = unprocessed[i];
+            if (processed_slices < instance.n)
+                automorphism.symbols[processed_slices] = processed_slices;
+            for (int i = 0; i < unprocessed_after_next; ++i)
+                automorphism.symbols[processed_slices + 1 + i] = unprocessed[i];
             group.push_back(std::move(automorphism));
         } while (std::next_permutation(unprocessed.begin(), unprocessed.end()));
     } while (std::next_permutation(coordinates.begin(), coordinates.end()));

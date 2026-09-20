@@ -128,15 +128,9 @@ int main(int argc, char **argv) {
         std::cerr << "unsupported audit range\n";
         return 1;
     }
-    double vertex_count = 1;
+    std::uint64_t vertex_count = 1;
     for (int i = 0; i < k; ++i)
-        vertex_count *= n - i;
-    constexpr std::uint64_t max_vertex_visits = 100'000'000;
-    if (group_size >
-        max_vertex_visits / static_cast<std::uint64_t>(vertex_count)) {
-        std::cerr << "Burnside enumeration exceeds work limit\n";
-        return 1;
-    }
+        vertex_count *= static_cast<std::uint64_t>(n - i);
     if (maximum > static_cast<int>(vertex_count)) {
         std::cerr << "max_R exceeds vertex count |A(n,k)|\n";
         return 1;
@@ -153,11 +147,17 @@ int main(int argc, char **argv) {
             group_size *= value;
         }
     }
+    constexpr std::uint64_t max_vertex_visits = 100'000'000;
+    if (group_size > max_vertex_visits / vertex_count) {
+        std::cerr << "Burnside enumeration exceeds work limit\n";
+        return 1;
+    }
     // log2(|G| * max_R C(N,R)) must stay below 126 for exact 128-bit sums.
     const double log2_group =
         (std::lgamma(n + 1.0) + std::lgamma(k + 1.0)) / std::log(2.0);
     double log2_binom = 0;
-    for (int r = 0; r <= maximum && r <= vertex_count; ++r)
+    for (int r = 0;
+         r <= maximum && static_cast<std::uint64_t>(r) <= vertex_count; ++r)
         log2_binom = std::max(log2_binom, (std::lgamma(vertex_count + 1) -
                                            std::lgamma(r + 1.0) -
                                            std::lgamma(vertex_count - r + 1)) /

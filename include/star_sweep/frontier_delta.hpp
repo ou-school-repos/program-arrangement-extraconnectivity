@@ -101,10 +101,76 @@ inline std::uint64_t write_frontier_delta(const AtomicBitset &frontier,
     return written_blocks;
 }
 
+inline std::uint64_t frontier_delta_bit_count(const std::string &path,
+                                              std::uint64_t valid_bits) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input)
+        throw std::runtime_error("cannot open frontier delta: " + path);
+    DeltaHeader header;
+    if (!input.read(reinterpret_cast<char *>(&header), sizeof(header)))
+        throw std::runtime_error("failed to read delta header: " + path);
+    const std::uint64_t expected_words =
+        valid_bits / 64 + static_cast<std::uint64_t>(valid_bits % 64 != 0);
+    if (header.magic_value != DeltaHeader::magic || header.version != 1 ||
+        header.block_words != AtomicBitset::block_size ||
+        header.num_words != expected_words ||
+        header.block_count > (expected_words + AtomicBitset::block_size - 1) /
+                                 AtomicBitset::block_size)
+        throw std::runtime_error("invalid frontier delta header: " + path);
+
+    Xxh64 checksum;
+    std::uint64_t bit_count = 0;
+    std::uint64_t previous_block = 0;
+    bool have_previous_block = false;
+    for (std::uint64_t index = 0; index < header.block_count; ++index) {
+        DeltaBlockHeader block;
+        if (!input.read(reinterpret_cast<char *>(&block), sizeof(block)))
+            throw std::runtime_error("failed to read delta block header: " +
+                                     path);
+        if (block.block_index >=
+                (expected_words + AtomicBitset::block_size - 1) /
+                    AtomicBitset::block_size ||
+            (have_previous_block && block.block_index <= previous_block))
+            throw std::runtime_error("invalid delta block index: " + path);
+        const std::uint64_t first =
+            block.block_index * AtomicBitset::block_size;
+        const std::uint64_t words = std::min<std::uint64_t>(
+            AtomicBitset::block_size, expected_words - first);
+        if (block.word_count != words)
+            throw std::runtime_error("invalid delta block length: " + path);
+        checksum.update(&block, sizeof(block));
+        for (std::uint64_t word_index = 0; word_index < words; ++word_index) {
+            std::uint64_t value = 0;
+            if (!input.read(reinterpret_cast<char *>(&value), sizeof(value)))
+                throw std::runtime_error("failed to read delta block data: " +
+                                         path);
+            checksum.update(&value, sizeof(value));
+            if (first + word_index + 1 == expected_words && valid_bits % 64) {
+                const std::uint64_t valid_mask =
+                    (std::uint64_t{1} << (valid_bits % 64)) - 1;
+                if ((value & ~valid_mask) != 0)
+                    throw std::runtime_error(
+                        "frontier delta sets bits beyond valid range: " + path);
+            }
+            bit_count +=
+                static_cast<std::uint64_t>(__builtin_popcountll(value));
+        }
+        previous_block = block.block_index;
+        have_previous_block = true;
+    }
+    if (checksum.digest() != header.payload_checksum ||
+        input.peek() != std::char_traits<char>::eof())
+        throw std::runtime_error(
+            "frontier delta checksum or length mismatch: " + path);
+    return bit_count;
+}
+
 // Replays one immutable frontier delta into a fresh working bitmap.
 inline void replay_frontier_delta(const std::string &path,
                                   AtomicBitset &frontier,
-                                  std::uint64_t *payload_bits = nullptr) {
+                                  std::uint64_t *payload_bits = nullptr,
+                                  std::uint64_t *overlapping_bits = nullptr,
+                                  std::uint64_t valid_bits = 0) {
     std::ifstream input(path, std::ios::binary);
     if (!input)
         throw std::runtime_error("cannot open frontier delta for replay: " +
@@ -148,6 +214,14 @@ inline void replay_frontier_delta(const std::string &path,
                 throw std::runtime_error("failed to read delta block data: " +
                                          path);
             checksum.update(&value, sizeof(value));
+            if (valid_bits != 0 && first + word + 1 == header.num_words &&
+                valid_bits % 64) {
+                const std::uint64_t valid_mask =
+                    (std::uint64_t{1} << (valid_bits % 64)) - 1;
+                if ((value & ~valid_mask) != 0)
+                    throw std::runtime_error(
+                        "frontier delta sets bits beyond valid range: " + path);
+            }
             if (payload_bits != nullptr)
                 *payload_bits += __builtin_popcountll(value);
         }
@@ -173,6 +247,11 @@ inline void replay_frontier_delta(const std::string &path,
             if (!input.read(reinterpret_cast<char *>(&value), sizeof(value)))
                 throw std::runtime_error("failed to reread delta block data: " +
                                          path);
+            if (overlapping_bits != nullptr)
+                *overlapping_bits +=
+                    static_cast<std::uint64_t>(__builtin_popcountll(
+                        value & frontier.load_word(
+                                    first + static_cast<std::size_t>(word))));
             if (value != 0)
                 frontier.set_word_atomic(first + static_cast<std::size_t>(word),
                                          value);

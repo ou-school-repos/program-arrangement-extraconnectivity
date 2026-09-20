@@ -38,21 +38,21 @@ int main() {
     assert(restored.test(2048));
     std::cout << "[checkpoint] replay restored bits 3 and 2048: PASS\n";
 
-    const star_sweep::CheckpointSignature signature{11, 7, 7920, 990};
+    const star_sweep::CheckpointSignature signature{11, 7, 4096, 512};
     assert(star_sweep::signature_matches(signature, signature));
     std::cout << "[checkpoint] signature validation: PASS\n";
 
     star_sweep::CheckpointState state;
     state.signature = signature;
     state.generation = 1;
-    state.layer = 4;
+    state.layer = 1;
     state.component_anchor = 17;
-    state.component_size = 128;
-    state.discovered_survivors = 256;
+    state.component_size = 1;
+    state.discovered_survivors = 1;
     state.star_boundary_size = 42;
-    state.active_frontier_size = 1;
-    state.component_sizes = {10, 20};
-    state.direction_history = {false, true, false, true};
+    state.active_frontier_size = 2;
+    state.component_sizes = {10};
+    state.direction_history = {false};
 
     star_sweep::CheckpointManager manager(base.string());
     manager.publish(state, "frontier.delta");
