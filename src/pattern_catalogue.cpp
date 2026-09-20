@@ -1,302 +1,201 @@
-// Exhaustive finite-host catalogue of connected arrangement-graph patterns.
+// pattern_catalogue.cpp — catalogue of connected R-vertex patterns in
+// arrangement graphs.
 //
-// For a fixed R, the host A(2R-2,R-1) contains a representative of every
-// connected R-vertex pattern: a spanning tree uses at most R-1 coordinates
-// and introduces at most R-1 new symbols. The catalogue records (D,X,p,s_a),
-// then evaluates the connected-pattern envelope for requested A(n,k) cells.
-// This is Phi_conn, not the unrestricted vertex-boundary profile Phi.
-//
-// Usage: pattern_catalogue R [n k]...
-
-#include <algorithm>
-#include <array>
-#include <cerrno>
-#include <climits>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <functional>
-#include <iterator>
-#include <limits>
-#include <map>
-#include <set>
-#include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
-
-namespace {
-
-constexpr int max_r = 9;
-constexpr int max_positions = 8;
-using Word = std::array<std::int8_t, max_positions>;
-using Signature =
-    std::array<int, 4>; // defect, collisions, active positions, symbols
-
-int R = 0;
-int K = 0;
-int N = 0;
-int vertex_count = 0;
-std::vector<Word> words;
-std::vector<std::vector<int>> adjacency;
-std::vector<bool> in_set;
-std::vector<int> set_neighbor_count;
-std::vector<std::uint64_t> boundary_stamp;
-std::uint64_t current_stamp = 0;
-std::array<int, max_r> selected{};
-std::set<Signature> signatures;
-std::map<Signature, std::vector<int>> examples;
-std::uint64_t leaves = 0;
-
-bool parse_int(const char *text, int &value) {
-    char *end = nullptr;
-    errno = 0;
-    const long parsed = std::strtol(text, &end, 10);
-    if (errno != 0 || end == text || *end != '\0' || parsed < INT_MIN ||
-        parsed > INT_MAX)
-        return false;
-    value = static_cast<int>(parsed);
-    return true;
-}
-
-void evaluate_leaf() {
-    ++leaves;
-    ++current_stamp;
-    int external_boundary = 0;
-    for (int i = 0; i < R; ++i) {
-        for (const int neighbor : adjacency[static_cast<std::size_t>(
-                 selected[static_cast<std::size_t>(i)])]) {
-            const auto index = static_cast<std::size_t>(neighbor);
-            if (!in_set[index] && boundary_stamp[index] != current_stamp) {
-                boundary_stamp[index] = current_stamp;
-                ++external_boundary;
+// Host graph A(N,K) with K = R-1, N = 2R-2 contains every connected R-vertex
+// pattern: a spanning tree changes at most R-1 coordinates (p <= K), and each
+// added vertex adds at most one symbol, so active + constant symbols <= K + R -
+// 1 = N. ESU enumerates every connected R-set through vertex 0 (complete by
+// vertex-transitivity). For each set it records the signature (D, X, p, s_a):
+//   U = sum_q #distinct q-roots, D = RK - U, X = U(N-K+1) - RK - |N(S)|
+//   (boundary identity), p = #coordinates that vary, s_a = #symbols occurring
+//   in varying coordinates.
+// Prediction for any A(n,k):  Phi_conn(R) = min over signatures with p<=k,
+// s_a-p<=n-k of
+//   (Rk - D)(n-k) - D - X.
+// Usage: ./pattern_catalogue R [n k]...   (prints signatures, then predictions)
+#include <bits/stdc++.h>
+using namespace std;
+int R, K, N, NV;
+vector<array<int8_t, 8>> W;
+vector<vector<int>> adj;
+vector<char> inS;
+vector<int> nsCnt, stamp;
+int stampId = 0;
+int S[16];
+set<array<int, 4>> sigs;
+map<array<int, 4>, vector<int>> ex;
+long long leaves = 0;
+void leaf() {
+    leaves++;
+    ++stampId;
+    int ext = 0;
+    for (int t = 0; t < R; t++)
+        for (int w : adj[S[t]])
+            if (!inS[w] && stamp[w] != stampId) {
+                stamp[w] = stampId;
+                ext++;
             }
+    int U = 0, p = 0;
+    set<int> sym;
+    for (int q = 0; q < K; q++) {
+        set<vector<int>> roots;
+        set<int> col;
+        for (int t = 0; t < R; t++) {
+            vector<int> r;
+            for (int j = 0; j < K; j++)
+                if (j != q)
+                    r.push_back(W[S[t]][j]);
+            roots.insert(r);
+            col.insert(W[S[t]][q]);
+        }
+        U += roots.size();
+        if (col.size() > 1) {
+            p++;
+            for (int c : col)
+                sym.insert(c);
         }
     }
-
-    int root_sum = 0;
-    int active_positions = 0;
-    std::set<int> active_symbols;
-    for (int coordinate = 0; coordinate < K; ++coordinate) {
-        std::set<std::vector<int>> roots;
-        std::set<int> coordinate_symbols;
-        for (int i = 0; i < R; ++i) {
-            const Word &word = words[static_cast<std::size_t>(
-                selected[static_cast<std::size_t>(i)])];
-            std::vector<int> root;
-            for (int position = 0; position < K; ++position) {
-                if (position != coordinate)
-                    root.push_back(static_cast<int>(
-                        word[static_cast<std::size_t>(position)]));
-            }
-            roots.insert(std::move(root));
-            coordinate_symbols.insert(
-                static_cast<int>(word[static_cast<std::size_t>(coordinate)]));
-        }
-        root_sum += static_cast<int>(roots.size());
-        if (coordinate_symbols.size() > 1) {
-            ++active_positions;
-            active_symbols.insert(coordinate_symbols.begin(),
-                                  coordinate_symbols.end());
-        }
-    }
-
-    const int defect = R * K - root_sum;
-    const int collisions = root_sum * (N - K + 1) - R * K - external_boundary;
-    const Signature signature{defect, collisions, active_positions,
-                              static_cast<int>(active_symbols.size())};
-    if (signatures.insert(signature).second)
-        examples[signature] =
-            std::vector<int>(selected.begin(), selected.begin() + R);
+    array<int, 4> sg = {R * K - U, U * (N - K + 1) - R * K - ext, p,
+                        (int)sym.size()};
+    if (sigs.insert(sg).second)
+        ex[sg] = vector<int>(S, S + R);
 }
-
-void enumerate_connected(int size, std::vector<int> extension) {
-    if (size == R) {
-        evaluate_leaf();
+void rec(int sz, vector<int> ext) {
+    if (sz == R) {
+        leaf();
         return;
     }
-
-    while (!extension.empty()) {
-        const int vertex = extension.back();
-        extension.pop_back();
-
-        std::vector<int> new_extension;
-        for (const int neighbor : adjacency[static_cast<std::size_t>(vertex)]) {
-            const auto index = static_cast<std::size_t>(neighbor);
-            if (neighbor > 0 && !in_set[index] &&
-                set_neighbor_count[index] == 0)
-                new_extension.push_back(neighbor);
-        }
-
-        selected[static_cast<std::size_t>(size)] = vertex;
-        in_set[static_cast<std::size_t>(vertex)] = true;
-        ++set_neighbor_count[static_cast<std::size_t>(vertex)];
-        for (const int neighbor : adjacency[static_cast<std::size_t>(vertex)])
-            ++set_neighbor_count[static_cast<std::size_t>(neighbor)];
-
-        std::vector<int> next_extension = extension;
-        std::copy_if(new_extension.begin(), new_extension.end(),
-                     std::back_inserter(next_extension),
-                     [&](const int candidate) {
-                         return std::find(extension.begin(), extension.end(),
-                                          candidate) == extension.end();
-                     });
-        enumerate_connected(size + 1, std::move(next_extension));
-
-        in_set[static_cast<std::size_t>(vertex)] = false;
-        --set_neighbor_count[static_cast<std::size_t>(vertex)];
-        for (const int neighbor : adjacency[static_cast<std::size_t>(vertex)])
-            --set_neighbor_count[static_cast<std::size_t>(neighbor)];
+    while (!ext.empty()) {
+        int w = ext.back();
+        ext.pop_back();
+        vector<int> nb;
+        for (int x : adj[w])
+            if (x > 0 && !inS[x] && nsCnt[x] == 0)
+                nb.push_back(x);
+        S[sz] = w;
+        inS[w] = 1;
+        nsCnt[w]++;
+        for (int x : adj[w])
+            nsCnt[x]++;
+        vector<int> e2 = ext;
+        for (int x : nb)
+            if (find(e2.begin(), e2.end(), x) == e2.end())
+                e2.push_back(x);
+        rec(sz + 1, e2);
+        inS[w] = 0;
+        nsCnt[w]--;
+        for (int x : adj[w])
+            nsCnt[x]--;
     }
 }
-
-void build_host() {
-    std::vector<int> prefix;
-    std::function<void()> generate = [&]() {
-        if (static_cast<int>(prefix.size()) == K) {
-            Word word{};
-            for (int i = 0; i < K; ++i)
-                word[static_cast<std::size_t>(i)] = static_cast<std::int8_t>(
-                    prefix[static_cast<std::size_t>(i)]);
-            words.push_back(word);
-            return;
-        }
-        for (int symbol = 0; symbol < N; ++symbol) {
-            if (std::find(prefix.begin(), prefix.end(), symbol) ==
-                prefix.end()) {
-                prefix.push_back(symbol);
-                generate();
-                prefix.pop_back();
-            }
-        }
-    };
-    generate();
-
-    if (words.size() > static_cast<std::size_t>(INT_MAX))
-        throw std::runtime_error(
-            "host graph exceeds integer vertex-index capacity");
-    vertex_count = static_cast<int>(words.size());
-    std::map<Word, int> vertex_id;
-    for (int i = 0; i < vertex_count; ++i)
-        vertex_id.emplace(words[static_cast<std::size_t>(i)], i);
-
-    adjacency.assign(words.size(), {});
-    for (int i = 0; i < vertex_count; ++i) {
-        for (int coordinate = 0; coordinate < K; ++coordinate) {
-            for (int symbol = 0; symbol < N; ++symbol) {
-                bool already_used = false;
-                for (int position = 0; position < K; ++position) {
-                    already_used |= words[static_cast<std::size_t>(i)]
-                                         [static_cast<std::size_t>(position)] ==
-                                    symbol;
-                }
-                if (already_used)
-                    continue;
-                Word neighbor = words[static_cast<std::size_t>(i)];
-                neighbor[static_cast<std::size_t>(coordinate)] =
-                    static_cast<std::int8_t>(symbol);
-                adjacency[static_cast<std::size_t>(i)].push_back(
-                    vertex_id.at(neighbor));
-            }
-        }
-    }
-}
-
-} // namespace
-
 int main(int argc, char **argv) {
-    if (argc < 2 || argc % 2 != 0) {
-        std::fprintf(stderr, "Usage: %s R [n k]...\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "usage: %s R [n k]...\n", argv[0]);
         return 1;
     }
-    if (!parse_int(argv[1], R) || R < 2 || R > max_r) {
-        std::fprintf(stderr, "R must be in 2..%d (fixed pattern buffers).\n",
-                     max_r);
+    R = atoi(argv[1]);
+    // K=R-1 coordinates must fit array<int8_t,8>, S[] holds R entries, symbols
+    // fit int8_t.
+    if (R < 1 || R > 9) {
+        fprintf(
+            stderr,
+            "R must be in 1..9 (array<int8_t,8> holds K=R-1<=8 coordinates)\n");
         return 1;
     }
-
-    std::vector<std::pair<int, int>> queries;
-    for (int arg = 2; arg < argc; arg += 2) {
-        int n = 0;
-        int k = 0;
-        if (!parse_int(argv[arg], n) || !parse_int(argv[arg + 1], k) || k < 1 ||
-            n <= k || n > 100000000) {
-            std::fprintf(stderr,
-                         "Queries must satisfy 1 <= k < n <= 100000000.\n");
+    K = max(1, R - 1);
+    N = K + R - 1;
+    int argi = 2;
+    if (argc >= 5 && string(argv[2]) == "--host") {
+        N = atoi(argv[3]);
+        K = atoi(argv[4]);
+        argi = 5;
+        if (K < 1 || K > 8 || N <= K) {
+            fprintf(stderr, "bad host\n");
             return 1;
         }
-        queries.emplace_back(n, k);
     }
-
-    K = std::max(1, R - 1);
-    N = K + R - 1;
-    try {
-        build_host();
-    } catch (const std::exception &error) {
-        std::fprintf(stderr, "pattern_catalogue: %s\n", error.what());
-        return 1;
-    }
-
-    in_set.assign(words.size(), false);
-    set_neighbor_count.assign(words.size(), 0);
-    boundary_stamp.assign(words.size(), 0);
-    selected[0] = 0;
-    in_set[0] = true;
-    ++set_neighbor_count[0];
-    for (const int neighbor : adjacency[0])
-        ++set_neighbor_count[static_cast<std::size_t>(neighbor)];
-    std::vector<int> initial_extension = adjacency[0];
-    enumerate_connected(1, std::move(initial_extension));
-
-    std::printf(
-        "R=%d host=A(%d,%d) connected sets through root=%llu signatures=%zu\n",
-        R, N, K, static_cast<unsigned long long>(leaves), signatures.size());
-    std::printf("D X p s_a  example\n");
-    for (const Signature &signature : signatures) {
-        std::printf("%d %d %d %d  ", signature[0], signature[1], signature[2],
-                    signature[3]);
-        for (const int index : examples.at(signature)) {
-            std::printf("(");
-            for (int position = 0; position < K; ++position) {
-                if (position != 0)
-                    std::printf(",");
-                std::printf("%d",
-                            static_cast<int>(words[static_cast<std::size_t>(
-                                index)][static_cast<std::size_t>(position)]));
+    vector<int> c;
+    function<void()> gen = [&]() {
+        if ((int)c.size() == K) {
+            array<int8_t, 8> a{};
+            for (int i = 0; i < K; i++)
+                a[i] = c[i];
+            W.push_back(a);
+            return;
+        }
+        for (int x = 0; x < N; x++)
+            if (find(c.begin(), c.end(), x) == c.end()) {
+                c.push_back(x);
+                gen();
+                c.pop_back();
             }
-            std::printf(")");
-        }
-        std::printf("\n");
-    }
-
-    for (const auto &[n, k] : queries) {
-        long long best = std::numeric_limits<long long>::max();
-        Signature best_signature{};
-        for (const Signature &signature : signatures) {
-            const int defect = signature[0];
-            const int active_positions = signature[2];
-            const int active_symbols = signature[3];
-            if (active_positions > k ||
-                active_symbols - active_positions > n - k)
-                continue;
-            const long long boundary =
-                static_cast<long long>(R * k - defect) * (n - k) - defect -
-                signature[1];
-            if (boundary < best) {
-                best = boundary;
-                best_signature = signature;
+    };
+    gen();
+    NV = W.size();
+    map<array<int8_t, 8>, int> id;
+    for (int i = 0; i < NV; i++)
+        id[W[i]] = i;
+    adj.assign(NV, {});
+    for (int i = 0; i < NV; i++)
+        for (int q = 0; q < K; q++)
+            for (int x = 0; x < N; x++) {
+                bool used = false;
+                for (int j = 0; j < K; j++)
+                    if (W[i][j] == x)
+                        used = true;
+                if (used)
+                    continue;
+                auto v = W[i];
+                v[q] = x;
+                adj[i].push_back(id[v]);
             }
+    inS.assign(NV, 0);
+    nsCnt.assign(NV, 0);
+    stamp.assign(NV, 0);
+    S[0] = 0;
+    inS[0] = 1;
+    nsCnt[0]++;
+    for (int x : adj[0])
+        nsCnt[x]++;
+    vector<int> e0;
+    for (int x : adj[0])
+        e0.push_back(x);
+    if (R == 1)
+        leaf();
+    else
+        rec(1, e0);
+    printf("R=%d host=A(%d,%d) [complete for cells k<=K, n-k<=N-K] connected "
+           "sets through root=%lld signatures=%zu\n",
+           R, N, K, leaves, sigs.size());
+    printf("D X p s_a  example\n");
+    for (auto &s : sigs) {
+        printf("%d %d %d %d  ", s[0], s[1], s[2], s[3]);
+        for (int v : ex[s]) {
+            printf("(");
+            for (int j = 0; j < K; j++)
+                printf("%d%s", W[v][j], j + 1 < K ? "," : "");
+            printf(")");
         }
-        if (best == std::numeric_limits<long long>::max()) {
-            std::printf(
-                "predict A(%d,%d): no feasible connected pattern signature\n",
-                n, k);
-        } else {
-            std::printf("predict A(%d,%d): Phi_conn(%d)=%lld via "
-                        "(D,X,p,s_a)=(%d,%d,%d,%d)\n",
-                        n, k, R, best, best_signature[0], best_signature[1],
-                        best_signature[2], best_signature[3]);
-        }
+        puts("");
     }
-    return 0;
+    for (int a = argi; a + 1 < argc; a += 2) {
+        int n = atoi(argv[a]), k = atoi(argv[a + 1]);
+        if (k < 1 || n <= k) {
+            fprintf(stderr, "skip A(%d,%d): need n>k>=1\n", n, k);
+            continue;
+        }
+        long best = LONG_MAX;
+        array<int, 4> arg{};
+        for (auto &s : sigs)
+            if (s[2] <= k && s[3] - s[2] <= n - k) {
+                long v = (long)(R * k - s[0]) * (n - k) - s[0] - s[1];
+                if (v < best) {
+                    best = v;
+                    arg = s;
+                }
+            }
+        printf("predict A(%d,%d): Phi_conn(%d)=%ld via "
+               "(D,X,p,s_a)=(%d,%d,%d,%d)\n",
+               n, k, R, best, arg[0], arg[1], arg[2], arg[3]);
+    }
 }
