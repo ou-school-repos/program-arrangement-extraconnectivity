@@ -31,8 +31,7 @@ def D(s):
 
 
 Et = [E(t) for t in range(R + 1)]
-maxd = 0
-bad = 0
+stats = [0, 0]  # [maxd, bad]
 seen: set[int] = set()
 
 
@@ -44,15 +43,14 @@ def shellable(s):
     return any(D(s - {v}) == Et[len(s) - 1] and shellable(s - {v}) for v in s)
 
 
-def rec(s, ext, sset, ns):  # pylint: disable=global-statement
+def rec(s, ext, sset, ns):
     """Depth-first growth of connected R-sets through root 0."""
-    global maxd, bad
     if len(s) == R:
         fs = frozenset(s)
         if D(fs) == Et[R]:
-            maxd += 1
+            stats[0] += 1
             if not shellable(fs):
-                bad += 1
+                stats[1] += 1
                 print(
                     "NON-SHELLABLE",
                     [V[i] for i in s],
@@ -75,6 +73,6 @@ def rec(s, ext, sset, ns):  # pylint: disable=global-statement
 rec([0], set(adj[0]), {0}, set(adj[0]))
 print(
     f"R={R} host A({N},{K}): "
-    f"max-defect connected sets through root={maxd}, "
-    f"non-shellable={bad}"
+    f"max-defect connected sets through root={stats[0]}, "
+    f"non-shellable={stats[1]}"
 )
